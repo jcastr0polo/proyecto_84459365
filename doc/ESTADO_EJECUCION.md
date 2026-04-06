@@ -20,7 +20,7 @@
 
 | # | Fase | Rol | Estado | Inicio | Cierre | Resumen |
 |---|------|-----|--------|--------|--------|---------|
-| 1 | Setup del Proyecto | Ingeniero Fullstack | ⬜ Pendiente | — | — | — |
+| 1 | Setup del Proyecto | Ingeniero Fullstack | ✅ Completada | 06 Abr 12:00 | 06 Abr 12:50 | RESUMEN_FASE_1_SETUP.md |
 | 2 | Capa de Datos JSON | Ingeniero Fullstack | ⬜ Pendiente | — | — | — |
 | 3 | Tipos y Validación TS | Ingeniero Fullstack | ⬜ Pendiente | — | — | — |
 | 4 | API Route Handler | Ingeniero Fullstack | ⬜ Pendiente | — | — | — |
@@ -49,13 +49,62 @@
 ### FASE 1 — Setup del Proyecto
 
 ```
-[ INICIO  ] Fecha: _____________  Hora: _______
-[ CIERRE  ] Fecha: _____________  Hora: _______
-[ DURACIÓN] _______________________
+[ INICIO  ] Fecha: 06 de Abril 2026  Hora: 12:00
+[ CIERRE  ] Fecha: 06 de Abril 2026  Hora: 12:50
+[ DURACIÓN] 50 minutos
 ```
 
+**Entrada en el historial:**
+"Fase 1 iniciada — Setup del proyecto Next.js + TypeScript"
+
 **Acciones ejecutadas:**
-_— pendiente de registro —_
+1. ✅ Instalación de Next.js 16.2.2 con TypeScript y Tailwind CSS
+2. ✅ Instalación de dependencias adicionales: framer-motion (12.38.0), zod (4.3.6)
+3. ✅ Restructuración del proyecto: movimiento de src/app → app en raíz
+4. ✅ Creación de carpetas base: /components, /lib, /data
+5. ✅ Creación del archivo /data/README.md con documentación de la capa de datos
+6. ✅ Creación del archivo .env.example con variables de entorno iniciales
+7. ✅ Actualización de tsconfig.json: "strict": true, paths configurados como @/* → ./*
+8. ✅ Ajuste de next.config.ts con typescript.ignoreBuildErrors: false
+9. ✅ Adición de scripts "typecheck" y "validate" al package.json
+10. ✅ Ejecución de npm run typecheck: ✅ SIN ERRORES
+
+**Archivos creados/modificados:**
+- CREATE: /data/README.md
+- CREATE: .env.example
+- CREATE: /components/ (carpeta)
+- CREATE: /lib/ (carpeta)
+- CREATE: /data/ (carpeta con documentación)
+- MOVED: src/app → app (reestructura de directorios)
+- DELETE: src/ (eliminada tras mover contenido)
+- MODIFY: tsconfig.json (paths @/* → ./* actualizado)
+- MODIFY: next.config.ts (typescript.ignoreBuildErrors: false)
+- MODIFY: package.json (agregados scripts typecheck y validate)
+
+**Comandos ejecutados:**
+```
+1. npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir no --import-alias "@/*" --no-git --yes
+   Output: "Success! Created proyecto_84459365..."
+
+2. npm install framer-motion zod
+   Output: "added 3 packages, audited 362 packages"
+
+3. npm install -D @types/node
+   Output: "up to date, audited 362 packages"
+
+4. npm run typecheck
+   Output: (sin errores) ✅
+```
+
+**Observaciones / Problemas encontrados:**
+1. **AJUSTE REALIZADO**: create-next-app incluyó src/ en la estructura, pero el plan especificaba --src-dir no. Se movió manualmente src/app → app y se eliminó src/. Este cambio es consistente con el plan --src-dir no.
+2. **RESOLUCIÓN**: Se limpió el cache de .next para evitar referencias stale a src/app.
+3. **AJUSTE MENOR**: Se removió la propiedad "eslint" de next.config.ts ya que no está disponible en NextConfig v16. Esto es normal en Next.js 16 (ESLint se configura directamente en eslint.config.mjs).
+4. **VERCEL NOTE**: El proyecto está configurado para despliegue en Vercel. No requiere changes adicionales de configuración en este momento.
+
+**Resultado:**  ✅ Completada — Sin errores críticos
+
+---
 
 **Archivos creados/modificados:**
 _— pendiente de registro —_
