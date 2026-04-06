@@ -25,22 +25,48 @@ Toda lectura ocurre ÚNICAMENTE en:
 ## 📄 Archivos Disponibles
 
 ### `config.json`
-Configuración global de la aplicación:
-- `appName`: Nombre de la aplicación
-- `version`: Versión actual
-- `locale`: Localización (ej: es-CO, en-US)
-- `theme`: Tema visual (light/dark)
+**Propósito:** Configuración global de la aplicación que se carga una sola vez.
 
-**Acceso:** `readAppConfig()` desde `lib/dataService.ts`
+**Estructura actual:**
+```json
+{
+  "appName": "Mi App TypeScript",      // Nombre único de la aplicación
+  "version": "1.0.0",                   // Versión semántica actual
+  "locale": "es-CO",                    // Localización (idioma-país)
+  "theme": "dark"                       // Tema visual: "light" o "dark"
+}
+```
+
+**Cuándo usarlo:** Valores globales que afectan toda la aplicación.  
+**Acceso:** `readAppConfig()` desde `lib/dataService.ts`  
+**Servidor-only:** ✅ Nunca exponer al cliente  
+
+---
 
 ### `home.json`
-Contenido de la página HOME:
-- `hero`: Sección principal con título, subtítulo, descripción, estilo de animación
-- `meta`: Metadata para SEO (pageTitle, description)
+**Propósito:** Contenido e información de la página HOME (Hola Mundo inicial).
 
-**Acceso:** `readHomeData()` desde `lib/dataService.ts`
+**Estructura actual:**
+```json
+{
+  "hero": {
+    "title": "Hola Mundo",              // Texto principal del héroe
+    "subtitle": "TypeScript + Next.js + Vercel",  // Subtítulo
+    "description": "Sistema fullstack funcionando correctamente.",
+    "animationStyle": "typewriter"      // Estilo: "typewriter", "fadeIn", "slideUp"
+  },
+  "meta": {
+    "pageTitle": "Home | Mi App",       // Título para <head>
+    "description": "Página principal del sistema"  // Meta description para SEO
+  }
+}
+```
 
-## ➕ Cómo Agregar Nuevos Archivos JSON
+**Cuándo usarlo:** Contenido de la página HOME, animación y metadata SEO.  
+**Acceso:** `readHomeData()` desde `lib/dataService.ts`  
+**Servidor-only:** ✅ Los datos se validan/envían desde servidor  
+
+---
 
 1. Crear un nuevo archivo `nombreArchivo.json` en esta carpeta
 2. Definir su interfaz TypeScript en `lib/types.ts`

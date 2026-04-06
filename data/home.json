@@ -1,0 +1,12 @@
+{
+  "hero": {
+    "title": "Hola Mundo",
+    "subtitle": "TypeScript + Next.js + Vercel",
+    "description": "Sistema fullstack funcionando correctamente.",
+    "animationStyle": "typewriter"
+  },
+  "meta": {
+    "pageTitle": "Home | Mi App",
+    "description": "Página principal del sistema"
+  }
+}
