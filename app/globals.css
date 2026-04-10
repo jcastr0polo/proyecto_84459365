@@ -1,26 +1,86 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Paleta de colores */
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --color-accent: #06b6d4;
+  --color-accent-light: rgba(6, 182, 212, 0.3);
+  --color-text-secondary: rgba(255, 255, 255, 0.6);
+  --color-text-tertiary: rgba(255, 255, 255, 0.4);
+  
+  /* Tipografía */
+  --font-display: var(--font-playfair);
+  --font-body: var(--font-poppins);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-accent: var(--color-accent);
+  --font-playfair: var(--font-playfair);
+  --font-poppins: var(--font-poppins);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Reset y normalización */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  width: 100%;
+  height: 100%;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#__next {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Estilos base para componentes */
+h1 {
+  font-family: var(--font-display), serif;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+p {
+  font-family: var(--font-body), sans-serif;
+  line-height: 1.5;
+}
+
+/* Clases de utilidad para animaciones */
+.font-playfair {
+  font-family: var(--font-display);
+}
+
+.font-poppins {
+  font-family: var(--font-body);
+}
+
+/* Eliminar bordes default en links */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Scroll behavior suave */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Estilos para tipografía elegante */
+@supports (font-variation-settings: normal) {
+  body {
+    font-variation-settings: "opsz" 32;
+  }
 }
