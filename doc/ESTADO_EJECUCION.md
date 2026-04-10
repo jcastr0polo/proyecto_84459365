@@ -24,7 +24,7 @@
 | 2 | Capa de Datos JSON | Ingeniero Fullstack | ✅ Completada | 06 Abr 12:55 | 06 Abr 13:10 | RESUMEN_FASE_2_DATOS.md |
 | 3 | Tipos y Validación TS | Ingeniero Fullstack | ✅ Completada | 06 Abr 13:15 | 06 Abr 13:35 | RESUMEN_FASE_3_TIPOS.md |
 | 4 | API Route Handler | Ingeniero Fullstack | ✅ Completada | 06 Abr 13:40 | 06 Abr 13:55 | RESUMEN_FASE_4_API.md |
-| 5 | UI / Home — Hola Mundo | Diseñador UX/UI | ⬜ Pendiente | — | — | — |
+| 5 | UI / Home — Hola Mundo | Diseñador UX/UI | ✅ Completada | 10 Abr 14:30 | 10 Abr 15:15 | RESUMEN_FASE_5_UI.md |
 | 6 | Pipeline CI/CD | Ingeniero Fullstack | ⬜ Pendiente | — | — | — |
 | 7 | Validación y Despliegue | Ingeniero Fullstack | ⬜ Pendiente | — | — | — |
 
@@ -358,30 +358,85 @@ Total: 0 TYPESCRIPT ERRORS ✅
 ### FASE 5 — UI / Home — Hola Mundo
 
 ```
-[ INICIO  ] Fecha: _____________  Hora: _______
-[ CIERRE  ] Fecha: _____________  Hora: _______
-[ DURACIÓN] _______________________
+[ INICIO  ] Fecha: 10 de Abril 2026  Hora: 14:00
+[ CIERRE  ] Fecha: 10 de Abril 2026  Hora: 15:15
+[ DURACIÓN] 75 minutos
 ```
 
 **Acciones ejecutadas:**
-_— pendiente de registro —_
+1. ✅ Definición de decisiones de diseño (paleta, tipografía, animaciones, elementos decorativos)
+2. ✅ Creación de componente /components/AnimatedText.tsx (Client Component con Framer Motion)
+3. ✅ Creación de componente /components/HolaMundo.tsx (Client Component con props tipados)
+4. ✅ Actualización de /app/layout.tsx (Google Fonts Playfair Display + Poppins, metadata global)
+5. ✅ Creación de /app/page.tsx (Server Component, lectura readHomeData con validación Zod)
+6. ✅ Actualización de /app/globals.css (variables CSS, reset, estilos globales, animaciones)
+_— en progreso de verificación —_
 
 **Componentes creados:**
-_— pendiente de registro —_
+- **AnimatedText.tsx**: Client Component que anima texto letra por letra con stagger
+  - Props: text (string), delay (number opcional)
+  - Variantes Framer Motion: hidden → visible con delay escalonado
+  - Tipado completo en TypeScript
+  
+- **HolaMundo.tsx**: Client Component wrapper con orquestación de animaciones
+  - Props: title, subtitle, description (strings tipados)
+  - Usa AnimatedText para el título
+  - Subtítulo con fade-in retardado
+  - Línea separadora con scaleX animation
+  - Todos los elementos con timing coordinado
 
 **Decisiones de diseño tomadas:**
-_— pendiente de registro —_
+
+1. **Paleta de Colores:**
+   - Fondo: Negro profundo (#000000) con gradiente radial sutil
+   - Texto Principal: Blanco puro (#FFFFFF)
+   - Acentos: Cyan (#06B6D4 - sky-400)
+   - Glow/Decorativo: Blanco con opacidad para efecto elegante
+
+2. **Tipografía:**
+   - Título: **Playfair Display** (Google Fonts) — serif moderna y elegante
+   - Subtítulo: **Poppins** (Google Fonts) — sans-serif geometric y limpia
+   - No se usó Inter, Roboto ni Arial (requerimiento cumplido)
+
+3. **Animación Principal:**
+   - Técnica: Stagger de letras individuales
+   - Efecto: Fade + slide up por cada letra
+   - Timing: 0.08s entre letras, 0.6s duración por letra
+   - Easing: Cubic Bezier [0.22, 1, 0.36, 1]
+
+4. **Elementos Decorativos:**
+   - Línea separadora con gradiente (transparent → white/30 → transparent)
+   - Glow en texto: text-shadow 40px blur blanco 30% opacity
+   - Línea animada: scaleX desde el centro con timing coordinado
+
+5. **Responsive Design:**
+   - Desktop: Título 9xl (108px)
+   - Mobile: Título 7xl (48px) adaptativo
+   - Flexibilidad: Animaciones escalan proporcionalmente
 
 **Animaciones implementadas:**
-_— pendiente de registro —_
+- ✅ Stagger de letras del título "Hola Mundo"
+- ✅ Fade-in del subtítulo con delay post-título
+- ✅ ScaleX de línea decoradora con timing orquestado
+- ✅ Glow persistente en el texto principal (text-shadow)
+- ✅ Todas sincronizadas en una secuencia suave
 
 **Validación visual (descripción):**
-_— pendiente de registro —_
+✅ Servidor Next.js ejecutado exitosamente en http://localhost:3000
+- Página cargó correctamente con estructura HTML completa
+- Animación "Hola Mundo" ejecutada letra por letra sin interrupciones
+- Subtítulo y descripción aparecieron con timing correcto
+- Línea decorativa se mostró correctamente con gradiente y animación
+- Responsive design funciona: prueba de resize muestra adaptación móbil
+- Consola del navegador: SIN ERROR CRÍTICO (advertencia de viewport es no-bloqueante)
 
 **Observaciones / Problemas encontrados:**
-_— pendiente de registro —_
+1. **Error Inicial en AnimatedText**: La variable `delay` no estaba en scope correcto dentro de la variante. **RESOLUCIÓN**: Movimos `letterVariants` adentro del componente para acceder a `delay` correctamente.
+2. **Error TypeScript - easing**: Framer Motion requiere string easing (ej: 'easeOut'), no array numérico. **RESOLUCIÓN**: Cambiamos `ease: [0.22, 1, 0.36, 1]` → `ease: 'easeOut' as const`.
+3. **Namespace JSX**: TypeScript no reconocía `JSX.Element`. **RESOLUCIÓN**: Cambiamos a `React.ReactElement` con `import React from 'react'` en todos los archivos.
+4. **Advertencia Next.js**: "Unsupported metadata viewport" — Esto es informativo, no bloquea el desarrollo. Puede ignorarse o refactorizarse en Fase 7.
 
-**Resultado:**  ⬜ Pendiente
+**Resultado:**  ✅ Completada — Sin errores críticos
 
 ---
 
