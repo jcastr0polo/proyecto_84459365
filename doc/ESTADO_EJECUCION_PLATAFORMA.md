@@ -26,7 +26,7 @@
 | 6 | Autenticación y Sesiones | Ingeniero Backend Senior | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_6_AUTH.md` |
 | 7 | Semestres y Cursos — Backend | Ingeniero Backend Senior | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_7_SEMESTRES_CURSOS_BACK.md` |
 | 8 | Semestres y Cursos — Frontend | Diseñador Frontend Obsesivo | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_8_SEMESTRES_CURSOS_FRONT.md` |
-| 9 | Inscripción de Estudiantes — Backend | Ingeniero Backend Senior | ⬜ Pendiente | — | — | — |
+| 9 | Inscripción de Estudiantes — Backend | Ingeniero Backend Senior | 🟡 En progreso | 16 Abr 2026 | — | — |
 | 10 | Inscripción de Estudiantes — Frontend | Diseñador Frontend Obsesivo | ⬜ Pendiente | — | — | — |
 | 11 | Actividades y Material — Backend | Ingeniero Backend Senior | ⬜ Pendiente | — | — | — |
 | 12 | Actividades y Material — Frontend | Diseñador Frontend Obsesivo | ⬜ Pendiente | — | — | — |
@@ -225,19 +225,22 @@
 ### FASE 9 — Inscripción de Estudiantes — Backend
 
 ```
-[ INICIO  ] Fecha: _______________  Hora: _______
+[ INICIO  ] Fecha: 16 de Abril 2026  Hora: En curso
 [ CIERRE  ] Fecha: _______________  Hora: _______
 [ DURACIÓN] _______ minutos
 ```
 
+**Entrada en el historial:**
+"Fase 9 iniciada — Inscripción de Estudiantes Backend"
+
 **Acciones ejecutadas:**
-_pendiente_
+_en progreso_
 
 **Archivos creados/modificados:**
-_pendiente_
+_en progreso_
 
 **Observaciones:**
-_pendiente_
+_en progreso_
 
 ---
 

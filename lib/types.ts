@@ -201,3 +201,59 @@ export interface UpdateCourseRequest {
   schedule?: CourseSchedule[];
   isActive?: boolean;
 }
+
+// ────────────────────────────────────────────────────────────
+// FASE 9 — Inscripción de Estudiantes
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Enrollment — Inscripción de un estudiante a un curso
+ * Se almacena en /data/enrollments.json
+ * Regla RN-INS-02: Un estudiante no puede estar inscrito dos veces al mismo curso activo
+ * Regla RN-INS-05: Se retira cambiando status, nunca se borra físicamente
+ */
+export interface Enrollment {
+  id: string;                    // UUID
+  courseId: string;              // FK → Course.id
+  studentId: string;            // FK → User.id (role: student)
+  status: 'active' | 'withdrawn';
+  enrolledAt: string;            // ISO timestamp
+  enrolledBy: string;            // adminId que inscribió
+  withdrawnAt?: string;          // ISO timestamp (solo si status === 'withdrawn')
+}
+
+/**
+ * EnrollStudentRequest — Datos para inscribir un estudiante
+ * Si el email no existe, se crea el usuario automáticamente
+ */
+export interface EnrollStudentRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  documentNumber: string;
+  phone?: string;
+}
+
+/**
+ * BulkEnrollRequest — Inscripción masiva
+ */
+export interface BulkEnrollRequest {
+  students: EnrollStudentRequest[];
+}
+
+/**
+ * EnrollmentWithStudent — Enrollment con datos del estudiante embebidos
+ * Usado en GET /api/courses/[id]/enrollments para listar con información completa
+ */
+export interface EnrollmentWithStudent extends Enrollment {
+  student: SafeUser;
+}
+
+/**
+ * BulkEnrollResult — Resultado de la inscripción masiva
+ */
+export interface BulkEnrollResult {
+  success: { enrollment: Enrollment; student: SafeUser; created: boolean }[];
+  alreadyEnrolled: { email: string; studentId: string }[];
+  errors: { email: string; error: string }[];
+}

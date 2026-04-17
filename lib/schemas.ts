@@ -169,3 +169,45 @@ export type UpdateSemesterZod = z.infer<typeof updateSemesterSchema>;
 export type CourseZod = z.infer<typeof courseSchema>;
 export type CreateCourseZod = z.infer<typeof createCourseSchema>;
 export type UpdateCourseZod = z.infer<typeof updateCourseSchema>;
+
+// ────────────────────────────────────────────────────────────
+// FASE 9 — INSCRIPCIÓN DE ESTUDIANTES SCHEMAS
+// ────────────────────────────────────────────────────────────
+
+/**
+ * enrollStudentSchema — Validación del body para inscribir un estudiante
+ */
+export const enrollStudentSchema = z.object({
+  firstName: z.string().min(1, 'Nombre es requerido').trim(),
+  lastName: z.string().min(1, 'Apellido es requerido').trim(),
+  email: z.string().email('Email inválido').trim().toLowerCase(),
+  documentNumber: z.string()
+    .regex(/^\d+$/, 'Documento debe ser numérico')
+    .min(5, 'Documento debe tener mínimo 5 dígitos'),
+  phone: z.string().optional(),
+});
+
+/**
+ * bulkEnrollSchema — Validación del body para inscripción masiva
+ */
+export const bulkEnrollSchema = z.object({
+  students: z.array(enrollStudentSchema).min(1, 'Al menos un estudiante es requerido'),
+});
+
+/**
+ * enrollmentSchema — Validación completa de un Enrollment en enrollments.json
+ */
+export const enrollmentSchema = z.object({
+  id: z.string().min(1),
+  courseId: z.string().min(1),
+  studentId: z.string().min(1),
+  status: z.enum(['active', 'withdrawn']),
+  enrolledAt: z.string(),
+  enrolledBy: z.string(),
+  withdrawnAt: z.string().optional(),
+});
+
+// Tipos inferidos — Inscripciones
+export type EnrollStudentZod = z.infer<typeof enrollStudentSchema>;
+export type BulkEnrollZod = z.infer<typeof bulkEnrollSchema>;
+export type EnrollmentZod = z.infer<typeof enrollmentSchema>;

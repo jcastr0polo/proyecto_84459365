@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { HomeDataSchema, AppConfigSchema } from './validators';
-import type { HomeData, AppConfig, User, Session, Semester, Course } from './types';
-import { userSchema, sessionSchema, semesterSchema, courseSchema } from './schemas';
+import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment } from './types';
+import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema } from './schemas';
 import { z } from 'zod';
 
 /**
@@ -203,4 +203,50 @@ export function getCourseById(id: string): Course | null {
 export function getCoursesBySemester(semesterId: string): Course[] {
   const courses = readCourses();
   return courses.filter((c) => c.semesterId === semesterId);
+}
+
+// ────────────────────────────────────────────────────────────
+// FASE 9 — Inscripciones (Enrollments)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Lee y valida /data/enrollments.json
+ */
+export function readEnrollments(): Enrollment[] {
+  const raw = readJsonFile<unknown[]>('enrollments.json');
+  return z.array(enrollmentSchema).parse(raw) as Enrollment[];
+}
+
+/**
+ * Escribe el array completo de enrollments en /data/enrollments.json
+ */
+export function writeEnrollments(enrollments: Enrollment[]): void {
+  writeJsonFile('enrollments.json', enrollments);
+}
+
+/**
+ * Lista inscripciones de un curso específico
+ */
+export function getEnrollmentsByCourse(courseId: string): Enrollment[] {
+  const enrollments = readEnrollments();
+  return enrollments.filter((e) => e.courseId === courseId);
+}
+
+/**
+ * Lista inscripciones de un estudiante específico
+ */
+export function getEnrollmentsByStudent(studentId: string): Enrollment[] {
+  const enrollments = readEnrollments();
+  return enrollments.filter((e) => e.studentId === studentId);
+}
+
+/**
+ * Verifica si un estudiante ya está inscrito (activo) en un curso
+ * RN-INS-02: No puede haber inscripción duplicada activa
+ */
+export function isStudentEnrolled(studentId: string, courseId: string): boolean {
+  const enrollments = readEnrollments();
+  return enrollments.some(
+    (e) => e.studentId === studentId && e.courseId === courseId && e.status === 'active'
+  );
 }
