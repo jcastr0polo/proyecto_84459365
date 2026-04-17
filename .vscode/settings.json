@@ -1,0 +1,4 @@
+{
+    "chat.agent.maxRequests": 500000000,
+    "chat.editing.autoAcceptDelay": 2
+}

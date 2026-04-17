@@ -40,3 +40,70 @@ export interface HomeData {
     description: string;         // Meta description para SEO
   };
 }
+
+// ────────────────────────────────────────────────────────────
+// FASE 6 — Autenticación y Sesiones
+// ────────────────────────────────────────────────────────────
+
+/**
+ * User — Usuario del sistema (admin o estudiante)
+ * Se almacena en /data/users.json
+ */
+export interface User {
+  id: string;
+  email: string;
+  passwordHash: string;
+  role: 'admin' | 'student';
+  mustChangePassword: boolean;
+  firstName: string;
+  lastName: string;
+  documentNumber: string;
+  phone?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string | null;
+}
+
+/**
+ * SafeUser — Datos del usuario sin información sensible (para respuestas API)
+ */
+export type SafeUser = Omit<User, 'passwordHash'>;
+
+/**
+ * Session — Sesión activa del usuario
+ * Se almacena en /data/sessions.json
+ */
+export interface Session {
+  id: string;
+  userId: string;
+  createdAt: string;
+  expiresAt: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+/**
+ * LoginRequest — Datos requeridos para iniciar sesión
+ */
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+/**
+ * LoginResponse — Datos retornados tras login exitoso
+ */
+export interface LoginResponse {
+  user: SafeUser;
+  mustChangePassword: boolean;
+}
+
+/**
+ * ChangePasswordRequest — Datos para cambiar contraseña
+ */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}

@@ -1,7 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { HomeDataSchema, AppConfigSchema } from './validators';
-import type { HomeData, AppConfig } from './types';
+import type { HomeData, AppConfig, User, Session } from './types';
+import { userSchema, sessionSchema } from './schemas';
+import { z } from 'zod';
 
 /**
  * Lee un archivo JSON de la carpeta /data y lo parsea con tipado genérico.
@@ -63,4 +65,72 @@ export function readHomeData(): HomeData {
 export function readAppConfig(): AppConfig {
   const raw = readJsonFile<AppConfig>('config.json');
   return AppConfigSchema.parse(raw);
+}
+
+// ────────────────────────────────────────────────────────────
+// Escritura genérica de JSON
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Escribe un objeto como JSON en la carpeta /data
+ * @param filename - Nombre del archivo (ej: "users.json")
+ * @param data - Objeto a serializar
+ */
+export function writeJsonFile<T>(filename: string, data: T): void {
+  const filePath = path.join(process.cwd(), 'data', filename);
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf-8');
+}
+
+// ────────────────────────────────────────────────────────────
+// FASE 6 — Usuarios
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Lee y valida /data/users.json
+ */
+export function readUsers(): User[] {
+  const raw = readJsonFile<unknown[]>('users.json');
+  return z.array(userSchema).parse(raw) as User[];
+}
+
+/**
+ * Escribe el array completo de usuarios en /data/users.json
+ */
+export function writeUsers(users: User[]): void {
+  writeJsonFile('users.json', users);
+}
+
+/**
+ * Busca un usuario por email (case-insensitive)
+ */
+export function getUserByEmail(email: string): User | null {
+  const users = readUsers();
+  return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null;
+}
+
+/**
+ * Busca un usuario por ID
+ */
+export function getUserById(id: string): User | null {
+  const users = readUsers();
+  return users.find((u) => u.id === id) ?? null;
+}
+
+// ────────────────────────────────────────────────────────────
+// FASE 6 — Sesiones
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Lee y valida /data/sessions.json
+ */
+export function readSessions(): Session[] {
+  const raw = readJsonFile<unknown[]>('sessions.json');
+  return z.array(sessionSchema).parse(raw) as Session[];
+}
+
+/**
+ * Escribe el array completo de sesiones en /data/sessions.json
+ */
+export function writeSessions(sessions: Session[]): void {
+  writeJsonFile('sessions.json', sessions);
 }
