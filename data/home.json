@@ -1,12 +1,12 @@
 {
   "hero": {
     "title": "Hola Mundo",
-    "subtitle": "TypeScript + Next.js + Vercel",
-    "description": "Sistema fullstack funcionando correctamente.",
+    "subtitle": "Plataforma de Gestión Académica | Fullstack TypeScript",
+    "description": "Construida con Next.js, React 19, TypeScript y Tailwind CSS. Un caso de estudio completo de desarrollo web moderno.",
     "animationStyle": "typewriter"
   },
   "meta": {
-    "pageTitle": "Home | Mi App",
-    "description": "Página principal del sistema"
+    "pageTitle": "Plataforma de Gestión Académica",
+    "description": "Sistema fullstack de gestión académica universitaria"
   }
 }

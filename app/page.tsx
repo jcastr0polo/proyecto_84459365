@@ -1,27 +1,36 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { readHomeData } from '@/lib/dataService';
-import HolaMundo from '@/components/HolaMundo';
+import LandingClient from '@/components/LandingClient';
 
 export const metadata: Metadata = {
-  title: 'Home | Mi App - TypeScript Fullstack',
-  description: 'Sistema fullstack TypeScript + Next.js + Vercel funcionando correctamente.',
-  authors: [{ name: 'Fullstack Engineer' }],
-  viewport: 'width=device-width, initial-scale=1',
+  title: 'Plataforma de Gestión Académica | Fullstack TypeScript',
+  description: 'Plataforma web de gestión académica universitaria construida con Next.js, TypeScript, React 19 y Tailwind CSS. Caso de estudio fullstack.',
+  authors: [{ name: 'Plataforma Académica' }],
   robots: 'index, follow',
+  openGraph: {
+    title: 'Plataforma de Gestión Académica',
+    description: 'Sistema fullstack de gestión académica universitaria. Next.js + TypeScript + React 19 + Tailwind CSS.',
+    type: 'website',
+    locale: 'es_CO',
+    siteName: 'Plataforma Académica',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Plataforma de Gestión Académica',
+    description: 'Sistema fullstack de gestión académica universitaria.',
+  },
+  keywords: ['gestión académica', 'Next.js', 'TypeScript', 'React', 'Tailwind CSS', 'Vercel', 'fullstack', 'universidad'],
 };
 
 export default function HomePage(): React.ReactElement {
-  // Lectura desde /data/home.json — solo en servidor
   const homeData = readHomeData();
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-black px-4">
-      <HolaMundo
-        title={homeData.hero.title}
-        subtitle={homeData.hero.subtitle}
-        description={homeData.hero.description}
-      />
-    </main>
+    <LandingClient
+      heroTitle={homeData.hero.title}
+      heroSubtitle={homeData.hero.subtitle}
+      heroDescription={homeData.hero.description}
+    />
   );
 }

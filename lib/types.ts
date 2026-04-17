@@ -605,3 +605,58 @@ export interface UpdatePromptRequest {
   isTemplate?: boolean;
   activityId?: string | null;
 }
+
+// ────────────────────────────────────────────────────────────
+// FASE 19 — Proyectos Estudiantiles
+// ────────────────────────────────────────────────────────────
+
+/**
+ * StudentProject — Proyecto fullstack registrado por un estudiante
+ * Se almacena en /data/projects.json
+ * RN-PRY-01: Estudiante registra con GitHub URL obligatorio
+ * RN-PRY-02: Validación de URLs (GitHub, Vercel)
+ * RN-PRY-03: isPublic && isFeatured → vitrina pública
+ * RN-PRY-04: Solo admin marca isFeatured
+ */
+export interface StudentProject {
+  id: string;                          // UUID
+  studentId: string;                   // FK a User.id
+  courseId: string;                     // FK a Course.id
+  activityId?: string;                 // FK a Activity.id (si vinculado)
+  projectName: string;                 // "Mi Portafolio Web"
+  description?: string;                // Descripción del proyecto
+  githubUrl: string;                   // URL del repositorio (obligatorio)
+  vercelUrl?: string;                  // URL del deploy en Vercel
+  figmaUrl?: string;                   // URL de prototipo en Figma
+  isPublic: boolean;                   // ¿Compartir en vitrina pública?
+  isFeatured: boolean;                 // ¿Destacado por el docente?
+  status: 'in-progress' | 'submitted' | 'reviewed' | 'featured';
+  createdAt: string;                   // ISO 8601
+  updatedAt: string;                   // ISO 8601
+}
+
+/**
+ * CreateProjectRequest — Datos para registrar un proyecto
+ */
+export interface CreateProjectRequest {
+  projectName: string;
+  description?: string;
+  githubUrl: string;
+  vercelUrl?: string;
+  figmaUrl?: string;
+  isPublic?: boolean;
+}
+
+/**
+ * UpdateProjectRequest — Datos para actualizar un proyecto
+ */
+export interface UpdateProjectRequest {
+  projectName?: string;
+  description?: string;
+  githubUrl?: string;
+  vercelUrl?: string;
+  figmaUrl?: string;
+  isPublic?: boolean;
+  isFeatured?: boolean;
+  status?: StudentProject['status'];
+}

@@ -36,10 +36,10 @@
 | 16 | Calificaciones y Notas — Frontend | Diseñador Frontend Obsesivo | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_16_CALIFICACIONES_FRONT.md` |
 | 17 | Exportación de Notas | Ingeniero Backend Senior + Experto Educación | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_17_EXPORTACION.md` |
 | 18 | Prompts de IA — Backend y Frontend | Ingeniero Fullstack + Experto en IA Educativa | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_18_PROMPTS.md` |
-| 19 | Proyectos Estudiantiles y Vitrina | Diseñador UX/UI + Ingeniero Fullstack | ⬜ Pendiente | — | — | — |
-| 20 | Dashboards — Admin | Diseñador Frontend Obsesivo | ⬜ Pendiente | — | — | — |
-| 21 | Dashboards — Estudiante | Diseñador Frontend Obsesivo + Experto UX Educativo | ⬜ Pendiente | — | — | — |
-| 22 | Landing Pública y Vitrina | Diseñador UX/UI Senior | ⬜ Pendiente | — | — | — |
+| 19 | Proyectos Estudiantiles y Vitrina | Diseñador UX/UI + Ingeniero Fullstack | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_19_PROYECTOS_VITRINA.md` |
+| 20 | Dashboards — Admin | Diseñador Frontend Obsesivo | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_20_DASHBOARD_ADMIN.md` |
+| 21 | Dashboards — Estudiante | Diseñador Frontend Obsesivo + Experto UX Educativo | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_21_DASHBOARD_ESTUDIANTE.md` |
+| 22 | Landing Pública y Vitrina | Diseñador UX/UI Senior | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_22_LANDING.md` |
 | 23 | Navegación, Layout y Temas | Diseñador de Sistemas de Diseño | ⬜ Pendiente | — | — | — |
 | 24 | Seguridad, Validación y Errores | Ingeniero de Seguridad + QA | ⬜ Pendiente | — | — | — |
 | 25 | Pulido Final y Deploy | Ingeniero Fullstack Senior + QA | ⬜ Pendiente | — | — | — |
@@ -673,76 +673,149 @@
 ### FASE 19 — Proyectos Estudiantiles y Vitrina
 
 ```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+[ INICIO  ] Fecha: 17 de Abril 2026
+[ CIERRE  ] Fecha: 17 de Abril 2026
+[ DURACIÓN] Sesión única
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Crear data/projects.json (array vacío)
+2. Agregar tipos StudentProject, CreateProjectRequest, UpdateProjectRequest en lib/types.ts
+3. Agregar githubUrlSchema, vercelUrlSchema, projectSchema, createProjectSchema, updateProjectSchema en lib/schemas.ts
+4. Agregar readProjects, writeProjects, getProjectById, getProjectsByCourse, getProjectByStudentAndCourse en lib/dataService.ts
+5. Crear app/api/projects/route.ts — GET (listar con filtros: courseId, featured, public) + POST (crear, estudiante autenticado)
+6. Crear app/api/projects/[id]/route.ts — GET (detalle con enrichment) + PUT (actualizar; admin: isFeatured/status; estudiante: campos propios)
+7. Crear app/student/courses/[courseId]/project/page.tsx — Registro/edición con validación de URLs, toggle público, preview de vitrina
+8. Crear app/admin/courses/[courseId]/projects/page.tsx — Grid de proyectos, toggle destacar (⭐), links externos, control de estado
+9. Crear app/showcase/ShowcaseClient.tsx — Client component con framer-motion stagger animations, cards con hover effects y gradientes
+10. Crear app/showcase/page.tsx — Server component público (sin auth), lee datos de dataService, filtra isPublic && isFeatured
+11. TypeScript: 0 errores | ESLint: 0 errores nuevos
 
 **Archivos creados/modificados:**
-_pendiente_
+- CREATE: data/projects.json
+- CREATE: app/api/projects/route.ts
+- CREATE: app/api/projects/[id]/route.ts
+- CREATE: app/student/courses/[courseId]/project/page.tsx
+- CREATE: app/admin/courses/[courseId]/projects/page.tsx
+- CREATE: app/showcase/page.tsx (Server Component)
+- CREATE: app/showcase/ShowcaseClient.tsx (Client Component + framer-motion)
+- CREATE: doc/RESUMEN_FASE_19_PROYECTOS_VITRINA.md
+- MODIFY: lib/types.ts (StudentProject + request interfaces)
+- MODIFY: lib/schemas.ts (project schemas + URL validators)
+- MODIFY: lib/dataService.ts (funciones CRUD proyectos)
 
 **Observaciones:**
-_pendiente_
+- Showcase es Server Component que pasa datos a Client Component para animaciones
+- Validación de URLs: GitHub debe empezar con https://github.com/, Vercel debe terminar en .vercel.app
+- Solo admin puede marcar isFeatured (RN-PRY-04)
+- Solo isPublic && isFeatured aparecen en la vitrina pública
+- Estudiante ve preview de cómo se verá su proyecto en la vitrina
+- Cards con gradientes sutiles cyan/purple, hover effects, stagger entry animations
 
 ---
 
 ### FASE 20 — Dashboards — Admin
 
 ```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+[ INICIO  ] Fecha: 17 de Abril 2026
+[ CIERRE  ] Fecha: 17 de Abril 2026
+[ DURACIÓN] Sesión única
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Crear components/dashboard/StatCard.tsx — Métrica con número animado (spring counter), skeleton loading, breakdown de detalles
+2. Crear components/dashboard/CourseCard.tsx — Card de curso con gradiente por categoría, mini-stats (estudiantes, actividades, pendientes), horarios, click to navigate
+3. Crear components/dashboard/DeadlineList.tsx — Lista de vencimientos con código de color urgencia (rojo <2d, ámbar <5d, verde >5d), barra de completitud
+4. Crear components/dashboard/ActivityTimeline.tsx — Timeline vertical de eventos recientes con iconos por tipo, timestamps relativos
+5. Reemplazar app/admin/page.tsx — Dashboard ejecutivo completo con 4 widgets de stats, grid de cursos, deadlines, timeline
+6. Fetching paralelo: semesters + courses, luego per-course enrollments + activities + submissions
+7. TypeScript: 0 errores | ESLint: 0 errores
 
 **Archivos creados/modificados:**
-_pendiente_
+- CREATE: components/dashboard/StatCard.tsx
+- CREATE: components/dashboard/CourseCard.tsx
+- CREATE: components/dashboard/DeadlineList.tsx
+- CREATE: components/dashboard/ActivityTimeline.tsx
+- MODIFY: app/admin/page.tsx (reemplazo completo del dashboard placeholder)
 
 **Observaciones:**
-_pendiente_
+- Animated number counter usa useSpring + useTransform de Framer Motion
+- useSyncExternalStore para detección de hydration (client vs server)
+- Cada widget tiene skeleton loading independiente
+- Responsive: 4-col → 2-col → 1-col para stats, 3-col → 2-col → 1-col para cursos
+- Pending grading se calcula desde status de submissions (submitted/resubmitted)
+- Timeline agrega: entregas, calificaciones, inscripciones, actividades — ordena por fecha, top 15
 
 ---
 
 ### FASE 21 — Dashboards — Estudiante
 
 ```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+[ INICIO  ] Fecha: 17 Abr 2026  Hora: —
+[ CIERRE  ] Fecha: 17 Abr 2026  Hora: —
+[ DURACIÓN] — minutos
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Leer PLAN secciones 13.3 (wireframe dashboard estudiante) y 6.10 (RF-CFG-02)
+2. Crear app/student/layout.tsx — Layout completo con sidebar, navegación (Dashboard, Mis Cursos, Perfil), sección de usuario, logout, link a cambio de contraseña
+3. Crear app/student/page.tsx — Dashboard con saludo personalizado, quick stats (cursos, pendientes, entregadas, calificadas), grid de cursos inscritos, lista de pendientes con urgencia visual, notas recientes con color por rango
+4. Crear app/student/courses/page.tsx — Grid de cursos inscritos con detalle completo: horarios, modalidad, room, stats de actividades
+5. Crear app/student/courses/[courseId]/page.tsx — Dashboard del curso: badge categoría, nota acumulada prominente, horario, acciones rápidas (actividades/notas/proyecto), lista de actividades con estado de entrega y countdown
+6. Crear app/student/profile/page.tsx — Perfil del estudiante: datos personales (nombre, email, documento, teléfono), cursos inscritos, enlace a cambiar contraseña
+7. Reescribir app/change-password/page.tsx — De inline styles a Tailwind, agregar indicador de fortaleza (5 segmentos), reglas visibles (8 chars, mayúscula, número, coincidencia), toggle mostrar/ocultar contraseña, validación visual en campos
+8. Validar TypeScript (0 errores) y ESLint (0 errores, 0 warnings en archivos nuevos)
 
 **Archivos creados/modificados:**
-_pendiente_
+- `app/student/layout.tsx` (creado)
+- `app/student/page.tsx` (creado)
+- `app/student/courses/page.tsx` (creado)
+- `app/student/courses/[courseId]/page.tsx` (creado)
+- `app/student/profile/page.tsx` (creado)
+- `app/change-password/page.tsx` (reescrito)
 
 **Observaciones:**
-_pendiente_
+- Dashboard sigue wireframe 13.3: saludo → cursos → pendientes → notas
+- Urgencia visual: 🔴 vencida / ⚠️ urgente (<2d) / 🔶 próximo (<7d) / 🟢 tranquilo
+- Notas con colores: verde ≥4.0, ámbar ≥3.0, rojo <3.0 (escala colombiana)
+- Student layout incluye sidebar con links a Dashboard, Mis Cursos, Perfil
+- Course dashboard muestra horario prominente + nota acumulada + actividades con delivery status
+- Change-password: indicador de fortaleza con 5 niveles, reglas visibles con checkmarks en tiempo real
 
 ---
 
 ### FASE 22 — Landing Pública y Vitrina
 
 ```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+[ INICIO  ] Fecha: 17 Abr 2026  Hora: —
+[ CIERRE  ] Fecha: 17 Abr 2026  Hora: —
+[ DURACIÓN] — minutos
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Leer PLAN secciones 1 (visión), 11.1 (rutas públicas), 16.4
+2. Crear components/LandingClient.tsx — Componente cliente completo con 5 secciones: Navbar fija, Hero animado, Cursos del Semestre, ¿Cómo funciona?, Stack Tecnológico, Footer
+3. Reescribir app/page.tsx — Server component que pasa datos de home.json a LandingClient
+4. Actualizar app/layout.tsx — Separar viewport en export dedicado, metadata template con OG tags, themeColor, favicon, metadataBase
+5. Actualizar data/home.json — Subtitle y description acordes a landing
+6. Animaciones: Hero con stagger (AnimatedText), secciones con fade-in al scroll (useInView), cards con hover effect (whileHover), línea decorativa con scaleX
+7. Validar TypeScript (0 errores) y ESLint (0 errores, 0 warnings)
 
 **Archivos creados/modificados:**
-_pendiente_
+- `components/LandingClient.tsx` (creado)
+- `app/page.tsx` (reescrito)
+- `app/layout.tsx` (actualizado — viewport separado, OG tags)
+- `data/home.json` (actualizado)
 
 **Observaciones:**
-_pendiente_
+- Landing inspirada en Vercel/Linear/Stripe: minimalismo, espaciado generoso, tipografía grande
+- Navbar fija con backdrop-blur, botón "Iniciar Sesión" y link "Vitrina"
+- Hero mantiene AnimatedText de Fase 5 (letter-by-letter stagger) como identidad visual
+- Cursos se cargan dinámicamente via GET /api/courses con fallback estático
+- Sección "¿Cómo funciona?" con 4 pasos: creación → IA → entrega → feedback
+- Stack grid: Next.js, TypeScript, React 19, Tailwind, Vercel, GitHub + resumen 100% TS / JSON DB / IA
+- Footer: marca del semestre, links, crédito "Construido con Next.js + TypeScript + IA"
+- viewport export separado (Next.js 14+ best practice, elimina deprecation warning)
 
 ---
 

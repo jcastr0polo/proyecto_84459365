@@ -471,3 +471,83 @@ export const updatePromptSchema = z.object({
 export type PromptZod = z.infer<typeof promptSchema>;
 export type CreatePromptZod = z.infer<typeof createPromptSchema>;
 export type UpdatePromptZod = z.infer<typeof updatePromptSchema>;
+
+// ────────────────────────────────────────────────────────────
+// FASE 19 — PROYECTOS ESTUDIANTILES SCHEMAS
+// ────────────────────────────────────────────────────────────
+
+/**
+ * githubUrlSchema — Validación de URL de GitHub
+ * RN-PRY-02: Debe empezar con https://github.com/
+ */
+const githubUrlSchema = z.string()
+  .url('URL de GitHub inválida')
+  .refine((url) => url.startsWith('https://github.com/'), {
+    message: 'La URL de GitHub debe empezar con https://github.com/',
+  });
+
+/**
+ * vercelUrlSchema — Validación de URL de Vercel
+ * RN-PRY-02: Debe ser HTTPS y terminar en .vercel.app
+ */
+const vercelUrlSchema = z.string()
+  .url('URL de Vercel inválida')
+  .refine((url) => {
+    try {
+      const u = new URL(url);
+      return u.protocol === 'https:' && u.hostname.endsWith('.vercel.app');
+    } catch { return false; }
+  }, { message: 'La URL de Vercel debe ser HTTPS y terminar en .vercel.app' });
+
+/**
+ * projectSchema — Validación completa de un StudentProject en projects.json
+ */
+export const projectSchema = z.object({
+  id: z.string().min(1),
+  studentId: z.string().min(1),
+  courseId: z.string().min(1),
+  activityId: z.string().optional(),
+  projectName: z.string().min(1),
+  description: z.string().optional(),
+  githubUrl: githubUrlSchema,
+  vercelUrl: vercelUrlSchema.optional(),
+  figmaUrl: z.string().url().optional(),
+  isPublic: z.boolean(),
+  isFeatured: z.boolean(),
+  status: z.enum(['in-progress', 'submitted', 'reviewed', 'featured']),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+/**
+ * createProjectSchema — Validación del body de POST /api/projects
+ * RN-PRY-01: GitHub URL obligatorio
+ */
+export const createProjectSchema = z.object({
+  projectName: z.string().min(1, 'El nombre del proyecto es requerido').max(150).trim(),
+  description: z.string().max(1000, 'La descripción no puede exceder 1000 caracteres').optional(),
+  githubUrl: githubUrlSchema,
+  vercelUrl: vercelUrlSchema.optional().or(z.literal('')),
+  figmaUrl: z.string().url('URL de Figma inválida').optional().or(z.literal('')),
+  isPublic: z.boolean().optional().default(false),
+});
+
+/**
+ * updateProjectSchema — Validación del body de PUT /api/projects/[id]
+ * RN-PRY-04: isFeatured solo puede ser seteado por admin (validar en API)
+ */
+export const updateProjectSchema = z.object({
+  projectName: z.string().min(1).max(150).trim().optional(),
+  description: z.string().max(1000).optional(),
+  githubUrl: githubUrlSchema.optional(),
+  vercelUrl: vercelUrlSchema.optional().or(z.literal('')),
+  figmaUrl: z.string().url().optional().or(z.literal('')),
+  isPublic: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  status: z.enum(['in-progress', 'submitted', 'reviewed', 'featured']).optional(),
+});
+
+// Tipos inferidos — Proyectos
+export type ProjectZod = z.infer<typeof projectSchema>;
+export type CreateProjectZod = z.infer<typeof createProjectSchema>;
+export type UpdateProjectZod = z.infer<typeof updateProjectSchema>;

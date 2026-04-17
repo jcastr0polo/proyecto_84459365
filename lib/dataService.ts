@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { HomeDataSchema, AppConfigSchema } from './validators';
-import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt } from './types';
-import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema } from './schemas';
+import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject } from './types';
+import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema } from './schemas';
 import { z } from 'zod';
 
 /**
@@ -432,4 +432,48 @@ export function getPromptsByCourse(courseId: string): AIPrompt[] {
 export function getPromptByActivity(activityId: string): AIPrompt | null {
   const prompts = readPrompts();
   return prompts.find((p) => p.activityId === activityId) ?? null;
+}
+
+// ────────────────────────────────────────────────────────────
+// FASE 19 — Proyectos Estudiantiles
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Lee y valida /data/projects.json
+ */
+export function readProjects(): StudentProject[] {
+  const raw = readJsonFile<unknown[]>('projects.json');
+  return z.array(projectSchema).parse(raw) as StudentProject[];
+}
+
+/**
+ * Escribe el array completo de proyectos en /data/projects.json
+ */
+export function writeProjects(projects: StudentProject[]): void {
+  writeJsonFile('projects.json', projects);
+}
+
+/**
+ * Busca un proyecto por ID
+ */
+export function getProjectById(id: string): StudentProject | null {
+  const projects = readProjects();
+  return projects.find((p) => p.id === id) ?? null;
+}
+
+/**
+ * Lista proyectos de un curso específico
+ */
+export function getProjectsByCourse(courseId: string): StudentProject[] {
+  const projects = readProjects();
+  return projects.filter((p) => p.courseId === courseId);
+}
+
+/**
+ * Busca el proyecto de un estudiante en un curso específico
+ * Un estudiante solo puede tener un proyecto por curso
+ */
+export function getProjectByStudentAndCourse(studentId: string, courseId: string): StudentProject | null {
+  const projects = readProjects();
+  return projects.find((p) => p.studentId === studentId && p.courseId === courseId) ?? null;
 }

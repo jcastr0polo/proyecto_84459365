@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Poppins } from "next/font/google";
 import "./globals.css";
 
@@ -14,12 +14,29 @@ const poppins = Poppins({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#000000",
+};
+
 export const metadata: Metadata = {
-  title: "Home | Mi App - TypeScript Fullstack",
-  description: "Sistema fullstack TypeScript + Next.js + Vercel funcionando correctamente.",
-  authors: [{ name: "Fullstack Engineer" }],
-  viewport: "width=device-width, initial-scale=1",
+  title: {
+    default: "Plataforma de Gestión Académica",
+    template: "%s | Plataforma Académica",
+  },
+  description: "Plataforma web de gestión académica universitaria. Fullstack TypeScript + Next.js + React 19.",
+  authors: [{ name: "Plataforma Académica" }],
   robots: "index, follow",
+  icons: {
+    icon: "/favicon.ico",
+  },
+  metadataBase: new URL("https://plataforma-academica.vercel.app"),
+  openGraph: {
+    type: "website",
+    locale: "es_CO",
+    siteName: "Plataforma Académica",
+  },
 };
 
 export default function RootLayout({
