@@ -26,7 +26,7 @@
 | 6 | Autenticación y Sesiones | Ingeniero Backend Senior | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_6_AUTH.md` |
 | 7 | Semestres y Cursos — Backend | Ingeniero Backend Senior | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_7_SEMESTRES_CURSOS_BACK.md` |
 | 8 | Semestres y Cursos — Frontend | Diseñador Frontend Obsesivo | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_8_SEMESTRES_CURSOS_FRONT.md` |
-| 9 | Inscripción de Estudiantes — Backend | Ingeniero Backend Senior | 🟡 En progreso | 16 Abr 2026 | — | — |
+| 9 | Inscripción de Estudiantes — Backend | Ingeniero Backend Senior | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_9_INSCRIPCIONES_BACK.md` |
 | 10 | Inscripción de Estudiantes — Frontend | Diseñador Frontend Obsesivo | ⬜ Pendiente | — | — | — |
 | 11 | Actividades y Material — Backend | Ingeniero Backend Senior | ⬜ Pendiente | — | — | — |
 | 12 | Actividades y Material — Frontend | Diseñador Frontend Obsesivo | ⬜ Pendiente | — | — | — |
@@ -226,21 +226,49 @@
 
 ```
 [ INICIO  ] Fecha: 16 de Abril 2026  Hora: En curso
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+[ CIERRE  ] Fecha: 16 de Abril 2026  Hora: Completada
+[ DURACIÓN] Sesión única
 ```
 
 **Entrada en el historial:**
-"Fase 9 iniciada — Inscripción de Estudiantes Backend"
+"Fase 9 completada — Inscripción de Estudiantes Backend con lógica de negocio, creación automática de usuarios, inscripción individual y masiva, 6 endpoints API"
 
 **Acciones ejecutadas:**
-_en progreso_
+
+1. Crear data/enrollments.json (array vacío)
+2. Actualizar lib/types.ts — interfaces Enrollment, EnrollStudentRequest, BulkEnrollRequest, EnrollmentWithStudent, BulkEnrollResult
+3. Actualizar lib/schemas.ts — Zod: enrollStudentSchema, bulkEnrollSchema, enrollmentSchema
+4. Actualizar lib/dataService.ts — funciones: readEnrollments, writeEnrollments, getEnrollmentsByCourse, getEnrollmentsByStudent, isStudentEnrolled
+5. Crear lib/enrollmentService.ts — lógica enrollStudent (buscar/crear usuario + inscribir), bulkEnroll (masivo con resumen), EnrollmentError
+6. Crear app/api/courses/[id]/enrollments/route.ts — GET (listar inscritos con SafeUser), POST (inscribir individual)
+7. Crear app/api/courses/[id]/enrollments/bulk/route.ts — POST (inscripción masiva con resumen)
+8. Crear app/api/courses/[id]/enrollments/[enrollId]/route.ts — DELETE (retiro soft: status → withdrawn)
+9. Crear app/api/students/route.ts — GET (buscar estudiantes por nombre/email/documento)
+10. Crear app/api/students/[id]/route.ts — GET (perfil + cursos inscritos, admin o propio)
+11. TypeScript typecheck + ESLint: 0 errores, 0 warnings de Fase 9
 
 **Archivos creados/modificados:**
-_en progreso_
+
+- ✅ `data/enrollments.json` — CREADO
+- ✅ `lib/types.ts` — MODIFICADO (tipos Fase 9)
+- ✅ `lib/schemas.ts` — MODIFICADO (schemas Zod Fase 9)
+- ✅ `lib/dataService.ts` — MODIFICADO (funciones CRUD enrollments)
+- ✅ `lib/enrollmentService.ts` — CREADO
+- ✅ `app/api/courses/[id]/enrollments/route.ts` — CREADO
+- ✅ `app/api/courses/[id]/enrollments/bulk/route.ts` — CREADO
+- ✅ `app/api/courses/[id]/enrollments/[enrollId]/route.ts` — CREADO
+- ✅ `app/api/students/route.ts` — CREADO
+- ✅ `app/api/students/[id]/route.ts` — CREADO
 
 **Observaciones:**
-_en progreso_
+
+- enrollStudent crea usuario automáticamente si el email no existe (role: student, password: bcrypt(documentNumber), mustChangePassword: true)
+- inscripción duplicada activa rechazada con 409 (RN-INS-02)
+- Retiro es soft-delete: status → 'withdrawn' + withdrawnAt timestamp (RN-INS-05)
+- bulkEnroll retorna resumen detallado: {success, alreadyEnrolled, errors}
+- Estudiantes solo pueden ver su propio perfil (403 si intentan ver otro)
+- Búsqueda de estudiantes funciona por nombre, apellido, email o documento
+- EnrollmentError con statusCode y code para respuestas HTTP coherentes
 
 ---
 
