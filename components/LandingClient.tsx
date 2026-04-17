@@ -1,30 +1,46 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { motion, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import AnimatedText from '@/components/AnimatedText';
 import type { Course } from '@/lib/types';
 
-/* ─── Section wrapper with scroll animation ─── */
-function Section({ children, className = '', delay = 0 }: {
+/* ─── Section wrapper with CSS scroll reveal (SSR-safe) ─── */
+function Section({ children, className = '' }: {
   children: React.ReactNode;
   className?: string;
-  delay?: number;
 }) {
-  const ref = React.useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
+  const ref = React.useRef<HTMLElement>(null);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    // If already in viewport, mark visible immediately
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 80) {
+      el.classList.add('visible');
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '-80px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <motion.section
-      ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-      transition={{ duration: 0.7, delay, ease: 'easeOut' }}
-      className={className}
-    >
+    <section ref={ref} className={`scroll-reveal ${className}`}>
       {children}
-    </motion.section>
+    </section>
   );
 }
 
@@ -72,12 +88,12 @@ const STEPS = [
   },
 ];
 
-const categoryConfig: Record<string, { gradient: string; badge: string; badgeBg: string }> = {
-  programming: { gradient: 'from-cyan-500/[0.1] to-blue-500/[0.03]', badge: 'Programación', badgeBg: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
-  design: { gradient: 'from-purple-500/[0.1] to-pink-500/[0.03]', badge: 'Diseño', badgeBg: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
-  management: { gradient: 'from-amber-500/[0.1] to-orange-500/[0.03]', badge: 'Gerencia', badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  leadership: { gradient: 'from-emerald-500/[0.1] to-teal-500/[0.03]', badge: 'Liderazgo', badgeBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  other: { gradient: 'from-white/[0.04] to-white/[0.01]', badge: 'Otro', badgeBg: 'bg-white/10 text-white/60 border-white/20' },
+const categoryConfig: Record<string, { gradientStyle: string; badge: string; badgeStyle: React.CSSProperties }> = {
+  programming: { gradientStyle: 'linear-gradient(135deg, rgba(6,182,212,0.1), rgba(59,130,246,0.03))', badge: 'Programación', badgeStyle: { background: 'rgba(6,182,212,0.1)', color: '#22d3ee', borderColor: 'rgba(6,182,212,0.2)' } },
+  design: { gradientStyle: 'linear-gradient(135deg, rgba(168,85,247,0.1), rgba(236,72,153,0.03))', badge: 'Diseño', badgeStyle: { background: 'rgba(168,85,247,0.1)', color: '#c084fc', borderColor: 'rgba(168,85,247,0.2)' } },
+  management: { gradientStyle: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.03))', badge: 'Gerencia', badgeStyle: { background: 'rgba(245,158,11,0.1)', color: '#fbbf24', borderColor: 'rgba(245,158,11,0.2)' } },
+  leadership: { gradientStyle: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(20,184,166,0.03))', badge: 'Liderazgo', badgeStyle: { background: 'rgba(16,185,129,0.1)', color: '#34d399', borderColor: 'rgba(16,185,129,0.2)' } },
+  other: { gradientStyle: 'linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))', badge: 'Otro', badgeStyle: { background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.2)' } },
 };
 
 /**
@@ -85,15 +101,9 @@ const categoryConfig: Record<string, { gradient: string; badge: string; badgeBg:
  * Fase 22 — Inspired by Vercel, Linear, and Stripe landing pages
  */
 export default function LandingClient({ heroTitle, heroSubtitle, heroDescription }: LandingClientProps) {
-  const [courses, setCourses] = useState<Course[]>([]);
+  // Use fallback courses directly — /api/courses requires auth
+  const courses = FALLBACK_COURSES;
   const titleAnimationDuration = heroTitle.length * 0.08 + 0.6;
-
-  useEffect(() => {
-    fetch('/api/courses')
-      .then((r) => r.ok ? r.json() : { courses: [] })
-      .then((data) => setCourses(data.courses ?? []))
-      .catch(() => {});
-  }, []);
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
@@ -230,7 +240,7 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {(courses.length > 0 ? courses : FALLBACK_COURSES).map((course, i) => {
+            {courses.map((course, i) => {
               const cfg = categoryConfig[course.category] ?? categoryConfig.other;
               return (
                 <motion.div
@@ -240,12 +250,13 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
                   viewport={{ once: true, margin: '-40px' }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                   whileHover={{ y: -4, transition: { duration: 0.15 } }}
-                  className={`
-                    rounded-2xl border border-white/[0.08] bg-gradient-to-br ${cfg.gradient}
-                    p-6 hover:border-white/15 transition-colors
-                  `}
+                  className="rounded-2xl border border-white/[0.08] p-6 hover:border-white/15 transition-colors"
+                  style={{ background: cfg.gradientStyle }}
                 >
-                  <div className={`inline-flex px-2.5 py-1 rounded-full border text-[10px] font-medium mb-4 ${cfg.badgeBg}`}>
+                  <div
+                    className="inline-flex px-2.5 py-1 rounded-full border text-[10px] font-medium mb-4"
+                    style={cfg.badgeStyle}
+                  >
                     {cfg.badge}
                   </div>
                   <h3 className="text-lg font-semibold text-white/90 mb-2 line-clamp-2">{course.name}</h3>

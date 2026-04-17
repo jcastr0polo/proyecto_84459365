@@ -1,6 +1,6 @@
 {
   "hero": {
-    "title": "Hola Mundo",
+    "title": "Gestión Académica",
     "subtitle": "Plataforma de Gestión Académica | Fullstack TypeScript",
     "description": "Construida con Next.js, React 19, TypeScript y Tailwind CSS. Un caso de estudio completo de desarrollo web moderno.",
     "animationStyle": "typewriter"

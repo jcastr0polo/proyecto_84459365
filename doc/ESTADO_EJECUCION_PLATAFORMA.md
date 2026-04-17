@@ -40,7 +40,7 @@
 | 20 | Dashboards — Admin | Diseñador Frontend Obsesivo | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_20_DASHBOARD_ADMIN.md` |
 | 21 | Dashboards — Estudiante | Diseñador Frontend Obsesivo + Experto UX Educativo | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_21_DASHBOARD_ESTUDIANTE.md` |
 | 22 | Landing Pública y Vitrina | Diseñador UX/UI Senior | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_22_LANDING.md` |
-| 23 | Navegación, Layout y Temas | Diseñador de Sistemas de Diseño | 🟡 En curso | 17 Abr 2026 | — | — |
+| 23 | Navegación, Layout y Temas | Diseñador de Sistemas de Diseño | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_23_LAYOUT_TEMAS.md` |
 | 24 | Seguridad, Validación y Errores | Ingeniero de Seguridad + QA | ⬜ Pendiente | — | — | — |
 | 25 | Pulido Final y Deploy | Ingeniero Fullstack Senior + QA | ⬜ Pendiente | — | — | — |
 
@@ -822,19 +822,43 @@
 ### FASE 23 — Navegación, Layout y Temas
 
 ```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+[ INICIO  ] Fecha: 17 Abr 2026  Hora: —
+[ CIERRE  ] Fecha: 17 Abr 2026  Hora: —
+[ DURACIÓN] — minutos
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Leer PLAN secciones 7.3 (usabilidad), 11 (rutas), 13 (wireframes)
+2. Crear components/ThemeProvider.tsx — Context + ThemeToggle + localStorage + prefers-color-scheme + useSyncExternalStore hydration
+3. Reescribir app/globals.css — Full dark/light CSS variable token system (backgrounds, surfaces, text, accent, semantic, shadows, radii, spacing, transitions)
+4. Actualizar app/layout.tsx — ThemeProvider wrapper, suppressHydrationWarning, token-based body classes
+5. Reescribir app/admin/layout.tsx — Agregar nav items (Estudiantes, Configuración), breadcrumbs, semester badge, ThemeToggle, change-password link, tokens CSS
+6. Reescribir app/student/layout.tsx — Convertir de sidebar a TOP NAVBAR (Logo + links + ThemeToggle + user dropdown + mobile hamburger)
+7. Crear app/admin/students/page.tsx — Búsqueda global de estudiantes con filtro por nombre/email/documento/curso
+8. Reescribir app/login/page.tsx — De inline styles a Tailwind + tokens + toggle mostrar contraseña + motion entrance
+9. Actualizar app/change-password/page.tsx — Migrar a tokens CSS (surface-border, accent-bg, success-bg)
+10. Actualizar app/showcase/ShowcaseClient.tsx — Migrar bg-black a token
+11. Validar TypeScript (0 errores) y ESLint (0 errores, 0 warnings)
 
 **Archivos creados/modificados:**
-_pendiente_
+- `components/ThemeProvider.tsx` (creado)
+- `app/globals.css` (reescrito)
+- `app/layout.tsx` (actualizado)
+- `app/admin/layout.tsx` (reescrito)
+- `app/student/layout.tsx` (reescrito)
+- `app/admin/students/page.tsx` (creado)
+- `app/login/page.tsx` (reescrito)
+- `app/change-password/page.tsx` (actualizado)
+- `app/showcase/ShowcaseClient.tsx` (actualizado)
 
 **Observaciones:**
-_pendiente_
+- Theme system: data-theme attribute on <html>, CSS variables para dark/light, localStorage persistence
+- Admin layout: sidebar con 5 items + breadcrumbs dinámicos + semester badge + ThemeToggle
+- Student layout: top navbar horizontal + user dropdown + mobile hamburger (diferente UI de admin)
+- Login: rediseñado de inline styles a Tailwind + tokens + motion + toggle pw
+- 100+ CSS custom properties definidas para ambos temas
+- Transición suave entre temas (background + color CSS transition)
+- Scrollbar y ::selection estilizados con tokens
 
 ---
 

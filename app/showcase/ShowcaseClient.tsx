@@ -52,7 +52,7 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
   }, [projects, courseFilter]);
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)]">
+    <div className="min-h-screen bg-black">
       {/* ─── Hero Header ─── */}
       <div className="relative overflow-hidden">
         {/* Background effects */}

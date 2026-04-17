@@ -123,26 +123,26 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-black px-4">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="w-full max-w-md"
       >
-        <div className="rounded-2xl border border-[var(--color-surface-border)] bg-[var(--color-bg-secondary)] p-8 shadow-[var(--shadow-lg)]">
+        <div className="rounded-2xl border border-white/10 bg-zinc-950 p-8 shadow-2xl">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--color-accent-bg)] border border-[var(--color-accent-border)] mb-4">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mb-4">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0110 0v4" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-[var(--color-text-primary)] tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+            <h1 className="text-xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               Cambiar Contraseña
             </h1>
-            <p className="text-sm text-[var(--color-text-tertiary)] mt-1">
+            <p className="text-sm text-white/40 mt-1">
               Por seguridad, actualiza tu contraseña
             </p>
           </div>
@@ -151,7 +151,7 @@ export default function ChangePasswordPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="rounded-xl bg-[var(--color-success-bg)] border border-[var(--color-success-border)] p-6 text-center"
+              className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-6 text-center"
             >
               <div className="text-3xl mb-2">✅</div>
               <p className="text-sm font-medium text-emerald-400">

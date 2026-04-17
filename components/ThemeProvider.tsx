@@ -59,7 +59,7 @@ export default function ThemeProvider({ children, defaultTheme = 'dark' }: {
     return defaultTheme;
   });
 
-  // Apply theme to document
+  // Apply theme to document + mark as hydrated (for SSR framer-motion fix)
   useEffect(() => {
     if (!isClient) return;
     const html = document.documentElement;
@@ -67,6 +67,14 @@ export default function ThemeProvider({ children, defaultTheme = 'dark' }: {
     html.classList.remove('dark', 'light');
     html.classList.add(theme);
     localStorage.setItem(STORAGE_KEY, theme);
+
+    // Delay .hydrated by one frame so framer-motion can start animations
+    // before the CSS override (html:not(.hydrated)) is removed
+    if (!html.classList.contains('hydrated')) {
+      requestAnimationFrame(() => {
+        html.classList.add('hydrated');
+      });
+    }
   }, [theme, isClient]);
 
   // Listen for OS preference changes

@@ -59,20 +59,30 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // 5. Limpiar sesiones expiradas
-    cleanExpiredSessions();
+    // 5. Limpiar sesiones expiradas (puede fallar en filesystem read-only)
+    try { cleanExpiredSessions(); } catch { /* ignore on read-only fs */ }
 
     // 6. Crear nueva sesión
-    const session = createSession(user.id);
-
-    // 7. Actualizar lastLoginAt
-    const users = readUsers();
-    const userIndex = users.findIndex((u) => u.id === user.id);
-    if (userIndex !== -1) {
-      users[userIndex].lastLoginAt = new Date().toISOString();
-      users[userIndex].updatedAt = new Date().toISOString();
-      writeUsers(users);
+    let session;
+    try {
+      session = createSession(user.id);
+    } catch {
+      return NextResponse.json(
+        { error: 'No se pudo crear la sesión. El sistema puede estar en modo de solo lectura.' },
+        { status: 503 }
+      );
     }
+
+    // 7. Actualizar lastLoginAt (puede fallar en filesystem read-only)
+    try {
+      const users = readUsers();
+      const userIndex = users.findIndex((u) => u.id === user.id);
+      if (userIndex !== -1) {
+        users[userIndex].lastLoginAt = new Date().toISOString();
+        users[userIndex].updatedAt = new Date().toISOString();
+        writeUsers(users);
+      }
+    } catch { /* ignore on read-only fs */ }
 
     // 8. Preparar respuesta con cookie
     const response = NextResponse.json({
