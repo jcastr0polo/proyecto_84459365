@@ -40,7 +40,7 @@
 | 20 | Dashboards — Admin | Diseñador Frontend Obsesivo | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_20_DASHBOARD_ADMIN.md` |
 | 21 | Dashboards — Estudiante | Diseñador Frontend Obsesivo + Experto UX Educativo | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_21_DASHBOARD_ESTUDIANTE.md` |
 | 22 | Landing Pública y Vitrina | Diseñador UX/UI Senior | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_22_LANDING.md` |
-| 23 | Navegación, Layout y Temas | Diseñador de Sistemas de Diseño | ⬜ Pendiente | — | — | — |
+| 23 | Navegación, Layout y Temas | Diseñador de Sistemas de Diseño | 🟡 En curso | 17 Abr 2026 | — | — |
 | 24 | Seguridad, Validación y Errores | Ingeniero de Seguridad + QA | ⬜ Pendiente | — | — | — |
 | 25 | Pulido Final y Deploy | Ingeniero Fullstack Senior + QA | ⬜ Pendiente | — | — | — |
 
