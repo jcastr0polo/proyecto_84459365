@@ -1,12 +1,12 @@
 {
   "hero": {
-    "title": "Gestión Académica",
-    "subtitle": "Plataforma de Gestión Académica | Fullstack TypeScript",
-    "description": "Construida con Next.js, React 19, TypeScript y Tailwind CSS. Un caso de estudio completo de desarrollo web moderno.",
+    "title": "NEXUS",
+    "subtitle": "Plataforma Académica · Fullstack TypeScript",
+    "description": "Donde la docencia se conecta con la inteligencia artificial. Next.js, React 19, TypeScript y Tailwind CSS en un solo ecosistema.",
     "animationStyle": "typewriter"
   },
   "meta": {
-    "pageTitle": "Plataforma de Gestión Académica",
-    "description": "Sistema fullstack de gestión académica universitaria"
+    "pageTitle": "NEXUS — Plataforma Académica",
+    "description": "Sistema fullstack de gestión académica universitaria potenciado por IA"
   }
 }

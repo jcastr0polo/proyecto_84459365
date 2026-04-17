@@ -5,243 +5,192 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import AnimatedText from '@/components/AnimatedText';
 import type { Course } from '@/lib/types';
+import {
+  ArrowRight,
+  ExternalLink,
+  Sparkles,
+  Code2,
+  Rocket,
+  MessageSquareText,
+  GraduationCap,
+  BookOpen,
+  Users,
+  GitBranch,
+  Cpu,
+  Palette,
+  BarChart3,
+  Globe,
+  Zap,
+  ChevronRight,
+  LogIn,
+} from 'lucide-react';
 
 /* ─── Section wrapper with CSS scroll reveal (SSR-safe) ─── */
-function Section({ children, className = '' }: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   const ref = React.useRef<HTMLElement>(null);
-
   React.useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
-    // If already in viewport, mark visible immediately
     const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight + 80) {
-      el.classList.add('visible');
-      return;
-    }
-
+    if (rect.top < window.innerHeight + 80) { el.classList.add('visible'); return; }
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.disconnect();
-        }
-      },
+      ([entry]) => { if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.disconnect(); } },
       { rootMargin: '-80px' }
     );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-
-  return (
-    <section ref={ref} className={`scroll-reveal ${className}`}>
-      {children}
-    </section>
-  );
-}
-
-/* ─── Types ─── */
-interface LandingClientProps {
-  heroTitle: string;
-  heroSubtitle: string;
-  heroDescription: string;
+  return <section ref={ref} className={`scroll-reveal ${className}`}>{children}</section>;
 }
 
 /* ─── Constants ─── */
 const STACK_ITEMS = [
-  { name: 'Next.js', desc: 'Framework React fullstack', icon: '▲' },
-  { name: 'TypeScript', desc: 'Tipado estático y seguro', icon: 'TS' },
-  { name: 'React 19', desc: 'Componentes e interactividad', icon: '⚛' },
-  { name: 'Tailwind CSS', desc: 'Estilos utility-first', icon: '🎨' },
-  { name: 'Vercel', desc: 'Deploy serverless global', icon: '▲' },
-  { name: 'GitHub', desc: 'Control de versiones + CI/CD', icon: '🐙' },
+  { name: 'Next.js 16', desc: 'Framework fullstack', icon: Globe },
+  { name: 'TypeScript', desc: 'Tipado estricto', icon: Code2 },
+  { name: 'React 19', desc: 'UI declarativa', icon: Zap },
+  { name: 'Tailwind', desc: 'Utility-first CSS', icon: Palette },
+  { name: 'Vercel', desc: 'Deploy global', icon: Rocket },
+  { name: 'GitHub', desc: 'Version control', icon: GitBranch },
 ];
 
 const STEPS = [
-  {
-    number: '01',
-    title: 'Docente crea actividad',
-    description: 'El profesor publica actividades con descripción, material adjunto y prompt de IA para guiar al estudiante.',
-    icon: '📝',
-  },
-  {
-    number: '02',
-    title: 'Estudiante ejecuta con IA',
-    description: 'El estudiante usa el prompt asignado con su asistente de IA para desarrollar el proyecto paso a paso.',
-    icon: '🤖',
-  },
-  {
-    number: '03',
-    title: 'Entrega del proyecto',
-    description: 'Se sube la entrega con enlace a GitHub y deploy en Vercel. Todo queda registrado y versionado.',
-    icon: '🚀',
-  },
-  {
-    number: '04',
-    title: 'Calificación y feedback',
-    description: 'El docente revisa, califica con retroalimentación detallada y publica la nota al estudiante.',
-    icon: '✅',
-  },
+  { number: '01', title: 'Docente crea actividad', description: 'Publica actividades con material adjunto y prompt de IA para guiar al estudiante paso a paso.', icon: BookOpen },
+  { number: '02', title: 'Estudiante ejecuta con IA', description: 'Usa el prompt asignado con su asistente de IA para desarrollar el proyecto de forma guiada.', icon: Sparkles },
+  { number: '03', title: 'Entrega del proyecto', description: 'Sube la entrega con enlace a GitHub y deploy en Vercel. Todo queda registrado y versionado.', icon: Rocket },
+  { number: '04', title: 'Feedback y calificación', description: 'El docente revisa, califica con retroalimentación detallada y publica la nota.', icon: MessageSquareText },
 ];
 
-const categoryConfig: Record<string, { gradientStyle: string; badge: string; badgeStyle: React.CSSProperties }> = {
-  programming: { gradientStyle: 'linear-gradient(135deg, rgba(6,182,212,0.1), rgba(59,130,246,0.03))', badge: 'Programación', badgeStyle: { background: 'rgba(6,182,212,0.1)', color: '#22d3ee', borderColor: 'rgba(6,182,212,0.2)' } },
-  design: { gradientStyle: 'linear-gradient(135deg, rgba(168,85,247,0.1), rgba(236,72,153,0.03))', badge: 'Diseño', badgeStyle: { background: 'rgba(168,85,247,0.1)', color: '#c084fc', borderColor: 'rgba(168,85,247,0.2)' } },
-  management: { gradientStyle: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.03))', badge: 'Gerencia', badgeStyle: { background: 'rgba(245,158,11,0.1)', color: '#fbbf24', borderColor: 'rgba(245,158,11,0.2)' } },
-  leadership: { gradientStyle: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(20,184,166,0.03))', badge: 'Liderazgo', badgeStyle: { background: 'rgba(16,185,129,0.1)', color: '#34d399', borderColor: 'rgba(16,185,129,0.2)' } },
-  other: { gradientStyle: 'linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))', badge: 'Otro', badgeStyle: { background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', borderColor: 'rgba(255,255,255,0.2)' } },
+const categoryConfig: Record<string, { gradient: string; border: string; badge: string; badgeClass: string; icon: typeof Code2 }> = {
+  programming: { gradient: 'from-cyan-500/10 to-blue-500/5', border: 'hover:border-cyan-500/30', badge: 'Programación', badgeClass: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20', icon: Code2 },
+  design: { gradient: 'from-purple-500/10 to-pink-500/5', border: 'hover:border-purple-500/30', badge: 'Diseño', badgeClass: 'bg-purple-500/10 text-purple-400 border-purple-500/20', icon: Palette },
+  management: { gradient: 'from-amber-500/10 to-orange-500/5', border: 'hover:border-amber-500/30', badge: 'Gerencia', badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20', icon: BarChart3 },
+  other: { gradient: 'from-white/5 to-white/[0.02]', border: 'hover:border-white/20', badge: 'Otro', badgeClass: 'bg-white/10 text-white/60 border-white/20', icon: BookOpen },
 };
 
-/**
- * LandingClient — Full landing page with scroll animations
- * Fase 22 — Inspired by Vercel, Linear, and Stripe landing pages
- */
-export default function LandingClient({ heroTitle, heroSubtitle, heroDescription }: LandingClientProps) {
-  // Use fallback courses directly — /api/courses requires auth
+export default function LandingClient({ heroTitle, heroSubtitle, heroDescription }: {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroDescription: string;
+}) {
   const courses = FALLBACK_COURSES;
   const titleAnimationDuration = heroTitle.length * 0.08 + 0.6;
 
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
-      {/* ═══════════════════════════════════════════════ */}
-      {/* NAVBAR                                         */}
-      {/* ═══════════════════════════════════════════════ */}
+      {/* ═══ NAVBAR ═══ */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/[0.06] bg-black/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="text-xl">🎓</span>
-            <span className="text-sm font-semibold text-white tracking-tight hidden sm:block">
-              Plataforma Académica
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
+              <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
+            </div>
+            <span className="text-sm font-bold text-white tracking-tight hidden sm:block">
+              NEXUS
             </span>
           </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/showcase"
-              className="text-xs font-medium text-white/40 hover:text-white/70 transition-colors px-3 py-2"
-            >
+          <div className="flex items-center gap-2">
+            <Link href="/showcase" className="flex items-center gap-1.5 text-xs font-medium text-white/40 hover:text-white/70 transition-colors px-3 py-2 rounded-lg hover:bg-white/[0.04]">
+              <ExternalLink className="w-3.5 h-3.5" />
               Vitrina
             </Link>
-            <Link
-              href="/login"
-              className="text-xs font-medium text-black bg-white hover:bg-white/90 px-4 py-2 rounded-lg transition-colors"
-            >
-              Iniciar Sesión
+            <Link href="/login" className="flex items-center gap-1.5 text-xs font-bold bg-gradient-to-r from-cyan-400 to-blue-500 text-black px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-200">
+              <LogIn className="w-3.5 h-3.5" />
+              Ingresar
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* ═══════════════════════════════════════════════ */}
-      {/* HERO                                           */}
-      {/* ═══════════════════════════════════════════════ */}
-      <section className="relative pt-32 pb-24 sm:pt-40 sm:pb-32 px-6">
-        {/* Background glow */}
+      {/* ═══ HERO ═══ */}
+      <section className="relative pt-32 pb-24 sm:pt-44 sm:pb-36 px-6">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-cyan-500/[0.07] rounded-full blur-[120px]" />
-          <div className="absolute top-1/3 left-1/3 w-[300px] h-[300px] bg-purple-500/[0.04] rounded-full blur-[100px]" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-cyan-500/[0.06] rounded-full blur-[150px]" />
+          <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-blue-500/[0.04] rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-purple-500/[0.03] rounded-full blur-[100px]" />
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
-          {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] mb-8"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] mb-10"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] font-medium text-white/50">Semestre 202601 · En curso</span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+            </span>
+            <span className="text-[11px] font-medium text-white/50 tracking-wide">Semestre 2026-1 · En curso</span>
           </motion.div>
 
-          {/* Animated title */}
-          <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+          <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tighter" style={{ fontFamily: 'var(--font-playfair)' }}>
             <AnimatedText text={heroTitle} delay={0.2} />
           </h1>
 
-          {/* Subtitle */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: titleAnimationDuration + 0.3, duration: 0.8 }}
-            className="mt-6 text-base sm:text-lg text-white/50 tracking-[0.2em] uppercase font-light"
-            style={{ fontFamily: 'var(--font-poppins)' }}
+            className="mt-8 text-base sm:text-lg text-white/40 tracking-[0.15em] uppercase font-light"
           >
             {heroSubtitle}
           </motion.p>
 
-          {/* Description */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: titleAnimationDuration + 0.6, duration: 0.8 }}
-            className="mt-4 text-sm sm:text-base text-white/30 max-w-xl mx-auto font-light"
-            style={{ fontFamily: 'var(--font-poppins)' }}
+            className="mt-4 text-sm sm:text-base text-white/25 max-w-xl mx-auto font-light leading-relaxed"
           >
             {heroDescription}
           </motion.p>
 
-          {/* CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: titleAnimationDuration + 0.9, duration: 0.6 }}
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3"
+            className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-3"
           >
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black text-sm font-semibold
-                         hover:bg-white/90 transition-all duration-200 shadow-lg shadow-white/10"
-            >
-              Iniciar Sesión
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
-              </svg>
+            <Link href="/login" className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black text-sm font-bold hover:shadow-lg hover:shadow-cyan-500/20 transition-all duration-300">
+              Comenzar ahora
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
-            <Link
-              href="/showcase"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-white/[0.1] text-white/70 text-sm font-medium
-                         hover:bg-white/[0.04] hover:text-white hover:border-white/20 transition-all duration-200"
-            >
-              Ver Proyectos
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-              </svg>
+            <Link href="/showcase" className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-white/[0.1] text-white/60 text-sm font-medium hover:bg-white/[0.04] hover:text-white hover:border-white/20 transition-all duration-200">
+              Ver proyectos
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </motion.div>
 
-          {/* Decorative line */}
           <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ delay: titleAnimationDuration + 1.2, duration: 0.8, ease: 'easeOut' }}
-            className="mt-16 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent mx-auto w-80"
+            className="mt-20 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent mx-auto w-96"
             style={{ transformOrigin: 'center' }}
           />
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════ */}
-      {/* COURSES                                        */}
-      {/* ═══════════════════════════════════════════════ */}
-      <Section className="py-20 sm:py-28 px-6">
+      {/* ═══ COURSES ═══ */}
+      <Section className="py-24 sm:py-32 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-[11px] font-medium text-cyan-400/60 uppercase tracking-[0.25em] mb-3">Semestre 202601</p>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/[0.08] border border-cyan-500/10 mb-4">
+              <GraduationCap className="w-3.5 h-3.5 text-cyan-400/70" />
+              <span className="text-[11px] font-medium text-cyan-400/70 tracking-wider uppercase">Semestre 2026-1</span>
+            </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               Cursos del Semestre
             </h2>
-            <p className="mt-3 text-sm text-white/35 max-w-lg mx-auto">
-              Tres disciplinas, un mismo stack tecnológico. Cada curso explora una faceta diferente del desarrollo de software.
+            <p className="mt-4 text-sm text-white/30 max-w-lg mx-auto leading-relaxed">
+              Tres disciplinas, un mismo stack. Cada curso explora una faceta del desarrollo moderno de software.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {courses.map((course, i) => {
               const cfg = categoryConfig[course.category] ?? categoryConfig.other;
+              const Icon = cfg.icon;
               return (
                 <motion.div
                   key={course.id}
@@ -249,27 +198,27 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-40px' }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  whileHover={{ y: -4, transition: { duration: 0.15 } }}
-                  className="rounded-2xl border border-white/[0.08] p-6 hover:border-white/15 transition-colors"
-                  style={{ background: cfg.gradientStyle }}
+                  whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                  className={`relative rounded-2xl border border-white/[0.08] bg-gradient-to-br ${cfg.gradient} p-6 ${cfg.border} transition-all duration-300 group`}
                 >
-                  <div
-                    className="inline-flex px-2.5 py-1 rounded-full border text-[10px] font-medium mb-4"
-                    style={cfg.badgeStyle}
-                  >
-                    {cfg.badge}
+                  <div className="flex items-start justify-between mb-5">
+                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-medium ${cfg.badgeClass}`}>
+                      <Icon className="w-3 h-3" />
+                      {cfg.badge}
+                    </div>
+                    <span className="text-[10px] font-mono text-white/15">{course.code}</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-white/90 mb-2 line-clamp-2">{course.name}</h3>
-                  <p className="text-xs text-white/35 line-clamp-3 mb-4">
-                    {course.description || 'Curso del programa académico del semestre 202601.'}
+                  <h3 className="text-lg font-semibold text-white/90 mb-2 group-hover:text-white transition-colors">{course.name}</h3>
+                  <p className="text-xs text-white/30 leading-relaxed line-clamp-3">
+                    {course.description || 'Curso del programa académico.'}
                   </p>
-                  <div className="flex items-center gap-2 text-[11px] text-white/20">
-                    <span className="font-mono">{course.code}</span>
+                  <div className="mt-5 pt-4 border-t border-white/[0.06] flex items-center gap-3 text-[11px] text-white/20">
+                    <span className="flex items-center gap-1"><Users className="w-3 h-3" /> Activo</span>
                     {course.schedule?.length > 0 && (
-                      <>
-                        <span>·</span>
-                        <span>{course.schedule.length} sesión{course.schedule.length > 1 ? 'es' : ''}/semana</span>
-                      </>
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="w-3 h-3" />
+                        {course.schedule.length} sesión/sem
+                      </span>
                     )}
                   </div>
                 </motion.div>
@@ -279,91 +228,95 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
         </div>
       </Section>
 
-      {/* ═══════════════════════════════════════════════ */}
-      {/* HOW IT WORKS                                   */}
-      {/* ═══════════════════════════════════════════════ */}
-      <Section className="py-20 sm:py-28 px-6">
+      {/* ═══ HOW IT WORKS ═══ */}
+      <Section className="py-24 sm:py-32 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-[11px] font-medium text-cyan-400/60 uppercase tracking-[0.25em] mb-3">Flujo de Trabajo</p>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/[0.08] border border-purple-500/10 mb-4">
+              <Sparkles className="w-3.5 h-3.5 text-purple-400/70" />
+              <span className="text-[11px] font-medium text-purple-400/70 tracking-wider uppercase">Flujo de trabajo</span>
+            </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               ¿Cómo funciona?
             </h2>
-            <p className="mt-3 text-sm text-white/35 max-w-lg mx-auto">
-              Un ciclo completo desde la creación de la actividad hasta la retroalimentación final.
+            <p className="mt-4 text-sm text-white/30 max-w-lg mx-auto leading-relaxed">
+              Un ciclo completo desde la creación de la actividad hasta el feedback final.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {STEPS.map((step, i) => (
-              <motion.div
-                key={step.number}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.5, delay: i * 0.12 }}
-                className="relative"
-              >
-                {/* Connector line */}
-                {i < STEPS.length - 1 && (
-                  <div className="hidden lg:block absolute top-8 left-full w-full h-px bg-gradient-to-r from-white/[0.08] to-transparent z-0" />
-                )}
-
-                <div className="relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 hover:bg-white/[0.04] hover:border-white/[0.1] transition-all">
-                  {/* Number + Icon */}
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-3xl">{step.icon}</span>
-                    <span className="text-[10px] font-mono text-white/15 tracking-wider">{step.number}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {STEPS.map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <motion.div
+                  key={step.number}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.5, delay: i * 0.12 }}
+                  className="relative group"
+                >
+                  {i < STEPS.length - 1 && (
+                    <div className="hidden lg:block absolute top-10 left-full w-full h-px bg-gradient-to-r from-white/[0.08] to-transparent z-0" />
+                  )}
+                  <div className="relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-300">
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
+                        <Icon className="w-5 h-5 text-white/50 group-hover:text-cyan-400 transition-colors" />
+                      </div>
+                      <span className="text-[10px] font-mono text-white/10 tracking-wider">{step.number}</span>
+                    </div>
+                    <h3 className="text-sm font-semibold text-white/80 mb-2">{step.title}</h3>
+                    <p className="text-xs text-white/25 leading-relaxed">{step.description}</p>
                   </div>
-
-                  <h3 className="text-sm font-semibold text-white/80 mb-2">{step.title}</h3>
-                  <p className="text-xs text-white/30 leading-relaxed">{step.description}</p>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </Section>
 
-      {/* ═══════════════════════════════════════════════ */}
-      {/* TECH STACK                                     */}
-      {/* ═══════════════════════════════════════════════ */}
-      <Section className="py-20 sm:py-28 px-6">
+      {/* ═══ TECH STACK ═══ */}
+      <Section className="py-24 sm:py-32 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-[11px] font-medium text-cyan-400/60 uppercase tracking-[0.25em] mb-3">Tecnologías</p>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/[0.08] border border-emerald-500/10 mb-4">
+              <Code2 className="w-3.5 h-3.5 text-emerald-400/70" />
+              <span className="text-[11px] font-medium text-emerald-400/70 tracking-wider uppercase">Tecnologías</span>
+            </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               Stack Tecnológico
             </h2>
-            <p className="mt-3 text-sm text-white/35 max-w-lg mx-auto">
-              Construido con las herramientas más modernas del ecosistema JavaScript/TypeScript.
+            <p className="mt-4 text-sm text-white/30 max-w-lg mx-auto leading-relaxed">
+              Las herramientas más modernas del ecosistema JavaScript/TypeScript.
             </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            {STACK_ITEMS.map((item, i) => (
-              <motion.div
-                key={item.name}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.06 }}
-                whileHover={{ y: -4, transition: { duration: 0.15 } }}
-                className="flex flex-col items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5
-                           hover:bg-white/[0.04] hover:border-white/[0.1] transition-all cursor-default"
-              >
-                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white/[0.04] text-xl font-bold text-white/60">
-                  {item.icon}
-                </div>
-                <div className="text-center">
-                  <p className="text-xs font-semibold text-white/70">{item.name}</p>
-                  <p className="text-[10px] text-white/25 mt-0.5">{item.desc}</p>
-                </div>
-              </motion.div>
-            ))}
+            {STACK_ITEMS.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.06 }}
+                  whileHover={{ y: -4, transition: { duration: 0.15 } }}
+                  className="flex flex-col items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 hover:bg-white/[0.04] hover:border-white/[0.1] transition-all cursor-default group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-white/[0.04] flex items-center justify-center group-hover:bg-white/[0.08] transition-colors">
+                    <Icon className="w-5 h-5 text-white/40 group-hover:text-white/70 transition-colors" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-semibold text-white/70">{item.name}</p>
+                    <p className="text-[10px] text-white/25 mt-0.5">{item.desc}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
 
-          {/* Architecture summary */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -373,7 +326,7 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
               <div>
-                <p className="text-2xl font-bold text-cyan-400">100%</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">100%</p>
                 <p className="text-[11px] text-white/30 mt-1">TypeScript — Zero any</p>
               </div>
               <div>
@@ -381,7 +334,7 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
                 <p className="text-[11px] text-white/30 mt-1">Base de datos en archivos</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-purple-400">IA</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">IA</p>
                 <p className="text-[11px] text-white/30 mt-1">Prompts como metodología</p>
               </div>
             </div>
@@ -389,36 +342,30 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
         </div>
       </Section>
 
-      {/* ═══════════════════════════════════════════════ */}
-      {/* FOOTER                                         */}
-      {/* ═══════════════════════════════════════════════ */}
+      {/* ═══ FOOTER ═══ */}
       <footer className="border-t border-white/[0.06] py-12 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            {/* Left */}
             <div className="flex items-center gap-3">
-              <span className="text-lg">🎓</span>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
+                <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
+              </div>
               <div>
-                <p className="text-sm font-semibold text-white/70">Plataforma Académica</p>
-                <p className="text-[11px] text-white/25">Semestre 202601 · Universidad</p>
+                <p className="text-sm font-bold text-white/70">NEXUS</p>
+                <p className="text-[11px] text-white/25">Plataforma Académica · 2026-1</p>
               </div>
             </div>
-
-            {/* Center links */}
             <div className="flex items-center gap-6 text-xs text-white/30">
-              <Link href="/login" className="hover:text-white/60 transition-colors">Login</Link>
-              <Link href="/showcase" className="hover:text-white/60 transition-colors">Vitrina</Link>
+              <Link href="/login" className="hover:text-white/60 transition-colors flex items-center gap-1.5">
+                <LogIn className="w-3 h-3" /> Login
+              </Link>
+              <Link href="/showcase" className="hover:text-white/60 transition-colors flex items-center gap-1.5">
+                <ExternalLink className="w-3 h-3" /> Vitrina
+              </Link>
             </div>
-
-            {/* Right */}
-            <div className="text-right">
-              <p className="text-[11px] text-white/20">
-                Construido con Next.js + TypeScript + IA
-              </p>
-              <p className="text-[10px] text-white/10 mt-0.5">
-                © 2026 · Plataforma de Gestión Académica
-              </p>
-            </div>
+            <p className="text-[10px] text-white/15">
+              Next.js + TypeScript + IA · © 2026
+            </p>
           </div>
         </div>
       </footer>
@@ -426,42 +373,27 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
   );
 }
 
-/* ─── Fallback courses if API is unavailable ─── */
+/* ─── Fallback courses ─── */
 const FALLBACK_COURSES: Course[] = [
   {
-    id: 'course-log-202601',
-    code: 'LOG-202601',
-    name: 'Lógica y Programación',
+    id: 'course-log-202601', code: 'LOG-202601', name: 'Lógica y Programación',
     description: 'Fundamentos de programación fullstack con TypeScript, Next.js y despliegue en Vercel. Uso de IA como herramienta de desarrollo.',
-    semesterId: '202601',
-    category: 'programming',
+    semesterId: '202601', category: 'programming',
     schedule: [{ dayOfWeek: 'lunes', startTime: '08:00', endTime: '10:00', modality: 'presencial' }],
-    isActive: true,
-    createdAt: '',
-    updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
   },
   {
-    id: 'course-dis-202601',
-    code: 'DIS-202601',
-    name: 'Diseño de Interfaces RA',
+    id: 'course-dis-202601', code: 'DIS-202601', name: 'Diseño de Interfaces RA',
     description: 'Diseño de interfaces de usuario y experiencia de usuario. Prototipado, wireframing y desarrollo de UI con React.',
-    semesterId: '202601',
-    category: 'design',
+    semesterId: '202601', category: 'design',
     schedule: [{ dayOfWeek: 'martes', startTime: '10:00', endTime: '12:00', modality: 'presencial' }],
-    isActive: true,
-    createdAt: '',
-    updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
   },
   {
-    id: 'course-ger-202601',
-    code: 'GER-202601',
-    name: 'Gerencia de Proyectos',
+    id: 'course-ger-202601', code: 'GER-202601', name: 'Gerencia de Proyectos',
     description: 'Gestión de proyectos de software, metodologías ágiles, liderazgo de equipos y entrega de valor al cliente.',
-    semesterId: '202601',
-    category: 'management',
+    semesterId: '202601', category: 'management',
     schedule: [{ dayOfWeek: 'miércoles', startTime: '14:00', endTime: '16:00', modality: 'presencial' }],
-    isActive: true,
-    createdAt: '',
-    updatedAt: '',
+    isActive: true, createdAt: '', updatedAt: '',
   },
 ];

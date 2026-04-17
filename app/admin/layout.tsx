@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
+import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight } from 'lucide-react';
 import type { Semester } from '@/lib/types';
 
 interface UserInfo {
@@ -13,11 +14,11 @@ interface UserInfo {
 }
 
 const NAV_ITEMS = [
-  { href: '/admin', label: 'Dashboard', icon: '📊' },
-  { href: '/admin/courses', label: 'Cursos', icon: '📚' },
-  { href: '/admin/students', label: 'Estudiantes', icon: '👥' },
-  { href: '/admin/prompts', label: 'Prompts', icon: '📝' },
-  { href: '/admin/semesters', label: 'Configuración', icon: '⚙️' },
+  { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/courses', label: 'Cursos', icon: BookOpen },
+  { href: '/admin/students', label: 'Estudiantes', icon: Users },
+  { href: '/admin/prompts', label: 'Prompts IA', icon: Sparkles },
+  { href: '/admin/semesters', label: 'Configuración', icon: Settings },
 ];
 
 /* ─── Breadcrumb helpers ─── */
@@ -125,9 +126,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         >
           {/* Logo */}
           <div className="flex items-center gap-3 px-5 h-16 border-b border-white/10 shrink-0">
-            <span className="text-xl" aria-hidden="true">🎓</span>
-            <span className="text-sm font-semibold text-white tracking-tight">
-              Plataforma Académica
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
+              <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
+            </div>
+            <span className="text-sm font-bold text-white tracking-tight">
+              NEXUS
             </span>
           </div>
 
@@ -148,7 +151,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       }
                     `}
                   >
-                    <span className="text-base" aria-hidden="true">{item.icon}</span>
+                    <item.icon className="w-4 h-4" />
                     {item.label}
                   </Link>
                 </li>
@@ -176,10 +179,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                            text-white/40 hover:text-white/60 hover:bg-white/[0.04]
                            transition-colors"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
+                <Lock className="w-3.5 h-3.5" />
                 Cambiar contraseña
               </Link>
               <button
@@ -189,11 +189,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                            text-white/40 hover:text-red-400 hover:bg-red-500/10
                            transition-colors cursor-pointer disabled:opacity-50"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                  <polyline points="16 17 21 12 16 7" />
-                  <line x1="21" y1="12" x2="9" y2="12" />
-                </svg>
+                <LogOut className="w-3.5 h-3.5" />
                 {loggingOut ? 'Cerrando...' : 'Cerrar sesión'}
               </button>
             </div>
@@ -211,9 +207,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className="lg:hidden p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
                 aria-label="Abrir menú"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
+                <Menu className="w-5 h-5" />
               </button>
 
               {/* Breadcrumbs (desktop) */}
@@ -224,7 +218,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </Link>
                   {breadcrumbs.map((crumb, i) => (
                     <React.Fragment key={crumb.href}>
-                      <span className="text-white/20">/</span>
+                      <ChevronRight className="w-3 h-3 text-white/15" />
                       {i === breadcrumbs.length - 1 ? (
                         <span className="text-white/60 font-medium">{crumb.label}</span>
                       ) : (

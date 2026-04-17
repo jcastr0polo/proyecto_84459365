@@ -22,10 +22,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Plataforma de Gestión Académica",
-    template: "%s | Plataforma Académica",
+    default: "NEXUS — Plataforma Académica",
+    template: "%s | NEXUS",
   },
-  description: "Plataforma web de gestión académica universitaria. Fullstack TypeScript + Next.js + React 19.",
+  description: "Plataforma de gestión académica universitaria potenciada por IA. Fullstack TypeScript + Next.js + React 19.",
 };
 
 export default function RootLayout({
