@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { HomeDataSchema, AppConfigSchema } from './validators';
-import type { HomeData, AppConfig, User, Session } from './types';
-import { userSchema, sessionSchema } from './schemas';
+import type { HomeData, AppConfig, User, Session, Semester, Course } from './types';
+import { userSchema, sessionSchema, semesterSchema, courseSchema } from './schemas';
 import { z } from 'zod';
 
 /**
@@ -133,4 +133,74 @@ export function readSessions(): Session[] {
  */
 export function writeSessions(sessions: Session[]): void {
   writeJsonFile('sessions.json', sessions);
+}
+
+// ────────────────────────────────────────────────────────────
+// FASE 7 — Semestres
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Lee y valida /data/semesters.json
+ */
+export function readSemesters(): Semester[] {
+  const raw = readJsonFile<unknown[]>('semesters.json');
+  return z.array(semesterSchema).parse(raw) as Semester[];
+}
+
+/**
+ * Escribe el array completo de semestres en /data/semesters.json
+ */
+export function writeSemesters(semesters: Semester[]): void {
+  writeJsonFile('semesters.json', semesters);
+}
+
+/**
+ * Busca un semestre por ID
+ */
+export function getSemesterById(id: string): Semester | null {
+  const semesters = readSemesters();
+  return semesters.find((s) => s.id === id) ?? null;
+}
+
+/**
+ * Retorna el semestre activo (solo debería haber uno, RN-SEM-01)
+ */
+export function getActiveSemester(): Semester | null {
+  const semesters = readSemesters();
+  return semesters.find((s) => s.isActive) ?? null;
+}
+
+// ────────────────────────────────────────────────────────────
+// FASE 7 — Cursos
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Lee y valida /data/courses.json
+ */
+export function readCourses(): Course[] {
+  const raw = readJsonFile<unknown[]>('courses.json');
+  return z.array(courseSchema).parse(raw) as Course[];
+}
+
+/**
+ * Escribe el array completo de cursos en /data/courses.json
+ */
+export function writeCourses(courses: Course[]): void {
+  writeJsonFile('courses.json', courses);
+}
+
+/**
+ * Busca un curso por ID
+ */
+export function getCourseById(id: string): Course | null {
+  const courses = readCourses();
+  return courses.find((c) => c.id === id) ?? null;
+}
+
+/**
+ * Lista cursos de un semestre específico
+ */
+export function getCoursesBySemester(semesterId: string): Course[] {
+  const courses = readCourses();
+  return courses.filter((c) => c.semesterId === semesterId);
 }

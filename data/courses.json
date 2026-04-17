@@ -1,0 +1,62 @@
+[
+  {
+    "id": "course-log-202601",
+    "code": "LOG-202601",
+    "name": "Lógica y Programación",
+    "description": "Fundamentos de lógica de programación aplicada al desarrollo fullstack con TypeScript, Next.js y Vercel.",
+    "semesterId": "202601",
+    "category": "programming",
+    "schedule": [
+      {
+        "dayOfWeek": "lunes",
+        "startTime": "08:00",
+        "endTime": "10:00",
+        "room": "Lab 301",
+        "modality": "presencial"
+      }
+    ],
+    "isActive": true,
+    "createdAt": "2026-04-01T00:00:00.000Z",
+    "updatedAt": "2026-04-01T00:00:00.000Z"
+  },
+  {
+    "id": "course-dis-202601",
+    "code": "DIS-202601",
+    "name": "Diseño de Interfaces RA",
+    "description": "Diseño de interfaces de usuario, experiencia de usuario y prototipado en proyectos fullstack.",
+    "semesterId": "202601",
+    "category": "design",
+    "schedule": [
+      {
+        "dayOfWeek": "martes",
+        "startTime": "10:00",
+        "endTime": "12:00",
+        "room": "Lab 205",
+        "modality": "presencial"
+      }
+    ],
+    "isActive": true,
+    "createdAt": "2026-04-01T00:00:00.000Z",
+    "updatedAt": "2026-04-01T00:00:00.000Z"
+  },
+  {
+    "id": "course-ger-202601",
+    "code": "GER-202601",
+    "name": "Gerencia de Proyectos",
+    "description": "Metodologías de gestión, liderazgo, planificación y seguimiento de proyectos de tecnología.",
+    "semesterId": "202601",
+    "category": "management",
+    "schedule": [
+      {
+        "dayOfWeek": "miércoles",
+        "startTime": "14:00",
+        "endTime": "16:00",
+        "room": "Aula 102",
+        "modality": "presencial"
+      }
+    ],
+    "isActive": true,
+    "createdAt": "2026-04-01T00:00:00.000Z",
+    "updatedAt": "2026-04-01T00:00:00.000Z"
+  }
+]

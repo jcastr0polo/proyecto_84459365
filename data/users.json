@@ -1,14 +1,14 @@
 [
   {
     "id": "admin-001",
-    "email": "docente@universidad.edu.co",
+    "email": "jhonatan.castro@usa.edu.co",
     "passwordHash": "$2b$10$Vxo9eu8EuD3sMThhVa/PKehRBVrX4WVwcy7dlC2lKiHX1qDOWSWYy",
     "role": "admin",
     "mustChangePassword": false,
     "firstName": "Jhonatan",
-    "lastName": "Docente",
+    "lastName": "Castro",
     "documentNumber": "84459365",
-    "phone": "",
+    "phone": "3162800128",
     "isActive": true,
     "createdAt": "2026-04-01T00:00:00.000Z",
     "updatedAt": "2026-04-01T00:00:00.000Z",

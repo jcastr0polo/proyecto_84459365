@@ -107,3 +107,97 @@ export interface ChangePasswordRequest {
   newPassword: string;
   confirmPassword: string;
 }
+
+// ────────────────────────────────────────────────────────────
+// FASE 7 — Semestres y Cursos
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Semester — Período académico
+ * Se almacena en /data/semesters.json
+ * Regla RN-SEM-01: Solo uno activo a la vez
+ * Formato ID: YYYYSS (ej: "202601")
+ */
+export interface Semester {
+  id: string;                          // Ej: "202601"
+  label: string;                       // Ej: "2026 - Primer Semestre"
+  startDate: string;                   // Fecha inicio (ISO date: "2026-02-01")
+  endDate: string;                     // Fecha fin (ISO date: "2026-06-30")
+  isActive: boolean;                   // Solo uno activo a la vez (RN-SEM-01)
+  createdAt: string;                   // ISO timestamp
+}
+
+/**
+ * CourseSchedule — Horario de una clase
+ * Embebido dentro de Course.schedule[]
+ */
+export interface CourseSchedule {
+  dayOfWeek: 'lunes' | 'martes' | 'miércoles' | 'jueves' | 'viernes' | 'sábado';
+  startTime: string;                   // "08:00" (HH:mm)
+  endTime: string;                     // "10:00" (HH:mm)
+  room?: string;                       // Aula / salón (opcional)
+  modality: 'presencial' | 'virtual' | 'híbrido';
+}
+
+/**
+ * Course — Curso/materia del semestre
+ * Se almacena en /data/courses.json
+ * Regla RN-CUR-01: código único por semestre
+ * Regla RN-CUR-03: al menos un horario
+ */
+export interface Course {
+  id: string;                          // UUID o slug: "course-log-202601"
+  code: string;                        // Código visible: "LOG-202601"
+  name: string;                        // "Lógica y Programación"
+  description: string;                 // Descripción del curso
+  semesterId: string;                  // FK a Semester.id
+  category: 'programming' | 'design' | 'management' | 'leadership' | 'other';
+  schedule: CourseSchedule[];          // Horarios (min 1, RN-CUR-03)
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * CreateSemesterRequest — Datos para crear un semestre
+ */
+export interface CreateSemesterRequest {
+  id: string;
+  label: string;
+  startDate: string;
+  endDate: string;
+  isActive?: boolean;
+}
+
+/**
+ * UpdateSemesterRequest — Datos para editar un semestre (parcial)
+ */
+export interface UpdateSemesterRequest {
+  label?: string;
+  startDate?: string;
+  endDate?: string;
+  isActive?: boolean;
+}
+
+/**
+ * CreateCourseRequest — Datos para crear un curso
+ */
+export interface CreateCourseRequest {
+  code: string;
+  name: string;
+  description: string;
+  semesterId: string;
+  category: Course['category'];
+  schedule: CourseSchedule[];
+}
+
+/**
+ * UpdateCourseRequest — Datos para editar un curso (parcial)
+ */
+export interface UpdateCourseRequest {
+  name?: string;
+  description?: string;
+  category?: Course['category'];
+  schedule?: CourseSchedule[];
+  isActive?: boolean;
+}
