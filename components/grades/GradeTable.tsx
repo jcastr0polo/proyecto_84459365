@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
+import { Paperclip, Link as LinkIcon } from 'lucide-react';
 import ScoreInput from '@/components/grades/ScoreInput';
 
 // ────────────────────────────────────────────────────────────
@@ -145,10 +146,9 @@ export default function GradeTable({
 
                 {/* Archivos / Enlaces */}
                 <td className="px-4 py-3 text-center">
-                  <span className="text-xs text-white/50">
-                    {row.attachmentsCount > 0 && `📎${row.attachmentsCount}`}
-                    {row.attachmentsCount > 0 && row.linksCount > 0 && ' '}
-                    {row.linksCount > 0 && `🔗${row.linksCount}`}
+                  <span className="text-xs text-white/50 flex items-center justify-center gap-1">
+                    {row.attachmentsCount > 0 && <span className="flex items-center gap-0.5"><Paperclip className="w-3 h-3" />{row.attachmentsCount}</span>}
+                    {row.linksCount > 0 && <span className="flex items-center gap-0.5"><LinkIcon className="w-3 h-3" />{row.linksCount}</span>}
                     {row.attachmentsCount === 0 && row.linksCount === 0 && '—'}
                   </span>
                 </td>

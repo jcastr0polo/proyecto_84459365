@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { Rocket } from 'lucide-react';
 
 export interface ShowcaseProject {
   id: string;
@@ -139,7 +140,7 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
             animate={{ opacity: 1 }}
             className="text-center py-20"
           >
-            <p className="text-4xl mb-4">🚀</p>
+            <Rocket className="w-10 h-10 text-white/20 mx-auto mb-4" />
             <p className="text-white/30 text-sm">No hay proyectos destacados aún</p>
             <p className="text-white/15 text-xs mt-1">Los proyectos aparecerán aquí cuando el docente los destaque</p>
           </motion.div>

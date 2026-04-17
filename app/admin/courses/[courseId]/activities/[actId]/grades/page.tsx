@@ -6,6 +6,7 @@ import GradeTable from '@/components/grades/GradeTable';
 import type { GradeRow } from '@/components/grades/GradeTable';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
+import { AlertTriangle } from 'lucide-react';
 
 interface SubmissionData {
   id: string;
@@ -298,8 +299,8 @@ export default function AdminGradingPage() {
             y retroalimentación inmediatamente.
           </p>
           <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-            <p className="text-xs text-amber-400">
-              ⚠️ Esta acción no se puede deshacer. Las notas ya publicadas no se pueden ocultar.
+            <p className="text-xs text-amber-400 flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" /> Esta acción no se puede deshacer. Las notas ya publicadas no se pueden ocultar.
             </p>
           </div>
           <div className="flex justify-end gap-3 pt-2">

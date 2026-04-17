@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
+import { Inbox, Search, GitBranch, Palette, Link as LinkIcon, Paperclip } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import EmptyState from '@/components/ui/EmptyState';
@@ -157,13 +158,13 @@ export default function AdminSubmissionsPage() {
       {/* Table */}
       {submissions.length === 0 ? (
         <EmptyState
-          icon={<span>📭</span>}
+          icon={<Inbox className="w-6 h-6 text-white/30" />}
           title="Sin entregas"
           description="Ningún estudiante ha enviado una entrega aún."
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={<span>🔍</span>}
+          icon={<Search className="w-6 h-6 text-white/30" />}
           title="Sin resultados"
           description="No hay entregas con ese estado."
           action={<Button variant="ghost" size="sm" onClick={() => setStatusFilter('all')}>Limpiar filtro</Button>}
@@ -224,7 +225,7 @@ export default function AdminSubmissionsPage() {
                               className="text-cyan-400 hover:text-cyan-300 text-sm"
                               title={link.label || link.url}
                             >
-                              {LINK_ICONS[link.type] ?? '🔗'}
+                              {LINK_ICONS[link.type] ?? <LinkIcon className="w-3.5 h-3.5" />}
                             </a>
                           ))}
                           {sub.links.length === 0 && <span className="text-sm text-white/30">—</span>}
@@ -266,8 +267,8 @@ export default function AdminSubmissionsPage() {
                     <span>{formatDate(sub.submittedAt)}</span>
                     <span className="font-mono">v{sub.version}</span>
                     {sub.isLate && <Badge variant="danger" size="sm">Tardía</Badge>}
-                    {sub.attachments.length > 0 && <span>📎{sub.attachments.length}</span>}
-                    {sub.links.length > 0 && <span>🔗{sub.links.length}</span>}
+                    {sub.attachments.length > 0 && <span className="flex items-center gap-0.5"><Paperclip className="w-3 h-3" />{sub.attachments.length}</span>}
+                    {sub.links.length > 0 && <span className="flex items-center gap-0.5"><LinkIcon className="w-3 h-3" />{sub.links.length}</span>}
                   </div>
                 </div>
               );
@@ -305,11 +306,11 @@ function StatCard({ label, value, color }: { label: string; value: number; color
   );
 }
 
-const LINK_ICONS: Record<string, string> = {
-  github: '🐙',
-  vercel: '▲',
-  figma: '🎨',
-  other: '🔗',
+const LINK_ICONS: Record<string, React.ReactNode> = {
+  github: <GitBranch className="w-3.5 h-3.5" />,
+  vercel: <span>▲</span>,
+  figma: <Palette className="w-3.5 h-3.5" />,
+  other: <LinkIcon className="w-3.5 h-3.5" />,
 };
 
 function formatDate(iso: string): string {

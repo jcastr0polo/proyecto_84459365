@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
+import { Paperclip, Link as LinkIcon, AlertTriangle } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -187,8 +188,8 @@ function SubmissionSection({
           {/* Requirements */}
           {(activity.requiresFileUpload || activity.requiresLinkSubmission) && (
             <div className="text-xs text-white/30 space-y-1">
-              {activity.requiresFileUpload && <p>📎 Debes adjuntar un archivo</p>}
-              {activity.requiresLinkSubmission && <p>🔗 Debes enviar un enlace</p>}
+              {activity.requiresFileUpload && <p className="flex items-center gap-1"><Paperclip className="w-3 h-3" /> Debes adjuntar un archivo</p>}
+              {activity.requiresLinkSubmission && <p className="flex items-center gap-1"><LinkIcon className="w-3 h-3" /> Debes enviar un enlace</p>}
             </div>
           )}
 
@@ -204,8 +205,8 @@ function SubmissionSection({
           )}
 
           {isPastDue && activity.allowLateSubmission && (
-            <p className="text-[11px] text-amber-400/70">
-              ⚠ Entrega tardía: se aplicará una penalización del {activity.latePenaltyPercent ?? 0}%
+            <p className="text-[11px] text-amber-400/70 flex items-center gap-1">
+              <AlertTriangle className="w-3.5 h-3.5" /> Entrega tardía: se aplicará una penalización del {activity.latePenaltyPercent ?? 0}%
             </p>
           )}
         </div>

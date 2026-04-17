@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
+import { Bot } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
@@ -162,7 +163,7 @@ export default function AdminPromptsPage() {
       {/* ─── Results ─── */}
       {filtered.length === 0 ? (
         <EmptyState
-          icon="🤖"
+          icon={<Bot className="w-8 h-8 text-white/30" />}
           title={prompts.length === 0 ? 'Sin prompts aún' : 'Sin resultados'}
           description={
             prompts.length === 0

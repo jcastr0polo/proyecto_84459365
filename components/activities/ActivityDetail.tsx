@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Paperclip, Link as LinkIcon, Clock } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -197,14 +198,14 @@ export default function ActivityDetail({
           </h3>
           <div className="space-y-2">
             {activity.requiresFileUpload && (
-              <RequirementRow icon="📎" text="Debe subir un archivo" />
+              <RequirementRow icon={<Paperclip className="w-4 h-4" />} text="Debe subir un archivo" />
             )}
             {activity.requiresLinkSubmission && (
-              <RequirementRow icon="🔗" text="Debe enviar un enlace (GitHub, Vercel, etc.)" />
+              <RequirementRow icon={<LinkIcon className="w-4 h-4" />} text="Debe enviar un enlace (GitHub, Vercel, etc.)" />
             )}
             {activity.allowLateSubmission && (
               <RequirementRow
-                icon="⏰"
+                icon={<Clock className="w-4 h-4" />}
                 text={`Entrega tardía permitida con penalización del ${activity.latePenaltyPercent ?? 0}%`}
               />
             )}
@@ -266,10 +267,10 @@ function StatCard({ label, value, color }: { label: string; value: number; color
   );
 }
 
-function RequirementRow({ icon, text }: { icon: string; text: string }) {
+function RequirementRow({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="flex items-center gap-2 text-sm text-white/60">
-      <span aria-hidden="true">{icon}</span>
+      <span aria-hidden="true" className="text-white/40">{icon}</span>
       <span>{text}</span>
     </div>
   );

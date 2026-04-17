@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { Bot, ClipboardCopy } from 'lucide-react';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { useToast } from '@/components/ui/Toast';
 
@@ -55,7 +56,7 @@ export default function PromptViewer({
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-base">🤖</span>
+              <Bot className="w-4 h-4 text-cyan-400" />
               <h3 className="text-sm font-semibold text-white/90 truncate">{title}</h3>
               <span className="text-[10px] text-white/30 bg-white/[0.04] px-1.5 py-0.5 rounded flex-shrink-0">
                 v{version}
@@ -70,7 +71,7 @@ export default function PromptViewer({
               onClick={handleCopy}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-cyan-500 text-white hover:bg-cyan-400 transition-colors cursor-pointer"
             >
-              <span>📋</span> Copiar Prompt
+              <ClipboardCopy className="w-3.5 h-3.5" /> Copiar Prompt
             </button>
             <button
               onClick={() => setFullscreen(!fullscreen)}

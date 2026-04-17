@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Users, FileText, Clock } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 
 interface CourseCardProps {
@@ -94,10 +95,10 @@ export default function CourseCard({
 
       {/* Quick stats */}
       <div className="flex items-center gap-4 mb-3">
-        <MiniStat icon="👥" value={studentCount} label="estudiantes" />
-        <MiniStat icon="📝" value={activityCount} label="actividades" />
+        <MiniStat icon={<Users className="w-3 h-3" />} value={studentCount} label="estudiantes" />
+        <MiniStat icon={<FileText className="w-3 h-3" />} value={activityCount} label="actividades" />
         {pendingSubmissions > 0 && (
-          <MiniStat icon="⏳" value={pendingSubmissions} label="pendientes" highlight />
+          <MiniStat icon={<Clock className="w-3 h-3" />} value={pendingSubmissions} label="pendientes" highlight />
         )}
       </div>
 
@@ -120,10 +121,10 @@ export default function CourseCard({
   );
 }
 
-function MiniStat({ icon, value, label, highlight }: { icon: string; value: number; label: string; highlight?: boolean }) {
+function MiniStat({ icon, value, label, highlight }: { icon: React.ReactNode; value: number; label: string; highlight?: boolean }) {
   return (
     <div className="flex items-center gap-1">
-      <span className="text-xs">{icon}</span>
+      <span className="text-white/40">{icon}</span>
       <span className={`text-xs font-semibold ${highlight ? 'text-amber-400' : 'text-white/60'}`}>{value}</span>
       <span className="text-[10px] text-white/25">{label}</span>
     </div>

@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
+import { Star, Pencil, Rocket } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
@@ -161,11 +162,11 @@ export default function StudentProjectPage() {
                 <div className="flex items-center gap-2 mt-1.5">
                   <StatusBadge status={project.status} />
                   {project.isPublic && <Badge variant="info" size="sm">Público</Badge>}
-                  {project.isFeatured && <Badge variant="success" size="sm">⭐ Destacado</Badge>}
+                  {project.isFeatured && <Badge variant="success" size="sm"><Star className="w-3 h-3 inline fill-current" /> Destacado</Badge>}
                 </div>
               </div>
               <Button variant="secondary" size="sm" onClick={() => setEditMode(true)}>
-                ✏️ Editar
+                <Pencil className="w-4 h-4 inline mr-1" /> Editar
               </Button>
             </div>
 
@@ -205,7 +206,7 @@ export default function StudentProjectPage() {
           <CardHeader>
             <CardTitle>
               <span className="flex items-center gap-2">
-                <span className="text-lg">🚀</span>
+                <Rocket className="w-5 h-5 text-cyan-400" />
                 {project ? 'Editar Proyecto' : 'Registrar Proyecto'}
               </span>
             </CardTitle>
@@ -377,7 +378,7 @@ function StatusBadge({ status }: { status: string }) {
     'in-progress': 'En progreso',
     submitted: 'Entregado',
     reviewed: 'Revisado',
-    featured: '⭐ Destacado',
+    featured: 'Destacado',
   };
   return <Badge variant={variants[status] ?? 'neutral'} size="sm">{labels[status] ?? status}</Badge>;
 }

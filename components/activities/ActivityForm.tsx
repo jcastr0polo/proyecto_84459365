@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { Pencil, Eye } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import DatePicker from '@/components/ui/DatePicker';
 import FileUploadZone from '@/components/ui/FileUploadZone';
@@ -233,7 +234,7 @@ export default function ActivityForm({
             onClick={() => setShowPreview(!showPreview)}
             className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
           >
-            {showPreview ? '✏️ Editar' : '👁 Preview'}
+            {showPreview ? <><Pencil className="w-3 h-3 inline" /> Editar</> : <><Eye className="w-3 h-3 inline" /> Preview</>}
           </button>
         </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
+import { FileUp } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 
@@ -146,7 +147,7 @@ export default function CSVImporter({ onConfirm, loading = false }: CSVImporterP
             className="sr-only"
             aria-label="Seleccionar archivo CSV"
           />
-          <div className="text-4xl mb-3 text-white/15" aria-hidden="true">📄</div>
+          <div className="mb-3 text-white/15" aria-hidden="true"><FileUp className="w-10 h-10 mx-auto" /></div>
           <p className="text-sm font-medium text-white/50 mb-1">
             Arrastra un archivo CSV aquí
           </p>
@@ -161,8 +162,8 @@ export default function CSVImporter({ onConfirm, loading = false }: CSVImporterP
         <div className="space-y-4">
           {/* Summary bar */}
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm text-white/60">
-              📄 <span className="font-medium text-white/80">{fileName}</span>
+            <span className="text-sm text-white/60 flex items-center gap-1">
+              <FileUp className="w-4 h-4" /> <span className="font-medium text-white/80">{fileName}</span>
             </span>
             <Badge variant="info" size="sm">{rows.length} filas</Badge>
             <Badge variant="success" size="sm">{validRows.length} válidas</Badge>

@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
+import { Bot } from 'lucide-react';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import PromptEditor from '@/components/prompts/PromptEditor';
@@ -74,7 +75,7 @@ export default function NewPromptPage() {
         <CardHeader>
           <CardTitle>
             <span className="flex items-center gap-2">
-              <span className="text-lg">🤖</span>
+              <Bot className="w-5 h-5 text-cyan-400" />
               Nuevo Prompt de IA
             </span>
           </CardTitle>

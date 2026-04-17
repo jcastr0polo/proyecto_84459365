@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { GitBranch, Palette, Link as LinkIcon } from 'lucide-react';
 
 interface LinkInputProps {
   type: 'github' | 'vercel' | 'figma' | 'other';
@@ -10,11 +11,11 @@ interface LinkInputProps {
   disabled?: boolean;
 }
 
-const CONFIG: Record<string, { label: string; placeholder: string; icon: string; validate: (url: string) => string | null }> = {
+const CONFIG: Record<string, { label: string; placeholder: string; icon: React.ReactNode; validate: (url: string) => string | null }> = {
   github: {
     label: 'Repositorio GitHub',
     placeholder: 'https://github.com/usuario/repositorio',
-    icon: '🐙',
+    icon: <GitBranch className="w-4 h-4" />,
     validate: (url) => {
       if (!url) return null;
       try {
@@ -42,7 +43,7 @@ const CONFIG: Record<string, { label: string; placeholder: string; icon: string;
   figma: {
     label: 'Diseño Figma',
     placeholder: 'https://www.figma.com/file/...',
-    icon: '🎨',
+    icon: <Palette className="w-4 h-4" />,
     validate: (url) => {
       if (!url) return null;
       try {
@@ -55,7 +56,7 @@ const CONFIG: Record<string, { label: string; placeholder: string; icon: string;
   other: {
     label: 'Otro enlace',
     placeholder: 'https://...',
-    icon: '🔗',
+    icon: <LinkIcon className="w-4 h-4" />,
     validate: (url) => {
       if (!url) return null;
       try {

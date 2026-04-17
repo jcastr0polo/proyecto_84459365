@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
+import { Rocket, Star } from 'lucide-react';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import EmptyState from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
@@ -65,7 +66,7 @@ export default function AdminCourseProjectsPage() {
           )
         );
         toast(
-          project.isFeatured ? 'Proyecto removido de destacados' : 'Proyecto destacado ⭐',
+          project.isFeatured ? 'Proyecto removido de destacados' : 'Proyecto destacado',
           'success'
         );
       } else {
@@ -132,7 +133,7 @@ export default function AdminCourseProjectsPage() {
       {/* ─── Projects Grid ─── */}
       {projects.length === 0 ? (
         <EmptyState
-          icon="🚀"
+          icon={<Rocket className="w-8 h-8 text-white/30" />}
           title="Sin proyectos registrados"
           description="Los estudiantes aún no han registrado sus proyectos en este curso"
         />
@@ -163,7 +164,7 @@ export default function AdminCourseProjectsPage() {
                   } ${togglingId === p.id ? 'opacity-50' : ''}`}
                   title={p.isFeatured ? 'Quitar destacado' : 'Destacar proyecto'}
                 >
-                  ⭐
+                  <Star className={`w-4 h-4 ${p.isFeatured ? 'fill-amber-400' : ''}`} />
                 </button>
               </div>
 
@@ -199,7 +200,7 @@ export default function AdminCourseProjectsPage() {
                         : 'text-white/25 hover:text-white/50'
                     }`}
                   >
-                    {s === 'in-progress' ? 'En progreso' : s === 'submitted' ? 'Entregado' : s === 'reviewed' ? 'Revisado' : '⭐ Destacado'}
+                    {s === 'in-progress' ? 'En progreso' : s === 'submitted' ? 'Entregado' : s === 'reviewed' ? 'Revisado' : 'Destacado'}
                   </button>
                 ))}
               </div>
@@ -224,7 +225,7 @@ function StatusBadge({ status }: { status: string }) {
     'in-progress': 'En progreso',
     submitted: 'Entregado',
     reviewed: 'Revisado',
-    featured: '⭐ Destacado',
+    featured: 'Destacado',
   };
   return <Badge variant={variants[status] ?? 'neutral'} size="sm">{labels[status] ?? status}</Badge>;
 }

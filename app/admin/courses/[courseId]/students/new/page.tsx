@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
+import { CheckCircle2, Info } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
@@ -71,8 +72,8 @@ export default function NewStudentPage() {
 
       setLastResult({
         message: result.created
-          ? `✅ Se creó la cuenta de ${studentName} y se inscribió al curso.`
-          : `✅ ${studentName} ya tenía cuenta. Se vinculó al curso.`,
+          ? `Se creó la cuenta de ${studentName} y se inscribió al curso.`
+          : `${studentName} ya tenía cuenta. Se vinculó al curso.`,
         created: result.created,
         studentName,
       });
@@ -113,10 +114,14 @@ export default function NewStudentPage() {
       {/* Success result */}
       {lastResult && (
         <Card padding="md" className="border-emerald-500/20 bg-emerald-500/[0.04]">
-          <p className="text-sm text-emerald-300 mb-3">{lastResult.message}</p>
+          <p className="text-sm text-emerald-300 mb-3 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            {lastResult.message}
+          </p>
           {!lastResult.created && (
-            <p className="text-xs text-white/40 mb-3">
-              ℹ️ El usuario ya existía en el sistema. Solo se creó la inscripción al curso.
+            <p className="text-xs text-white/40 mb-3 flex items-center gap-1.5">
+              <Info className="w-3.5 h-3.5 flex-shrink-0" />
+              El usuario ya existía en el sistema. Solo se creó la inscripción al curso.
             </p>
           )}
           <div className="flex items-center gap-3">

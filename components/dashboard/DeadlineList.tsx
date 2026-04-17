@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { CheckCircle2 } from 'lucide-react';
 
 interface DeadlineItem {
   id: string;
@@ -47,7 +48,7 @@ export default function DeadlineList({ deadlines, loading = false, onItemClick }
   if (deadlines.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-2xl mb-2">✅</p>
+        <CheckCircle2 className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
         <p className="text-xs text-white/30">Sin vencimientos próximos</p>
       </div>
     );

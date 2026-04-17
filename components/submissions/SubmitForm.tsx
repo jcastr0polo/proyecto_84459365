@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { AlertTriangle, XCircle, Info, Paperclip, Link as LinkIcon, MessageSquare } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -125,15 +126,15 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
         )}
         {isLate && activity.allowLateSubmission && (
           <div className="mt-3 p-3 rounded-lg bg-amber-500/[0.06] border border-amber-500/20">
-            <p className="text-xs text-amber-300">
-              ⚠ El plazo ha vencido. Tu entrega se marcará como tardía
+            <p className="text-xs text-amber-300 flex items-center gap-1">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" /> El plazo ha vencido. Tu entrega se marcará como tardía
               {activity.latePenaltyPercent ? ` con una penalización del ${activity.latePenaltyPercent}%` : ''}.
             </p>
           </div>
         )}
         {isLate && !activity.allowLateSubmission && (
           <div className="mt-3 p-3 rounded-lg bg-red-500/[0.06] border border-red-500/20">
-            <p className="text-xs text-red-300">❌ El plazo ha vencido y no se aceptan entregas tardías.</p>
+            <p className="text-xs text-red-300 flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> El plazo ha vencido y no se aceptan entregas tardías.</p>
           </div>
         )}
       </Card>
@@ -141,8 +142,8 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
       {/* Re-submission notice */}
       {existingVersion && (
         <div className="p-3 rounded-lg bg-cyan-500/[0.06] border border-cyan-500/20">
-          <p className="text-xs text-cyan-300">
-            ℹ Ya tienes una entrega (versión {existingVersion}). Al enviar, se creará la versión {existingVersion + 1}.
+          <p className="text-xs text-cyan-300 flex items-center gap-1">
+            <Info className="w-3.5 h-3.5 flex-shrink-0" /> Ya tienes una entrega (versión {existingVersion}). Al enviar, se creará la versión {existingVersion + 1}.
           </p>
         </div>
       )}
@@ -290,17 +291,17 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
             </p>
 
             {isLate && activity.allowLateSubmission && (
-              <p className="text-xs text-amber-400 p-2 rounded bg-amber-500/[0.06]">
-                ⚠ Tu entrega se marcará como tardía
+              <p className="text-xs text-amber-400 p-2 rounded bg-amber-500/[0.06] flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5" /> Tu entrega se marcará como tardía
                 {activity.latePenaltyPercent ? ` (−${activity.latePenaltyPercent}%)` : ''}.
               </p>
             )}
 
             {/* Summary */}
             <div className="text-xs text-white/40 space-y-1">
-              {files.length > 0 && <p>📎 {files.length} archivo{files.length > 1 ? 's' : ''}</p>}
-              {buildLinks().length > 0 && <p>🔗 {buildLinks().length} enlace{buildLinks().length > 1 ? 's' : ''}</p>}
-              {content.trim() && <p>💬 Con comentario</p>}
+              {files.length > 0 && <p className="flex items-center gap-1"><Paperclip className="w-3 h-3" /> {files.length} archivo{files.length > 1 ? 's' : ''}</p>}
+              {buildLinks().length > 0 && <p className="flex items-center gap-1"><LinkIcon className="w-3 h-3" /> {buildLinks().length} enlace{buildLinks().length > 1 ? 's' : ''}</p>}
+              {content.trim() && <p className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> Con comentario</p>}
             </div>
 
             <div className="flex items-center gap-3 pt-2">

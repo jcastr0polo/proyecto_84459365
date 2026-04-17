@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
+import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
@@ -106,7 +107,7 @@ export default function StudentSubmitPage() {
         <BackLink courseId={courseId} actId={actId} router={router} />
         <Card padding="lg">
           <div className="text-center py-8">
-            <span className="text-4xl mb-4 block">✅</span>
+            <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
             <h2 className="text-lg font-bold text-white mb-2">Entrega Calificada</h2>
             <p className="text-sm text-white/50">
               Esta entrega ya fue calificada. No puedes re-enviar a menos que el docente la devuelva.
@@ -125,7 +126,7 @@ export default function StudentSubmitPage() {
         <BackLink courseId={courseId} actId={actId} router={router} />
         <Card padding="lg">
           <div className="text-center py-8">
-            <span className="text-5xl mb-4 block">✅</span>
+            <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">
               {newSubmission.version > 1 ? 'Re-entrega Registrada' : 'Entrega Registrada'}
             </h2>
@@ -133,7 +134,7 @@ export default function StudentSubmitPage() {
               Versión {newSubmission.version} · {new Date(newSubmission.submittedAt).toLocaleString('es-CO')}
             </p>
             {newSubmission.isLate && (
-              <p className="text-xs text-amber-400 mt-2">⚠ Marcada como entrega tardía</p>
+              <p className="text-xs text-amber-400 mt-2 flex items-center justify-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Marcada como entrega tardía</p>
             )}
           </div>
         </Card>

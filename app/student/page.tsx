@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { BookOpen, ClipboardList, CheckCircle2, BarChart3, Inbox, Bell, PartyPopper, FileText, AlertTriangle, Hand } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import type { Course, Enrollment, Activity, Submission, Semester, Grade } from '@/lib/types';
 
@@ -246,10 +247,10 @@ export default function StudentDashboardPage() {
   }
 
   const urgencyConfig = {
-    overdue: { label: 'Vencida', icon: '🔴', borderColor: 'border-l-red-500', textColor: 'text-red-400', bgColor: 'bg-red-500/10' },
-    urgent: { label: 'Urgente', icon: '⚠️', borderColor: 'border-l-red-400', textColor: 'text-red-400', bgColor: 'bg-red-500/10' },
-    soon: { label: 'Próximo', icon: '🔶', borderColor: 'border-l-amber-400', textColor: 'text-amber-400', bgColor: 'bg-amber-500/10' },
-    relaxed: { label: 'Tranquilo', icon: '🟢', borderColor: 'border-l-emerald-400', textColor: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
+    overdue: { label: 'Vencida', icon: <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />, borderColor: 'border-l-red-500', textColor: 'text-red-400', bgColor: 'bg-red-500/10' },
+    urgent: { label: 'Urgente', icon: <AlertTriangle className="w-3.5 h-3.5 text-red-400 inline" />, borderColor: 'border-l-red-400', textColor: 'text-red-400', bgColor: 'bg-red-500/10' },
+    soon: { label: 'Próximo', icon: <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />, borderColor: 'border-l-amber-400', textColor: 'text-amber-400', bgColor: 'bg-amber-500/10' },
+    relaxed: { label: 'Tranquilo', icon: <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />, borderColor: 'border-l-emerald-400', textColor: 'text-emerald-400', bgColor: 'bg-emerald-500/10' },
   };
 
   return (
@@ -261,7 +262,7 @@ export default function StudentDashboardPage() {
         transition={{ duration: 0.4 }}
       >
         <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
-          👋 Hola, {user?.firstName ?? 'Estudiante'}
+          <Hand className="w-6 h-6 inline mr-1" /> Hola, {user?.firstName ?? 'Estudiante'}
         </h1>
         <p className="text-sm text-white/40 mt-1">
           {semester ? `Semestre ${semester.id}` : 'Panel del estudiante'}
@@ -279,23 +280,23 @@ export default function StudentDashboardPage() {
         <QuickStat
           label="Cursos"
           value={coursesData.length}
-          icon="📚"
+          icon={<BookOpen className="w-5 h-5" />}
         />
         <QuickStat
           label="Pendientes"
           value={pendingItems.length}
-          icon="📋"
+          icon={<ClipboardList className="w-5 h-5" />}
           alert={pendingItems.some((p) => p.urgency === 'urgent' || p.urgency === 'overdue')}
         />
         <QuickStat
           label="Entregadas"
           value={coursesData.reduce((sum, cd) => sum + cd.submissions.length, 0)}
-          icon="✅"
+          icon={<CheckCircle2 className="w-5 h-5" />}
         />
         <QuickStat
           label="Calificadas"
           value={recentGrades.length}
-          icon="📊"
+          icon={<BarChart3 className="w-5 h-5" />}
         />
       </motion.div>
 
@@ -303,7 +304,7 @@ export default function StudentDashboardPage() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white tracking-tight">
-            📚 Mis Cursos ({coursesData.length})
+            <BookOpen className="w-5 h-5 inline mr-1" /> Mis Cursos ({coursesData.length})
           </h2>
           {coursesData.length > 0 && (
             <button
@@ -317,7 +318,7 @@ export default function StudentDashboardPage() {
 
         {coursesData.length === 0 ? (
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-8 text-center">
-            <p className="text-3xl mb-3">📭</p>
+            <Inbox className="w-8 h-8 text-white/20 mx-auto mb-3" />
             <p className="text-sm text-white/40">No estás inscrito en ningún curso actualmente.</p>
           </div>
         ) : (
@@ -373,12 +374,12 @@ export default function StudentDashboardPage() {
         {/* ─── Pendientes ─── */}
         <section>
           <h2 className="text-lg font-semibold text-white tracking-tight mb-4">
-            🔔 Pendientes ({pendingItems.length})
+            <Bell className="w-5 h-5 inline mr-1" /> Pendientes ({pendingItems.length})
           </h2>
 
           {pendingItems.length === 0 ? (
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-8 text-center">
-              <p className="text-3xl mb-3">🎉</p>
+              <PartyPopper className="w-8 h-8 text-white/20 mx-auto mb-3" />
               <p className="text-sm text-white/40">¡No tienes entregas pendientes!</p>
             </div>
           ) : (
@@ -437,12 +438,12 @@ export default function StudentDashboardPage() {
         {/* ─── Notas Recientes ─── */}
         <section>
           <h2 className="text-lg font-semibold text-white tracking-tight mb-4">
-            📊 Mis Notas Recientes
+            <BarChart3 className="w-5 h-5 inline mr-1" /> Mis Notas Recientes
           </h2>
 
           {recentGrades.length === 0 ? (
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-8 text-center">
-              <p className="text-3xl mb-3">📝</p>
+              <FileText className="w-8 h-8 text-white/20 mx-auto mb-3" />
               <p className="text-sm text-white/40">Aún no tienes notas publicadas.</p>
             </div>
           ) : (
@@ -483,8 +484,8 @@ export default function StudentDashboardPage() {
           transition={{ delay: 0.6 }}
           className="text-center py-4"
         >
-          <p className="text-xs text-red-400/60">
-            ⚠️ Tienes entregas urgentes o vencidas. ¡Revisa tus pendientes!
+          <p className="text-xs text-red-400/60 flex items-center justify-center gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5" /> Tienes entregas urgentes o vencidas. ¡Revisa tus pendientes!
           </p>
         </motion.div>
       )}
@@ -496,7 +497,7 @@ export default function StudentDashboardPage() {
 function QuickStat({ label, value, icon, alert }: {
   label: string;
   value: number;
-  icon: string;
+  icon: React.ReactNode;
   alert?: boolean;
 }) {
   return (

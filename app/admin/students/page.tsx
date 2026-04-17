@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Users } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -113,7 +114,7 @@ export default function AdminStudentsPage() {
       {/* Results */}
       {filtered.length === 0 ? (
         <EmptyState
-          icon={<span className="text-4xl">👥</span>}
+          icon={<Users className="w-8 h-8 text-white/30" />}
           title={search ? 'Sin resultados' : 'No hay estudiantes'}
           description={search ? `No se encontraron estudiantes para "${search}"` : 'Aún no hay estudiantes inscritos en ningún curso.'}
         />

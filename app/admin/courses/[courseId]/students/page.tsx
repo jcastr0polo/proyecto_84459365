@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
+import { FileUp, Users, Search } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -129,7 +130,7 @@ export default function CourseStudentsPage() {
               size="sm"
               onClick={() => router.push(`/admin/courses/${courseId}/students/import`)}
             >
-              📄 Importar CSV
+              <FileUp className="w-4 h-4 mr-1 inline" /> Importar CSV
             </Button>
             <Button
               variant="primary"
@@ -199,7 +200,7 @@ export default function CourseStudentsPage() {
       {/* Content */}
       {enrollments.length === 0 ? (
         <EmptyState
-          icon={<span>👥</span>}
+          icon={<Users className="w-6 h-6 text-white/30" />}
           title="No hay estudiantes inscritos"
           description="Inscribe estudiantes individualmente o importa un archivo CSV."
           action={
@@ -209,7 +210,7 @@ export default function CourseStudentsPage() {
                 size="sm"
                 onClick={() => router.push(`/admin/courses/${courseId}/students/import`)}
               >
-                📄 Importar CSV
+                <FileUp className="w-4 h-4 mr-1 inline" /> Importar CSV
               </Button>
               <Button
                 variant="primary"
@@ -223,7 +224,7 @@ export default function CourseStudentsPage() {
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={<span>🔍</span>}
+          icon={<Search className="w-6 h-6 text-white/30" />}
           title="Sin resultados"
           description="No se encontraron estudiantes con esos filtros."
           action={

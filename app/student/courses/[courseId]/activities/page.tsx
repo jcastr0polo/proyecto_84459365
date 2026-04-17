@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
+import { ClipboardList, AlertTriangle } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
@@ -24,12 +25,12 @@ function getDeliveryStatus(activity: Activity, submission: Submission | undefine
   return 'pending';
 }
 
-const DELIVERY_BADGES: Record<DeliveryStatus, { label: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; icon: string }> = {
-  delivered: { label: 'Entregada', variant: 'success', icon: '🟢' },
-  pending: { label: 'Pendiente', variant: 'warning', icon: '🟡' },
-  overdue: { label: 'Vencida', variant: 'danger', icon: '🔴' },
-  graded: { label: 'Calificada', variant: 'info', icon: '✅' },
-  returned: { label: 'Devuelta', variant: 'warning', icon: '↩️' },
+const DELIVERY_BADGES: Record<DeliveryStatus, { label: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; icon: React.ReactNode }> = {
+  delivered: { label: 'Entregada', variant: 'success', icon: <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" /> },
+  pending: { label: 'Pendiente', variant: 'warning', icon: <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /> },
+  overdue: { label: 'Vencida', variant: 'danger', icon: <span className="w-2 h-2 rounded-full bg-red-500 inline-block" /> },
+  graded: { label: 'Calificada', variant: 'info', icon: <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block" /> },
+  returned: { label: 'Devuelta', variant: 'warning', icon: <span className="text-xs">↩</span> },
 };
 
 /**
@@ -135,7 +136,7 @@ export default function StudentActivitiesPage() {
       {/* Activities list */}
       {activities.length === 0 ? (
         <EmptyState
-          icon={<span>📝</span>}
+          icon={<ClipboardList className="w-6 h-6 text-white/30" />}
           title="Sin actividades"
           description="No hay actividades publicadas para este curso."
         />
@@ -195,7 +196,7 @@ export default function StudentActivitiesPage() {
                   )}
                   {sub && (
                     <span className="text-[11px] text-white/30">
-                      {sub.isLate ? '⚠ tardía' : ''} {formatDate(sub.submittedAt)}
+                      {sub.isLate ? <><AlertTriangle className="w-3 h-3 inline" /> tardía</> : ''} {formatDate(sub.submittedAt)}
                     </span>
                   )}
                 </div>

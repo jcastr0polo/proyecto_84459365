@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Lock } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -124,7 +125,7 @@ export default function StudentProfilePage() {
             size="sm"
             onClick={() => router.push('/change-password')}
           >
-            🔒 Cambiar Contraseña
+            <Lock className="w-4 h-4 inline mr-1" /> Cambiar Contraseña
           </Button>
         </div>
       </motion.div>

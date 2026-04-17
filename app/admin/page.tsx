@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { BookOpen, Users, FileText, Clock, BookMarked } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import StatCard from '@/components/dashboard/StatCard';
 import CourseCard from '@/components/dashboard/CourseCard';
@@ -261,14 +262,14 @@ export default function AdminDashboardPage() {
         <StatCard
           value={stats.courseCount}
           label="Cursos Activos"
-          icon="📚"
+          icon={<BookOpen className="w-4 h-4 text-cyan-400" />}
           color="text-cyan-400"
           loading={loading}
         />
         <StatCard
           value={stats.totalStudents}
           label="Estudiantes"
-          icon="👥"
+          icon={<Users className="w-4 h-4 text-purple-400" />}
           color="text-purple-400"
           details={studentDetails}
           loading={loading}
@@ -276,7 +277,7 @@ export default function AdminDashboardPage() {
         <StatCard
           value={stats.totalActivities}
           label="Actividades"
-          icon="📝"
+          icon={<FileText className="w-4 h-4 text-emerald-400" />}
           color="text-emerald-400"
           details={[
             { label: 'Publicadas', value: stats.publishedActivities, color: 'text-emerald-400/70' },
@@ -287,7 +288,7 @@ export default function AdminDashboardPage() {
         <StatCard
           value={stats.pendingGrading}
           label="Pendientes de Calificar"
-          icon="⏳"
+          icon={<Clock className="w-4 h-4 text-amber-400" />}
           color={stats.pendingGrading > 0 ? 'text-amber-400' : 'text-emerald-400'}
           description={stats.pendingGrading > 0 ? 'Entregas sin nota asignada' : 'Todo al día ✓'}
           loading={loading}
@@ -309,7 +310,7 @@ export default function AdminDashboardPage() {
           </div>
         ) : courseMetrics.length === 0 ? (
           <div className="text-center py-12 rounded-xl border border-white/[0.04] bg-white/[0.01]">
-            <p className="text-3xl mb-2">📚</p>
+            <BookMarked className="w-8 h-8 text-white/20 mx-auto mb-2" />
             <p className="text-sm text-white/30">No hay cursos activos</p>
           </div>
         ) : (

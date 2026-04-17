@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Plus, BookOpen } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge, { categoryToBadgeVariant, categoryLabel } from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
@@ -103,7 +104,7 @@ export default function CoursesPage() {
             ))}
           </select>
           <Button variant="primary" size="sm" onClick={() => setModalOpen(true)}>
-            + Nuevo Curso
+            <Plus className="w-4 h-4 mr-1" /> Nuevo Curso
           </Button>
         </div>
       </div>
@@ -111,7 +112,7 @@ export default function CoursesPage() {
       {/* Course grid */}
       {filteredCourses.length === 0 ? (
         <EmptyState
-          icon={<span>📚</span>}
+          icon={<BookOpen className="w-6 h-6 text-white/30" />}
           title="No hay cursos"
           description={
             selectedSemester

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { GitBranch, Palette, Link as LinkIcon } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -118,7 +119,7 @@ export default function SubmissionDetail({ submission, isAdmin = false, onReturn
                 className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]
                          hover:bg-white/[0.06] hover:border-white/[0.12] transition-all group"
               >
-                <span className="text-lg shrink-0">{LINK_ICONS[link.type] ?? '🔗'}</span>
+                <span className="text-lg shrink-0">{LINK_ICONS[link.type] ?? <LinkIcon className="w-5 h-5" />}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-white/80 group-hover:text-cyan-300 truncate">{link.label || link.url}</p>
                   <p className="text-[11px] text-white/30 truncate">{link.url}</p>
@@ -151,11 +152,11 @@ export default function SubmissionDetail({ submission, isAdmin = false, onReturn
   );
 }
 
-const LINK_ICONS: Record<string, string> = {
-  github: '🐙',
-  vercel: '▲',
-  figma: '🎨',
-  other: '🔗',
+const LINK_ICONS: Record<string, React.ReactNode> = {
+  github: <GitBranch className="w-5 h-5" />,
+  vercel: <span>▲</span>,
+  figma: <Palette className="w-5 h-5" />,
+  other: <LinkIcon className="w-5 h-5" />,
 };
 
 function formatDateTime(iso: string): string {

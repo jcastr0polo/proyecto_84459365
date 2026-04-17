@@ -15,6 +15,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { CheckCircle2 } from 'lucide-react';
 
 interface UserData {
   role: 'admin' | 'student';
@@ -153,7 +154,7 @@ export default function ChangePasswordPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-6 text-center"
             >
-              <div className="text-3xl mb-2">✅</div>
+              <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
               <p className="text-sm font-medium text-emerald-400">
                 Contraseña actualizada correctamente
               </p>

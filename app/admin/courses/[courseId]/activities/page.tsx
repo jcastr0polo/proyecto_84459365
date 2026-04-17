@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
+import { AlertTriangle, ClipboardList, Search } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -146,8 +147,8 @@ export default function CourseActivitiesPage() {
             />
           </div>
           {totalWeight > 100 && (
-            <p className="mt-1.5 text-[11px] text-red-400">
-              ⚠ El peso acumulado excede 100%. Revisa los porcentajes de las actividades.
+            <p className="mt-1.5 text-[11px] text-red-400 flex items-center gap-1">
+              <AlertTriangle className="w-3.5 h-3.5" /> El peso acumulado excede 100%. Revisa los porcentajes de las actividades.
             </p>
           )}
           {totalWeight < 100 && totalWeight > 0 && (
@@ -196,7 +197,7 @@ export default function CourseActivitiesPage() {
       {/* Activity list */}
       {activities.length === 0 ? (
         <EmptyState
-          icon={<span>📝</span>}
+          icon={<ClipboardList className="w-6 h-6 text-white/30" />}
           title="No hay actividades"
           description="Crea la primera actividad para este curso."
           action={
@@ -211,7 +212,7 @@ export default function CourseActivitiesPage() {
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={<span>🔍</span>}
+          icon={<Search className="w-6 h-6 text-white/30" />}
           title="Sin resultados"
           description="No se encontraron actividades con esos filtros."
           action={

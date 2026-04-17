@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { FileText, BarChart3, Rocket, MapPin, Clock, Calendar, Building2, Monitor, RefreshCw } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -23,12 +24,12 @@ function getDeliveryStatus(activity: Activity, submission: Submission | undefine
   return 'pending';
 }
 
-const STATUS_CONFIG: Record<DeliveryStatus, { label: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; icon: string }> = {
-  delivered: { label: 'Entregada', variant: 'success', icon: '🟢' },
-  pending: { label: 'Pendiente', variant: 'warning', icon: '🟡' },
-  overdue: { label: 'Vencida', variant: 'danger', icon: '🔴' },
-  graded: { label: 'Calificada', variant: 'info', icon: '✅' },
-  returned: { label: 'Devuelta', variant: 'warning', icon: '↩️' },
+const STATUS_CONFIG: Record<DeliveryStatus, { label: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; icon: React.ReactNode }> = {
+  delivered: { label: 'Entregada', variant: 'success', icon: <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" /> },
+  pending: { label: 'Pendiente', variant: 'warning', icon: <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /> },
+  overdue: { label: 'Vencida', variant: 'danger', icon: <span className="w-2 h-2 rounded-full bg-red-500 inline-block" /> },
+  graded: { label: 'Calificada', variant: 'info', icon: <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block" /> },
+  returned: { label: 'Devuelta', variant: 'warning', icon: <span className="text-xs">↩</span> },
 };
 
 const DAY_SHORT: Record<string, string> = {
@@ -36,10 +37,10 @@ const DAY_SHORT: Record<string, string> = {
   jueves: 'Jue', viernes: 'Vie', sábado: 'Sáb',
 };
 
-const MODALITY_LABELS: Record<string, string> = {
-  presencial: '🏫 Presencial',
-  virtual: '💻 Virtual',
-  híbrido: '🔄 Híbrido',
+const MODALITY_LABELS: Record<string, React.ReactNode> = {
+  presencial: <><Building2 className="w-3 h-3 inline" /> Presencial</>,
+  virtual: <><Monitor className="w-3 h-3 inline" /> Virtual</>,
+  híbrido: <><RefreshCw className="w-3 h-3 inline" /> Híbrido</>,
 };
 
 const categoryBadge: Record<string, { variant: 'programming' | 'design' | 'management' | 'leadership' | 'other'; label: string }> = {
@@ -217,7 +218,7 @@ export default function StudentCourseDashboardPage() {
               </span>
               <span className="text-white/70">{s.startTime} – {s.endTime}</span>
               {s.room && (
-                <span className="text-white/40 text-xs">📍 {s.room}</span>
+                <span className="text-white/40 text-xs flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {s.room}</span>
               )}
               <span className="text-white/25 text-xs">{MODALITY_LABELS[s.modality] ?? s.modality}</span>
             </div>
@@ -232,21 +233,21 @@ export default function StudentCourseDashboardPage() {
           size="sm"
           onClick={() => router.push(`/student/courses/${courseId}/activities`)}
         >
-          📝 Actividades
+          <FileText className="w-4 h-4 inline mr-1" /> Actividades
         </Button>
         <Button
           variant="secondary"
           size="sm"
           onClick={() => router.push(`/student/courses/${courseId}/grades`)}
         >
-          📊 Mis Notas
+          <BarChart3 className="w-4 h-4 inline mr-1" /> Mis Notas
         </Button>
         <Button
           variant="secondary"
           size="sm"
           onClick={() => router.push(`/student/courses/${courseId}/project`)}
         >
-          🚀 Mi Proyecto
+          <Rocket className="w-4 h-4 inline mr-1" /> Mi Proyecto
         </Button>
       </div>
 
@@ -263,7 +264,7 @@ export default function StudentCourseDashboardPage() {
 
         {sortedActivities.length === 0 ? (
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-8 text-center">
-            <p className="text-3xl mb-3">📝</p>
+            <FileText className="w-8 h-8 text-white/20 mx-auto mb-3" />
             <p className="text-sm text-white/40">No hay actividades publicadas aún.</p>
           </div>
         ) : (
@@ -307,12 +308,12 @@ export default function StudentCourseDashboardPage() {
 
                       {/* Meta row */}
                       <div className="flex items-center gap-3 mt-1.5 text-[11px] text-white/30">
-                        <span>📅 {formatDate(activity.dueDate)}</span>
+                        <span><Calendar className="w-3 h-3 inline" /> {formatDate(activity.dueDate)}</span>
                         <span>{activity.weight}%</span>
                         <span>Máx: {activity.maxScore}</span>
                         {!isPastDue && deliveryStatus === 'pending' && daysLeft <= 7 && (
-                          <span className={daysLeft <= 2 ? 'text-red-400' : 'text-amber-400'}>
-                            ⏳ {daysLeft}d
+                          <span className={daysLeft <= 2 ? 'text-red-400 flex items-center gap-0.5' : 'text-amber-400 flex items-center gap-0.5'}>
+                            <Clock className="w-3 h-3" /> {daysLeft}d
                           </span>
                         )}
                       </div>

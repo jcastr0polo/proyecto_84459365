@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
+import { Bot, Pencil } from 'lucide-react';
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
@@ -105,7 +106,7 @@ export default function PromptDetailPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🤖</span>
+          <Bot className="w-7 h-7 text-cyan-400" />
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight">{prompt.title}</h1>
             <div className="flex items-center gap-2 mt-1">
@@ -124,7 +125,7 @@ export default function PromptDetailPage() {
                          border border-white/[0.12] text-white/70 hover:text-white hover:bg-white/[0.04]
                          transition-colors cursor-pointer"
             >
-              ✏️ Editar
+              <Pencil className="w-4 h-4" /> Editar
             </button>
           ) : (
             <button
@@ -168,7 +169,7 @@ export default function PromptDetailPage() {
           <CardHeader>
             <CardTitle>
               <span className="flex items-center gap-2">
-                ✏️ Editar Prompt
+                <Pencil className="w-4 h-4" /> Editar Prompt
                 <span className="text-xs font-normal text-white/30">
                   (se creará versión v{prompt.version + 1})
                 </span>

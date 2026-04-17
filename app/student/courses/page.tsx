@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Inbox, AlertTriangle, FileText, CheckCircle2, Clock, MapPin, Monitor, Building2, RefreshCw } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -37,10 +38,10 @@ const categoryGradient: Record<string, string> = {
   other: 'from-white/[0.04] to-white/[0.01]',
 };
 
-const MODALITY_LABELS: Record<string, string> = {
-  presencial: '🏫 Presencial',
-  virtual: '💻 Virtual',
-  híbrido: '🔄 Híbrido',
+const MODALITY_LABELS: Record<string, React.ReactNode> = {
+  presencial: <><Building2 className="w-3 h-3 inline" /> Presencial</>,
+  virtual: <><Monitor className="w-3 h-3 inline" /> Virtual</>,
+  híbrido: <><RefreshCw className="w-3 h-3 inline" /> Híbrido</>,
 };
 
 /**
@@ -143,7 +144,7 @@ export default function StudentCoursesPage() {
       {/* Courses grid */}
       {coursesData.length === 0 ? (
         <EmptyState
-          icon={<span className="text-4xl">📭</span>}
+          icon={<Inbox className="w-8 h-8 text-white/30" />}
           title="Sin cursos inscritos"
           description="No estás inscrito en ningún curso del semestre actual."
         />
@@ -170,8 +171,8 @@ export default function StudentCoursesPage() {
                 <div className="flex items-start justify-between mb-3">
                   <Badge variant={badge.variant} size="sm">{badge.label}</Badge>
                   {cd.pendingCount > 0 && (
-                    <span className="flex items-center gap-1 text-[11px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                      ⚠ {cd.pendingCount} pendiente{cd.pendingCount > 1 ? 's' : ''}
+                    <span className="flex items-center gap-0.5 text-[11px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                      <AlertTriangle className="w-3 h-3" /> {cd.pendingCount} pendiente{cd.pendingCount > 1 ? 's' : ''}
                     </span>
                   )}
                 </div>
@@ -194,7 +195,7 @@ export default function StudentCoursesPage() {
                       </span>
                       <span>{s.startTime}–{s.endTime}</span>
                       {s.room && (
-                        <span className="text-white/25">📍 {s.room}</span>
+                        <span className="text-white/25 flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {s.room}</span>
                       )}
                       <span className="text-white/20">
                         {MODALITY_LABELS[s.modality] ?? s.modality}
@@ -205,10 +206,10 @@ export default function StudentCoursesPage() {
 
                 {/* Bottom stats */}
                 <div className="flex items-center gap-4 pt-3 border-t border-white/[0.06] text-[11px] text-white/30">
-                  <span>📝 {cd.activities.filter((a) => a.status !== 'draft').length} actividades</span>
-                  <span>✅ {cd.deliveredCount} entregadas</span>
+                  <span className="flex items-center gap-0.5"><FileText className="w-3 h-3" /> {cd.activities.filter((a) => a.status !== 'draft').length} actividades</span>
+                  <span className="flex items-center gap-0.5"><CheckCircle2 className="w-3 h-3" /> {cd.deliveredCount} entregadas</span>
                   {cd.pendingCount > 0 && (
-                    <span className="text-amber-400/60">⏳ {cd.pendingCount} pendientes</span>
+                    <span className="text-amber-400/60 flex items-center gap-0.5"><Clock className="w-3 h-3" /> {cd.pendingCount} pendientes</span>
                   )}
                 </div>
               </motion.button>

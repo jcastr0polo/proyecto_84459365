@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Upload, CheckCircle2, UserPlus, FileText, Rocket, Inbox } from 'lucide-react';
 
 interface TimelineEvent {
   id: string;
@@ -17,12 +18,12 @@ interface ActivityTimelineProps {
   loading?: boolean;
 }
 
-const typeConfig: Record<string, { icon: string; color: string; dotColor: string }> = {
-  submission: { icon: '📤', color: 'text-blue-400', dotColor: 'bg-blue-400' },
-  grade: { icon: '✅', color: 'text-emerald-400', dotColor: 'bg-emerald-400' },
-  enrollment: { icon: '👤', color: 'text-purple-400', dotColor: 'bg-purple-400' },
-  activity: { icon: '📝', color: 'text-cyan-400', dotColor: 'bg-cyan-400' },
-  project: { icon: '🚀', color: 'text-amber-400', dotColor: 'bg-amber-400' },
+const typeConfig: Record<string, { icon: React.ReactNode; color: string; dotColor: string }> = {
+  submission: { icon: <Upload className="w-3 h-3" />, color: 'text-blue-400', dotColor: 'bg-blue-400' },
+  grade: { icon: <CheckCircle2 className="w-3 h-3" />, color: 'text-emerald-400', dotColor: 'bg-emerald-400' },
+  enrollment: { icon: <UserPlus className="w-3 h-3" />, color: 'text-purple-400', dotColor: 'bg-purple-400' },
+  activity: { icon: <FileText className="w-3 h-3" />, color: 'text-cyan-400', dotColor: 'bg-cyan-400' },
+  project: { icon: <Rocket className="w-3 h-3" />, color: 'text-amber-400', dotColor: 'bg-amber-400' },
 };
 
 /**
@@ -50,7 +51,7 @@ export default function ActivityTimeline({ events, loading = false }: ActivityTi
   if (events.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-2xl mb-2">📭</p>
+        <Inbox className="w-6 h-6 text-white/20 mx-auto mb-2" />
         <p className="text-xs text-white/30">Sin actividad reciente</p>
       </div>
     );
