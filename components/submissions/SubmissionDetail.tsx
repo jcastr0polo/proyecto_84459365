@@ -1,0 +1,173 @@
+'use client';
+
+import React from 'react';
+import Badge from '@/components/ui/Badge';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { SUBMISSION_STATUS_CONFIG } from '@/components/submissions/SubmissionCard';
+import type { Submission, SubmissionWithDetails } from '@/lib/types';
+
+interface SubmissionDetailProps {
+  submission: Submission | SubmissionWithDetails;
+  isAdmin?: boolean;
+  onReturn?: () => void;
+  returnLoading?: boolean;
+}
+
+function isWithDetails(s: Submission | SubmissionWithDetails): s is SubmissionWithDetails {
+  return 'student' in s && 'activity' in s;
+}
+
+/**
+ * SubmissionDetail — Vista de detalle de una entrega
+ */
+export default function SubmissionDetail({ submission, isAdmin = false, onReturn, returnLoading = false }: SubmissionDetailProps) {
+  const status = SUBMISSION_STATUS_CONFIG[submission.status];
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant={status.variant} size="md" dot>{status.label}</Badge>
+        <Badge variant="neutral" size="sm">Versión {submission.version}</Badge>
+        {submission.isLate && <Badge variant="danger" size="sm">Entrega tardía</Badge>}
+      </div>
+
+      {/* Student info (admin view) */}
+      {isAdmin && isWithDetails(submission) && (
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-xs font-bold text-white/80">
+            {submission.student.firstName[0]}{submission.student.lastName[0]}
+          </div>
+          <div>
+            <p className="text-sm text-white/80 font-medium">{submission.student.firstName} {submission.student.lastName}</p>
+            <p className="text-xs text-white/40">{submission.student.email}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Dates */}
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <span className="text-xs text-white/40 block mb-0.5">Enviado</span>
+          <span className="text-white/70">{formatDateTime(submission.submittedAt)}</span>
+        </div>
+        <div>
+          <span className="text-xs text-white/40 block mb-0.5">Última actualización</span>
+          <span className="text-white/70">{formatDateTime(submission.updatedAt)}</span>
+        </div>
+      </div>
+
+      {/* Content */}
+      {submission.content && (
+        <Card padding="md">
+          <h4 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Comentario del estudiante</h4>
+          <p className="text-sm text-white/70 whitespace-pre-wrap">{submission.content}</p>
+        </Card>
+      )}
+
+      {/* Attachments */}
+      {submission.attachments.length > 0 && (
+        <Card padding="md">
+          <h4 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+            Archivos ({submission.attachments.length})
+          </h4>
+          <div className="space-y-2">
+            {submission.attachments.map((att) => (
+              <a
+                key={att.id}
+                href={`/api/upload/${att.filePath.replace('uploads/', '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]
+                         hover:bg-white/[0.06] hover:border-white/[0.12] transition-all group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-cyan-500/10 flex items-center justify-center shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan-400">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white/80 group-hover:text-white truncate">{att.fileName}</p>
+                  <p className="text-[11px] text-white/30">{formatFileSize(att.fileSize)}</p>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/20 group-hover:text-cyan-400 shrink-0">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </a>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Links */}
+      {submission.links.length > 0 && (
+        <Card padding="md">
+          <h4 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+            Enlaces ({submission.links.length})
+          </h4>
+          <div className="space-y-2">
+            {submission.links.map((link, i) => (
+              <a
+                key={i}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]
+                         hover:bg-white/[0.06] hover:border-white/[0.12] transition-all group"
+              >
+                <span className="text-lg shrink-0">{LINK_ICONS[link.type] ?? '🔗'}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white/80 group-hover:text-cyan-300 truncate">{link.label || link.url}</p>
+                  <p className="text-[11px] text-white/30 truncate">{link.url}</p>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/20 group-hover:text-cyan-400 shrink-0">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </a>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Admin actions */}
+      {isAdmin && (submission.status === 'submitted' || submission.status === 'reviewed' || submission.status === 'resubmitted') && onReturn && (
+        <div className="pt-3 border-t border-white/[0.06]">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={onReturn}
+            loading={returnLoading}
+          >
+            ↩ Devolver Entrega
+          </Button>
+          <p className="text-[11px] text-white/25 mt-1">Permite al estudiante re-enviar su trabajo</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const LINK_ICONS: Record<string, string> = {
+  github: '🐙',
+  vercel: '▲',
+  figma: '🎨',
+  other: '🔗',
+};
+
+function formatDateTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString('es-CO', {
+      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+  } catch { return iso; }
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}

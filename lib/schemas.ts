@@ -211,3 +211,214 @@ export const enrollmentSchema = z.object({
 export type EnrollStudentZod = z.infer<typeof enrollStudentSchema>;
 export type BulkEnrollZod = z.infer<typeof bulkEnrollSchema>;
 export type EnrollmentZod = z.infer<typeof enrollmentSchema>;
+
+// ────────────────────────────────────────────────────────────
+// FASE 11 — ACTIVIDADES Y MATERIAL SCHEMAS
+// ────────────────────────────────────────────────────────────
+
+/**
+ * activityAttachmentSchema — Validación de un archivo adjunto de actividad
+ */
+export const activityAttachmentSchema = z.object({
+  id: z.string().min(1),
+  fileName: z.string().min(1),
+  filePath: z.string().min(1),
+  fileSize: z.number().min(0),
+  mimeType: z.string().min(1),
+  uploadedAt: z.string(),
+});
+
+/**
+ * activitySchema — Validación completa de una Activity en activities.json
+ */
+export const activitySchema = z.object({
+  id: z.string().min(1),
+  courseId: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string(),
+  type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'other']),
+  category: z.enum(['individual', 'group']),
+  attachments: z.array(activityAttachmentSchema),
+  promptId: z.string().optional(),
+  dueDate: z.string(),
+  publishDate: z.string(),
+  maxScore: z.number().positive('La nota máxima debe ser mayor que 0'),
+  weight: z.number().min(0, 'El peso no puede ser negativo').max(100, 'El peso no puede superar 100'),
+  allowLateSubmission: z.boolean(),
+  latePenaltyPercent: z.number().min(0).max(100).optional(),
+  status: z.enum(['draft', 'published', 'closed']),
+  requiresFileUpload: z.boolean(),
+  requiresLinkSubmission: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+/**
+ * createActivitySchema — Validación del body de POST /api/courses/[id]/activities
+ * Valida: título no vacío, maxScore > 0, weight 0-100, dueDate > publishDate
+ */
+export const createActivitySchema = z.object({
+  title: z.string().min(1, 'El título es requerido').trim(),
+  description: z.string().min(1, 'La descripción es requerida'),
+  type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'other']),
+  category: z.enum(['individual', 'group']),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido'),
+  publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido'),
+  maxScore: z.number().positive('La nota máxima debe ser mayor que 0'),
+  weight: z.number().min(0, 'El peso no puede ser negativo').max(100, 'El peso no puede superar 100'),
+  allowLateSubmission: z.boolean().optional().default(false),
+  latePenaltyPercent: z.number().min(0).max(100).optional(),
+  requiresFileUpload: z.boolean().optional().default(false),
+  requiresLinkSubmission: z.boolean().optional().default(false),
+}).refine((data) => new Date(data.dueDate) > new Date(data.publishDate), {
+  message: 'La fecha límite debe ser posterior a la fecha de publicación',
+  path: ['dueDate'],
+});
+
+/**
+ * updateActivitySchema — Validación del body de PUT /api/activities/[id]
+ */
+export const updateActivitySchema = z.object({
+  title: z.string().min(1, 'El título es requerido').trim().optional(),
+  description: z.string().optional(),
+  type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'other']).optional(),
+  category: z.enum(['individual', 'group']).optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido').optional(),
+  publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido').optional(),
+  maxScore: z.number().positive('La nota máxima debe ser mayor que 0').optional(),
+  weight: z.number().min(0, 'El peso no puede ser negativo').max(100, 'El peso no puede superar 100').optional(),
+  allowLateSubmission: z.boolean().optional(),
+  latePenaltyPercent: z.number().min(0).max(100).optional(),
+  requiresFileUpload: z.boolean().optional(),
+  requiresLinkSubmission: z.boolean().optional(),
+  status: z.enum(['draft', 'published', 'closed']).optional(),
+});
+
+// Tipos inferidos — Actividades
+export type ActivityAttachmentZod = z.infer<typeof activityAttachmentSchema>;
+export type ActivityZod = z.infer<typeof activitySchema>;
+export type CreateActivityZod = z.infer<typeof createActivitySchema>;
+export type UpdateActivityZod = z.infer<typeof updateActivitySchema>;
+
+// ────────────────────────────────────────────────────────────
+// FASE 13 — ENTREGAS DE ESTUDIANTES SCHEMAS
+// ────────────────────────────────────────────────────────────
+
+/**
+ * submissionLinkSchema — Validación de enlace de entrega
+ * RN-ENT-06: URLs de GitHub/Vercel para cursos de programación
+ */
+export const submissionLinkSchema = z.object({
+  type: z.enum(['github', 'vercel', 'figma', 'other']),
+  url: z.string()
+    .url('URL inválida')
+    .refine((url) => {
+      try {
+        const u = new URL(url);
+        return ['http:', 'https:'].includes(u.protocol);
+      } catch {
+        return false;
+      }
+    }, 'Solo se permiten URLs HTTP/HTTPS'),
+  label: z.string().max(100).optional(),
+});
+
+/**
+ * submissionAttachmentSchema — Validación de archivo adjunto de entrega
+ */
+export const submissionAttachmentSchema = z.object({
+  id: z.string().min(1),
+  fileName: z.string().min(1),
+  filePath: z.string().min(1),
+  fileSize: z.number().min(0),
+  mimeType: z.string().min(1),
+  uploadedAt: z.string(),
+});
+
+/**
+ * submissionSchema — Validación completa de una Submission en submissions.json
+ */
+export const submissionSchema = z.object({
+  id: z.string().min(1),
+  activityId: z.string().min(1),
+  studentId: z.string().min(1),
+  courseId: z.string().min(1),
+  content: z.string().optional(),
+  attachments: z.array(submissionAttachmentSchema),
+  links: z.array(submissionLinkSchema),
+  submittedAt: z.string(),
+  isLate: z.boolean(),
+  status: z.enum(['submitted', 'reviewed', 'returned', 'resubmitted']),
+  version: z.number().int().min(1),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+/**
+ * createSubmissionSchema — Validación del body de POST (entrega de estudiante)
+ * RN-ENT-03: Validación de contenido mínimo
+ */
+export const createSubmissionSchema = z.object({
+  content: z.string().max(5000, 'El comentario no puede exceder 5000 caracteres').optional(),
+  links: z.array(submissionLinkSchema).max(10, 'Máximo 10 enlaces').optional(),
+});
+
+// Tipos inferidos — Entregas
+export type SubmissionLinkZod = z.infer<typeof submissionLinkSchema>;
+export type SubmissionAttachmentZod = z.infer<typeof submissionAttachmentSchema>;
+export type SubmissionZod = z.infer<typeof submissionSchema>;
+export type CreateSubmissionZod = z.infer<typeof createSubmissionSchema>;
+
+// ────────────────────────────────────────────────────────────
+// FASE 15 — CALIFICACIONES SCHEMAS
+// ────────────────────────────────────────────────────────────
+
+/**
+ * gradeSchema — Validación completa de un Grade en grades.json
+ * RN-CAL-01: score entre 0 y maxScore
+ */
+export const gradeSchema = z.object({
+  id: z.string().min(1),
+  submissionId: z.string().min(1),
+  activityId: z.string().min(1),
+  studentId: z.string().min(1),
+  courseId: z.string().min(1),
+  score: z.number().min(0, 'La nota no puede ser negativa'),
+  maxScore: z.number().positive('La nota máxima debe ser mayor que 0'),
+  feedback: z.string().max(5000, 'La retroalimentación no puede exceder 5000 caracteres').optional(),
+  isPublished: z.boolean(),
+  publishedAt: z.string().optional(),
+  gradedBy: z.string().min(1),
+  gradedAt: z.string(),
+  updatedAt: z.string(),
+}).refine((data) => data.score <= data.maxScore, {
+  message: 'La nota no puede exceder la nota máxima',
+  path: ['score'],
+});
+
+/**
+ * createGradeSchema — Validación del body de POST /api/grades
+ * RF-CAL-01: Calificar entrega con nota y retroalimentación
+ * RN-CAL-01: score >= 0 && score <= maxScore (validación en servicio contra actividad)
+ */
+export const createGradeSchema = z.object({
+  submissionId: z.string().min(1, 'El ID de la entrega es requerido'),
+  activityId: z.string().min(1, 'El ID de la actividad es requerido'),
+  studentId: z.string().min(1, 'El ID del estudiante es requerido'),
+  courseId: z.string().min(1, 'El ID del curso es requerido'),
+  score: z.number().min(0, 'La nota no puede ser negativa'),
+  feedback: z.string().max(5000, 'La retroalimentación no puede exceder 5000 caracteres').optional(),
+});
+
+/**
+ * updateGradeSchema — Validación del body de PUT /api/grades/[id]
+ */
+export const updateGradeSchema = z.object({
+  score: z.number().min(0, 'La nota no puede ser negativa').optional(),
+  feedback: z.string().max(5000, 'La retroalimentación no puede exceder 5000 caracteres').optional(),
+});
+
+// Tipos inferidos — Calificaciones
+export type GradeZod = z.infer<typeof gradeSchema>;
+export type CreateGradeZod = z.infer<typeof createGradeSchema>;
+export type UpdateGradeZod = z.infer<typeof updateGradeSchema>;

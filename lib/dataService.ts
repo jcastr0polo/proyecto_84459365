@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { HomeDataSchema, AppConfigSchema } from './validators';
-import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment } from './types';
-import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema } from './schemas';
+import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade } from './types';
+import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema } from './schemas';
 import { z } from 'zod';
 
 /**
@@ -249,4 +249,144 @@ export function isStudentEnrolled(studentId: string, courseId: string): boolean 
   return enrollments.some(
     (e) => e.studentId === studentId && e.courseId === courseId && e.status === 'active'
   );
+}
+
+// ────────────────────────────────────────────────────────────
+// FASE 11 — Actividades
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Lee y valida /data/activities.json
+ */
+export function readActivities(): Activity[] {
+  const raw = readJsonFile<unknown[]>('activities.json');
+  return z.array(activitySchema).parse(raw) as Activity[];
+}
+
+/**
+ * Escribe el array completo de actividades en /data/activities.json
+ */
+export function writeActivities(activities: Activity[]): void {
+  writeJsonFile('activities.json', activities);
+}
+
+/**
+ * Lista actividades de un curso específico
+ */
+export function getActivitiesByCourse(courseId: string): Activity[] {
+  const activities = readActivities();
+  return activities.filter((a) => a.courseId === courseId);
+}
+
+/**
+ * Busca una actividad por ID
+ */
+export function getActivityById(id: string): Activity | null {
+  const activities = readActivities();
+  return activities.find((a) => a.id === id) ?? null;
+}
+
+// ────────────────────────────────────────────────────────────
+// FASE 13 — Entregas de Estudiantes
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Lee y valida /data/submissions.json
+ */
+export function readSubmissions(): Submission[] {
+  const raw = readJsonFile<unknown[]>('submissions.json');
+  return z.array(submissionSchema).parse(raw) as Submission[];
+}
+
+/**
+ * Escribe el array completo de entregas en /data/submissions.json
+ */
+export function writeSubmissions(submissions: Submission[]): void {
+  writeJsonFile('submissions.json', submissions);
+}
+
+/**
+ * Lista entregas de una actividad específica
+ */
+export function getSubmissionsByActivity(activityId: string): Submission[] {
+  const submissions = readSubmissions();
+  return submissions.filter((s) => s.activityId === activityId);
+}
+
+/**
+ * Lista entregas de un estudiante específico
+ */
+export function getSubmissionsByStudent(studentId: string): Submission[] {
+  const submissions = readSubmissions();
+  return submissions.filter((s) => s.studentId === studentId);
+}
+
+/**
+ * Busca una entrega específica por actividad y estudiante
+ * RN-ENT-01: Una entrega por actividad por estudiante
+ */
+export function getSubmission(activityId: string, studentId: string): Submission | null {
+  const submissions = readSubmissions();
+  return submissions.find(
+    (s) => s.activityId === activityId && s.studentId === studentId
+  ) ?? null;
+}
+
+/**
+ * Busca una entrega por ID
+ */
+export function getSubmissionById(id: string): Submission | null {
+  const submissions = readSubmissions();
+  return submissions.find((s) => s.id === id) ?? null;
+}
+
+// ────────────────────────────────────────────────────────────
+// FASE 15 — Calificaciones
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Lee y valida /data/grades.json
+ */
+export function readGrades(): Grade[] {
+  const raw = readJsonFile<unknown[]>('grades.json');
+  return z.array(gradeSchema).parse(raw) as Grade[];
+}
+
+/**
+ * Escribe el array completo de calificaciones en /data/grades.json
+ */
+export function writeGrades(grades: Grade[]): void {
+  writeJsonFile('grades.json', grades);
+}
+
+/**
+ * Lista calificaciones de una actividad específica
+ */
+export function getGradesByActivity(activityId: string): Grade[] {
+  const grades = readGrades();
+  return grades.filter((g) => g.activityId === activityId);
+}
+
+/**
+ * Lista calificaciones de un estudiante en un curso específico
+ */
+export function getGradesByStudent(studentId: string, courseId: string): Grade[] {
+  const grades = readGrades();
+  return grades.filter((g) => g.studentId === studentId && g.courseId === courseId);
+}
+
+/**
+ * Busca la calificación de una entrega específica
+ */
+export function getGradeForSubmission(submissionId: string): Grade | null {
+  const grades = readGrades();
+  return grades.find((g) => g.submissionId === submissionId) ?? null;
+}
+
+/**
+ * Busca una calificación por ID
+ */
+export function getGradeById(id: string): Grade | null {
+  const grades = readGrades();
+  return grades.find((g) => g.id === id) ?? null;
 }

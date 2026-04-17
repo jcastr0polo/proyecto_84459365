@@ -27,14 +27,14 @@
 | 7 | Semestres y Cursos — Backend | Ingeniero Backend Senior | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_7_SEMESTRES_CURSOS_BACK.md` |
 | 8 | Semestres y Cursos — Frontend | Diseñador Frontend Obsesivo | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_8_SEMESTRES_CURSOS_FRONT.md` |
 | 9 | Inscripción de Estudiantes — Backend | Ingeniero Backend Senior | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_9_INSCRIPCIONES_BACK.md` |
-| 10 | Inscripción de Estudiantes — Frontend | Diseñador Frontend Obsesivo | ⬜ Pendiente | — | — | — |
-| 11 | Actividades y Material — Backend | Ingeniero Backend Senior | ⬜ Pendiente | — | — | — |
-| 12 | Actividades y Material — Frontend | Diseñador Frontend Obsesivo | ⬜ Pendiente | — | — | — |
-| 13 | Entregas de Estudiantes — Backend | Ingeniero Backend Senior | ⬜ Pendiente | — | — | — |
-| 14 | Entregas de Estudiantes — Frontend | Diseñador Frontend Obsesivo | ⬜ Pendiente | — | — | — |
-| 15 | Calificaciones y Notas — Backend | Ingeniero Backend Senior + Experto Educación | ⬜ Pendiente | — | — | — |
-| 16 | Calificaciones y Notas — Frontend | Diseñador Frontend Obsesivo | ⬜ Pendiente | — | — | — |
-| 17 | Exportación de Notas | Ingeniero Backend Senior + Experto Educación | ⬜ Pendiente | — | — | — |
+| 10 | Inscripción de Estudiantes — Frontend | Diseñador Frontend Obsesivo | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_10_INSCRIPCIONES_FRONT.md` |
+| 11 | Actividades y Material — Backend | Ingeniero Backend Senior | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_11_ACTIVIDADES_BACK.md` |
+| 12 | Actividades y Material — Frontend | Diseñador Frontend Obsesivo | ✅ Completada | 16 Abr 2026 | 16 Abr 2026 | `RESUMEN_FASE_12_ACTIVIDADES_FRONT.md` |
+| 13 | Entregas de Estudiantes — Backend | Ingeniero Backend Senior | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_13_ENTREGAS_BACK.md` |
+| 14 | Entregas de Estudiantes — Frontend | Diseñador Frontend Obsesivo | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_14_ENTREGAS_FRONT.md` |
+| 15 | Calificaciones y Notas — Backend | Ingeniero Backend Senior + Experto Educación | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_15_CALIFICACIONES_BACK.md` |
+| 16 | Calificaciones y Notas — Frontend | Diseñador Frontend Obsesivo | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_16_CALIFICACIONES_FRONT.md` |
+| 17 | Exportación de Notas | Ingeniero Backend Senior + Experto Educación | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_17_EXPORTACION.md` |
 | 18 | Prompts de IA — Backend y Frontend | Ingeniero Fullstack + Experto en IA Educativa | ⬜ Pendiente | — | — | — |
 | 19 | Proyectos Estudiantiles y Vitrina | Diseñador UX/UI + Ingeniero Fullstack | ⬜ Pendiente | — | — | — |
 | 20 | Dashboards — Admin | Diseñador Frontend Obsesivo | ⬜ Pendiente | — | — | — |
@@ -275,152 +275,344 @@
 ### FASE 10 — Inscripción de Estudiantes — Frontend
 
 ```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+[ INICIO  ] Fecha: 16 de Abril 2026  Hora: En curso
+[ CIERRE  ] Fecha: 16 de Abril 2026  Hora: Completada
+[ DURACIÓN] Sesión única
 ```
 
+**Entrada en el historial:**
+"Fase 10 completada — Inscripción de Estudiantes Frontend con tabla responsiva, formulario individual, importación CSV, y 4 componentes"
+
 **Acciones ejecutadas:**
-_pendiente_
+
+1. Crear components/students/StudentCard.tsx — Vista mobile de estudiante inscrito
+2. Crear components/students/StudentTable.tsx — Tabla responsive (desktop: tabla / mobile: cards)
+3. Crear components/students/EnrollForm.tsx — Formulario con validación real-time e inline errors
+4. Crear components/students/CSVImporter.tsx — Drop zone + preview + descarga plantilla
+5. Crear app/admin/courses/[courseId]/students/page.tsx — Lista con búsqueda, filtro estado, retirar
+6. Crear app/admin/courses/[courseId]/students/new/page.tsx — Inscripción individual con feedback
+7. Crear app/admin/courses/[courseId]/students/import/page.tsx — Importación CSV con resumen
+8. Modificar app/admin/courses/[courseId]/page.tsx — Tab Estudiantes ahora navega a /students
+9. TypeScript typecheck + ESLint: 0 errores, 0 warnings de Fase 10
 
 **Archivos creados/modificados:**
-_pendiente_
+
+- ✅ `components/students/StudentCard.tsx` — CREADO
+- ✅ `components/students/StudentTable.tsx` — CREADO
+- ✅ `components/students/EnrollForm.tsx` — CREADO
+- ✅ `components/students/CSVImporter.tsx` — CREADO
+- ✅ `app/admin/courses/[courseId]/students/page.tsx` — CREADO
+- ✅ `app/admin/courses/[courseId]/students/new/page.tsx` — CREADO
+- ✅ `app/admin/courses/[courseId]/students/import/page.tsx` — CREADO
+- ✅ `app/admin/courses/[courseId]/page.tsx` — MODIFICADO (tab Estudiantes funcional)
 
 **Observaciones:**
-_pendiente_
+
+- Tabla responsiva: desktop muestra tabla con columnas, mobile muestra cards apiladas
+- Búsqueda en tiempo real por nombre, email o documento
+- Filtro por estado (activo/retirado)
+- Formulario con validación client-side en real-time + mensajes inline
+- Feedback diferenciado: usuario nuevo vs usuario existente vinculado
+- CSV: drag & drop + clic, preview con validación pre-envío, plantilla descargable
+- Resultado de importación: resumen con contadores + listas detalladas
+- No se modificó ningún archivo de backend
 
 ---
 
 ### FASE 11 — Actividades y Material — Backend
 
-```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+```text
+[ INICIO  ] Fecha: 16 de Abril 2026  Hora: En curso
+[ CIERRE  ] Fecha: 16 de Abril 2026  Hora: Completada
+[ DURACIÓN] Sesión única
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Crear data/activities.json (array vacío)
+2. Crear carpetas data/uploads/activities/ y data/uploads/submissions/ con .gitkeep
+3. Actualizar lib/types.ts — tipos Activity, ActivityAttachment, CreateActivityRequest, UpdateActivityRequest
+4. Actualizar lib/schemas.ts — activitySchema, activityAttachmentSchema, createActivitySchema (con refine dueDate > publishDate), updateActivitySchema
+5. Crear lib/uploadService.ts — uploadFile(), deleteFile(), readUploadedFile(), validación MIME/tamaño/extensión, sanitización de nombres, prevención path traversal
+6. Crear app/api/upload/route.ts — POST upload con FormData
+7. Crear app/api/upload/[...path]/route.ts — GET servir archivos estáticos con auth
+8. Actualizar lib/dataService.ts — readActivities, writeActivities, getActivitiesByCourse, getActivityById
+9. Crear app/api/courses/[id]/activities/route.ts — GET listar (admin: todas, student: published+visible), POST crear (admin, estado draft)
+10. Crear app/api/activities/[id]/route.ts — GET detalle (con permisos), PUT editar (admin, validación transiciones, warning entregas)
+11. Crear app/api/activities/[id]/publish/route.ts — POST publicar (draft→published, valida requisitos mínimos)
 
 **Archivos creados/modificados:**
-_pendiente_
+- data/activities.json (creado)
+- data/uploads/activities/.gitkeep (creado)
+- data/uploads/submissions/.gitkeep (creado)
+- lib/types.ts (modificado — +4 interfaces)
+- lib/schemas.ts (modificado — +4 schemas)
+- lib/uploadService.ts (creado)
+- lib/dataService.ts (modificado — +4 funciones)
+- app/api/upload/route.ts (creado)
+- app/api/upload/[...path]/route.ts (creado)
+- app/api/courses/[id]/activities/route.ts (creado)
+- app/api/activities/[id]/route.ts (creado)
+- app/api/activities/[id]/publish/route.ts (creado)
 
 **Observaciones:**
-_pendiente_
+- Typecheck: 0 errores
+- Lint: 0 errores de Fase 11 (2 warnings pre-existentes)
+- Upload service valida MIME types según Plan §15.3
+- Transiciones de estado validadas: draft → published → closed
+- Estudiantes solo ven actividades published con publishDate <= now
+- Sistema preparado para submissions.json (Fase 13) con detección automática
 
 ---
 
 ### FASE 12 — Actividades y Material — Frontend
 
-```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+```text
+[ INICIO  ] Fecha: 16 de Abril 2026  Hora: En curso
+[ CIERRE  ] Fecha: 16 de Abril 2026  Hora: Completada
+[ DURACIÓN] Sesión única
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Crear components/ui/FileUploadZone.tsx — drag & drop reutilizable con validación tamaño
+2. Crear components/ui/DatePicker.tsx — wrapper input date/datetime-local con estilo unificado
+3. Crear components/ui/Countdown.tsx — cuenta regresiva con colores de urgencia
+4. Crear components/activities/MarkdownRenderer.tsx — renderizado MD→HTML ligero
+5. Crear components/activities/ActivityCard.tsx — card para lista con badges tipo/estado/countdown
+6. Crear components/activities/ActivityForm.tsx — formulario 5 secciones (info, MD preview, config, opciones, uploads)
+7. Crear components/activities/ActivityDetail.tsx — vista detalle con acciones admin/student
+8. Crear app/admin/courses/[courseId]/activities/page.tsx — lista con filtros, peso acumulado
+9. Crear app/admin/courses/[courseId]/activities/new/page.tsx — crear actividad con upload
+10. Crear app/admin/courses/[courseId]/activities/[actId]/page.tsx — detalle admin con publicar/cerrar/editar
+11. Crear app/student/courses/[courseId]/activities/[actId]/page.tsx — detalle estudiante con sección Mi Entrega
+12. Modificar app/admin/courses/[courseId]/page.tsx — tab Actividades activo con navegación
 
 **Archivos creados/modificados:**
-_pendiente_
+- components/ui/FileUploadZone.tsx (creado)
+- components/ui/DatePicker.tsx (creado)
+- components/ui/Countdown.tsx (creado)
+- components/activities/MarkdownRenderer.tsx (creado)
+- components/activities/ActivityCard.tsx (creado)
+- components/activities/ActivityForm.tsx (creado)
+- components/activities/ActivityDetail.tsx (creado)
+- app/admin/courses/[courseId]/activities/page.tsx (creado)
+- app/admin/courses/[courseId]/activities/new/page.tsx (creado)
+- app/admin/courses/[courseId]/activities/[actId]/page.tsx (creado)
+- app/student/courses/[courseId]/activities/[actId]/page.tsx (creado)
+- app/admin/courses/[courseId]/page.tsx (modificado)
 
 **Observaciones:**
-_pendiente_
+- Typecheck: 0 errores
+- Lint: 0 errores de Fase 12 (2 warnings pre-existentes)
+- Markdown preview en vivo en formulario de actividad
+- Barra de peso acumulado con advertencia visual si excede 100%
+- Countdown con colores de urgencia (rojo < 6h, ámbar < 1d, normal)
+- Vista estudiante con placeholder para entregas (prep Fase 14)
+- Sistema de upload integrado via FormData + /api/upload
 
 ---
 
 ### FASE 13 — Entregas de Estudiantes — Backend
 
-```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+```text
+[ INICIO  ] Fecha: 17 de Abril 2026  Hora: En curso
+[ CIERRE  ] Fecha: 17 de Abril 2026  Hora: Completada
+[ DURACIÓN] Sesión única
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Crear data/submissions.json (array vacío)
+2. Actualizar lib/types.ts — +5 interfaces: Submission, SubmissionAttachment, SubmissionLink, CreateSubmissionRequest, SubmissionWithDetails
+3. Actualizar lib/schemas.ts — +4 schemas: submissionSchema, submissionAttachmentSchema, submissionLinkSchema, createSubmissionSchema
+4. Actualizar lib/dataService.ts — +6 funciones: readSubmissions, writeSubmissions, getSubmissionsByActivity, getSubmissionsByStudent, getSubmission, getSubmissionById
+5. Crear lib/submissionService.ts — submitWork (versionamiento, check plazo, check inscripción, check requisitos, máquina de estado), returnSubmission
+6. Crear app/api/activities/[id]/submissions/route.ts — GET (admin: todas con datos estudiante + filtro status; student: solo propia), POST (student: FormData archivos + JSON enlaces)
+7. Crear app/api/submissions/[id]/route.ts — GET (detalle enriquecido con permisos), PUT (admin: devolver entrega)
+8. Fix lint warning: remover import no utilizado en submissionService
 
 **Archivos creados/modificados:**
-_pendiente_
+- data/submissions.json (creado)
+- lib/types.ts (modificado — +5 interfaces)
+- lib/schemas.ts (modificado — +4 schemas)
+- lib/dataService.ts (modificado — +6 funciones)
+- lib/submissionService.ts (creado)
+- app/api/activities/[id]/submissions/route.ts (creado)
+- app/api/submissions/[id]/route.ts (creado)
 
 **Observaciones:**
-_pendiente_
+- Typecheck: 0 errores
+- Lint: 0 errores de Fase 13 (2 warnings pre-existentes)
+- Máquina de estado: submitted → reviewed → returned → resubmitted → reviewed
+- Versionamiento: re-entrega incrementa version, preserva id original
+- isLate calculado automáticamente vs dueDate de la actividad
+- Entrega bloqueada post-calificación salvo devolución por admin
+- Upload integrado via FormData + /api/upload pattern
+- SubmissionWithDetails para listados admin con datos contextuales
 
 ---
 
 ### FASE 14 — Entregas de Estudiantes — Frontend
 
-```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+```text
+[ INICIO  ] Fecha: 17 de Abril 2026  Hora: En curso
+[ CIERRE  ] Fecha: 17 de Abril 2026  Hora: Completada
+[ DURACIÓN] Sesión única
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Crear components/submissions/LinkInput.tsx — Input URL con validación por tipo (github/vercel/figma/otro)
+2. Crear components/submissions/SubmissionCard.tsx — Card de entrega con status, versión, late badge, conteos
+3. Crear components/submissions/SubmissionDetail.tsx — Detalle completo con archivos, enlaces, botón devolver admin
+4. Crear components/submissions/SubmitForm.tsx — Formulario multi-sección: resumen, archivos drag&drop, enlaces condicionales, comentarios, barra progreso, modal confirmación, pantalla éxito
+5. Crear app/student/courses/[courseId]/activities/[actId]/submit/page.tsx — Página de entrega con validación de inscripción y permisos
+6. Crear app/student/courses/[courseId]/activities/page.tsx — Lista de actividades del estudiante con badges de estado (🟢Entregada, 🟡Pendiente, 🔴Vencida, ✅Calificada)
+7. Crear app/admin/courses/[courseId]/activities/[actId]/submissions/page.tsx — Tabla admin con filtros, modal detalle, botón devolver
+8. Modificar app/admin/courses/[courseId]/activities/[actId]/page.tsx — Conectar botón "Ver Entregas" a navegación real
+9. Modificar app/student/courses/[courseId]/activities/[actId]/page.tsx — Reemplazar placeholder con fetch de entrega existente y navegación a submit
+10. Fix lint: refactorizar LinkInput para usar useMemo en vez de setState en useEffect
 
 **Archivos creados/modificados:**
-_pendiente_
+- components/submissions/LinkInput.tsx (creado)
+- components/submissions/SubmissionCard.tsx (creado)
+- components/submissions/SubmissionDetail.tsx (creado)
+- components/submissions/SubmitForm.tsx (creado)
+- app/student/courses/[courseId]/activities/[actId]/submit/page.tsx (creado)
+- app/student/courses/[courseId]/activities/page.tsx (creado)
+- app/admin/courses/[courseId]/activities/[actId]/submissions/page.tsx (creado)
+- app/admin/courses/[courseId]/activities/[actId]/page.tsx (modificado)
+- app/student/courses/[courseId]/activities/[actId]/page.tsx (modificado)
 
 **Observaciones:**
-_pendiente_
+- Typecheck: 0 errores
+- Lint: 0 errores de Fase 14 (2 warnings pre-existentes)
+- LinkInput con validación regex por tipo: GitHub (github.com/*), Vercel (*.vercel.app), Figma (figma.com/*)
+- SubmitForm con barra de progreso por secciones completadas
+- Modal de confirmación antes de envío final
+- Pantalla de éxito con animación post-entrega
+- Lista estudiante muestra estado derivado: pendiente/entregada/vencida/calificada
+- Admin puede devolver entrega desde modal de detalle
+- Soporte de re-entrega (incrementa versión) con badge "Reentrega"
 
 ---
 
 ### FASE 15 — Calificaciones y Notas — Backend
 
-```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+```text
+[ INICIO  ] Fecha: 17 de Abril 2026  Hora: En curso
+[ CIERRE  ] Fecha: 17 de Abril 2026  Hora: Completada
+[ DURACIÓN] Sesión única
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Crear data/grades.json (array vacío)
+2. Actualizar lib/types.ts — +7 interfaces: Grade, CreateGradeRequest, UpdateGradeRequest, CourseGradeSummary, StudentGradeSummary, GradeExportRow, FinalGradeResult
+3. Actualizar lib/schemas.ts — +3 schemas: gradeSchema (con refine score ≤ maxScore), createGradeSchema, updateGradeSchema
+4. Actualizar lib/dataService.ts — +6 funciones: readGrades, writeGrades, getGradesByActivity, getGradesByStudent, getGradeForSubmission, getGradeById
+5. Crear lib/gradeService.ts — gradeSubmission (penalización tardía, upsert, marca reviewed), updateGrade, publishGrades (masiva), calculateFinalGrade (ponderado colombiano), getCourseGradeSummary, getStudentGradeSummary
+6. Crear app/api/grades/route.ts — POST calificar entrega (admin)
+7. Crear app/api/grades/[id]/route.ts — PUT editar calificación (admin)
+8. Crear app/api/activities/[id]/grades/publish/route.ts — POST publicar notas (admin)
+9. Crear app/api/courses/[id]/grades/route.ts — GET resumen notas (admin: tabla completa, student: solo publicadas)
+10. Fix lint: remover imports no utilizados (getGradesByActivity, Activity), simplificar signature publishGrades
 
 **Archivos creados/modificados:**
-_pendiente_
+- data/grades.json (creado)
+- lib/types.ts (modificado — +7 interfaces)
+- lib/schemas.ts (modificado — +3 schemas)
+- lib/dataService.ts (modificado — +6 funciones)
+- lib/gradeService.ts (creado)
+- app/api/grades/route.ts (creado)
+- app/api/grades/[id]/route.ts (creado)
+- app/api/activities/[id]/grades/publish/route.ts (creado)
+- app/api/courses/[id]/grades/route.ts (creado)
 
 **Observaciones:**
-_pendiente_
+- Typecheck: 0 errores
+- Lint: 0 errores de Fase 15 (1 warning funcional — _user en publish route, misma categoría que warnings pre-existentes)
+- Escala colombiana: 0.0–5.0, aprobación ≥ 3.0, redondeo a 1 decimal
+- Fórmula definitiva: Σ(score/maxScore × weight) / Σ(weights) × 5.0
+- Penalización tardía: score × (1 - latePenaltyPercent/100), nunca negativa
+- isPublished: false por defecto al calificar (RN-CAL-02)
+- Publicación masiva por actividad (RN-CAL-03)
+- Estudiante solo ve notas publicadas (filtro en getStudentGradeSummary)
+- Admin ve todas las notas incluyendo no publicadas (CourseGradeSummary)
+- Upsert: si ya existe nota para la entrega, actualiza en vez de duplicar
+- Submission marcada como 'reviewed' automáticamente al calificar
 
 ---
 
 ### FASE 16 — Calificaciones y Notas — Frontend
 
-```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+```text
+[ INICIO  ] Fecha: 17 de Abril 2026  Hora: En curso
+[ CIERRE  ] Fecha: 17 de Abril 2026  Hora: Completada
+[ DURACIÓN] Sesión única
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Crear components/grades/ScoreInput.tsx — Input inline validado 0–maxScore, Tab/Enter flow, color coding por ratio
+2. Crear components/grades/GradeStats.tsx — Panel estadísticas: promedio, mediana, más alta/baja, aprobados/reprobados %, helper calculateStats
+3. Crear components/grades/GradeTable.tsx — Tabla calificación rápida spreadsheet-like: score+feedback inline, Tab flow, batch save, counter bar
+4. Crear components/grades/GradeSummaryTable.tsx — Tabla pivote wireframe §13.5: estudiantes × actividades (peso%) × definitiva, celdas color-coded, fila promedios, footnotes
+5. Crear components/grades/GradeCard.tsx — Card de nota alumno: barra progreso animada, score, feedback, estado aprobado/reprobado
+6. Crear app/admin/courses/[courseId]/activities/[actId]/grades/page.tsx — Página calificación rápida: fetch entregas + notas, batch save, publicar modal
+7. Crear app/admin/courses/[courseId]/grades/page.tsx — Página resumen notas curso: tabla pivote, estadísticas, exportar CSV con BOM UTF-8
+8. Crear app/student/courses/[courseId]/grades/page.tsx — Página mis notas: lista con GradeCard, barra progreso calificación, definitiva grande animada
+9. Fix lint: ScoreInput — reemplazar useEffect+setState por patrón editing/draft (focus/blur)
+10. Fix lint: admin grades page — const en vez de let, remover params no usados
 
 **Archivos creados/modificados:**
-_pendiente_
+- components/grades/ScoreInput.tsx (creado)
+- components/grades/GradeStats.tsx (creado)
+- components/grades/GradeTable.tsx (creado)
+- components/grades/GradeSummaryTable.tsx (creado)
+- components/grades/GradeCard.tsx (creado)
+- app/admin/courses/[courseId]/activities/[actId]/grades/page.tsx (creado)
+- app/admin/courses/[courseId]/grades/page.tsx (creado)
+- app/student/courses/[courseId]/grades/page.tsx (creado)
 
 **Observaciones:**
-_pendiente_
+- Typecheck: 0 errores
+- Lint: 0 errores de Fase 16 (3 warnings pre-existentes)
+- ScoreInput usa patrón editing/draft sin useEffect (React 19 strict compliant)
+- Tab key navega entre inputs de nota (spreadsheet UX)
+- GradeTable muestra contador X/Y calificados + cambios sin guardar
+- GradeSummaryTable con columnas sticky (nombre estudiante) y fila de promedios
+- Celdas color-coded: emerald ≥ 4.0, amber ≥ 3.0, red < 3.0
+- CSV export con BOM UTF-8 para compatibilidad Excel
+- Estudiante solo ve notas publicadas + definitiva parcial/total
+- Animaciones framer-motion en GradeCard y barra de progreso
 
 ---
 
 ### FASE 17 — Exportación de Notas
 
-```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+```text
+[ INICIO  ] Fecha: 17 de Abril 2026  Hora: En curso
+[ CIERRE  ] Fecha: 17 de Abril 2026  Hora: Completada
+[ DURACIÓN] Sesión única
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Crear lib/exportService.ts — generateGradesCSV (BOM UTF-8, RFC 4180, sorted by apellido) + generateGradesJSON (para consumo programático)
+2. Crear app/api/courses/[id]/grades/export/route.ts — GET endpoint: Content-Disposition attachment, Content-Type text/csv, query param format=json opcional
+3. Modificar app/admin/courses/[courseId]/grades/page.tsx — Reemplazar export client-side por fetch al endpoint server-side con loading state
 
 **Archivos creados/modificados:**
-_pendiente_
+- lib/exportService.ts (creado)
+- app/api/courses/[id]/grades/export/route.ts (creado)
+- app/admin/courses/[courseId]/grades/page.tsx (modificado)
 
 **Observaciones:**
-_pendiente_
+- Typecheck: 0 errores
+- Lint: 0 errores de Fase 17 (3 warnings pre-existentes)
+- CSV con BOM UTF-8 (\uFEFF) para compatibilidad Excel con acentos
+- Formato RFC 4180: escapado de comas y comillas dobles
+- Line endings CRLF (\r\n) para compatibilidad Windows
+- Estudiantes ordenados alfabéticamente por apellido (localeCompare es-CO)
+- Filename: notas-{courseCode}-{YYYY-MM-DD}.csv
+- Endpoint soporta formato JSON alternativo (?format=json)
+- Botón de exportar con loading spinner durante generación
+- Escala colombiana 0.0–5.0, estado: Aprobado/Reprobado/Pendiente
 
 ---
 

@@ -17,8 +17,8 @@ type TabKey = 'resumen' | 'estudiantes' | 'actividades' | 'notas' | 'proyectos';
 
 const TABS: { key: TabKey; label: string; icon: string; ready: boolean }[] = [
   { key: 'resumen', label: 'Resumen', icon: '📋', ready: true },
-  { key: 'estudiantes', label: 'Estudiantes', icon: '👥', ready: false },
-  { key: 'actividades', label: 'Actividades', icon: '📝', ready: false },
+  { key: 'estudiantes', label: 'Estudiantes', icon: '👥', ready: true },
+  { key: 'actividades', label: 'Actividades', icon: '📝', ready: true },
   { key: 'notas', label: 'Notas', icon: '📊', ready: false },
   { key: 'proyectos', label: 'Proyectos', icon: '🚀', ready: false },
 ];
@@ -143,7 +143,15 @@ export default function CourseDetailPage() {
           {TABS.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => {
+                if (tab.key === 'estudiantes') {
+                  router.push(`/admin/courses/${courseId}/students`);
+                } else if (tab.key === 'actividades') {
+                  router.push(`/admin/courses/${courseId}/activities`);
+                } else {
+                  setActiveTab(tab.key);
+                }
+              }}
               className={`
                 flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap
                 border-b-2 transition-all duration-150 cursor-pointer
