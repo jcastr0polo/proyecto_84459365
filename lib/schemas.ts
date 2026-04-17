@@ -422,3 +422,52 @@ export const updateGradeSchema = z.object({
 export type GradeZod = z.infer<typeof gradeSchema>;
 export type CreateGradeZod = z.infer<typeof createGradeSchema>;
 export type UpdateGradeZod = z.infer<typeof updateGradeSchema>;
+
+// ────────────────────────────────────────────────────────────
+// FASE 18 — PROMPTS DE IA SCHEMAS
+// ────────────────────────────────────────────────────────────
+
+/**
+ * promptSchema — Validación completa de un AIPrompt en prompts.json
+ */
+export const promptSchema = z.object({
+  id: z.string().min(1),
+  courseId: z.string().min(1),
+  activityId: z.string().optional(),
+  title: z.string().min(1).max(200),
+  content: z.string().min(1),
+  version: z.number().int().positive(),
+  tags: z.array(z.string()),
+  isTemplate: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+/**
+ * createPromptSchema — Validación del body de POST /api/prompts
+ */
+export const createPromptSchema = z.object({
+  courseId: z.string().min(1, 'El ID del curso es requerido'),
+  activityId: z.string().optional(),
+  title: z.string().min(1, 'El título es requerido').max(200, 'El título no puede exceder 200 caracteres'),
+  content: z.string().min(1, 'El contenido del prompt es requerido'),
+  tags: z.array(z.string().max(50)).max(20, 'Máximo 20 tags').default([]),
+  isTemplate: z.boolean().default(false),
+});
+
+/**
+ * updatePromptSchema — Validación del body de PUT /api/prompts/[id]
+ * RN-PRM-02: Al editar se incrementa la versión
+ */
+export const updatePromptSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  content: z.string().min(1).optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  isTemplate: z.boolean().optional(),
+  activityId: z.string().nullable().optional(),
+});
+
+// Tipos inferidos — Prompts
+export type PromptZod = z.infer<typeof promptSchema>;
+export type CreatePromptZod = z.infer<typeof createPromptSchema>;
+export type UpdatePromptZod = z.infer<typeof updatePromptSchema>;

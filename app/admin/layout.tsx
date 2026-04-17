@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
   { href: '/admin/semesters', label: 'Semestres', icon: '📅' },
   { href: '/admin/courses', label: 'Cursos', icon: '📚' },
+  { href: '/admin/prompts', label: 'Prompts IA', icon: '🤖' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -9,7 +9,8 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import ActivityDetail from '@/components/activities/ActivityDetail';
 import SubmissionDetail from '@/components/submissions/SubmissionDetail';
-import type { Activity, Submission } from '@/lib/types';
+import PromptViewer from '@/components/prompts/PromptViewer';
+import type { Activity, Submission, AIPrompt } from '@/lib/types';
 
 /**
  * Student — Activity Detail Page
@@ -25,6 +26,7 @@ export default function StudentActivityDetailPage() {
 
   const [activity, setActivity] = useState<Activity | null>(null);
   const [submission, setSubmission] = useState<Submission | null>(null);
+  const [prompt, setPrompt] = useState<AIPrompt | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -37,6 +39,19 @@ export default function StudentActivityDetailPage() {
       if (actRes.ok) {
         const data = await actRes.json();
         setActivity(data.activity);
+
+        // Fetch linked prompt if exists
+        if (data.activity?.promptId) {
+          try {
+            const promptRes = await fetch(`/api/prompts/${data.activity.promptId}`);
+            if (promptRes.ok) {
+              const promptData = await promptRes.json();
+              setPrompt(promptData.prompt);
+            }
+          } catch {
+            // Prompt fetch failure is non-critical
+          }
+        }
       } else {
         toast('Actividad no disponible', 'error');
         router.push(`/student/courses/${courseId}`);
@@ -78,6 +93,21 @@ export default function StudentActivityDetailPage() {
       <ActivityDetail
         activity={activity}
         isAdmin={false}
+        promptSlot={
+          prompt ? (
+            <Card padding="lg">
+              <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
+                Prompt de IA
+              </h3>
+              <PromptViewer
+                title={prompt.title}
+                content={prompt.content}
+                version={prompt.version}
+                tags={prompt.tags}
+              />
+            </Card>
+          ) : undefined
+        }
         submissionSlot={
           <SubmissionSection
             activity={activity}

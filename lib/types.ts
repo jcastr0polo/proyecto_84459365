@@ -557,3 +557,51 @@ export interface FinalGradeResult {
   isPartial: boolean;                  // true si faltan actividades
   isApproved: boolean;                 // finalScore ≥ 3.0
 }
+
+// ────────────────────────────────────────────────────────────
+// FASE 18 — Prompts de IA
+// ────────────────────────────────────────────────────────────
+
+/**
+ * AIPrompt — Prompt estructurado para asistentes de IA
+ * Se almacena en /data/prompts.json
+ * RN-PRM-01: Solo admin crea/edita
+ * RN-PRM-02: Versionamiento automático al editar
+ * RN-PRM-03: Plantillas reutilizables
+ * RN-PRM-04: Vinculable a actividad
+ */
+export interface AIPrompt {
+  id: string;                          // UUID
+  courseId: string;                     // FK a Course.id
+  activityId?: string;                 // FK a Activity.id (si vinculado)
+  title: string;                       // Título descriptivo
+  content: string;                     // Texto completo del prompt (Markdown)
+  version: number;                     // Versionado: 1, 2, 3...
+  tags: string[];                      // Tags para filtrado
+  isTemplate: boolean;                 // ¿Es plantilla reutilizable?
+  createdAt: string;                   // ISO 8601
+  updatedAt: string;                   // ISO 8601
+}
+
+/**
+ * CreatePromptRequest — Datos para crear un prompt
+ */
+export interface CreatePromptRequest {
+  courseId: string;
+  activityId?: string;
+  title: string;
+  content: string;
+  tags: string[];
+  isTemplate: boolean;
+}
+
+/**
+ * UpdatePromptRequest — Datos para editar un prompt (incrementa versión)
+ */
+export interface UpdatePromptRequest {
+  title?: string;
+  content?: string;
+  tags?: string[];
+  isTemplate?: boolean;
+  activityId?: string | null;
+}

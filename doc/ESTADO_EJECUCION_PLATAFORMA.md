@@ -35,7 +35,7 @@
 | 15 | Calificaciones y Notas — Backend | Ingeniero Backend Senior + Experto Educación | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_15_CALIFICACIONES_BACK.md` |
 | 16 | Calificaciones y Notas — Frontend | Diseñador Frontend Obsesivo | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_16_CALIFICACIONES_FRONT.md` |
 | 17 | Exportación de Notas | Ingeniero Backend Senior + Experto Educación | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_17_EXPORTACION.md` |
-| 18 | Prompts de IA — Backend y Frontend | Ingeniero Fullstack + Experto en IA Educativa | ⬜ Pendiente | — | — | — |
+| 18 | Prompts de IA — Backend y Frontend | Ingeniero Fullstack + Experto en IA Educativa | ✅ Completada | 17 Abr 2026 | 17 Abr 2026 | `RESUMEN_FASE_18_PROMPTS.md` |
 | 19 | Proyectos Estudiantiles y Vitrina | Diseñador UX/UI + Ingeniero Fullstack | ⬜ Pendiente | — | — | — |
 | 20 | Dashboards — Admin | Diseñador Frontend Obsesivo | ⬜ Pendiente | — | — | — |
 | 21 | Dashboards — Estudiante | Diseñador Frontend Obsesivo + Experto UX Educativo | ⬜ Pendiente | — | — | — |
@@ -619,19 +619,54 @@
 ### FASE 18 — Prompts de IA — Backend y Frontend
 
 ```
-[ INICIO  ] Fecha: _______________  Hora: _______
-[ CIERRE  ] Fecha: _______________  Hora: _______
-[ DURACIÓN] _______ minutos
+[ INICIO  ] Fecha: 17 de Abril 2026
+[ CIERRE  ] Fecha: 17 de Abril 2026
+[ DURACIÓN] Sesión única
 ```
 
 **Acciones ejecutadas:**
-_pendiente_
+1. Agregar tipos AIPrompt, CreatePromptRequest, UpdatePromptRequest en lib/types.ts
+2. Agregar promptSchema, createPromptSchema, updatePromptSchema en lib/schemas.ts
+3. Agregar readPrompts, writePrompts, getPromptById, getPromptsByCourse en lib/dataService.ts
+4. Crear data/prompts.json (array vacío)
+5. Crear app/api/prompts/route.ts — GET (listar con filtros) + POST (crear, admin only)
+6. Crear app/api/prompts/[id]/route.ts — GET (detalle) + PUT (editar con versionamiento automático)
+7. Crear components/prompts/TagInput.tsx — Input de chips con Enter/coma/backspace
+8. Crear components/prompts/PromptCard.tsx — Tarjeta para listados con preview
+9. Crear components/prompts/PromptEditor.tsx — Editor Markdown split-view con preview en vivo
+10. Crear components/prompts/PromptViewer.tsx — Visor read-only con botón copiar + fullscreen
+11. Crear app/admin/prompts/page.tsx — Listado con stats, filtros por curso/plantilla/búsqueda
+12. Crear app/admin/prompts/new/page.tsx — Formulario de creación con PromptEditor
+13. Crear app/admin/prompts/[promptId]/page.tsx — Detalle/edición con vista y modo editor
+14. Agregar "🤖 Prompts IA" en NAV_ITEMS del sidebar admin (app/admin/layout.tsx)
+15. Agregar prop promptSlot en ActivityDetail para sección de prompt vinculado
+16. Modificar student activity detail: fetch prompt si activity.promptId, mostrar PromptViewer
+17. TypeScript: 0 errores | ESLint: 0 errores nuevos
 
 **Archivos creados/modificados:**
-_pendiente_
+- CREATE: data/prompts.json
+- CREATE: app/api/prompts/route.ts
+- CREATE: app/api/prompts/[id]/route.ts
+- CREATE: components/prompts/TagInput.tsx
+- CREATE: components/prompts/PromptCard.tsx
+- CREATE: components/prompts/PromptEditor.tsx
+- CREATE: components/prompts/PromptViewer.tsx
+- CREATE: app/admin/prompts/page.tsx
+- CREATE: app/admin/prompts/new/page.tsx
+- CREATE: app/admin/prompts/[promptId]/page.tsx
+- CREATE: doc/RESUMEN_FASE_18_PROMPTS.md
+- MODIFY: lib/types.ts (tipos AIPrompt + promptId en Activity)
+- MODIFY: lib/schemas.ts (schemas de prompt)
+- MODIFY: lib/dataService.ts (funciones CRUD prompts)
+- MODIFY: app/admin/layout.tsx (nav item Prompts IA)
+- MODIFY: components/activities/ActivityDetail.tsx (promptSlot prop)
+- MODIFY: app/student/courses/[courseId]/activities/[actId]/page.tsx (fetch + render prompt)
 
 **Observaciones:**
-_pendiente_
+- Versionamiento automático: cada PUT incrementa version en +1
+- Tags filtrados por curso, plantilla y búsqueda en el listado admin
+- Estudiantes ven prompt vinculado con botón copiar al portapapeles + modo fullscreen
+- PromptEditor usa split-view con MarkdownRenderer para preview en tiempo real
 
 ---
 

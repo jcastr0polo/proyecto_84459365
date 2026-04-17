@@ -18,6 +18,8 @@ interface ActivityDetailProps {
   onViewSubmissions?: () => void;
   /** Student submission section */
   submissionSlot?: React.ReactNode;
+  /** Prompt section (if activity has linked prompt) */
+  promptSlot?: React.ReactNode;
   /** Statistics for admin */
   stats?: {
     submitted: number;
@@ -42,6 +44,7 @@ export default function ActivityDetail({
   onEdit,
   onViewSubmissions,
   submissionSlot,
+  promptSlot,
   stats,
   isAdmin = false,
   publishLoading = false,
@@ -182,6 +185,9 @@ export default function ActivityDetail({
           </div>
         </Card>
       )}
+
+      {/* ─── Prompt Slot (AI Prompt) ─── */}
+      {promptSlot}
 
       {/* ─── Delivery requirements ─── */}
       {(activity.requiresFileUpload || activity.requiresLinkSubmission) && (

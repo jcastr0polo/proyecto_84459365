@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { HomeDataSchema, AppConfigSchema } from './validators';
-import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade } from './types';
-import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema } from './schemas';
+import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt } from './types';
+import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema } from './schemas';
 import { z } from 'zod';
 
 /**
@@ -389,4 +389,47 @@ export function getGradeForSubmission(submissionId: string): Grade | null {
 export function getGradeById(id: string): Grade | null {
   const grades = readGrades();
   return grades.find((g) => g.id === id) ?? null;
+}
+
+// ────────────────────────────────────────────────────────────
+// FASE 18 — Prompts de IA
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Lee y valida /data/prompts.json
+ */
+export function readPrompts(): AIPrompt[] {
+  const raw = readJsonFile<unknown[]>('prompts.json');
+  return z.array(promptSchema).parse(raw) as AIPrompt[];
+}
+
+/**
+ * Escribe el array completo de prompts en /data/prompts.json
+ */
+export function writePrompts(prompts: AIPrompt[]): void {
+  writeJsonFile('prompts.json', prompts);
+}
+
+/**
+ * Busca un prompt por ID
+ */
+export function getPromptById(id: string): AIPrompt | null {
+  const prompts = readPrompts();
+  return prompts.find((p) => p.id === id) ?? null;
+}
+
+/**
+ * Lista prompts de un curso específico
+ */
+export function getPromptsByCourse(courseId: string): AIPrompt[] {
+  const prompts = readPrompts();
+  return prompts.filter((p) => p.courseId === courseId);
+}
+
+/**
+ * Busca un prompt vinculado a una actividad específica
+ */
+export function getPromptByActivity(activityId: string): AIPrompt | null {
+  const prompts = readPrompts();
+  return prompts.find((p) => p.activityId === activityId) ?? null;
 }
