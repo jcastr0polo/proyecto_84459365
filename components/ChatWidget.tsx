@@ -72,7 +72,7 @@ function userColor(name: string): string {
   return COLORS[Math.abs(h) % COLORS.length];
 }
 
-const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3 MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 /* ─── Component ─── */
 export default function ChatWidget() {
@@ -149,7 +149,7 @@ export default function ChatWidget() {
     e.target.value = '';
 
     if (file.size > MAX_FILE_SIZE) {
-      alert('El archivo excede 3 MB.');
+      alert('El archivo excede 5 MB.');
       return;
     }
 
@@ -327,7 +327,7 @@ export default function ChatWidget() {
                       onClick={() => fileRef.current?.click()}
                       disabled={uploading}
                       className="p-2 rounded-lg text-subtle hover:text-foreground hover:bg-foreground/[0.06] transition-colors cursor-pointer disabled:opacity-40"
-                      title="Adjuntar archivo (máx 3 MB)"
+                      title="Adjuntar archivo (máx 5 MB)"
                     >
                       {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
                     </button>

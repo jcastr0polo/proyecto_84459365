@@ -24,7 +24,7 @@ export interface ChatMsg {
 }
 
 const MAX_MESSAGES = 200;
-const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3 MB (base64 expands ~33%, Vercel limit ~4.5 MB)
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 let seq = 0;
 const messages: ChatMsg[] = [];
 
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
       // Validate base64 size (rough check)
       if (f.data.length > MAX_FILE_SIZE * 1.4) {
-        return NextResponse.json({ error: 'Archivo excede 3 MB' }, { status: 400 });
+        return NextResponse.json({ error: 'Archivo excede 5 MB' }, { status: 400 });
       }
       file = {
         fileName: String(f.fileName).slice(0, 200),
