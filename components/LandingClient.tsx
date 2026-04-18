@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import AnimatedText from '@/components/AnimatedText';
 import { ThemeToggle } from '@/components/ThemeProvider';
+import ChatWidget from '@/components/ChatWidget';
 import type { Course } from '@/lib/types';
 import {
   ArrowRight,
@@ -371,6 +372,9 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
           </div>
         </div>
       </footer>
+
+      {/* ═══ CHAT WIDGET ═══ */}
+      <ChatWidget />
     </div>
   );
 }
