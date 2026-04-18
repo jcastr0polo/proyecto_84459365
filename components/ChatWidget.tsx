@@ -16,9 +16,9 @@ import {
 /* ─── Types ─── */
 interface ChatFile {
   fileName: string;
-  storedName: string;
   size: number;
-  url: string;
+  mimeType: string;
+  data: string; // base64
 }
 
 interface ServerMsg {
@@ -36,6 +36,32 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function downloadBase64File(file: ChatFile) {
+  const byteChars = atob(file.data);
+  const byteArray = new Uint8Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+  const blob = new Blob([byteArray], { type: file.mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.fileName;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function readFileAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Strip "data:...;base64," prefix
+      resolve(result.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 const COLORS = [
   'text-cyan-400', 'text-emerald-400', 'text-purple-400',
   'text-amber-400', 'text-pink-400', 'text-blue-400', 'text-rose-400',
@@ -45,6 +71,8 @@ function userColor(name: string): string {
   for (let i = 0; i < name.length; i++) h = ((h << 5) - h + name.charCodeAt(i)) | 0;
   return COLORS[Math.abs(h) % COLORS.length];
 }
+
+const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3 MB
 
 /* ─── Component ─── */
 export default function ChatWidget() {
@@ -56,6 +84,7 @@ export default function ChatWidget() {
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const lastIdRef = useRef(0);
+  const fetchingRef = useRef(false); // mutex to prevent concurrent fetches
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -64,8 +93,10 @@ export default function ChatWidget() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
   }, []);
 
-  /* ── Polling ── */
+  /* ── Polling with mutex + dedup ── */
   const fetchMessages = useCallback(async () => {
+    if (fetchingRef.current) return; // skip if already fetching
+    fetchingRef.current = true;
     try {
       const res = await fetch(`/api/chat/messages?after=${lastIdRef.current}`);
       if (!res.ok) return;
@@ -73,15 +104,20 @@ export default function ChatWidget() {
       const newMsgs: ServerMsg[] = data.messages;
       if (newMsgs.length > 0) {
         lastIdRef.current = newMsgs[newMsgs.length - 1].id;
-        setMessages((prev) => [...prev, ...newMsgs]);
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id));
+          const unique = newMsgs.filter((m) => !existingIds.has(m.id));
+          return unique.length > 0 ? [...prev, ...unique] : prev;
+        });
       }
-    } catch { /* ignore network hiccups */ }
+    } catch { /* ignore */ }
+    finally { fetchingRef.current = false; }
   }, []);
 
   useEffect(() => {
     if (open && nameSet) {
       fetchMessages();
-      pollRef.current = setInterval(fetchMessages, 2000);
+      pollRef.current = setInterval(fetchMessages, 2500);
       return () => { if (pollRef.current) clearInterval(pollRef.current); };
     }
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
@@ -106,33 +142,38 @@ export default function ChatWidget() {
     setSending(false);
   }
 
-  /* ── Upload file ── */
+  /* ── Upload file as base64 in message ── */
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
+
+    if (file.size > MAX_FILE_SIZE) {
+      alert('El archivo excede 3 MB.');
+      return;
+    }
+
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/api/chat/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || 'Error al subir');
-        return;
-      }
-      // Post message with file
+      const base64 = await readFileAsBase64(file);
       await fetch('/api/chat/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user: username,
-          text: `📎 ${data.fileName}`,
-          file: data,
+          text: `📎 ${file.name}`,
+          file: {
+            fileName: file.name,
+            size: file.size,
+            mimeType: file.type || 'application/octet-stream',
+            data: base64,
+          },
         }),
       });
       await fetchMessages();
-    } catch { /* ignore */ }
+    } catch {
+      alert('Error al enviar archivo.');
+    }
     setUploading(false);
   }
 
@@ -251,10 +292,9 @@ export default function ChatWidget() {
                           )}
                           <p>{msg.text}</p>
                           {msg.file && (
-                            <a
-                              href={msg.file.url}
-                              download={msg.file.fileName}
-                              className={`mt-2 flex items-center gap-2 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${
+                            <button
+                              onClick={() => downloadBase64File(msg.file!)}
+                              className={`mt-2 flex items-center gap-2 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
                                 isMe
                                   ? 'bg-white/20 hover:bg-white/30 text-white'
                                   : 'bg-foreground/[0.06] hover:bg-foreground/[0.1] text-muted'
@@ -263,7 +303,7 @@ export default function ChatWidget() {
                               <Download className="w-3.5 h-3.5 shrink-0" />
                               <span className="truncate">{msg.file.fileName}</span>
                               <span className="shrink-0 text-[10px] opacity-70">{formatSize(msg.file.size)}</span>
-                            </a>
+                            </button>
                           )}
                           <p className={`text-[10px] mt-1 ${isMe ? 'text-white/50' : 'text-faint'}`}>{msg.time}</p>
                         </div>
@@ -287,7 +327,7 @@ export default function ChatWidget() {
                       onClick={() => fileRef.current?.click()}
                       disabled={uploading}
                       className="p-2 rounded-lg text-subtle hover:text-foreground hover:bg-foreground/[0.06] transition-colors cursor-pointer disabled:opacity-40"
-                      title="Adjuntar archivo"
+                      title="Adjuntar archivo (máx 3 MB)"
                     >
                       {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
                     </button>
