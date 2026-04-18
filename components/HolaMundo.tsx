@@ -32,7 +32,7 @@ export default function HolaMundo({
           delay: titleAnimationDuration + 0.3,
           duration: 0.8,
         }}
-        className="mt-6 text-lg md:text-xl text-white/60 font-light tracking-widest uppercase font-poppins"
+        className="mt-6 text-lg md:text-xl text-muted font-light tracking-widest uppercase font-poppins"
       >
         {subtitle}
       </motion.p>
@@ -45,7 +45,7 @@ export default function HolaMundo({
           delay: titleAnimationDuration + 0.7,
           duration: 0.8,
         }}
-        className="mt-4 text-base md:text-lg text-white/40 font-light font-poppins"
+        className="mt-4 text-base md:text-lg text-subtle font-light font-poppins"
       >
         {description}
       </motion.p>

@@ -72,12 +72,12 @@ export default function ActivityDetail({
           </Badge>
         </div>
 
-        <h1 className="text-2xl font-bold text-white tracking-tight">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">
           {activity.title}
         </h1>
 
         {/* Key info row */}
-        <div className="flex flex-wrap items-center gap-4 text-sm text-white/50">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-muted">
           <InfoItem icon="calendar" label="Publicación" value={formatDate(activity.publishDate)} />
           <InfoItem icon="clock" label="Fecha límite" value={formatDate(activity.dueDate)} />
           <InfoItem icon="star" label="Nota máxima" value={String(activity.maxScore)} />
@@ -87,7 +87,7 @@ export default function ActivityDetail({
         {/* Countdown */}
         {isPublished && !isPastDue && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-white/40">Tiempo restante:</span>
+            <span className="text-xs text-subtle">Tiempo restante:</span>
             <Countdown targetDate={activity.dueDate} />
           </div>
         )}
@@ -104,7 +104,7 @@ export default function ActivityDetail({
 
         {/* Admin action bar */}
         {isAdmin && (
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/[0.06]">
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-foreground/[0.06]">
             {isDraft && onPublish && (
               <Button variant="primary" size="sm" onClick={onPublish} loading={publishLoading}>
                 Publicar
@@ -141,20 +141,20 @@ export default function ActivityDetail({
 
       {/* ─── Description ─── */}
       <Card padding="lg">
-        <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
+        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-4">
           Descripción
         </h3>
         {activity.description ? (
           <MarkdownRenderer content={activity.description} />
         ) : (
-          <p className="text-sm text-white/30 italic">Sin descripción</p>
+          <p className="text-sm text-subtle italic">Sin descripción</p>
         )}
       </Card>
 
       {/* ─── Attachments ─── */}
       {activity.attachments.length > 0 && (
         <Card padding="lg">
-          <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
+          <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-4">
             Archivos Adjuntos ({activity.attachments.length})
           </h3>
           <div className="space-y-2">
@@ -164,19 +164,19 @@ export default function ActivityDetail({
                 href={`/api/upload/${att.filePath.replace('uploads/', '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]
-                         hover:bg-white/[0.06] hover:border-white/[0.12] transition-all group"
+                className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]
+                         hover:bg-foreground/[0.06] hover:border-foreground/[0.12] transition-all group"
               >
                 <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center shrink-0">
                   <FileIcon mimeType={att.mimeType} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white/80 group-hover:text-white truncate">{att.fileName}</p>
-                  <p className="text-[11px] text-white/30">
+                  <p className="text-sm text-foreground/80 group-hover:text-foreground truncate">{att.fileName}</p>
+                  <p className="text-[11px] text-subtle">
                     {formatFileSize(att.fileSize)} · {att.mimeType.split('/')[1]?.toUpperCase()}
                   </p>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/20 group-hover:text-cyan-400 shrink-0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-faint group-hover:text-cyan-400 shrink-0">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
@@ -193,7 +193,7 @@ export default function ActivityDetail({
       {/* ─── Delivery requirements ─── */}
       {(activity.requiresFileUpload || activity.requiresLinkSubmission) && (
         <Card padding="lg">
-          <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">
             Requisitos de Entrega
           </h3>
           <div className="space-y-2">
@@ -251,26 +251,26 @@ function InfoItem({ icon, label, value }: { icon: string; label: string; value: 
 
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-white/30">{icons[icon]}</span>
-      <span className="text-xs text-white/35">{label}:</span>
-      <span className="text-xs text-white/70 font-medium">{value}</span>
+      <span className="text-subtle">{icons[icon]}</span>
+      <span className="text-xs text-subtle">{label}:</span>
+      <span className="text-xs text-muted font-medium">{value}</span>
     </div>
   );
 }
 
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.06] text-center">
+    <div className="p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-center">
       <p className={`text-xl font-bold ${color}`}>{value}</p>
-      <p className="text-[11px] text-white/40 mt-0.5">{label}</p>
+      <p className="text-[11px] text-subtle mt-0.5">{label}</p>
     </div>
   );
 }
 
 function RequirementRow({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <div className="flex items-center gap-2 text-sm text-white/60">
-      <span aria-hidden="true" className="text-white/40">{icon}</span>
+    <div className="flex items-center gap-2 text-sm text-muted">
+      <span aria-hidden="true" className="text-subtle">{icon}</span>
       <span>{text}</span>
     </div>
   );

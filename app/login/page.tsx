@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Cpu, Eye, EyeOff, ArrowRight, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeProvider';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-base px-4 relative overflow-hidden">
       {/* Ambient glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[400px] bg-cyan-500/[0.05] rounded-full blur-[150px]" />
@@ -45,10 +46,15 @@ export default function LoginPage() {
       </div>
 
       {/* Back to home */}
-      <Link href="/" className="absolute top-6 left-6 flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 transition-colors z-10">
+      <Link href="/" className="absolute top-6 left-6 flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors z-10">
         <ArrowLeft className="w-3.5 h-3.5" />
         Inicio
       </Link>
+
+      {/* Theme toggle */}
+      <div className="absolute top-5 right-5 z-10">
+        <ThemeToggle />
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -56,23 +62,23 @@ export default function LoginPage() {
         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="relative w-full max-w-sm z-10"
       >
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl p-8">
+        <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] backdrop-blur-xl p-8">
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 mb-5 shadow-lg shadow-cyan-500/20">
               <Cpu className="w-7 h-7 text-white" strokeWidth={2} />
             </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               NEXUS
             </h1>
-            <p className="text-xs text-white/30 mt-1.5 tracking-wide">
+            <p className="text-xs text-subtle mt-1.5 tracking-wide">
               Plataforma Académica
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-[11px] font-medium text-white/40 mb-2 uppercase tracking-wider">
+              <label htmlFor="email" className="block text-[11px] font-medium text-subtle mb-2 uppercase tracking-wider">
                 Email
               </label>
               <input
@@ -84,12 +90,12 @@ export default function LoginPage() {
                 autoFocus
                 autoComplete="email"
                 placeholder="tu-email@universidad.edu.co"
-                className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white text-sm placeholder-white/15 focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/30 focus:bg-white/[0.06] transition-all duration-200"
+                className="w-full px-4 py-3 rounded-xl border border-foreground/[0.08] bg-foreground/[0.04] text-foreground text-sm placeholder-faint focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/30 focus:bg-foreground/[0.06] transition-all duration-200"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-[11px] font-medium text-white/40 mb-2 uppercase tracking-wider">
+              <label htmlFor="password" className="block text-[11px] font-medium text-subtle mb-2 uppercase tracking-wider">
                 Contraseña
               </label>
               <div className="relative">
@@ -101,12 +107,12 @@ export default function LoginPage() {
                   required
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-11 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white text-sm placeholder-white/15 focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/30 focus:bg-white/[0.06] transition-all duration-200"
+                  className="w-full px-4 py-3 pr-11 rounded-xl border border-foreground/[0.08] bg-foreground/[0.04] text-foreground text-sm placeholder-faint focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/30 focus:bg-foreground/[0.06] transition-all duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors cursor-pointer p-0.5"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-muted transition-colors cursor-pointer p-0.5"
                   tabIndex={-1}
                   aria-label={showPw ? 'Ocultar' : 'Mostrar'}
                 >
@@ -145,8 +151,8 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 pt-5 border-t border-white/[0.06]">
-            <p className="text-center text-[10px] text-white/15">
+          <div className="mt-6 pt-5 border-t border-foreground/[0.06]">
+            <p className="text-center text-[10px] text-faint">
               NEXUS · Fullstack TypeScript + Next.js + IA
             </p>
           </div>

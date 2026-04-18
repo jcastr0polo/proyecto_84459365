@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
 import { Home, BookOpen, User, Lock, LogOut, Menu, X, ChevronDown, Cpu } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeProvider';
 
 interface UserInfo {
   firstName: string;
@@ -59,17 +60,17 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/10 border-t-cyan-400" />
+      <div className="flex items-center justify-center min-h-screen bg-base">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-foreground/10 border-t-cyan-400" />
       </div>
     );
   }
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-base">
         {/* ═══ Top Navbar ═══ */}
-        <header className="sticky top-0 z-50 border-b border-white/10 bg-zinc-950/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-50 border-b border-foreground/10 bg-base/80 backdrop-blur-xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               {/* Left: Logo + Nav */}
@@ -78,7 +79,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                   <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
                     <Cpu className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
                   </div>
-                  <span className="text-sm font-bold text-white tracking-tight hidden sm:block">
+                  <span className="text-sm font-bold text-foreground tracking-tight hidden sm:block">
                     NEXUS
                   </span>
                 </Link>
@@ -95,7 +96,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                           flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150
                           ${isActive(item.href)
                             ? 'text-cyan-400 bg-cyan-500/10'
-                            : 'text-white/40 hover:text-white/60 hover:bg-white/[0.04]'
+                            : 'text-subtle hover:text-muted hover:bg-foreground/[0.04]'
                           }
                         `}
                       >
@@ -109,42 +110,43 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
               {/* Right: User + Mobile */}
               <div className="flex items-center gap-2">
+                <ThemeToggle />
                 {/* User dropdown */}
                 <div className="relative">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-white/[0.04] transition-colors cursor-pointer"
+                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-foreground/[0.04] transition-colors cursor-pointer"
                     aria-expanded={userMenuOpen}
                     aria-haspopup="true"
                   >
                     <div className="w-7 h-7 rounded-full bg-cyan-500/10 flex items-center justify-center text-[10px] font-bold text-cyan-400">
                       {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                     </div>
-                    <span className="text-sm font-medium text-white/60 hidden sm:block">
+                    <span className="text-sm font-medium text-muted hidden sm:block">
                       {user.firstName}
                     </span>
-                    <ChevronDown className="w-3 h-3 text-white/30 hidden sm:block" />
+                    <ChevronDown className="w-3 h-3 text-subtle hidden sm:block" />
                   </button>
 
                   {userMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} aria-hidden="true" />
-                      <div className="absolute right-0 mt-2 w-56 rounded-xl border border-white/10 bg-zinc-950 shadow-2xl z-50 overflow-hidden">
-                        <div className="px-4 py-3 border-b border-white/10">
-                          <p className="text-sm font-medium text-white">{user.firstName} {user.lastName}</p>
-                          <p className="text-[11px] text-white/20">Estudiante</p>
+                      <div className="absolute right-0 mt-2 w-56 rounded-xl border border-foreground/10 bg-base shadow-2xl z-50 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-foreground/10">
+                          <p className="text-sm font-medium text-foreground">{user.firstName} {user.lastName}</p>
+                          <p className="text-[11px] text-faint">Estudiante</p>
                         </div>
                         <div className="py-1">
                           <Link href="/student/profile" onClick={closeMenus}
-                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/60 hover:bg-white/[0.04] transition-colors">
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted hover:bg-foreground/[0.04] transition-colors">
                             <User className="w-3.5 h-3.5" /> Mi Perfil
                           </Link>
                           <Link href="/change-password" onClick={closeMenus}
-                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/60 hover:bg-white/[0.04] transition-colors">
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted hover:bg-foreground/[0.04] transition-colors">
                             <Lock className="w-3.5 h-3.5" /> Cambiar contraseña
                           </Link>
                         </div>
-                        <div className="py-1 border-t border-white/10">
+                        <div className="py-1 border-t border-foreground/10">
                           <button onClick={handleLogout} disabled={loggingOut}
                             className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer disabled:opacity-50">
                             <LogOut className="w-3.5 h-3.5" />
@@ -159,7 +161,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                 {/* Mobile hamburger */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="md:hidden p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
+                  className="md:hidden p-2 rounded-lg text-subtle hover:text-foreground hover:bg-foreground/[0.04] transition-colors cursor-pointer"
                   aria-label="Menú"
                 >
                   {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -170,7 +172,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
           {/* Mobile nav */}
           {mobileMenuOpen && (
-            <div className="md:hidden border-t border-white/10 bg-zinc-950">
+            <div className="md:hidden border-t border-foreground/10 bg-base">
               <nav className="px-4 py-3 space-y-1" aria-label="Navegación móvil">
                 {NAV_ITEMS.map((item) => {
                   const Icon = item.icon;
@@ -183,7 +185,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                         flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
                         ${isActive(item.href)
                           ? 'text-cyan-400 bg-cyan-500/10'
-                          : 'text-white/40 hover:text-white/60 hover:bg-white/[0.04]'
+                          : 'text-subtle hover:text-muted hover:bg-foreground/[0.04]'
                         }
                       `}
                     >

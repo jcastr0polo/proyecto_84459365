@@ -232,7 +232,7 @@ export default function AdminDashboardPage() {
     return courseData.map((cd) => ({
       label: cd.course.name,
       value: cd.enrollments.filter((e) => e.status === 'active').length,
-      color: 'text-white/50',
+      color: 'text-muted',
     }));
   }, [courseData]);
 
@@ -246,8 +246,8 @@ export default function AdminDashboardPage() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
-            <p className="text-sm text-white/30 mt-1">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h1>
+            <p className="text-sm text-subtle mt-1">
               Vista general del semestre
             </p>
           </div>
@@ -281,7 +281,7 @@ export default function AdminDashboardPage() {
           color="text-emerald-400"
           details={[
             { label: 'Publicadas', value: stats.publishedActivities, color: 'text-emerald-400/70' },
-            { label: 'Borradores', value: stats.draftActivities, color: 'text-white/30' },
+            { label: 'Borradores', value: stats.draftActivities, color: 'text-subtle' },
           ]}
           loading={loading}
         />
@@ -298,8 +298,8 @@ export default function AdminDashboardPage() {
       {/* ─── Mis Cursos ─── */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-white/50 uppercase tracking-wider">Mis Cursos</h2>
-          <span className="text-[10px] text-white/20">{stats.courseCount} curso{stats.courseCount !== 1 ? 's' : ''}</span>
+          <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Mis Cursos</h2>
+          <span className="text-[10px] text-faint">{stats.courseCount} curso{stats.courseCount !== 1 ? 's' : ''}</span>
         </div>
 
         {loading ? (
@@ -309,9 +309,9 @@ export default function AdminDashboardPage() {
             <CourseCard id="" name="" code="" category="other" studentCount={0} activityCount={0} pendingSubmissions={0} schedule={[]} onClick={() => {}} loading />
           </div>
         ) : courseMetrics.length === 0 ? (
-          <div className="text-center py-12 rounded-xl border border-white/[0.04] bg-white/[0.01]">
-            <BookMarked className="w-8 h-8 text-white/20 mx-auto mb-2" />
-            <p className="text-sm text-white/30">No hay cursos activos</p>
+          <div className="text-center py-12 rounded-xl border border-foreground/[0.04] bg-foreground/[0.01]">
+            <BookMarked className="w-8 h-8 text-faint mx-auto mb-2" />
+            <p className="text-sm text-subtle">No hay cursos activos</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -339,14 +339,14 @@ export default function AdminDashboardPage() {
         {/* Próximos Vencimientos */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-white/50 uppercase tracking-wider">
+            <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
               Próximos Vencimientos
             </h2>
             {deadlines.length > 0 && (
-              <span className="text-[10px] text-white/20">{deadlines.length} actividad{deadlines.length !== 1 ? 'es' : ''}</span>
+              <span className="text-[10px] text-faint">{deadlines.length} actividad{deadlines.length !== 1 ? 'es' : ''}</span>
             )}
           </div>
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-4">
+          <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.015] p-4">
             <DeadlineList deadlines={deadlines} loading={loading} />
           </div>
         </section>
@@ -354,14 +354,14 @@ export default function AdminDashboardPage() {
         {/* Actividad Reciente */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-white/50 uppercase tracking-wider">
+            <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
               Actividad Reciente
             </h2>
             {timeline.length > 0 && (
-              <span className="text-[10px] text-white/20">Últimos {timeline.length} eventos</span>
+              <span className="text-[10px] text-faint">Últimos {timeline.length} eventos</span>
             )}
           </div>
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-4">
+          <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.015] p-4">
             <ActivityTimeline events={timeline} loading={loading} />
           </div>
         </section>

@@ -81,7 +81,7 @@ export default function ImportStudentsPage() {
       {/* Back */}
       <button
         onClick={() => router.push(`/admin/courses/${courseId}/students`)}
-        className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="15 18 9 12 15 6" />
@@ -91,11 +91,11 @@ export default function ImportStudentsPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">
           Importar Estudiantes
         </h1>
         {course && (
-          <p className="text-sm text-white/40 mt-1">
+          <p className="text-sm text-subtle mt-1">
             {course.name} · <span className="font-mono">{course.code}</span>
           </p>
         )}
@@ -106,7 +106,7 @@ export default function ImportStudentsPage() {
         <div className="space-y-4">
           {/* Summary card */}
           <Card padding="lg">
-            <h2 className="text-base font-semibold text-white/90 mb-4">Resultado de la importación</h2>
+            <h2 className="text-base font-semibold text-foreground/90 mb-4">Resultado de la importación</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
               <SummaryBox label="Total procesados" value={result.summary.total} variant="info" />
               <SummaryBox label="Inscritos" value={result.summary.enrolled} variant="success" />
@@ -118,7 +118,7 @@ export default function ImportStudentsPage() {
             {result.success.length > 0 && (
               <DetailSection title="Inscritos exitosamente" variant="success">
                 {result.success.map((s, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs text-white/60">
+                  <li key={i} className="flex items-center gap-2 text-xs text-muted">
                     <span className="text-emerald-400">✓</span>
                     {s.email}
                     {s.created && <Badge variant="info" size="sm">nuevo</Badge>}
@@ -130,7 +130,7 @@ export default function ImportStudentsPage() {
             {result.alreadyEnrolled.length > 0 && (
               <DetailSection title="Ya estaban inscritos" variant="warning">
                 {result.alreadyEnrolled.map((s, i) => (
-                  <li key={i} className="text-xs text-white/50">
+                  <li key={i} className="text-xs text-muted">
                     <span className="text-amber-400 mr-2">≡</span>{s.email}
                   </li>
                 ))}
@@ -140,7 +140,7 @@ export default function ImportStudentsPage() {
             {result.errors.length > 0 && (
               <DetailSection title="Errores" variant="danger">
                 {result.errors.map((s, i) => (
-                  <li key={i} className="text-xs text-white/50">
+                  <li key={i} className="text-xs text-muted">
                     <span className="text-red-400 mr-2">✕</span>{s.email}: {s.error}
                   </li>
                 ))}
@@ -187,9 +187,9 @@ function SummaryBox({ label, value, variant }: {
     info: 'text-cyan-400',
   };
   return (
-    <div className="text-center p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+    <div className="text-center p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]">
       <p className={`text-2xl font-bold ${colors[variant]}`}>{value}</p>
-      <p className="text-[10px] text-white/40 uppercase tracking-wider mt-1">{label}</p>
+      <p className="text-[10px] text-subtle uppercase tracking-wider mt-1">{label}</p>
     </div>
   );
 }
@@ -206,7 +206,7 @@ function DetailSection({ title, variant, children }: {
   };
   return (
     <div className={`mt-4 pt-4 border-t ${borderColors[variant]}`}>
-      <p className="text-xs font-medium text-white/50 mb-2">{title}</p>
+      <p className="text-xs font-medium text-muted mb-2">{title}</p>
       <ul className="space-y-1">{children}</ul>
     </div>
   );

@@ -53,13 +53,13 @@ export default function CourseCard({
 }: CourseCardProps) {
   if (loading) {
     return (
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 animate-pulse">
-        <div className="h-3 w-24 rounded bg-white/[0.06] mb-3" />
-        <div className="h-5 w-40 rounded bg-white/[0.06] mb-4" />
+      <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-5 animate-pulse">
+        <div className="h-3 w-24 rounded bg-foreground/[0.06] mb-3" />
+        <div className="h-5 w-40 rounded bg-foreground/[0.06] mb-4" />
         <div className="flex gap-4">
-          <div className="h-3 w-16 rounded bg-white/[0.04]" />
-          <div className="h-3 w-16 rounded bg-white/[0.04]" />
-          <div className="h-3 w-16 rounded bg-white/[0.04]" />
+          <div className="h-3 w-16 rounded bg-foreground/[0.04]" />
+          <div className="h-3 w-16 rounded bg-foreground/[0.04]" />
+          <div className="h-3 w-16 rounded bg-foreground/[0.04]" />
         </div>
       </div>
     );
@@ -79,17 +79,17 @@ export default function CourseCard({
       transition={{ duration: 0.4, delay: index * 0.08 }}
       whileHover={{ y: -2, transition: { duration: 0.15 } }}
       onClick={onClick}
-      className={`w-full text-left rounded-xl border border-white/[0.06] hover:border-white/[0.12]
+      className={`w-full text-left rounded-xl border border-foreground/[0.06] hover:border-foreground/[0.12]
                   bg-gradient-to-br ${gradient} p-5 transition-colors duration-200 cursor-pointer group`}
     >
       {/* Code + Badge */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-mono text-white/25 tracking-wider">{code}</span>
+        <span className="text-[10px] font-mono text-faint tracking-wider">{code}</span>
         <Badge variant={badge.variant} size="sm">{badge.label}</Badge>
       </div>
 
       {/* Name */}
-      <h3 className="text-base font-semibold text-white group-hover:text-cyan-50 transition-colors leading-tight mb-3">
+      <h3 className="text-base font-semibold text-foreground group-hover:text-cyan-50 transition-colors leading-tight mb-3">
         {name}
       </h3>
 
@@ -104,15 +104,15 @@ export default function CourseCard({
 
       {/* Schedule */}
       {schedule.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pt-3 border-t border-white/[0.04]">
+        <div className="flex flex-wrap gap-1.5 pt-3 border-t border-foreground/[0.04]">
           {schedule.map((s, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-1 text-[10px] text-white/30 bg-white/[0.03] px-2 py-0.5 rounded"
+              className="inline-flex items-center gap-1 text-[10px] text-subtle bg-foreground/[0.03] px-2 py-0.5 rounded"
             >
-              <span className="font-medium text-white/40">{dayShort[s.dayOfWeek] ?? s.dayOfWeek}</span>
+              <span className="font-medium text-subtle">{dayShort[s.dayOfWeek] ?? s.dayOfWeek}</span>
               {s.startTime}-{s.endTime}
-              {s.room && <span className="text-white/20">· {s.room}</span>}
+              {s.room && <span className="text-faint">· {s.room}</span>}
             </span>
           ))}
         </div>
@@ -124,9 +124,9 @@ export default function CourseCard({
 function MiniStat({ icon, value, label, highlight }: { icon: React.ReactNode; value: number; label: string; highlight?: boolean }) {
   return (
     <div className="flex items-center gap-1">
-      <span className="text-white/40">{icon}</span>
-      <span className={`text-xs font-semibold ${highlight ? 'text-amber-400' : 'text-white/60'}`}>{value}</span>
-      <span className="text-[10px] text-white/25">{label}</span>
+      <span className="text-subtle">{icon}</span>
+      <span className={`text-xs font-semibold ${highlight ? 'text-amber-400' : 'text-muted'}`}>{value}</span>
+      <span className="text-[10px] text-faint">{label}</span>
     </div>
   );
 }

@@ -229,18 +229,18 @@ export default function StudentDashboardPage() {
       <div className="space-y-8 max-w-6xl mx-auto">
         {/* Greeting skeleton */}
         <div className="animate-pulse">
-          <div className="h-8 w-64 rounded bg-white/[0.06] mb-2" />
-          <div className="h-4 w-40 rounded bg-white/[0.04]" />
+          <div className="h-8 w-64 rounded bg-foreground/[0.06] mb-2" />
+          <div className="h-4 w-40 rounded bg-foreground/[0.04]" />
         </div>
         {/* Cards skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[1, 2].map((i) => (
-            <div key={i} className="h-40 rounded-xl border border-white/[0.06] bg-white/[0.02] animate-pulse" />
+            <div key={i} className="h-40 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] animate-pulse" />
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-48 rounded-xl border border-white/[0.06] bg-white/[0.02] animate-pulse" />
-          <div className="h-48 rounded-xl border border-white/[0.06] bg-white/[0.02] animate-pulse" />
+          <div className="h-48 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] animate-pulse" />
+          <div className="h-48 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] animate-pulse" />
         </div>
       </div>
     );
@@ -261,10 +261,10 @@ export default function StudentDashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
           <Hand className="w-6 h-6 inline mr-1" /> Hola, {user?.firstName ?? 'Estudiante'}
         </h1>
-        <p className="text-sm text-white/40 mt-1">
+        <p className="text-sm text-subtle mt-1">
           {semester ? `Semestre ${semester.id}` : 'Panel del estudiante'}
           {coursesData.length > 0 && ` · ${coursesData.length} curso${coursesData.length > 1 ? 's' : ''} inscrito${coursesData.length > 1 ? 's' : ''}`}
         </p>
@@ -303,7 +303,7 @@ export default function StudentDashboardPage() {
       {/* ─── Mis Cursos ─── */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white tracking-tight">
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">
             <BookOpen className="w-5 h-5 inline mr-1" /> Mis Cursos ({coursesData.length})
           </h2>
           {coursesData.length > 0 && (
@@ -317,9 +317,9 @@ export default function StudentDashboardPage() {
         </div>
 
         {coursesData.length === 0 ? (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-8 text-center">
-            <Inbox className="w-8 h-8 text-white/20 mx-auto mb-3" />
-            <p className="text-sm text-white/40">No estás inscrito en ningún curso actualmente.</p>
+          <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-8 text-center">
+            <Inbox className="w-8 h-8 text-faint mx-auto mb-3" />
+            <p className="text-sm text-subtle">No estás inscrito en ningún curso actualmente.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -339,8 +339,8 @@ export default function StudentDashboardPage() {
                   whileHover={{ y: -2, transition: { duration: 0.15 } }}
                   onClick={() => router.push(`/student/courses/${cd.course.id}`)}
                   className={`
-                    w-full text-left rounded-xl border border-white/[0.08] bg-gradient-to-br ${gradient}
-                    p-5 hover:border-white/15 transition-colors cursor-pointer
+                    w-full text-left rounded-xl border border-foreground/[0.08] bg-gradient-to-br ${gradient}
+                    p-5 hover:border-foreground/15 transition-colors cursor-pointer
                   `}
                 >
                   <div className="flex items-start justify-between mb-3">
@@ -351,12 +351,12 @@ export default function StudentDashboardPage() {
                       </span>
                     )}
                   </div>
-                  <h3 className="text-sm font-semibold text-white/90 mb-1 line-clamp-1">{cd.course.name}</h3>
-                  <p className="text-[11px] text-white/30 mb-3 font-mono">{cd.course.code}</p>
+                  <h3 className="text-sm font-semibold text-foreground/90 mb-1 line-clamp-1">{cd.course.name}</h3>
+                  <p className="text-[11px] text-subtle mb-3 font-mono">{cd.course.code}</p>
                   {/* Schedule */}
                   <div className="flex flex-wrap gap-2">
                     {cd.course.schedule.map((s, si) => (
-                      <span key={si} className="text-[11px] text-white/40 bg-white/[0.04] px-2 py-0.5 rounded">
+                      <span key={si} className="text-[11px] text-subtle bg-foreground/[0.04] px-2 py-0.5 rounded">
                         {DAY_SHORT[s.dayOfWeek] ?? s.dayOfWeek} {s.startTime}–{s.endTime}
                         {s.room && ` · ${s.room}`}
                       </span>
@@ -373,14 +373,14 @@ export default function StudentDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* ─── Pendientes ─── */}
         <section>
-          <h2 className="text-lg font-semibold text-white tracking-tight mb-4">
+          <h2 className="text-lg font-semibold text-foreground tracking-tight mb-4">
             <Bell className="w-5 h-5 inline mr-1" /> Pendientes ({pendingItems.length})
           </h2>
 
           {pendingItems.length === 0 ? (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-8 text-center">
-              <PartyPopper className="w-8 h-8 text-white/20 mx-auto mb-3" />
-              <p className="text-sm text-white/40">¡No tienes entregas pendientes!</p>
+            <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-8 text-center">
+              <PartyPopper className="w-8 h-8 text-faint mx-auto mb-3" />
+              <p className="text-sm text-subtle">¡No tienes entregas pendientes!</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -394,17 +394,17 @@ export default function StudentDashboardPage() {
                     whileHover={{ x: 4, transition: { duration: 0.1 } }}
                     onClick={() => router.push(`/student/courses/${item.course.id}/activities/${item.activity.id}`)}
                     className={`
-                      w-full text-left rounded-lg border border-white/[0.06] bg-white/[0.02]
+                      w-full text-left rounded-lg border border-foreground/[0.06] bg-foreground/[0.02]
                       p-3.5 border-l-[3px] ${cfg.borderColor}
-                      hover:bg-white/[0.04] transition-all cursor-pointer
+                      hover:bg-foreground/[0.04] transition-all cursor-pointer
                     `}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-white/90 line-clamp-1">
+                        <p className="text-sm font-medium text-foreground/90 line-clamp-1">
                           {cfg.icon} {item.activity.title}
                         </p>
-                        <p className="text-[11px] text-white/35 mt-0.5">{item.course.name}</p>
+                        <p className="text-[11px] text-subtle mt-0.5">{item.course.name}</p>
                       </div>
                       <span className={`shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full ${cfg.bgColor} ${cfg.textColor}`}>
                         {item.daysLeft < 0
@@ -414,7 +414,7 @@ export default function StudentDashboardPage() {
                             : `${item.daysLeft}d`}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 mt-2 text-[10px] text-white/25">
+                    <div className="flex items-center gap-3 mt-2 text-[10px] text-faint">
                       <span>
                         Vence: {new Date(item.activity.dueDate).toLocaleDateString('es-CO', {
                           day: '2-digit', month: 'short',
@@ -427,7 +427,7 @@ export default function StudentDashboardPage() {
                 );
               })}
               {pendingItems.length > 8 && (
-                <p className="text-xs text-white/25 text-center pt-2">
+                <p className="text-xs text-faint text-center pt-2">
                   +{pendingItems.length - 8} más pendientes
                 </p>
               )}
@@ -437,14 +437,14 @@ export default function StudentDashboardPage() {
 
         {/* ─── Notas Recientes ─── */}
         <section>
-          <h2 className="text-lg font-semibold text-white tracking-tight mb-4">
+          <h2 className="text-lg font-semibold text-foreground tracking-tight mb-4">
             <BarChart3 className="w-5 h-5 inline mr-1" /> Mis Notas Recientes
           </h2>
 
           {recentGrades.length === 0 ? (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-8 text-center">
-              <FileText className="w-8 h-8 text-white/20 mx-auto mb-3" />
-              <p className="text-sm text-white/40">Aún no tienes notas publicadas.</p>
+            <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-8 text-center">
+              <FileText className="w-8 h-8 text-faint mx-auto mb-3" />
+              <p className="text-sm text-subtle">Aún no tienes notas publicadas.</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -460,14 +460,14 @@ export default function StudentDashboardPage() {
                   `}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-white/90 line-clamp-1">{g.activityTitle}</p>
-                    <p className="text-[11px] text-white/35 mt-0.5">{g.courseName}</p>
+                    <p className="text-sm font-medium text-foreground/90 line-clamp-1">{g.activityTitle}</p>
+                    <p className="text-[11px] text-subtle mt-0.5">{g.courseName}</p>
                   </div>
                   <div className="text-right shrink-0 ml-3">
                     <p className={`text-lg font-bold ${getScoreColor(g.score, g.maxScore)}`}>
                       {g.score.toFixed(1)}
                     </p>
-                    <p className="text-[10px] text-white/25">/ {g.maxScore.toFixed(1)}</p>
+                    <p className="text-[10px] text-faint">/ {g.maxScore.toFixed(1)}</p>
                   </div>
                 </motion.div>
               ))}
@@ -505,14 +505,14 @@ function QuickStat({ label, value, icon, alert }: {
       rounded-xl border p-3.5 transition-colors
       ${alert
         ? 'border-amber-500/20 bg-amber-500/[0.05]'
-        : 'border-white/[0.06] bg-white/[0.02]'
+        : 'border-foreground/[0.06] bg-foreground/[0.02]'
       }
     `}>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-medium text-white/30 uppercase tracking-wider">{label}</span>
+        <span className="text-[10px] font-medium text-subtle uppercase tracking-wider">{label}</span>
         <span className="text-base">{icon}</span>
       </div>
-      <p className={`text-2xl font-bold tracking-tight ${alert ? 'text-amber-400' : 'text-white'}`}>
+      <p className={`text-2xl font-bold tracking-tight ${alert ? 'text-amber-400' : 'text-foreground'}`}>
         {value}
       </p>
     </div>

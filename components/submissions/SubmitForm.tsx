@@ -99,8 +99,8 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
       <Card padding="lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-white/90">{activity.title}</h2>
-            <p className="text-xs text-white/40 mt-0.5">
+            <h2 className="text-lg font-bold text-foreground/90">{activity.title}</h2>
+            <p className="text-xs text-subtle mt-0.5">
               Nota máxima: {activity.maxScore} · Peso: {activity.weight}%
             </p>
           </div>
@@ -120,7 +120,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
         {/* Countdown / Late warning */}
         {!isLate && (
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-xs text-white/40">Tiempo restante:</span>
+            <span className="text-xs text-subtle">Tiempo restante:</span>
             <Countdown targetDate={activity.dueDate} compact />
           </div>
         )}
@@ -151,14 +151,14 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
       {/* ─── Files Section ─── */}
       {activity.requiresFileUpload && (
         <section>
-          <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">
             Archivos Adjuntos <span className="text-red-400/70">*</span>
           </h3>
 
           {files.length > 0 && (
             <div className="space-y-2 mb-4">
               {files.map((file, i) => (
-                <div key={`${file.name}-${i}`} className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                <div key={`${file.name}-${i}`} className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]">
                   <div className="w-8 h-8 rounded bg-cyan-500/10 flex items-center justify-center shrink-0">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan-400">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -166,13 +166,13 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white/80 truncate">{file.name}</p>
-                    <p className="text-[11px] text-white/30">{formatFileSize(file.size)}</p>
+                    <p className="text-sm text-foreground/80 truncate">{file.name}</p>
+                    <p className="text-[11px] text-subtle">{formatFileSize(file.size)}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => removeFile(i)}
-                    className="p-1 rounded hover:bg-white/10 text-white/30 hover:text-red-400 transition-colors cursor-pointer"
+                    className="p-1 rounded hover:bg-foreground/10 text-subtle hover:text-red-400 transition-colors cursor-pointer"
                     aria-label={`Quitar ${file.name}`}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -198,7 +198,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
       {/* ─── Links Section ─── */}
       {activity.requiresLinkSubmission && (
         <section>
-          <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">
             Enlaces <span className="text-red-400/70">*</span>
           </h3>
           <div className="space-y-4">
@@ -213,7 +213,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
       {/* Always show optional links if not required */}
       {!activity.requiresLinkSubmission && (
         <section>
-          <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">
             Enlaces (opcional)
           </h3>
           <div className="space-y-4">
@@ -226,7 +226,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
 
       {/* ─── Comment Section ─── */}
       <section>
-        <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
+        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">
           Comentario (opcional)
         </h3>
         <textarea
@@ -236,22 +236,22 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
           rows={4}
           maxLength={5000}
           disabled={loading}
-          className="w-full px-3 py-2.5 rounded-lg border border-white/10 bg-white/[0.04] text-white text-sm
-                     placeholder:text-white/25 outline-none transition-colors resize-y
+          className="w-full px-3 py-2.5 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-foreground text-sm
+                     placeholder:text-faint outline-none transition-colors resize-y
                      focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25
                      disabled:opacity-50 disabled:cursor-not-allowed"
         />
-        <p className="mt-1 text-[11px] text-white/20 text-right">{content.length}/5000</p>
+        <p className="mt-1 text-[11px] text-faint text-right">{content.length}/5000</p>
       </section>
 
       {/* ─── Upload Progress ─── */}
       {loading && uploadProgress > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-white/50">Enviando entrega...</span>
+            <span className="text-muted">Enviando entrega...</span>
             <span className="text-cyan-400 font-mono">{uploadProgress}%</span>
           </div>
-          <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
+          <div className="w-full h-2 rounded-full bg-foreground/[0.06] overflow-hidden">
             <div
               className="h-full rounded-full bg-cyan-500 transition-all duration-300"
               style={{ width: `${uploadProgress}%` }}
@@ -261,7 +261,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
       )}
 
       {/* ─── Submit Button ─── */}
-      <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
+      <div className="flex items-center gap-3 pt-4 border-t border-foreground/[0.06]">
         <Button
           type="button"
           variant="primary"
@@ -280,10 +280,10 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
 
       {/* ─── Confirmation Modal ─── */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-[#111] rounded-xl border border-white/[0.08] p-6 space-y-4">
-            <h3 className="text-lg font-bold text-white">¿Confirmar entrega?</h3>
-            <p className="text-sm text-white/60">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-base/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-base rounded-xl border border-foreground/[0.08] p-6 space-y-4">
+            <h3 className="text-lg font-bold text-foreground">¿Confirmar entrega?</h3>
+            <p className="text-sm text-muted">
               {existingVersion
                 ? `Se registrará la versión ${existingVersion + 1} de tu entrega.`
                 : 'Esta acción registrará tu entrega para esta actividad.'
@@ -298,7 +298,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
             )}
 
             {/* Summary */}
-            <div className="text-xs text-white/40 space-y-1">
+            <div className="text-xs text-subtle space-y-1">
               {files.length > 0 && <p className="flex items-center gap-1"><Paperclip className="w-3 h-3" /> {files.length} archivo{files.length > 1 ? 's' : ''}</p>}
               {buildLinks().length > 0 && <p className="flex items-center gap-1"><LinkIcon className="w-3 h-3" /> {buildLinks().length} enlace{buildLinks().length > 1 ? 's' : ''}</p>}
               {content.trim() && <p className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> Con comentario</p>}

@@ -138,7 +138,7 @@ export default function StudentProjectPage() {
       {/* Back link */}
       <button
         onClick={() => router.push(`/student/courses/${courseId}`)}
-        className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <polyline points="15 18 9 12 15 6" />
@@ -148,8 +148,8 @@ export default function StudentProjectPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Mi Proyecto</h1>
-        <p className="text-sm text-white/40 mt-1">{course?.name ?? 'Curso'}</p>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Mi Proyecto</h1>
+        <p className="text-sm text-subtle mt-1">{course?.name ?? 'Curso'}</p>
       </div>
 
       {/* ─── View Mode ─── */}
@@ -158,7 +158,7 @@ export default function StudentProjectPage() {
           <div className="space-y-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-white">{project.projectName}</h2>
+                <h2 className="text-lg font-semibold text-foreground">{project.projectName}</h2>
                 <div className="flex items-center gap-2 mt-1.5">
                   <StatusBadge status={project.status} />
                   {project.isPublic && <Badge variant="info" size="sm">Público</Badge>}
@@ -171,7 +171,7 @@ export default function StudentProjectPage() {
             </div>
 
             {project.description && (
-              <p className="text-sm text-white/60 leading-relaxed">{project.description}</p>
+              <p className="text-sm text-muted leading-relaxed">{project.description}</p>
             )}
 
             {/* Links */}
@@ -183,8 +183,8 @@ export default function StudentProjectPage() {
 
             {/* Preview card */}
             {project.isPublic && (
-              <div className="mt-6 pt-6 border-t border-white/[0.06]">
-                <p className="text-[11px] text-white/30 uppercase tracking-wider mb-3">
+              <div className="mt-6 pt-6 border-t border-foreground/[0.06]">
+                <p className="text-[11px] text-subtle uppercase tracking-wider mb-3">
                   Vista previa en la Vitrina
                 </p>
                 <ShowcasePreview
@@ -215,7 +215,7 @@ export default function StudentProjectPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Project name */}
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-1.5">
+              <label className="block text-xs font-medium text-muted mb-1.5">
                 Nombre del Proyecto *
               </label>
               <input
@@ -223,14 +223,14 @@ export default function StudentProjectPage() {
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 placeholder="Ej: Mi Portafolio Web"
-                className="w-full px-3 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-sm text-white/90 placeholder:text-white/25 focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-colors"
+                className="w-full px-3 py-2.5 bg-foreground/[0.04] border border-foreground/[0.08] rounded-lg text-sm text-foreground/90 placeholder:text-faint focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-colors"
                 required
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-1.5">
+              <label className="block text-xs font-medium text-muted mb-1.5">
                 Descripción (opcional)
               </label>
               <textarea
@@ -239,14 +239,14 @@ export default function StudentProjectPage() {
                 placeholder="Breve descripción de tu proyecto..."
                 rows={3}
                 maxLength={1000}
-                className="w-full px-3 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-sm text-white/80 placeholder:text-white/25 focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-colors resize-y"
+                className="w-full px-3 py-2.5 bg-foreground/[0.04] border border-foreground/[0.08] rounded-lg text-sm text-foreground/80 placeholder:text-faint focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-colors resize-y"
               />
-              <p className="text-[10px] text-white/25 mt-1">{description.length}/1000</p>
+              <p className="text-[10px] text-faint mt-1">{description.length}/1000</p>
             </div>
 
             {/* GitHub URL */}
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-1.5">
+              <label className="block text-xs font-medium text-muted mb-1.5">
                 URL de GitHub *
               </label>
               <input
@@ -254,10 +254,10 @@ export default function StudentProjectPage() {
                 value={githubUrl}
                 onChange={(e) => setGithubUrl(e.target.value)}
                 placeholder="https://github.com/tu-usuario/tu-proyecto"
-                className={`w-full px-3 py-2.5 bg-white/[0.04] border rounded-lg text-sm text-white/90 placeholder:text-white/25 focus:outline-none focus:ring-1 transition-colors ${
+                className={`w-full px-3 py-2.5 bg-foreground/[0.04] border rounded-lg text-sm text-foreground/90 placeholder:text-faint focus:outline-none focus:ring-1 transition-colors ${
                   githubUrl && !isGithubValid
                     ? 'border-red-500/50 focus:border-red-500/60 focus:ring-red-500/20'
-                    : 'border-white/[0.08] focus:border-cyan-500/40 focus:ring-cyan-500/20'
+                    : 'border-foreground/[0.08] focus:border-cyan-500/40 focus:ring-cyan-500/20'
                 }`}
                 required
               />
@@ -268,7 +268,7 @@ export default function StudentProjectPage() {
 
             {/* Vercel URL */}
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-1.5">
+              <label className="block text-xs font-medium text-muted mb-1.5">
                 URL de Vercel (opcional)
               </label>
               <input
@@ -276,10 +276,10 @@ export default function StudentProjectPage() {
                 value={vercelUrl}
                 onChange={(e) => setVercelUrl(e.target.value)}
                 placeholder="https://tu-proyecto.vercel.app"
-                className={`w-full px-3 py-2.5 bg-white/[0.04] border rounded-lg text-sm text-white/90 placeholder:text-white/25 focus:outline-none focus:ring-1 transition-colors ${
+                className={`w-full px-3 py-2.5 bg-foreground/[0.04] border rounded-lg text-sm text-foreground/90 placeholder:text-faint focus:outline-none focus:ring-1 transition-colors ${
                   vercelUrl && !isVercelValid
                     ? 'border-red-500/50 focus:border-red-500/60 focus:ring-red-500/20'
-                    : 'border-white/[0.08] focus:border-cyan-500/40 focus:ring-cyan-500/20'
+                    : 'border-foreground/[0.08] focus:border-cyan-500/40 focus:ring-cyan-500/20'
                 }`}
               />
               {vercelUrl && !isVercelValid && (
@@ -289,7 +289,7 @@ export default function StudentProjectPage() {
 
             {/* Figma URL */}
             <div>
-              <label className="block text-xs font-medium text-white/50 mb-1.5">
+              <label className="block text-xs font-medium text-muted mb-1.5">
                 URL de Figma (opcional)
               </label>
               <input
@@ -297,12 +297,12 @@ export default function StudentProjectPage() {
                 value={figmaUrl}
                 onChange={(e) => setFigmaUrl(e.target.value)}
                 placeholder="https://figma.com/file/..."
-                className="w-full px-3 py-2.5 bg-white/[0.04] border border-white/[0.08] rounded-lg text-sm text-white/90 placeholder:text-white/25 focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-colors"
+                className="w-full px-3 py-2.5 bg-foreground/[0.04] border border-foreground/[0.08] rounded-lg text-sm text-foreground/90 placeholder:text-faint focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-colors"
               />
             </div>
 
             {/* Public toggle */}
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.02] border border-foreground/[0.06]">
               <label className="flex items-center gap-2.5 cursor-pointer group flex-1">
                 <div className="relative">
                   <input
@@ -311,14 +311,14 @@ export default function StudentProjectPage() {
                     onChange={(e) => setIsPublic(e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 bg-white/[0.08] rounded-full peer-checked:bg-cyan-500/30 transition-colors" />
-                  <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white/40 rounded-full shadow peer-checked:translate-x-4 peer-checked:bg-cyan-400 transition-all" />
+                  <div className="w-9 h-5 bg-foreground/[0.08] rounded-full peer-checked:bg-cyan-500/30 transition-colors" />
+                  <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-foreground/40 rounded-full shadow peer-checked:translate-x-4 peer-checked:bg-cyan-400 transition-all" />
                 </div>
                 <div>
-                  <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
+                  <span className="text-sm text-muted group-hover:text-foreground/90 transition-colors">
                     Compartir en vitrina pública
                   </span>
-                  <p className="text-[10px] text-white/30">
+                  <p className="text-[10px] text-subtle">
                     Tu proyecto será visible para cualquier visitante (requiere aprobación del docente)
                   </p>
                 </div>
@@ -328,7 +328,7 @@ export default function StudentProjectPage() {
             {/* Preview */}
             {isPublic && projectName && (
               <div>
-                <p className="text-[11px] text-white/30 uppercase tracking-wider mb-3">
+                <p className="text-[11px] text-subtle uppercase tracking-wider mb-3">
                   Vista previa en la Vitrina
                 </p>
                 <ShowcasePreview
@@ -342,12 +342,12 @@ export default function StudentProjectPage() {
             )}
 
             {/* Submit */}
-            <div className="flex items-center justify-between pt-4 border-t border-white/[0.06]">
+            <div className="flex items-center justify-between pt-4 border-t border-foreground/[0.06]">
               {editMode && (
                 <button
                   type="button"
                   onClick={() => setEditMode(false)}
-                  className="text-sm text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+                  className="text-sm text-subtle hover:text-muted transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -407,16 +407,16 @@ function LinkRow({ icon, label, url }: { icon: string; label: string; url: strin
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/[0.12] transition-all group"
+      className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] hover:bg-foreground/[0.06] hover:border-foreground/[0.12] transition-all group"
     >
-      <div className="text-white/40 group-hover:text-cyan-400 transition-colors">
+      <div className="text-subtle group-hover:text-cyan-400 transition-colors">
         {icons[icon]}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-white/40">{label}</p>
-        <p className="text-sm text-white/80 group-hover:text-white truncate">{url}</p>
+        <p className="text-xs text-subtle">{label}</p>
+        <p className="text-sm text-foreground/80 group-hover:text-foreground truncate">{url}</p>
       </div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/20 group-hover:text-cyan-400 shrink-0">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-faint group-hover:text-cyan-400 shrink-0">
         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
         <polyline points="15 3 21 3 21 9" />
         <line x1="10" y1="14" x2="21" y2="3" />
@@ -438,18 +438,18 @@ function ShowcasePreview({
   courseName?: string;
 }) {
   return (
-    <div className="relative rounded-xl overflow-hidden border border-white/[0.08] bg-gradient-to-br from-white/[0.04] via-transparent to-cyan-500/[0.03] p-5 max-w-sm">
+    <div className="relative rounded-xl overflow-hidden border border-foreground/[0.08] bg-gradient-to-br from-white/[0.04] via-transparent to-cyan-500/[0.03] p-5 max-w-sm">
       <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent pointer-events-none" />
       <div className="relative">
         {courseName && (
           <p className="text-[10px] text-cyan-400/60 uppercase tracking-wider mb-2">{courseName}</p>
         )}
-        <h3 className="text-sm font-semibold text-white">{projectName}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{projectName}</h3>
         {description && (
-          <p className="text-xs text-white/40 mt-1 line-clamp-2">{description}</p>
+          <p className="text-xs text-subtle mt-1 line-clamp-2">{description}</p>
         )}
         <div className="flex gap-2 mt-3">
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] bg-white/[0.06] text-white/50">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] bg-foreground/[0.06] text-muted">
             GitHub
           </span>
           {vercelUrl && (

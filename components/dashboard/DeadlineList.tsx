@@ -32,13 +32,13 @@ export default function DeadlineList({ deadlines, loading = false, onItemClick }
     return (
       <div className="space-y-2">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.02] animate-pulse">
-            <div className="w-1 h-10 rounded-full bg-white/[0.06]" />
+          <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.02] animate-pulse">
+            <div className="w-1 h-10 rounded-full bg-foreground/[0.06]" />
             <div className="flex-1 space-y-1.5">
-              <div className="h-3 w-40 rounded bg-white/[0.06]" />
-              <div className="h-2.5 w-24 rounded bg-white/[0.04]" />
+              <div className="h-3 w-40 rounded bg-foreground/[0.06]" />
+              <div className="h-2.5 w-24 rounded bg-foreground/[0.04]" />
             </div>
-            <div className="h-6 w-14 rounded bg-white/[0.04]" />
+            <div className="h-6 w-14 rounded bg-foreground/[0.04]" />
           </div>
         ))}
       </div>
@@ -49,7 +49,7 @@ export default function DeadlineList({ deadlines, loading = false, onItemClick }
     return (
       <div className="text-center py-8">
         <CheckCircle2 className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
-        <p className="text-xs text-white/30">Sin vencimientos próximos</p>
+        <p className="text-xs text-subtle">Sin vencimientos próximos</p>
       </div>
     );
   }
@@ -69,8 +69,8 @@ export default function DeadlineList({ deadlines, loading = false, onItemClick }
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: i * 0.05 }}
             onClick={() => onItemClick?.(d.id, '')}
-            className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/[0.015] hover:bg-white/[0.04]
-                       border border-transparent hover:border-white/[0.06]
+            className="w-full flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.015] hover:bg-foreground/[0.04]
+                       border border-transparent hover:border-foreground/[0.06]
                        transition-all duration-200 cursor-pointer group text-left"
           >
             {/* Urgency bar */}
@@ -79,21 +79,21 @@ export default function DeadlineList({ deadlines, loading = false, onItemClick }
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="text-sm text-white/80 font-medium truncate group-hover:text-white transition-colors">
+                <p className="text-sm text-foreground/80 font-medium truncate group-hover:text-foreground transition-colors">
                   {d.title}
                 </p>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] font-mono text-white/20">{d.courseCode}</span>
-                <span className="text-[10px] text-white/15">·</span>
-                <span className="text-[10px] text-white/25">{d.courseName}</span>
+                <span className="text-[10px] font-mono text-faint">{d.courseCode}</span>
+                <span className="text-[10px] text-faint">·</span>
+                <span className="text-[10px] text-faint">{d.courseName}</span>
               </div>
             </div>
 
             {/* Completion indicator */}
             <div className="flex-shrink-0 text-right">
-              <span className="text-[10px] text-white/20">{d.submissionCount}/{d.studentCount}</span>
-              <div className="w-12 h-1 rounded-full bg-white/[0.06] mt-1 overflow-hidden">
+              <span className="text-[10px] text-faint">{d.submissionCount}/{d.studentCount}</span>
+              <div className="w-12 h-1 rounded-full bg-foreground/[0.06] mt-1 overflow-hidden">
                 <div
                   className="h-full rounded-full bg-cyan-500/40 transition-all"
                   style={{ width: `${completionRate}%` }}

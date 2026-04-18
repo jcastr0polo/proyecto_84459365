@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Poppins } from "next/font/google";
+import ThemeProvider from "@/components/ThemeProvider";
 import "./globals.css";
 
 const playfairDisplay = Playfair_Display({
@@ -17,7 +18,7 @@ const poppins = Poppins({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#000000",
+  themeColor: "#0d1117",
 };
 
 export const metadata: Metadata = {
@@ -34,9 +35,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${playfairDisplay.variable} ${poppins.variable} antialiased`}>
-      <body className="min-h-screen bg-black text-white">
-        {children}
+    <html lang="es" data-theme="dark" className={`${playfairDisplay.variable} ${poppins.variable} antialiased`} suppressHydrationWarning>
+      <body className="min-h-screen bg-base text-foreground">
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

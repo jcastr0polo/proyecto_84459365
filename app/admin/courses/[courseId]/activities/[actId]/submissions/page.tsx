@@ -114,7 +114,7 @@ export default function AdminSubmissionsPage() {
       {/* Back link */}
       <button
         onClick={() => router.push(`/admin/courses/${courseId}/activities/${actId}`)}
-        className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <polyline points="15 18 9 12 15 6" />
@@ -124,15 +124,15 @@ export default function AdminSubmissionsPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Entregas</h1>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Entregas</h1>
         {activity && (
-          <p className="text-sm text-white/40 mt-1">{activity.title}</p>
+          <p className="text-sm text-subtle mt-1">{activity.title}</p>
         )}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-        <StatCard label="Total" value={stats.total} color="text-white/70" />
+        <StatCard label="Total" value={stats.total} color="text-muted" />
         <StatCard label="Entregadas" value={stats.submitted} color="text-emerald-400" />
         <StatCard label="Calificadas" value={stats.reviewed} color="text-cyan-400" />
         <StatCard label="Devueltas" value={stats.returned} color="text-amber-400" />
@@ -145,7 +145,7 @@ export default function AdminSubmissionsPage() {
         value={statusFilter}
         onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
         aria-label="Filtrar por estado"
-        className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.04] text-sm text-white
+        className="px-3 py-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-sm text-foreground
                    outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
       >
         <option value="all">Todos los estados</option>
@@ -158,13 +158,13 @@ export default function AdminSubmissionsPage() {
       {/* Table */}
       {submissions.length === 0 ? (
         <EmptyState
-          icon={<Inbox className="w-6 h-6 text-white/30" />}
+          icon={<Inbox className="w-6 h-6 text-subtle" />}
           title="Sin entregas"
           description="Ningún estudiante ha enviado una entrega aún."
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={<Search className="w-6 h-6 text-white/30" />}
+          icon={<Search className="w-6 h-6 text-subtle" />}
           title="Sin resultados"
           description="No hay entregas con ese estado."
           action={<Button variant="ghost" size="sm" onClick={() => setStatusFilter('all')}>Limpiar filtro</Button>}
@@ -192,27 +192,27 @@ export default function AdminSubmissionsPage() {
                     <Tr key={sub.id}>
                       <Td>
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-[10px] font-bold text-white/70 shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-[10px] font-bold text-muted shrink-0">
                             {sub.student.firstName[0]}{sub.student.lastName[0]}
                           </div>
                           <div>
-                            <p className="text-sm text-white/80">{sub.student.firstName} {sub.student.lastName}</p>
-                            <p className="text-[11px] text-white/30">{sub.student.email}</p>
+                            <p className="text-sm text-foreground/80">{sub.student.firstName} {sub.student.lastName}</p>
+                            <p className="text-[11px] text-subtle">{sub.student.email}</p>
                           </div>
                         </div>
                       </Td>
                       <Td>
-                        <span className="text-sm text-white/60">{formatDate(sub.submittedAt)}</span>
+                        <span className="text-sm text-muted">{formatDate(sub.submittedAt)}</span>
                         {sub.isLate && <Badge variant="danger" size="sm" className="ml-1.5">Tardía</Badge>}
                       </Td>
                       <Td>
                         <Badge variant={statusCfg.variant} size="sm" dot>{statusCfg.label}</Badge>
                       </Td>
                       <Td>
-                        <span className="text-sm text-white/50 font-mono">v{sub.version}</span>
+                        <span className="text-sm text-muted font-mono">v{sub.version}</span>
                       </Td>
                       <Td>
-                        <span className="text-sm text-white/50">{sub.attachments.length || '—'}</span>
+                        <span className="text-sm text-muted">{sub.attachments.length || '—'}</span>
                       </Td>
                       <Td>
                         <div className="flex items-center gap-1">
@@ -228,7 +228,7 @@ export default function AdminSubmissionsPage() {
                               {LINK_ICONS[link.type] ?? <LinkIcon className="w-3.5 h-3.5" />}
                             </a>
                           ))}
-                          {sub.links.length === 0 && <span className="text-sm text-white/30">—</span>}
+                          {sub.links.length === 0 && <span className="text-sm text-subtle">—</span>}
                         </div>
                       </Td>
                       <Td>
@@ -251,19 +251,19 @@ export default function AdminSubmissionsPage() {
                 <div
                   key={sub.id}
                   onClick={() => setSelectedId(sub.id)}
-                  className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.03] cursor-pointer
-                           hover:border-white/15 hover:bg-white/[0.06] transition-all"
+                  className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] cursor-pointer
+                           hover:border-foreground/15 hover:bg-foreground/[0.06] transition-all"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-[10px] font-bold text-white/70">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-[10px] font-bold text-muted">
                         {sub.student.firstName[0]}{sub.student.lastName[0]}
                       </div>
-                      <p className="text-sm text-white/80">{sub.student.firstName} {sub.student.lastName}</p>
+                      <p className="text-sm text-foreground/80">{sub.student.firstName} {sub.student.lastName}</p>
                     </div>
                     <Badge variant={statusCfg.variant} size="sm" dot>{statusCfg.label}</Badge>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-white/40">
+                  <div className="flex items-center gap-3 text-xs text-subtle">
                     <span>{formatDate(sub.submittedAt)}</span>
                     <span className="font-mono">v{sub.version}</span>
                     {sub.isLate && <Badge variant="danger" size="sm">Tardía</Badge>}
@@ -299,9 +299,9 @@ export default function AdminSubmissionsPage() {
 
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.06] text-center">
+    <div className="p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-center">
       <p className={`text-lg font-bold ${color}`}>{value}</p>
-      <p className="text-[11px] text-white/40">{label}</p>
+      <p className="text-[11px] text-subtle">{label}</p>
     </div>
   );
 }

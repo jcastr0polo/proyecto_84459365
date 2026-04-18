@@ -105,7 +105,7 @@ export default function CourseStudentsPage() {
       <div>
         <button
           onClick={() => router.push(`/admin/courses/${courseId}`)}
-          className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors mb-4 cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors mb-4 cursor-pointer"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="15 18 9 12 15 6" />
@@ -115,11 +115,11 @@ export default function CourseStudentsPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
               Estudiantes
             </h1>
             {course && (
-              <p className="text-sm text-white/40 mt-1">
+              <p className="text-sm text-subtle mt-1">
                 {course.name} · <span className="font-mono">{course.code}</span>
               </p>
             )}
@@ -166,7 +166,7 @@ export default function CourseStudentsPage() {
             <svg
               width="16" height="16" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-faint"
             >
               <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
@@ -176,8 +176,8 @@ export default function CourseStudentsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               aria-label="Buscar estudiantes"
-              className="w-full pl-10 pr-3 py-2 text-sm rounded-lg border border-white/10
-                         bg-white/[0.04] text-white placeholder:text-white/25
+              className="w-full pl-10 pr-3 py-2 text-sm rounded-lg border border-foreground/10
+                         bg-foreground/[0.04] text-white placeholder:text-faint
                          outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25"
             />
           </div>
@@ -187,7 +187,7 @@ export default function CourseStudentsPage() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'withdrawn')}
             aria-label="Filtrar por estado"
-            className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.04] text-sm text-white
+            className="px-3 py-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-sm text-foreground
                        outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
           >
             <option value="all">Todos los estados</option>
@@ -200,7 +200,7 @@ export default function CourseStudentsPage() {
       {/* Content */}
       {enrollments.length === 0 ? (
         <EmptyState
-          icon={<Users className="w-6 h-6 text-white/30" />}
+          icon={<Users className="w-6 h-6 text-subtle" />}
           title="No hay estudiantes inscritos"
           description="Inscribe estudiantes individualmente o importa un archivo CSV."
           action={
@@ -224,7 +224,7 @@ export default function CourseStudentsPage() {
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={<Search className="w-6 h-6 text-white/30" />}
+          icon={<Search className="w-6 h-6 text-subtle" />}
           title="Sin resultados"
           description="No se encontraron estudiantes con esos filtros."
           action={

@@ -43,16 +43,16 @@ export default function StudentTable({ enrollments, onWithdraw }: StudentTablePr
                       <div className="w-8 h-8 rounded-full bg-cyan-500/15 flex items-center justify-center text-[10px] font-bold text-cyan-400 shrink-0">
                         {student.firstName.charAt(0)}{student.lastName.charAt(0)}
                       </div>
-                      <span className="font-medium text-white/90">
+                      <span className="font-medium text-foreground/90">
                         {student.firstName} {student.lastName}
                       </span>
                     </div>
                   </Td>
                   <Td>
-                    <span className="text-white/60">{student.email}</span>
+                    <span className="text-muted">{student.email}</span>
                   </Td>
                   <Td>
-                    <span className="font-mono text-xs text-white/50">{student.documentNumber}</span>
+                    <span className="font-mono text-xs text-muted">{student.documentNumber}</span>
                   </Td>
                   <Td>
                     <Badge variant={isActive ? 'success' : 'danger'} size="sm" dot>
@@ -60,7 +60,7 @@ export default function StudentTable({ enrollments, onWithdraw }: StudentTablePr
                     </Badge>
                   </Td>
                   <Td>
-                    <span className="text-xs text-white/50">{formatDate(enrollment.enrolledAt)}</span>
+                    <span className="text-xs text-muted">{formatDate(enrollment.enrolledAt)}</span>
                   </Td>
                   <Td className="text-right">
                     {isActive && onWithdraw && (
@@ -73,7 +73,7 @@ export default function StudentTable({ enrollments, onWithdraw }: StudentTablePr
                       </Button>
                     )}
                     {!isActive && enrollment.withdrawnAt && (
-                      <span className="text-[10px] text-white/30">
+                      <span className="text-[10px] text-subtle">
                         {formatDate(enrollment.withdrawnAt)}
                       </span>
                     )}

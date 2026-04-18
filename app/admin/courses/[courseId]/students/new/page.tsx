@@ -91,7 +91,7 @@ export default function NewStudentPage() {
       {/* Back link */}
       <button
         onClick={() => router.push(`/admin/courses/${courseId}/students`)}
-        className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="15 18 9 12 15 6" />
@@ -101,11 +101,11 @@ export default function NewStudentPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">
           Inscribir Estudiante
         </h1>
         {course && (
-          <p className="text-sm text-white/40 mt-1">
+          <p className="text-sm text-subtle mt-1">
             {course.name} · <span className="font-mono">{course.code}</span>
           </p>
         )}
@@ -119,7 +119,7 @@ export default function NewStudentPage() {
             {lastResult.message}
           </p>
           {!lastResult.created && (
-            <p className="text-xs text-white/40 mb-3 flex items-center gap-1.5">
+            <p className="text-xs text-subtle mb-3 flex items-center gap-1.5">
               <Info className="w-3.5 h-3.5 flex-shrink-0" />
               El usuario ya existía en el sistema. Solo se creó la inscripción al curso.
             </p>
@@ -151,7 +151,7 @@ export default function NewStudentPage() {
       )}
 
       {/* Help text */}
-      <p className="text-xs text-white/20 leading-relaxed">
+      <p className="text-xs text-faint leading-relaxed">
         Al inscribir un estudiante, se crea automáticamente su cuenta con la contraseña igual
         al número de documento. El estudiante deberá cambiarla en su primer inicio de sesión.
       </p>

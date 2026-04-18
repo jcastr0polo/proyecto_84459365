@@ -18,12 +18,12 @@ const variantClasses: Record<BadgeVariant, string> = {
   warning: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
   danger: 'bg-red-500/15 text-red-400 border-red-500/20',
   info: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20',
-  neutral: 'bg-white/10 text-white/60 border-white/10',
+  neutral: 'bg-foreground/10 text-muted border-foreground/10',
   programming: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
   design: 'bg-purple-500/15 text-purple-400 border-purple-500/20',
   management: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
   leadership: 'bg-rose-500/15 text-rose-400 border-rose-500/20',
-  other: 'bg-white/10 text-white/60 border-white/10',
+  other: 'bg-foreground/10 text-muted border-foreground/10',
 };
 
 const dotColors: Record<BadgeVariant, string> = {
@@ -31,12 +31,12 @@ const dotColors: Record<BadgeVariant, string> = {
   warning: 'bg-amber-400',
   danger: 'bg-red-400',
   info: 'bg-cyan-400',
-  neutral: 'bg-white/60',
+  neutral: 'bg-foreground/60',
   programming: 'bg-blue-400',
   design: 'bg-purple-400',
   management: 'bg-amber-400',
   leadership: 'bg-rose-400',
-  other: 'bg-white/60',
+  other: 'bg-foreground/60',
 };
 
 const sizeClasses: Record<BadgeSize, string> = {

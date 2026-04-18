@@ -101,7 +101,7 @@ export default function CourseDetailPage() {
       <div>
         <button
           onClick={() => router.push('/admin/courses')}
-          className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors mb-4 cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors mb-4 cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Volver a cursos
@@ -110,20 +110,20 @@ export default function CourseDetailPage() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-bold text-white tracking-tight">{course.name}</h1>
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">{course.name}</h1>
               <Badge variant={categoryToBadgeVariant(course.category)} size="sm">
                 {categoryLabel(course.category)}
               </Badge>
             </div>
-            <div className="flex items-center gap-3 text-sm text-white/40">
+            <div className="flex items-center gap-3 text-sm text-subtle">
               <span className="font-mono">{course.code}</span>
               {semester && (
                 <>
-                  <span className="text-white/15">·</span>
+                  <span className="text-faint">·</span>
                   <span>{semester.label}</span>
                 </>
               )}
-              <span className="text-white/15">·</span>
+              <span className="text-faint">·</span>
               <Badge variant={course.isActive ? 'success' : 'neutral'} size="sm" dot>
                 {course.isActive ? 'Activo' : 'Inactivo'}
               </Badge>
@@ -137,7 +137,7 @@ export default function CourseDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-white/[0.06]">
+      <div className="border-b border-foreground/[0.06]">
         <nav className="flex gap-1 -mb-px overflow-x-auto" aria-label="Pestañas del curso">
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -156,7 +156,7 @@ export default function CourseDetailPage() {
                   border-b-2 transition-all duration-150 cursor-pointer
                   ${activeTab === tab.key && !tab.href
                     ? 'border-cyan-500 text-cyan-400'
-                    : 'border-transparent text-white/40 hover:text-white/60 hover:border-white/10'
+                    : 'border-transparent text-subtle hover:text-muted hover:border-foreground/10'
                   }
                 `}
               >
@@ -196,13 +196,13 @@ function ResumenTab({ course, semester }: { course: Course; semester?: Semester 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {/* Description */}
       <Card padding="lg" className="lg:col-span-2">
-        <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Descripción</h3>
-        <p className="text-sm text-white/70 leading-relaxed">{course.description}</p>
+        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">Descripción</h3>
+        <p className="text-sm text-muted leading-relaxed">{course.description}</p>
       </Card>
 
       {/* Info */}
       <Card padding="lg">
-        <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Información</h3>
+        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">Información</h3>
         <dl className="space-y-3">
           <InfoRow label="Código" value={course.code} />
           <InfoRow label="Categoría" value={categoryLabel(course.category)} />
@@ -215,19 +215,19 @@ function ResumenTab({ course, semester }: { course: Course; semester?: Semester 
 
       {/* Schedule */}
       <Card padding="lg" className="lg:col-span-3">
-        <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Horarios</h3>
+        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">Horarios</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {course.schedule.map((slot: CourseSchedule, idx: number) => (
             <div
               key={idx}
-              className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]"
+              className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]"
             >
               <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center shrink-0">
                 <Clock className="w-4 h-4 text-cyan-400" />
               </div>
               <div>
-                <p className="text-sm font-medium text-white/80 capitalize">{slot.dayOfWeek}</p>
-                <p className="text-xs text-white/40">
+                <p className="text-sm font-medium text-foreground/80 capitalize">{slot.dayOfWeek}</p>
+                <p className="text-xs text-subtle">
                   {slot.startTime}–{slot.endTime}
                   {slot.room && ` · ${slot.room}`}
                   {` · ${slot.modality}`}
@@ -244,8 +244,8 @@ function ResumenTab({ course, semester }: { course: Course; semester?: Semester 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
-      <dt className="text-xs text-white/40">{label}</dt>
-      <dd className="text-sm text-white/70 font-medium">{value}</dd>
+      <dt className="text-xs text-subtle">{label}</dt>
+      <dd className="text-sm text-muted font-medium">{value}</dd>
     </div>
   );
 }

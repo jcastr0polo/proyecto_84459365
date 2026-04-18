@@ -83,7 +83,7 @@ export default function LinkInput({ type, value, onChange, required = false, dis
 
   return (
     <div>
-      <label className="flex items-center gap-1.5 text-xs font-medium text-white/60 mb-1.5">
+      <label className="flex items-center gap-1.5 text-xs font-medium text-muted mb-1.5">
         <span>{config.icon}</span>
         {config.label}
         {required && <span className="text-red-400/70">*</span>}
@@ -96,11 +96,11 @@ export default function LinkInput({ type, value, onChange, required = false, dis
         placeholder={config.placeholder}
         disabled={disabled}
         className={`
-          w-full px-3 py-2.5 rounded-lg border bg-white/[0.04] text-white text-sm
-          placeholder:text-white/25 outline-none transition-colors
+          w-full px-3 py-2.5 rounded-lg border bg-foreground/[0.04] text-foreground text-sm
+          placeholder:text-faint outline-none transition-colors
           focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25
           disabled:opacity-50 disabled:cursor-not-allowed
-          ${error && touched ? 'border-red-500/50' : 'border-white/10'}
+          ${error && touched ? 'border-red-500/50' : 'border-foreground/10'}
         `}
       />
       {touched && error && <p className="mt-1 text-xs text-red-400">{error}</p>}

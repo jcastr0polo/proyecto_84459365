@@ -91,7 +91,7 @@ export default function FileUploadZone({
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           ${isDragging
             ? 'border-cyan-500/60 bg-cyan-500/[0.06]'
-            : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
+            : 'border-foreground/10 bg-foreground/[0.02] hover:border-foreground/20 hover:bg-foreground/[0.04]'
           }
           ${error ? 'border-red-500/40' : ''}
         `}
@@ -107,7 +107,7 @@ export default function FileUploadZone({
         />
 
         {/* Upload icon */}
-        <div className={`${isDragging ? 'text-cyan-400' : 'text-white/25'} transition-colors`}>
+        <div className={`${isDragging ? 'text-cyan-400' : 'text-faint'} transition-colors`}>
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
@@ -116,11 +116,11 @@ export default function FileUploadZone({
         </div>
 
         <div>
-          <p className={`text-sm font-medium ${isDragging ? 'text-cyan-300' : 'text-white/60'}`}>
+          <p className={`text-sm font-medium ${isDragging ? 'text-cyan-300' : 'text-muted'}`}>
             {isDragging ? 'Suelta el archivo aquí' : label}
           </p>
           {hint && (
-            <p className="text-xs text-white/30 mt-1">{hint}</p>
+            <p className="text-xs text-subtle mt-1">{hint}</p>
           )}
         </div>
       </label>

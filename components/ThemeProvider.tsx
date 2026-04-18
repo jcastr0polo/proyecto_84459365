@@ -109,17 +109,22 @@ export default function ThemeProvider({ children, defaultTheme = 'dark' }: {
 /* ─── ThemeToggle button component ─── */
 export function ThemeToggle({ className = '' }: { className?: string }) {
   const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  // Render a fixed-size placeholder during SSR to avoid hydration mismatch
+  const isDark = mounted ? theme === 'dark' : true;
 
   return (
     <button
       onClick={toggleTheme}
       className={`p-2 rounded-lg transition-colors cursor-pointer
-                  text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]
-                  hover:bg-[var(--color-surface-hover)] ${className}`}
-      aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-      title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+                  text-subtle hover:text-foreground/80
+                  hover:bg-foreground/[0.06] ${className}`}
+      aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+      title={isDark ? 'Modo claro' : 'Modo oscuro'}
     >
-      {theme === 'dark' ? (
+      {isDark ? (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="5" />
           <line x1="12" y1="1" x2="12" y2="3" />

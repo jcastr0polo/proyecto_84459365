@@ -82,9 +82,9 @@ export default function GradeTable({
     <div>
       {/* Counter bar */}
       <div className="flex items-center justify-between mb-4 px-1">
-        <p className="text-sm text-white/60">
+        <p className="text-sm text-muted">
           <span className="text-cyan-400 font-semibold">{gradedCount}</span> /{' '}
-          <span className="text-white/80">{rows.length}</span> calificados
+          <span className="text-foreground/80">{rows.length}</span> calificados
         </p>
         <div className="flex items-center gap-2">
           {modified.size > 0 && (
@@ -96,19 +96,19 @@ export default function GradeTable({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
+      <div className="overflow-x-auto rounded-xl border border-foreground/[0.08]">
         <table className="w-full text-sm text-left">
-          <thead className="bg-white/[0.03] border-b border-white/[0.06]">
+          <thead className="bg-foreground/[0.03] border-b border-foreground/[0.06]">
             <tr>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/50">#</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/50">Estudiante</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/50 text-center">Entrega</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/50 text-center">Archivos</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/50 text-center">
-                Nota <span className="text-white/30 normal-case">/ {maxScore}</span>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">#</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Estudiante</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted text-center">Entrega</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted text-center">Archivos</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted text-center">
+                Nota <span className="text-subtle normal-case">/ {maxScore}</span>
               </th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/50">Feedback</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/50 text-center">Estado</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Feedback</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted text-center">Estado</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[0.04]">
@@ -116,37 +116,37 @@ export default function GradeTable({
               <tr
                 key={row.submissionId}
                 className={`
-                  hover:bg-white/[0.02] transition-colors
+                  hover:bg-foreground/[0.02] transition-colors
                   ${modified.has(idx) ? 'bg-cyan-500/[0.03]' : ''}
                 `}
               >
                 {/* # */}
-                <td className="px-4 py-3 text-xs text-white/40 tabular-nums">{idx + 1}</td>
+                <td className="px-4 py-3 text-xs text-subtle tabular-nums">{idx + 1}</td>
 
                 {/* Estudiante */}
                 <td className="px-4 py-3">
-                  <p className="text-sm text-white/90 font-medium">{row.studentName}</p>
-                  <p className="text-[11px] text-white/40">{row.studentEmail}</p>
+                  <p className="text-sm text-foreground/90 font-medium">{row.studentName}</p>
+                  <p className="text-[11px] text-subtle">{row.studentEmail}</p>
                 </td>
 
                 {/* Entrega info */}
                 <td className="px-4 py-3 text-center">
                   <div className="flex items-center justify-center gap-1.5">
-                    <span className="text-xs text-white/50">v{row.version}</span>
+                    <span className="text-xs text-muted">v{row.version}</span>
                     {row.isLate && (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/15 text-red-400 border border-red-500/20">
                         Tardía
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] text-white/30 mt-0.5">
+                  <p className="text-[10px] text-subtle mt-0.5">
                     {new Date(row.submittedAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
                   </p>
                 </td>
 
                 {/* Archivos / Enlaces */}
                 <td className="px-4 py-3 text-center">
-                  <span className="text-xs text-white/50 flex items-center justify-center gap-1">
+                  <span className="text-xs text-muted flex items-center justify-center gap-1">
                     {row.attachmentsCount > 0 && <span className="flex items-center gap-0.5"><Paperclip className="w-3 h-3" />{row.attachmentsCount}</span>}
                     {row.linksCount > 0 && <span className="flex items-center gap-0.5"><LinkIcon className="w-3 h-3" />{row.linksCount}</span>}
                     {row.attachmentsCount === 0 && row.linksCount === 0 && '—'}
@@ -172,7 +172,7 @@ export default function GradeTable({
                     onChange={(e) => updateRow(idx, 'feedback', e.target.value)}
                     placeholder="Retroalimentación..."
                     rows={1}
-                    className="w-full min-w-[160px] px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] text-sm text-white/80 placeholder:text-white/20 outline-none transition-colors focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25 resize-y"
+                    className="w-full min-w-[160px] px-2.5 py-1.5 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-sm text-foreground/80 placeholder:text-faint outline-none transition-colors focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25 resize-y"
                   />
                 </td>
 
@@ -183,7 +183,7 @@ export default function GradeTable({
                       ✓ Calificado
                     </span>
                   ) : (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/10 text-white/40 border border-white/10">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-foreground/10 text-subtle border border-foreground/10">
                       Pendiente
                     </span>
                   )}
@@ -195,10 +195,10 @@ export default function GradeTable({
       </div>
 
       {/* Save bar */}
-      <div className="flex items-center justify-between mt-4 p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
-        <p className="text-xs text-white/40">
-          Usa <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/60 text-[10px] font-mono">Tab</kbd> o{' '}
-          <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/60 text-[10px] font-mono">Enter</kbd> para avanzar rápidamente
+      <div className="flex items-center justify-between mt-4 p-4 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02]">
+        <p className="text-xs text-subtle">
+          Usa <kbd className="px-1.5 py-0.5 rounded bg-foreground/10 text-muted text-[10px] font-mono">Tab</kbd> o{' '}
+          <kbd className="px-1.5 py-0.5 rounded bg-foreground/10 text-muted text-[10px] font-mono">Enter</kbd> para avanzar rápidamente
         </p>
         <button
           onClick={() => onSaveAll(modifiedRows.length > 0 ? modifiedRows : rows.filter((r) => r.score !== null))}

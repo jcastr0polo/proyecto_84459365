@@ -108,8 +108,8 @@ export default function StudentSubmitPage() {
         <Card padding="lg">
           <div className="text-center py-8">
             <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
-            <h2 className="text-lg font-bold text-white mb-2">Entrega Calificada</h2>
-            <p className="text-sm text-white/50">
+            <h2 className="text-lg font-bold text-foreground mb-2">Entrega Calificada</h2>
+            <p className="text-sm text-muted">
               Esta entrega ya fue calificada. No puedes re-enviar a menos que el docente la devuelva.
             </p>
           </div>
@@ -127,10 +127,10 @@ export default function StudentSubmitPage() {
         <Card padding="lg">
           <div className="text-center py-8">
             <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">
+            <h2 className="text-xl font-bold text-foreground mb-2">
               {newSubmission.version > 1 ? 'Re-entrega Registrada' : 'Entrega Registrada'}
             </h2>
-            <p className="text-sm text-white/50 mb-1">
+            <p className="text-sm text-muted mb-1">
               Versión {newSubmission.version} · {new Date(newSubmission.submittedAt).toLocaleString('es-CO')}
             </p>
             {newSubmission.isLate && (
@@ -168,7 +168,7 @@ export default function StudentSubmitPage() {
     <div className="space-y-6 max-w-3xl mx-auto">
       <BackLink courseId={courseId} actId={actId} router={router} />
 
-      <h1 className="text-2xl font-bold text-white tracking-tight">
+      <h1 className="text-2xl font-bold text-foreground tracking-tight">
         {existing ? 'Re-enviar Entrega' : 'Enviar Entrega'}
       </h1>
 
@@ -186,7 +186,7 @@ function BackLink({ courseId, actId, router }: { courseId: string; actId: string
   return (
     <button
       onClick={() => router.push(`/student/courses/${courseId}/activities/${actId}`)}
-      className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <polyline points="15 18 9 12 15 6" />

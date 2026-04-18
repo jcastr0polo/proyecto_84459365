@@ -19,15 +19,15 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
     <div
       className={`
         prose prose-invert prose-sm max-w-none
-        prose-headings:text-white/90 prose-headings:font-semibold
-        prose-p:text-white/70 prose-p:leading-relaxed
+        prose-headings:text-foreground/90 prose-headings:font-semibold
+        prose-p:text-muted prose-p:leading-relaxed
         prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
-        prose-strong:text-white/85 prose-em:text-white/65
-        prose-code:text-cyan-300 prose-code:bg-white/[0.06] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
-        prose-pre:bg-white/[0.04] prose-pre:border prose-pre:border-white/[0.08] prose-pre:rounded-lg
-        prose-blockquote:border-l-cyan-500/40 prose-blockquote:text-white/50
-        prose-li:text-white/70 prose-li:marker:text-white/30
-        prose-hr:border-white/[0.08]
+        prose-strong:text-muted prose-em:text-muted
+        prose-code:text-cyan-300 prose-code:bg-foreground/[0.06] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
+        prose-pre:bg-foreground/[0.04] prose-pre:border prose-pre:border-foreground/[0.08] prose-pre:rounded-lg
+        prose-blockquote:border-l-cyan-500/40 prose-blockquote:text-muted
+        prose-li:text-muted prose-li:marker:text-subtle
+        prose-hr:border-foreground/[0.08]
         [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5
         ${className}
       `}

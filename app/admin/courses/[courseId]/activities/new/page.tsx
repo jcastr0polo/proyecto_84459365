@@ -122,7 +122,7 @@ export default function NewActivityPage() {
       {/* Back link */}
       <button
         onClick={() => router.push(`/admin/courses/${courseId}/activities`)}
-        className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <polyline points="15 18 9 12 15 6" />
@@ -132,9 +132,9 @@ export default function NewActivityPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Nueva Actividad</h1>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Nueva Actividad</h1>
         {course && (
-          <p className="text-sm text-white/40 mt-1">
+          <p className="text-sm text-subtle mt-1">
             {course.name} · <span className="font-mono">{course.code}</span>
           </p>
         )}

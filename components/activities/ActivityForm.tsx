@@ -149,28 +149,28 @@ export default function ActivityForm({
   }
 
   const inputClass = (field: string) =>
-    `w-full px-3 py-2.5 rounded-lg border bg-white/[0.04] text-white text-sm
-     placeholder:text-white/25 outline-none transition-colors
+    `w-full px-3 py-2.5 rounded-lg border bg-foreground/[0.04] text-foreground text-sm
+     placeholder:text-faint outline-none transition-colors
      focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25
-     ${errors[field] && touched[field] ? 'border-red-500/50' : 'border-white/10'}`;
+     ${errors[field] && touched[field] ? 'border-red-500/50' : 'border-foreground/10'}`;
 
   const selectClass = (field: string) =>
-    `w-full px-3 py-2.5 rounded-lg border bg-white/[0.04] text-white text-sm
+    `w-full px-3 py-2.5 rounded-lg border bg-foreground/[0.04] text-foreground text-sm
      outline-none transition-colors appearance-none cursor-pointer
      focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25
-     ${errors[field] && touched[field] ? 'border-red-500/50' : 'border-white/10'}`;
+     ${errors[field] && touched[field] ? 'border-red-500/50' : 'border-foreground/10'}`;
 
   return (
     <form onSubmit={(e) => handleSubmit(e)} className="space-y-8">
       {/* ─── SECCIÓN 1: Información Básica ─── */}
       <section>
-        <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
+        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-4">
           Información Básica
         </h3>
         <div className="space-y-4">
           {/* Title */}
           <div>
-            <label htmlFor="act-title" className="block text-xs font-medium text-white/60 mb-1.5">
+            <label htmlFor="act-title" className="block text-xs font-medium text-muted mb-1.5">
               Título <span className="text-red-400/70">*</span>
             </label>
             <input
@@ -190,7 +190,7 @@ export default function ActivityForm({
           {/* Type + Category row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="act-type" className="block text-xs font-medium text-white/60 mb-1.5">
+              <label htmlFor="act-type" className="block text-xs font-medium text-muted mb-1.5">
                 Tipo <span className="text-red-400/70">*</span>
               </label>
               <select
@@ -206,7 +206,7 @@ export default function ActivityForm({
             </div>
 
             <div>
-              <label htmlFor="act-category" className="block text-xs font-medium text-white/60 mb-1.5">
+              <label htmlFor="act-category" className="block text-xs font-medium text-muted mb-1.5">
                 Categoría <span className="text-red-400/70">*</span>
               </label>
               <select
@@ -226,7 +226,7 @@ export default function ActivityForm({
       {/* ─── SECCIÓN 2: Descripción con Preview ─── */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider">
+          <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider">
             Descripción
           </h3>
           <button
@@ -239,11 +239,11 @@ export default function ActivityForm({
         </div>
 
         {showPreview ? (
-          <div className="min-h-[200px] p-4 rounded-lg border border-white/[0.08] bg-white/[0.02]">
+          <div className="min-h-[200px] p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
             {form.description ? (
               <MarkdownRenderer content={form.description} />
             ) : (
-              <p className="text-sm text-white/30 italic">Sin contenido para previsualizar</p>
+              <p className="text-sm text-subtle italic">Sin contenido para previsualizar</p>
             )}
           </div>
         ) : (
@@ -257,7 +257,7 @@ export default function ActivityForm({
               rows={8}
               className={`${inputClass('description')} resize-y min-h-[200px] font-mono text-xs`}
             />
-            <p className="mt-1 text-[11px] text-white/25">
+            <p className="mt-1 text-[11px] text-faint">
               Soporta Markdown: **negrita**, *cursiva*, `código`, # títulos, - listas
             </p>
             {touched.description && errors.description && (
@@ -269,7 +269,7 @@ export default function ActivityForm({
 
       {/* ─── SECCIÓN 3: Configuración ─── */}
       <section>
-        <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
+        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-4">
           Configuración
         </h3>
         <div className="space-y-4">
@@ -301,7 +301,7 @@ export default function ActivityForm({
           {/* Score + Weight row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="act-maxscore" className="block text-xs font-medium text-white/60 mb-1.5">
+              <label htmlFor="act-maxscore" className="block text-xs font-medium text-muted mb-1.5">
                 Nota Máxima <span className="text-red-400/70">*</span>
               </label>
               <input
@@ -321,7 +321,7 @@ export default function ActivityForm({
             </div>
 
             <div>
-              <label htmlFor="act-weight" className="block text-xs font-medium text-white/60 mb-1.5">
+              <label htmlFor="act-weight" className="block text-xs font-medium text-muted mb-1.5">
                 Peso Porcentual (%) <span className="text-red-400/70">*</span>
               </label>
               <input
@@ -346,7 +346,7 @@ export default function ActivityForm({
 
       {/* ─── SECCIÓN 4: Opciones ─── */}
       <section>
-        <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
+        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-4">
           Opciones de Entrega
         </h3>
         <div className="space-y-3">
@@ -362,7 +362,7 @@ export default function ActivityForm({
           {/* Late penalty */}
           {form.allowLateSubmission && (
             <div className="ml-8">
-              <label htmlFor="act-penalty" className="block text-xs font-medium text-white/60 mb-1.5">
+              <label htmlFor="act-penalty" className="block text-xs font-medium text-muted mb-1.5">
                 Penalización por tardanza (%)
               </label>
               <input
@@ -376,7 +376,7 @@ export default function ActivityForm({
                 onChange={(e) => update('latePenaltyPercent', parseInt(e.target.value) || 0)}
                 className={`${inputClass('latePenaltyPercent')} max-w-[120px]`}
               />
-              <p className="mt-1 text-[11px] text-white/25">
+              <p className="mt-1 text-[11px] text-faint">
                 Se descontará este % de la nota por entrega tardía
               </p>
             </div>
@@ -405,7 +405,7 @@ export default function ActivityForm({
       {/* ─── SECCIÓN 5: Archivos Adjuntos ─── */}
       {onUploadFile && (
         <section>
-          <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
+          <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-4">
             Archivos Adjuntos del Docente
           </h3>
 
@@ -415,7 +415,7 @@ export default function ActivityForm({
               {attachments.map((att) => (
                 <div
                   key={att.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]"
                 >
                   <div className="w-8 h-8 rounded bg-cyan-500/10 flex items-center justify-center shrink-0">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-cyan-400">
@@ -424,15 +424,15 @@ export default function ActivityForm({
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white/80 truncate">{att.fileName}</p>
-                    <p className="text-[11px] text-white/30">
+                    <p className="text-sm text-foreground/80 truncate">{att.fileName}</p>
+                    <p className="text-[11px] text-subtle">
                       {formatFileSize(att.fileSize)} · {att.mimeType.split('/')[1]?.toUpperCase()}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => removeAttachment(att.id)}
-                    className="p-1 rounded hover:bg-white/10 text-white/30 hover:text-red-400 transition-colors cursor-pointer"
+                    className="p-1 rounded hover:bg-foreground/10 text-subtle hover:text-red-400 transition-colors cursor-pointer"
                     aria-label={`Eliminar ${att.fileName}`}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -459,7 +459,7 @@ export default function ActivityForm({
       )}
 
       {/* ─── Acciones ─── */}
-      <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
+      <div className="flex items-center gap-3 pt-4 border-t border-foreground/[0.06]">
         <Button
           type="submit"
           variant="secondary"
@@ -508,7 +508,7 @@ function ToggleRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-start gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+    <div className="flex items-start gap-3 p-3 rounded-lg bg-foreground/[0.02] border border-foreground/[0.05]">
       <button
         id={id}
         type="button"
@@ -517,7 +517,7 @@ function ToggleRow({
         onClick={() => onChange(!checked)}
         className={`
           relative mt-0.5 w-9 h-5 rounded-full shrink-0 transition-colors cursor-pointer
-          ${checked ? 'bg-cyan-500' : 'bg-white/15'}
+          ${checked ? 'bg-cyan-500' : 'bg-foreground/15'}
         `}
       >
         <span
@@ -529,8 +529,8 @@ function ToggleRow({
         />
       </button>
       <label htmlFor={id} className="cursor-pointer">
-        <p className="text-sm text-white/80 font-medium">{label}</p>
-        <p className="text-xs text-white/35">{description}</p>
+        <p className="text-sm text-foreground/80 font-medium">{label}</p>
+        <p className="text-xs text-subtle">{description}</p>
       </label>
     </div>
   );

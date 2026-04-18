@@ -239,15 +239,15 @@ export default function AdminGradingPage() {
         <div>
           <button
             onClick={() => router.back()}
-            className="text-xs text-white/40 hover:text-white/60 transition-colors mb-2 cursor-pointer"
+            className="text-xs text-subtle hover:text-muted transition-colors mb-2 cursor-pointer"
           >
             ← Volver
           </button>
-          <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>
+          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
             Calificar Entregas
           </h1>
           {activity && (
-            <p className="text-sm text-white/50 mt-1">
+            <p className="text-sm text-muted mt-1">
               {activity.title} · Nota máxima: <span className="text-cyan-400 font-medium">{activity.maxScore}</span>
             </p>
           )}
@@ -255,7 +255,7 @@ export default function AdminGradingPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push(`/admin/courses/${courseId}/grades`)}
-            className="px-4 py-2 text-sm border border-white/10 rounded-lg text-white/60 hover:text-white/80 hover:border-white/20 transition-colors cursor-pointer"
+            className="px-4 py-2 text-sm border border-foreground/10 rounded-lg text-muted hover:text-foreground/80 hover:border-foreground/20 transition-colors cursor-pointer"
           >
             Ver Resumen del Curso
           </button>
@@ -280,7 +280,7 @@ export default function AdminGradingPage() {
           saving={saving}
         />
       ) : (
-        <div className="text-center py-16 text-white/30">
+        <div className="text-center py-16 text-subtle">
           <p className="text-lg mb-2">No hay entregas para calificar</p>
           <p className="text-sm">Los estudiantes aún no han realizado entregas para esta actividad.</p>
         </div>
@@ -294,7 +294,7 @@ export default function AdminGradingPage() {
         maxWidth="sm"
       >
         <div className="space-y-4">
-          <p className="text-sm text-white/70">
+          <p className="text-sm text-muted">
             ¿Publicar todas las notas de esta actividad? Los estudiantes podrán ver sus calificaciones
             y retroalimentación inmediatamente.
           </p>
@@ -306,7 +306,7 @@ export default function AdminGradingPage() {
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={() => setShowPublishModal(false)}
-              className="px-4 py-2 text-sm border border-white/10 rounded-lg text-white/60 hover:text-white/80 transition-colors cursor-pointer"
+              className="px-4 py-2 text-sm border border-foreground/10 rounded-lg text-muted hover:text-foreground/80 transition-colors cursor-pointer"
             >
               Cancelar
             </button>

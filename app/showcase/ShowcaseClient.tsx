@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Rocket } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeProvider';
 
 export interface ShowcaseProject {
   id: string;
@@ -53,7 +54,11 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
   }, [projects, courseFilter]);
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-base">
+      {/* Theme toggle */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
       {/* ─── Hero Header ─── */}
       <div className="relative overflow-hidden">
         {/* Background effects */}
@@ -72,23 +77,23 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
             <p className="text-xs font-medium text-cyan-400/60 uppercase tracking-[0.2em] mb-3">
               Vitrina de Proyectos
             </p>
-            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
               Proyectos{' '}
               <span className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent">
                 Estudiantiles
               </span>
             </h1>
-            <p className="text-white/40 mt-4 max-w-xl mx-auto leading-relaxed">
+            <p className="text-subtle mt-4 max-w-xl mx-auto leading-relaxed">
               Proyectos fullstack destacados construidos por estudiantes durante el semestre{' '}
-              <span className="text-white/60">{semesterLabel}</span>, utilizando Next.js, TypeScript y asistentes de IA.
+              <span className="text-muted">{semesterLabel}</span>, utilizando Next.js, TypeScript y asistentes de IA.
             </p>
 
             {/* Stats */}
             <div className="flex items-center justify-center gap-8 mt-8">
               <Stat value={projects.length} label="Proyectos" />
-              <div className="w-px h-8 bg-white/[0.08]" />
+              <div className="w-px h-8 bg-foreground/[0.08]" />
               <Stat value={courses.length} label="Cursos" />
-              <div className="w-px h-8 bg-white/[0.08]" />
+              <div className="w-px h-8 bg-foreground/[0.08]" />
               <Stat value={new Set(projects.map((p) => p.studentName)).size} label="Estudiantes" />
             </div>
           </motion.div>
@@ -108,7 +113,7 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
             className={`px-4 py-2 rounded-full text-xs font-medium transition-all cursor-pointer ${
               courseFilter === 'all'
                 ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
-                : 'text-white/35 border border-white/[0.06] hover:text-white/60 hover:border-white/[0.12]'
+                : 'text-subtle border border-foreground/[0.06] hover:text-muted hover:border-foreground/[0.12]'
             }`}
           >
             Todos ({projects.length})
@@ -122,7 +127,7 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
                 className={`px-4 py-2 rounded-full text-xs font-medium transition-all cursor-pointer ${
                   courseFilter === c.id
                     ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
-                    : 'text-white/35 border border-white/[0.06] hover:text-white/60 hover:border-white/[0.12]'
+                    : 'text-subtle border border-foreground/[0.06] hover:text-muted hover:border-foreground/[0.12]'
                 }`}
               >
                 {c.name} ({count})
@@ -140,9 +145,9 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
             animate={{ opacity: 1 }}
             className="text-center py-20"
           >
-            <Rocket className="w-10 h-10 text-white/20 mx-auto mb-4" />
-            <p className="text-white/30 text-sm">No hay proyectos destacados aún</p>
-            <p className="text-white/15 text-xs mt-1">Los proyectos aparecerán aquí cuando el docente los destaque</p>
+            <Rocket className="w-10 h-10 text-faint mx-auto mb-4" />
+            <p className="text-subtle text-sm">No hay proyectos destacados aún</p>
+            <p className="text-faint text-xs mt-1">Los proyectos aparecerán aquí cuando el docente los destaque</p>
           </motion.div>
         ) : (
           <motion.div
@@ -159,9 +164,9 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
       </div>
 
       {/* Footer */}
-      <div className="border-t border-white/[0.04] py-8">
+      <div className="border-t border-foreground/[0.04] py-8">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <p className="text-xs text-white/15">
+          <p className="text-xs text-faint">
             Plataforma de Gestión Académica · {semesterLabel} · Construido con Next.js + TypeScript + Vercel
           </p>
         </div>
@@ -182,25 +187,25 @@ function ProjectCard({ project }: { project: ShowcaseProject }) {
       {/* Card background with gradient border effect */}
       <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-500/10 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-      <div className="relative rounded-2xl border border-white/[0.06] group-hover:border-white/[0.12] bg-white/[0.02] group-hover:bg-white/[0.04] backdrop-blur-sm p-6 transition-all duration-300">
+      <div className="relative rounded-2xl border border-foreground/[0.06] group-hover:border-foreground/[0.12] bg-foreground/[0.02] group-hover:bg-foreground/[0.04] backdrop-blur-sm p-6 transition-all duration-300">
         {/* Course tag */}
         <p className="text-[10px] font-medium text-cyan-400/50 uppercase tracking-[0.15em] mb-3">
           {project.courseName}
         </p>
 
         {/* Project name */}
-        <h3 className="text-lg font-semibold text-white group-hover:text-cyan-50 transition-colors leading-tight">
+        <h3 className="text-lg font-semibold text-foreground group-hover:text-cyan-50 transition-colors leading-tight">
           {project.projectName}
         </h3>
 
         {/* Student name */}
-        <p className="text-xs text-white/30 mt-1">
-          por <span className="text-white/50">{project.studentName}</span>
+        <p className="text-xs text-subtle mt-1">
+          por <span className="text-muted">{project.studentName}</span>
         </p>
 
         {/* Description */}
         {project.description && (
-          <p className="text-sm text-white/35 mt-3 leading-relaxed line-clamp-3 group-hover:text-white/50 transition-colors">
+          <p className="text-sm text-subtle mt-3 leading-relaxed line-clamp-3 group-hover:text-muted transition-colors">
             {project.description}
           </p>
         )}
@@ -209,18 +214,18 @@ function ProjectCard({ project }: { project: ShowcaseProject }) {
         <div className="flex gap-1.5 mt-4">
           <div className="w-1.5 h-1.5 rounded-full bg-cyan-400/40" title="Next.js" />
           <div className="w-1.5 h-1.5 rounded-full bg-blue-400/40" title="TypeScript" />
-          <div className="w-1.5 h-1.5 rounded-full bg-white/20" title="Vercel" />
+          <div className="w-1.5 h-1.5 rounded-full bg-foreground/20" title="Vercel" />
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-2 mt-5 pt-4 border-t border-white/[0.04]">
+        <div className="flex gap-2 mt-5 pt-4 border-t border-foreground/[0.04]">
           <a
             href={project.githubUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium
-                       border border-white/[0.08] text-white/50
-                       hover:bg-white/[0.06] hover:text-white hover:border-white/[0.15]
+                       border border-foreground/[0.08] text-muted
+                       hover:bg-foreground/[0.06] hover:text-foreground hover:border-foreground/[0.15]
                        transition-all"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -245,7 +250,7 @@ function ProjectCard({ project }: { project: ShowcaseProject }) {
               Ver Demo
             </a>
           ) : (
-            <div className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium border border-white/[0.04] text-white/15">
+            <div className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium border border-foreground/[0.04] text-faint">
               Sin demo
             </div>
           )}
@@ -256,8 +261,8 @@ function ProjectCard({ project }: { project: ShowcaseProject }) {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center p-2.5 rounded-xl text-xs font-medium
-                         border border-white/[0.08] text-white/40
-                         hover:bg-white/[0.06] hover:text-purple-400 hover:border-purple-500/20
+                         border border-foreground/[0.08] text-subtle
+                         hover:bg-foreground/[0.06] hover:text-purple-400 hover:border-purple-500/20
                          transition-all"
               title="Figma"
             >
@@ -277,8 +282,8 @@ function ProjectCard({ project }: { project: ShowcaseProject }) {
 function Stat({ value, label }: { value: number; label: string }) {
   return (
     <div className="text-center">
-      <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-[10px] text-white/30 uppercase tracking-wider">{label}</p>
+      <p className="text-2xl font-bold text-foreground">{value}</p>
+      <p className="text-[10px] text-subtle uppercase tracking-wider">{label}</p>
     </div>
   );
 }

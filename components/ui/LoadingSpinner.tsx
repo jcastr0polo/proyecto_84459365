@@ -18,9 +18,9 @@ export default function LoadingSpinner({ size = 'md', className = '', label }: L
   return (
     <div className={`flex flex-col items-center justify-center gap-3 ${className}`} role="status">
       <div
-        className={`animate-spin rounded-full border-white/10 border-t-cyan-400 ${sizeClasses[size]}`}
+        className={`animate-spin rounded-full border-foreground/10 border-t-cyan-400 ${sizeClasses[size]}`}
       />
-      {label && <span className="text-sm text-white/40">{label}</span>}
+      {label && <span className="text-sm text-subtle">{label}</span>}
       <span className="sr-only">Cargando...</span>
     </div>
   );

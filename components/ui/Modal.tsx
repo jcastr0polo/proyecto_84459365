@@ -49,7 +49,7 @@ export default function Modal({ open, onClose, title, children, maxWidth = 'md' 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-base/70 backdrop-blur-sm"
             onClick={onClose}
             aria-hidden="true"
           />
@@ -63,15 +63,15 @@ export default function Modal({ open, onClose, title, children, maxWidth = 'md' 
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            className={`relative w-full ${widthClasses[maxWidth]} rounded-2xl border border-white/[0.08] bg-[#0a0a0a] shadow-2xl`}
+            className={`relative w-full ${widthClasses[maxWidth]} rounded-2xl border border-foreground/[0.08] bg-base shadow-2xl`}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
-              <h2 className="text-lg font-semibold text-white">{title}</h2>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-foreground/[0.06]">
+              <h2 className="text-lg font-semibold text-foreground">{title}</h2>
               <button
                 onClick={onClose}
                 aria-label="Cerrar"
-                className="p-1 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-subtle hover:text-foreground hover:bg-foreground/10 transition-colors cursor-pointer"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" />

@@ -121,10 +121,10 @@ export default function StudentCoursesPage() {
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
           Mis Cursos
         </h1>
-        <p className="text-sm text-white/40 mt-1">
+        <p className="text-sm text-subtle mt-1">
           {semester ? `Semestre ${semester.id}` : 'Todos los cursos'}
           {coursesData.length > 0 && ` · ${coursesData.length} curso${coursesData.length > 1 ? 's' : ''}`}
         </p>
@@ -144,7 +144,7 @@ export default function StudentCoursesPage() {
       {/* Courses grid */}
       {coursesData.length === 0 ? (
         <EmptyState
-          icon={<Inbox className="w-8 h-8 text-white/30" />}
+          icon={<Inbox className="w-8 h-8 text-subtle" />}
           title="Sin cursos inscritos"
           description="No estás inscrito en ningún curso del semestre actual."
         />
@@ -163,8 +163,8 @@ export default function StudentCoursesPage() {
                 whileHover={{ y: -2, transition: { duration: 0.15 } }}
                 onClick={() => router.push(`/student/courses/${cd.course.id}`)}
                 className={`
-                  w-full text-left rounded-xl border border-white/[0.08] bg-gradient-to-br ${gradient}
-                  p-5 hover:border-white/15 transition-colors cursor-pointer
+                  w-full text-left rounded-xl border border-foreground/[0.08] bg-gradient-to-br ${gradient}
+                  p-5 hover:border-foreground/15 transition-colors cursor-pointer
                 `}
               >
                 {/* Top */}
@@ -178,26 +178,26 @@ export default function StudentCoursesPage() {
                 </div>
 
                 {/* Name + code */}
-                <h3 className="text-base font-semibold text-white/90 mb-0.5 line-clamp-1">{cd.course.name}</h3>
-                <p className="text-[11px] text-white/30 font-mono mb-3">{cd.course.code}</p>
+                <h3 className="text-base font-semibold text-foreground/90 mb-0.5 line-clamp-1">{cd.course.name}</h3>
+                <p className="text-[11px] text-subtle font-mono mb-3">{cd.course.code}</p>
 
                 {/* Description */}
                 {cd.course.description && (
-                  <p className="text-xs text-white/35 line-clamp-2 mb-3">{cd.course.description}</p>
+                  <p className="text-xs text-subtle line-clamp-2 mb-3">{cd.course.description}</p>
                 )}
 
                 {/* Schedule rows */}
                 <div className="space-y-1.5 mb-3">
                   {cd.course.schedule.map((s, si) => (
-                    <div key={si} className="flex items-center gap-2 text-[11px] text-white/40">
-                      <span className="bg-white/[0.04] px-2 py-0.5 rounded font-medium">
+                    <div key={si} className="flex items-center gap-2 text-[11px] text-subtle">
+                      <span className="bg-foreground/[0.04] px-2 py-0.5 rounded font-medium">
                         {DAY_SHORT[s.dayOfWeek] ?? s.dayOfWeek}
                       </span>
                       <span>{s.startTime}–{s.endTime}</span>
                       {s.room && (
-                        <span className="text-white/25 flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {s.room}</span>
+                        <span className="text-faint flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {s.room}</span>
                       )}
-                      <span className="text-white/20">
+                      <span className="text-faint">
                         {MODALITY_LABELS[s.modality] ?? s.modality}
                       </span>
                     </div>
@@ -205,7 +205,7 @@ export default function StudentCoursesPage() {
                 </div>
 
                 {/* Bottom stats */}
-                <div className="flex items-center gap-4 pt-3 border-t border-white/[0.06] text-[11px] text-white/30">
+                <div className="flex items-center gap-4 pt-3 border-t border-foreground/[0.06] text-[11px] text-subtle">
                   <span className="flex items-center gap-0.5"><FileText className="w-3 h-3" /> {cd.activities.filter((a) => a.status !== 'draft').length} actividades</span>
                   <span className="flex items-center gap-0.5"><CheckCircle2 className="w-3 h-3" /> {cd.deliveredCount} entregadas</span>
                   {cd.pendingCount > 0 && (

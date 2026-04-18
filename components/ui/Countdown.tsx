@@ -68,7 +68,7 @@ export default function Countdown({
     ? 'text-red-400'
     : isWarning
       ? 'text-amber-400'
-      : 'text-white/70';
+      : 'text-muted';
 
   if (compact) {
     if (timeLeft.days > 0) {
@@ -101,7 +101,7 @@ function Unit({ value, label, colorClass }: { value: number; label: string; colo
   return (
     <span className={`inline-flex items-baseline gap-0.5 font-mono text-sm ${colorClass}`}>
       <span className="font-semibold">{String(value).padStart(2, '0')}</span>
-      <span className="text-[10px] text-white/40">{label}</span>
+      <span className="text-[10px] text-subtle">{label}</span>
     </span>
   );
 }

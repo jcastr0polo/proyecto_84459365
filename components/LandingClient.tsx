@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import AnimatedText from '@/components/AnimatedText';
+import { ThemeToggle } from '@/components/ThemeProvider';
 import type { Course } from '@/lib/types';
 import {
   ArrowRight,
@@ -64,7 +65,7 @@ const categoryConfig: Record<string, { gradient: string; border: string; badge: 
   programming: { gradient: 'from-cyan-500/10 to-blue-500/5', border: 'hover:border-cyan-500/30', badge: 'Programación', badgeClass: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20', icon: Code2 },
   design: { gradient: 'from-purple-500/10 to-pink-500/5', border: 'hover:border-purple-500/30', badge: 'Diseño', badgeClass: 'bg-purple-500/10 text-purple-400 border-purple-500/20', icon: Palette },
   management: { gradient: 'from-amber-500/10 to-orange-500/5', border: 'hover:border-amber-500/30', badge: 'Gerencia', badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20', icon: BarChart3 },
-  other: { gradient: 'from-white/5 to-white/[0.02]', border: 'hover:border-white/20', badge: 'Otro', badgeClass: 'bg-white/10 text-white/60 border-white/20', icon: BookOpen },
+  other: { gradient: 'from-white/5 to-white/[0.02]', border: 'hover:border-foreground/20', badge: 'Otro', badgeClass: 'bg-foreground/10 text-muted border-foreground/20', icon: BookOpen },
 };
 
 export default function LandingClient({ heroTitle, heroSubtitle, heroDescription }: {
@@ -76,20 +77,21 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
   const titleAnimationDuration = heroTitle.length * 0.08 + 0.6;
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+    <div className="min-h-screen bg-base text-foreground overflow-x-hidden">
       {/* ═══ NAVBAR ═══ */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/[0.06] bg-black/80 backdrop-blur-xl">
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-foreground/[0.06] bg-base/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
               <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
             </div>
-            <span className="text-sm font-bold text-white tracking-tight hidden sm:block">
+            <span className="text-sm font-bold text-foreground tracking-tight hidden sm:block">
               NEXUS
             </span>
           </Link>
           <div className="flex items-center gap-2">
-            <Link href="/showcase" className="flex items-center gap-1.5 text-xs font-medium text-white/40 hover:text-white/70 transition-colors px-3 py-2 rounded-lg hover:bg-white/[0.04]">
+            <ThemeToggle />
+            <Link href="/showcase" className="flex items-center gap-1.5 text-xs font-medium text-subtle hover:text-muted transition-colors px-3 py-2 rounded-lg hover:bg-foreground/[0.04]">
               <ExternalLink className="w-3.5 h-3.5" />
               Vitrina
             </Link>
@@ -114,13 +116,13 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] mb-10"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-foreground/[0.08] bg-foreground/[0.03] mb-10"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
             </span>
-            <span className="text-[11px] font-medium text-white/50 tracking-wide">Semestre 2026-1 · En curso</span>
+            <span className="text-[11px] font-medium text-muted tracking-wide">Semestre 2026-1 · En curso</span>
           </motion.div>
 
           <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tighter" style={{ fontFamily: 'var(--font-playfair)' }}>
@@ -131,7 +133,7 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: titleAnimationDuration + 0.3, duration: 0.8 }}
-            className="mt-8 text-base sm:text-lg text-white/40 tracking-[0.15em] uppercase font-light"
+            className="mt-8 text-base sm:text-lg text-subtle tracking-[0.15em] uppercase font-light"
           >
             {heroSubtitle}
           </motion.p>
@@ -140,7 +142,7 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: titleAnimationDuration + 0.6, duration: 0.8 }}
-            className="mt-4 text-sm sm:text-base text-white/25 max-w-xl mx-auto font-light leading-relaxed"
+            className="mt-4 text-sm sm:text-base text-subtle max-w-xl mx-auto font-light leading-relaxed"
           >
             {heroDescription}
           </motion.p>
@@ -155,7 +157,7 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
               Comenzar ahora
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
-            <Link href="/showcase" className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-white/[0.1] text-white/60 text-sm font-medium hover:bg-white/[0.04] hover:text-white hover:border-white/20 transition-all duration-200">
+            <Link href="/showcase" className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-foreground/[0.1] text-muted text-sm font-medium hover:bg-foreground/[0.04] hover:text-foreground hover:border-foreground/20 transition-all duration-200">
               Ver proyectos
               <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
@@ -179,10 +181,10 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
               <GraduationCap className="w-3.5 h-3.5 text-cyan-400/70" />
               <span className="text-[11px] font-medium text-cyan-400/70 tracking-wider uppercase">Semestre 2026-1</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               Cursos del Semestre
             </h2>
-            <p className="mt-4 text-sm text-white/30 max-w-lg mx-auto leading-relaxed">
+            <p className="mt-4 text-sm text-subtle max-w-lg mx-auto leading-relaxed">
               Tres disciplinas, un mismo stack. Cada curso explora una faceta del desarrollo moderno de software.
             </p>
           </div>
@@ -199,20 +201,20 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
                   viewport={{ once: true, margin: '-40px' }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                   whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                  className={`relative rounded-2xl border border-white/[0.08] bg-gradient-to-br ${cfg.gradient} p-6 ${cfg.border} transition-all duration-300 group`}
+                  className={`relative rounded-2xl border border-foreground/[0.08] bg-gradient-to-br ${cfg.gradient} p-6 ${cfg.border} transition-all duration-300 group`}
                 >
                   <div className="flex items-start justify-between mb-5">
                     <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-medium ${cfg.badgeClass}`}>
                       <Icon className="w-3 h-3" />
                       {cfg.badge}
                     </div>
-                    <span className="text-[10px] font-mono text-white/15">{course.code}</span>
+                    <span className="text-[10px] font-mono text-faint">{course.code}</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-white/90 mb-2 group-hover:text-white transition-colors">{course.name}</h3>
-                  <p className="text-xs text-white/30 leading-relaxed line-clamp-3">
+                  <h3 className="text-lg font-semibold text-foreground/90 mb-2 group-hover:text-foreground transition-colors">{course.name}</h3>
+                  <p className="text-xs text-subtle leading-relaxed line-clamp-3">
                     {course.description || 'Curso del programa académico.'}
                   </p>
-                  <div className="mt-5 pt-4 border-t border-white/[0.06] flex items-center gap-3 text-[11px] text-white/20">
+                  <div className="mt-5 pt-4 border-t border-foreground/[0.06] flex items-center gap-3 text-[11px] text-faint">
                     <span className="flex items-center gap-1"><Users className="w-3 h-3" /> Activo</span>
                     {course.schedule?.length > 0 && (
                       <span className="flex items-center gap-1">
@@ -236,10 +238,10 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
               <Sparkles className="w-3.5 h-3.5 text-purple-400/70" />
               <span className="text-[11px] font-medium text-purple-400/70 tracking-wider uppercase">Flujo de trabajo</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               ¿Cómo funciona?
             </h2>
-            <p className="mt-4 text-sm text-white/30 max-w-lg mx-auto leading-relaxed">
+            <p className="mt-4 text-sm text-subtle max-w-lg mx-auto leading-relaxed">
               Un ciclo completo desde la creación de la actividad hasta el feedback final.
             </p>
           </div>
@@ -259,15 +261,15 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
                   {i < STEPS.length - 1 && (
                     <div className="hidden lg:block absolute top-10 left-full w-full h-px bg-gradient-to-r from-white/[0.08] to-transparent z-0" />
                   )}
-                  <div className="relative rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 hover:bg-white/[0.04] hover:border-white/[0.12] transition-all duration-300">
+                  <div className="relative rounded-2xl border border-foreground/[0.06] bg-foreground/[0.02] p-6 hover:bg-foreground/[0.04] hover:border-foreground/[0.12] transition-all duration-300">
                     <div className="flex items-center justify-between mb-5">
-                      <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
-                        <Icon className="w-5 h-5 text-white/50 group-hover:text-cyan-400 transition-colors" />
+                      <div className="w-10 h-10 rounded-xl bg-foreground/[0.05] flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
+                        <Icon className="w-5 h-5 text-muted group-hover:text-cyan-400 transition-colors" />
                       </div>
-                      <span className="text-[10px] font-mono text-white/10 tracking-wider">{step.number}</span>
+                      <span className="text-[10px] font-mono text-faint tracking-wider">{step.number}</span>
                     </div>
-                    <h3 className="text-sm font-semibold text-white/80 mb-2">{step.title}</h3>
-                    <p className="text-xs text-white/25 leading-relaxed">{step.description}</p>
+                    <h3 className="text-sm font-semibold text-foreground/80 mb-2">{step.title}</h3>
+                    <p className="text-xs text-subtle leading-relaxed">{step.description}</p>
                   </div>
                 </motion.div>
               );
@@ -284,10 +286,10 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
               <Code2 className="w-3.5 h-3.5 text-emerald-400/70" />
               <span className="text-[11px] font-medium text-emerald-400/70 tracking-wider uppercase">Tecnologías</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               Stack Tecnológico
             </h2>
-            <p className="mt-4 text-sm text-white/30 max-w-lg mx-auto leading-relaxed">
+            <p className="mt-4 text-sm text-subtle max-w-lg mx-auto leading-relaxed">
               Las herramientas más modernas del ecosistema JavaScript/TypeScript.
             </p>
           </div>
@@ -303,14 +305,14 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: i * 0.06 }}
                   whileHover={{ y: -4, transition: { duration: 0.15 } }}
-                  className="flex flex-col items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 hover:bg-white/[0.04] hover:border-white/[0.1] transition-all cursor-default group"
+                  className="flex flex-col items-center gap-3 rounded-2xl border border-foreground/[0.06] bg-foreground/[0.02] p-5 hover:bg-foreground/[0.04] hover:border-foreground/[0.1] transition-all cursor-default group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-white/[0.04] flex items-center justify-center group-hover:bg-white/[0.08] transition-colors">
-                    <Icon className="w-5 h-5 text-white/40 group-hover:text-white/70 transition-colors" />
+                  <div className="w-12 h-12 rounded-xl bg-foreground/[0.04] flex items-center justify-center group-hover:bg-foreground/[0.08] transition-colors">
+                    <Icon className="w-5 h-5 text-subtle group-hover:text-muted transition-colors" />
                   </div>
                   <div className="text-center">
-                    <p className="text-xs font-semibold text-white/70">{item.name}</p>
-                    <p className="text-[10px] text-white/25 mt-0.5">{item.desc}</p>
+                    <p className="text-xs font-semibold text-muted">{item.name}</p>
+                    <p className="text-[10px] text-faint mt-0.5">{item.desc}</p>
                   </div>
                 </motion.div>
               );
@@ -322,20 +324,20 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-10 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 sm:p-8"
+            className="mt-10 rounded-2xl border border-foreground/[0.06] bg-foreground/[0.02] p-6 sm:p-8"
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
               <div>
                 <p className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">100%</p>
-                <p className="text-[11px] text-white/30 mt-1">TypeScript — Zero any</p>
+                <p className="text-[11px] text-subtle mt-1">TypeScript — Zero any</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-white/80">JSON</p>
-                <p className="text-[11px] text-white/30 mt-1">Base de datos en archivos</p>
+                <p className="text-2xl font-bold text-foreground/80">JSON</p>
+                <p className="text-[11px] text-subtle mt-1">Base de datos en archivos</p>
               </div>
               <div>
                 <p className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">IA</p>
-                <p className="text-[11px] text-white/30 mt-1">Prompts como metodología</p>
+                <p className="text-[11px] text-subtle mt-1">Prompts como metodología</p>
               </div>
             </div>
           </motion.div>
@@ -343,7 +345,7 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
       </Section>
 
       {/* ═══ FOOTER ═══ */}
-      <footer className="border-t border-white/[0.06] py-12 px-6">
+      <footer className="border-t border-foreground/[0.06] py-12 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
@@ -351,19 +353,19 @@ export default function LandingClient({ heroTitle, heroSubtitle, heroDescription
                 <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-sm font-bold text-white/70">NEXUS</p>
-                <p className="text-[11px] text-white/25">Plataforma Académica · 2026-1</p>
+                <p className="text-sm font-bold text-muted">NEXUS</p>
+                <p className="text-[11px] text-faint">Plataforma Académica · 2026-1</p>
               </div>
             </div>
-            <div className="flex items-center gap-6 text-xs text-white/30">
-              <Link href="/login" className="hover:text-white/60 transition-colors flex items-center gap-1.5">
+            <div className="flex items-center gap-6 text-xs text-subtle">
+              <Link href="/login" className="hover:text-muted transition-colors flex items-center gap-1.5">
                 <LogIn className="w-3 h-3" /> Login
               </Link>
-              <Link href="/showcase" className="hover:text-white/60 transition-colors flex items-center gap-1.5">
+              <Link href="/showcase" className="hover:text-muted transition-colors flex items-center gap-1.5">
                 <ExternalLink className="w-3 h-3" /> Vitrina
               </Link>
             </div>
-            <p className="text-[10px] text-white/15">
+            <p className="text-[10px] text-faint">
               Next.js + TypeScript + IA · © 2026
             </p>
           </div>

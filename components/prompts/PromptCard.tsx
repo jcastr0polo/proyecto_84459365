@@ -35,20 +35,20 @@ export default function PromptCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
       onClick={onClick}
-      className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 cursor-pointer hover:border-cyan-500/30 hover:bg-white/[0.03] transition-all group"
+      className="rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] p-4 cursor-pointer hover:border-cyan-500/30 hover:bg-foreground/[0.03] transition-all group"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold text-white/90 truncate group-hover:text-cyan-400 transition-colors">
+          <h3 className="text-sm font-semibold text-foreground/90 truncate group-hover:text-cyan-400 transition-colors">
             {title}
           </h3>
           {courseName && (
-            <p className="text-[11px] text-white/40 mt-0.5 truncate">{courseName}</p>
+            <p className="text-[11px] text-subtle mt-0.5 truncate">{courseName}</p>
           )}
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <span className="text-[10px] text-white/30 bg-white/[0.04] px-1.5 py-0.5 rounded">
+          <span className="text-[10px] text-subtle bg-foreground/[0.04] px-1.5 py-0.5 rounded">
             v{version}
           </span>
           {isTemplate && (
@@ -60,7 +60,7 @@ export default function PromptCard({
       </div>
 
       {/* Content preview */}
-      <p className="text-xs text-white/40 line-clamp-2 mb-3 leading-relaxed">
+      <p className="text-xs text-subtle line-clamp-2 mb-3 leading-relaxed">
         {contentPreview}
       </p>
 
@@ -76,10 +76,10 @@ export default function PromptCard({
             </span>
           ))}
           {tags.length > 4 && (
-            <span className="text-[10px] text-white/20">+{tags.length - 4}</span>
+            <span className="text-[10px] text-faint">+{tags.length - 4}</span>
           )}
         </div>
-        <span className="text-[10px] text-white/20 flex-shrink-0">
+        <span className="text-[10px] text-faint flex-shrink-0">
           {new Date(updatedAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
         </span>
       </div>

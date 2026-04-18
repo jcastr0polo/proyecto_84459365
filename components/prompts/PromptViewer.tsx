@@ -50,20 +50,20 @@ export default function PromptViewer({
   }, [content, toast]);
 
   const viewer = (
-    <div className={fullscreen ? 'fixed inset-0 z-50 bg-black overflow-y-auto' : ''}>
+    <div className={fullscreen ? 'fixed inset-0 z-50 bg-base overflow-y-auto' : ''}>
       {/* Header */}
-      <div className={`${fullscreen ? 'sticky top-0 z-10 bg-black/95 backdrop-blur-sm border-b border-white/[0.06]' : ''} py-3 px-4`}>
+      <div className={`${fullscreen ? 'sticky top-0 z-10 bg-base/95 backdrop-blur-sm border-b border-foreground/[0.06]' : ''} py-3 px-4`}>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <Bot className="w-4 h-4 text-cyan-400" />
-              <h3 className="text-sm font-semibold text-white/90 truncate">{title}</h3>
-              <span className="text-[10px] text-white/30 bg-white/[0.04] px-1.5 py-0.5 rounded flex-shrink-0">
+              <h3 className="text-sm font-semibold text-foreground/90 truncate">{title}</h3>
+              <span className="text-[10px] text-subtle bg-foreground/[0.04] px-1.5 py-0.5 rounded flex-shrink-0">
                 v{version}
               </span>
             </div>
             {courseName && (
-              <p className="text-[10px] text-white/40 mt-0.5 ml-7">{courseName}</p>
+              <p className="text-[10px] text-subtle mt-0.5 ml-7">{courseName}</p>
             )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -75,7 +75,7 @@ export default function PromptViewer({
             </button>
             <button
               onClick={() => setFullscreen(!fullscreen)}
-              className="p-1.5 rounded-lg border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg border border-foreground/10 text-muted hover:text-foreground/80 hover:border-foreground/20 transition-colors cursor-pointer"
               title={fullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
             >
               {fullscreen ? (
@@ -108,7 +108,7 @@ export default function PromptViewer({
 
       {/* Markdown body */}
       <div className={`${fullscreen ? 'max-w-4xl mx-auto px-6 py-6' : 'px-4 py-3'}`}>
-        <div className="rounded-lg bg-white/[0.02] border border-white/[0.06] p-4">
+        <div className="rounded-lg bg-foreground/[0.02] border border-foreground/[0.06] p-4">
           <MarkdownRenderer content={content} />
         </div>
       </div>

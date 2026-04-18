@@ -86,7 +86,7 @@ export default function AdminGradeSummaryPage() {
   if (!data) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <p className="text-white/40">No se pudieron cargar los datos del curso.</p>
+        <p className="text-subtle">No se pudieron cargar los datos del curso.</p>
       </div>
     );
   }
@@ -100,14 +100,14 @@ export default function AdminGradeSummaryPage() {
         <div>
           <button
             onClick={() => router.back()}
-            className="text-xs text-white/40 hover:text-white/60 transition-colors mb-2 cursor-pointer"
+            className="text-xs text-subtle hover:text-muted transition-colors mb-2 cursor-pointer"
           >
             ← Volver al curso
           </button>
-          <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>
+          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
             Resumen de Notas
           </h1>
-          <p className="text-sm text-white/50 mt-1">
+          <p className="text-sm text-muted mt-1">
             {data.courseName} · {data.students.length} estudiantes · {data.activities.length} actividades
           </p>
         </div>
@@ -142,8 +142,8 @@ export default function AdminGradeSummaryPage() {
       {data.students.length > 0 ? (
         <GradeSummaryTable data={data} />
       ) : (
-        <div className="text-center py-16 rounded-xl border border-white/[0.08] bg-white/[0.02]">
-          <p className="text-white/30">No hay estudiantes inscritos en este curso.</p>
+        <div className="text-center py-16 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02]">
+          <p className="text-subtle">No hay estudiantes inscritos en este curso.</p>
         </div>
       )}
     </div>

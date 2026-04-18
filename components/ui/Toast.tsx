@@ -71,7 +71,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <span className="flex-1">{t.message}</span>
               <button
                 onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
-                className="shrink-0 p-0.5 rounded hover:bg-white/10 transition-colors text-white/40 hover:text-white/70 cursor-pointer"
+                className="shrink-0 p-0.5 rounded hover:bg-foreground/10 transition-colors text-subtle hover:text-muted cursor-pointer"
                 aria-label="Cerrar notificación"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -115,7 +115,7 @@ export default function CSVImporter({ onConfirm, loading = false }: CSVImporterP
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl bg-cyan-500/[0.06] border border-cyan-500/10">
         <div>
           <p className="text-sm text-cyan-300 font-medium mb-1">Formato CSV esperado</p>
-          <p className="text-xs text-white/40 font-mono">nombre, apellido, email, documento</p>
+          <p className="text-xs text-subtle font-mono">nombre, apellido, email, documento</p>
         </div>
         <Button variant="ghost" size="sm" onClick={downloadExample}>
           ↓ Descargar plantilla
@@ -134,7 +134,7 @@ export default function CSVImporter({ onConfirm, loading = false }: CSVImporterP
             py-16 px-6 text-center transition-all duration-200 cursor-pointer
             ${dragOver
               ? 'border-cyan-500/50 bg-cyan-500/[0.06]'
-              : 'border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]'
+              : 'border-foreground/10 bg-foreground/[0.02] hover:border-foreground/20 hover:bg-foreground/[0.04]'
             }
           `}
         >
@@ -147,11 +147,11 @@ export default function CSVImporter({ onConfirm, loading = false }: CSVImporterP
             className="sr-only"
             aria-label="Seleccionar archivo CSV"
           />
-          <div className="mb-3 text-white/15" aria-hidden="true"><FileUp className="w-10 h-10 mx-auto" /></div>
-          <p className="text-sm font-medium text-white/50 mb-1">
+          <div className="mb-3 text-faint" aria-hidden="true"><FileUp className="w-10 h-10 mx-auto" /></div>
+          <p className="text-sm font-medium text-muted mb-1">
             Arrastra un archivo CSV aquí
           </p>
-          <p className="text-xs text-white/30">
+          <p className="text-xs text-subtle">
             o haz clic para seleccionar un archivo
           </p>
         </label>
@@ -162,8 +162,8 @@ export default function CSVImporter({ onConfirm, loading = false }: CSVImporterP
         <div className="space-y-4">
           {/* Summary bar */}
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm text-white/60 flex items-center gap-1">
-              <FileUp className="w-4 h-4" /> <span className="font-medium text-white/80">{fileName}</span>
+            <span className="text-sm text-muted flex items-center gap-1">
+              <FileUp className="w-4 h-4" /> <span className="font-medium text-foreground/80">{fileName}</span>
             </span>
             <Badge variant="info" size="sm">{rows.length} filas</Badge>
             <Badge variant="success" size="sm">{validRows.length} válidas</Badge>
@@ -172,33 +172,33 @@ export default function CSVImporter({ onConfirm, loading = false }: CSVImporterP
             )}
             <button
               onClick={() => { setRows([]); setFileName(''); }}
-              className="ml-auto text-xs text-white/30 hover:text-white/60 transition-colors cursor-pointer"
+              className="ml-auto text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
             >
               Limpiar
             </button>
           </div>
 
           {/* Preview table */}
-          <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
+          <div className="overflow-x-auto rounded-xl border border-foreground/[0.08]">
             <table className="w-full text-sm text-left">
-              <thead className="bg-white/[0.03] border-b border-white/[0.06]">
+              <thead className="bg-foreground/[0.03] border-b border-foreground/[0.06]">
                 <tr>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">#</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">Nombre</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">Apellido</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">Email</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">Documento</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">Estado</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">#</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">Nombre</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">Apellido</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">Email</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">Documento</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">Estado</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
                 {rows.map((row, idx) => (
                   <tr key={idx} className={row.valid ? '' : 'bg-red-500/[0.04]'}>
-                    <td className="px-3 py-2 text-xs text-white/30">{idx + 1}</td>
-                    <td className="px-3 py-2 text-xs text-white/70">{row.firstName || '—'}</td>
-                    <td className="px-3 py-2 text-xs text-white/70">{row.lastName || '—'}</td>
-                    <td className="px-3 py-2 text-xs text-white/50">{row.email || '—'}</td>
-                    <td className="px-3 py-2 text-xs text-white/50 font-mono">{row.documentNumber || '—'}</td>
+                    <td className="px-3 py-2 text-xs text-subtle">{idx + 1}</td>
+                    <td className="px-3 py-2 text-xs text-muted">{row.firstName || '—'}</td>
+                    <td className="px-3 py-2 text-xs text-muted">{row.lastName || '—'}</td>
+                    <td className="px-3 py-2 text-xs text-muted">{row.email || '—'}</td>
+                    <td className="px-3 py-2 text-xs text-muted font-mono">{row.documentNumber || '—'}</td>
                     <td className="px-3 py-2">
                       {row.valid ? (
                         <Badge variant="success" size="sm">✓</Badge>

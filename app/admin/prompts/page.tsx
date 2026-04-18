@@ -92,8 +92,8 @@ export default function AdminPromptsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Prompts de IA</h1>
-          <p className="text-sm text-white/40 mt-1">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Prompts de IA</h1>
+          <p className="text-sm text-subtle mt-1">
             {prompts.length} prompt{prompts.length !== 1 ? 's' : ''} · Gestión de instrucciones para asistentes de IA
           </p>
         </div>
@@ -115,7 +115,7 @@ export default function AdminPromptsPage() {
       </div>
 
       {/* ─── Filters ─── */}
-      <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg bg-white/[0.02] border border-white/[0.06]">
+      <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg bg-foreground/[0.02] border border-foreground/[0.06]">
         {/* Search */}
         <div className="flex-1 min-w-[180px]">
           <input
@@ -123,8 +123,8 @@ export default function AdminPromptsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por título, tag o contenido..."
-            className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.08] rounded-lg
-                       text-sm text-white/80 placeholder:text-white/25
+            className="w-full px-3 py-2 bg-foreground/[0.04] border border-foreground/[0.08] rounded-lg
+                       text-sm text-foreground/80 placeholder:text-faint
                        focus:outline-none focus:border-cyan-500/40 transition-colors"
           />
         </div>
@@ -133,17 +133,17 @@ export default function AdminPromptsPage() {
         <select
           value={courseFilter}
           onChange={(e) => setCourseFilter(e.target.value)}
-          className="px-3 py-2 bg-white/[0.04] border border-white/[0.08] rounded-lg
-                     text-sm text-white/70 focus:outline-none focus:border-cyan-500/40 transition-colors"
+          className="px-3 py-2 bg-foreground/[0.04] border border-foreground/[0.08] rounded-lg
+                     text-sm text-muted focus:outline-none focus:border-cyan-500/40 transition-colors"
         >
-          <option value="all" className="bg-[#111]">Todos los cursos</option>
+          <option value="all" className="bg-base">Todos los cursos</option>
           {courses.map((c) => (
-            <option key={c.id} value={c.id} className="bg-[#111]">{c.name}</option>
+            <option key={c.id} value={c.id} className="bg-base">{c.name}</option>
           ))}
         </select>
 
         {/* Template filter */}
-        <div className="flex rounded-lg border border-white/[0.08] overflow-hidden">
+        <div className="flex rounded-lg border border-foreground/[0.08] overflow-hidden">
           {(['all', 'templates', 'prompts'] as TemplateFilter[]).map((f) => (
             <button
               key={f}
@@ -151,7 +151,7 @@ export default function AdminPromptsPage() {
               className={`px-3 py-2 text-xs font-medium transition-colors cursor-pointer
                 ${templateFilter === f
                   ? 'bg-cyan-500/15 text-cyan-400'
-                  : 'text-white/40 hover:text-white/60 hover:bg-white/[0.03]'
+                  : 'text-subtle hover:text-muted hover:bg-foreground/[0.03]'
                 }`}
             >
               {f === 'all' ? 'Todos' : f === 'templates' ? 'Plantillas' : 'Específicos'}
@@ -163,7 +163,7 @@ export default function AdminPromptsPage() {
       {/* ─── Results ─── */}
       {filtered.length === 0 ? (
         <EmptyState
-          icon={<Bot className="w-8 h-8 text-white/30" />}
+          icon={<Bot className="w-8 h-8 text-subtle" />}
           title={prompts.length === 0 ? 'Sin prompts aún' : 'Sin resultados'}
           description={
             prompts.length === 0
@@ -178,7 +178,7 @@ export default function AdminPromptsPage() {
         />
       ) : (
         <>
-          <p className="text-xs text-white/30">
+          <p className="text-xs text-subtle">
             {filtered.length} de {prompts.length} prompt{prompts.length !== 1 ? 's' : ''}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -207,9 +207,9 @@ export default function AdminPromptsPage() {
 
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.06] text-center">
+    <div className="p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-center">
       <p className={`text-xl font-bold ${color}`}>{value}</p>
-      <p className="text-[11px] text-white/40 mt-0.5">{label}</p>
+      <p className="text-[11px] text-subtle mt-0.5">{label}</p>
     </div>
   );
 }

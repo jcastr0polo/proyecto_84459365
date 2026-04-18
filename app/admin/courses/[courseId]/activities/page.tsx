@@ -88,7 +88,7 @@ export default function CourseActivitiesPage() {
       <div>
         <button
           onClick={() => router.push(`/admin/courses/${courseId}`)}
-          className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors mb-4 cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors mb-4 cursor-pointer"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <polyline points="15 18 9 12 15 6" />
@@ -98,9 +98,9 @@ export default function CourseActivitiesPage() {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Actividades</h1>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Actividades</h1>
             {course && (
-              <p className="text-sm text-white/40 mt-1">
+              <p className="text-sm text-subtle mt-1">
                 {course.name} · <span className="font-mono">{course.code}</span>
               </p>
             )}
@@ -131,14 +131,14 @@ export default function CourseActivitiesPage() {
 
       {/* Weight progress bar */}
       {activities.length > 0 && (
-        <div className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.03]">
+        <div className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-white/50">Peso acumulado</span>
-            <span className={`text-xs font-bold ${totalWeight > 100 ? 'text-red-400' : totalWeight === 100 ? 'text-emerald-400' : 'text-white/70'}`}>
+            <span className="text-xs font-medium text-muted">Peso acumulado</span>
+            <span className={`text-xs font-bold ${totalWeight > 100 ? 'text-red-400' : totalWeight === 100 ? 'text-emerald-400' : 'text-muted'}`}>
               {totalWeight}%
             </span>
           </div>
-          <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden">
+          <div className="w-full h-2 rounded-full bg-foreground/[0.06] overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 totalWeight > 100 ? 'bg-red-500' : totalWeight === 100 ? 'bg-emerald-500' : 'bg-cyan-500'
@@ -152,7 +152,7 @@ export default function CourseActivitiesPage() {
             </p>
           )}
           {totalWeight < 100 && totalWeight > 0 && (
-            <p className="mt-1.5 text-[11px] text-white/25">
+            <p className="mt-1.5 text-[11px] text-faint">
               Falta {100 - totalWeight}% por asignar
             </p>
           )}
@@ -166,7 +166,7 @@ export default function CourseActivitiesPage() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
             aria-label="Filtrar por estado"
-            className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.04] text-sm text-white
+            className="px-3 py-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-sm text-foreground
                        outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
           >
             <option value="all">Todos los estados</option>
@@ -179,7 +179,7 @@ export default function CourseActivitiesPage() {
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
             aria-label="Filtrar por tipo"
-            className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.04] text-sm text-white
+            className="px-3 py-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-sm text-foreground
                        outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
           >
             <option value="all">Todos los tipos</option>
@@ -197,7 +197,7 @@ export default function CourseActivitiesPage() {
       {/* Activity list */}
       {activities.length === 0 ? (
         <EmptyState
-          icon={<ClipboardList className="w-6 h-6 text-white/30" />}
+          icon={<ClipboardList className="w-6 h-6 text-subtle" />}
           title="No hay actividades"
           description="Crea la primera actividad para este curso."
           action={
@@ -212,7 +212,7 @@ export default function CourseActivitiesPage() {
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={<Search className="w-6 h-6 text-white/30" />}
+          icon={<Search className="w-6 h-6 text-subtle" />}
           title="Sin resultados"
           description="No se encontraron actividades con esos filtros."
           action={

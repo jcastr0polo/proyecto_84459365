@@ -107,7 +107,7 @@ export default function AdminCourseProjectsPage() {
       {/* Back link */}
       <button
         onClick={() => router.push(`/admin/courses/${courseId}`)}
-        className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <polyline points="15 18 9 12 15 6" />
@@ -118,8 +118,8 @@ export default function AdminCourseProjectsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Proyectos Estudiantiles</h1>
-          <p className="text-sm text-white/40 mt-1">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Proyectos Estudiantiles</h1>
+          <p className="text-sm text-subtle mt-1">
             {course?.name ?? 'Curso'} · {projects.length} proyecto{projects.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -133,7 +133,7 @@ export default function AdminCourseProjectsPage() {
       {/* ─── Projects Grid ─── */}
       {projects.length === 0 ? (
         <EmptyState
-          icon={<Rocket className="w-8 h-8 text-white/30" />}
+          icon={<Rocket className="w-8 h-8 text-subtle" />}
           title="Sin proyectos registrados"
           description="Los estudiantes aún no han registrado sus proyectos en este curso"
         />
@@ -145,14 +145,14 @@ export default function AdminCourseProjectsPage() {
               className={`relative rounded-xl border p-5 transition-all ${
                 p.isFeatured
                   ? 'border-amber-500/30 bg-gradient-to-br from-amber-500/[0.04] to-transparent'
-                  : 'border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04]'
+                  : 'border-foreground/[0.08] bg-foreground/[0.02] hover:bg-foreground/[0.04]'
               }`}
             >
               {/* Header */}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-semibold text-white truncate">{p.projectName}</h3>
-                  <p className="text-xs text-white/40 mt-0.5">{p.studentName}</p>
+                  <h3 className="text-sm font-semibold text-foreground truncate">{p.projectName}</h3>
+                  <p className="text-xs text-subtle mt-0.5">{p.studentName}</p>
                 </div>
                 <button
                   onClick={() => toggleFeatured(p)}
@@ -160,7 +160,7 @@ export default function AdminCourseProjectsPage() {
                   className={`flex-shrink-0 p-2 rounded-lg border transition-all cursor-pointer ${
                     p.isFeatured
                       ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
-                      : 'border-white/[0.08] text-white/25 hover:text-amber-400 hover:border-amber-500/20'
+                      : 'border-foreground/[0.08] text-faint hover:text-amber-400 hover:border-amber-500/20'
                   } ${togglingId === p.id ? 'opacity-50' : ''}`}
                   title={p.isFeatured ? 'Quitar destacado' : 'Destacar proyecto'}
                 >
@@ -177,7 +177,7 @@ export default function AdminCourseProjectsPage() {
 
               {/* Description */}
               {p.description && (
-                <p className="text-xs text-white/40 mt-2 line-clamp-2">{p.description}</p>
+                <p className="text-xs text-subtle mt-2 line-clamp-2">{p.description}</p>
               )}
 
               {/* Links */}
@@ -188,8 +188,8 @@ export default function AdminCourseProjectsPage() {
               </div>
 
               {/* Status control */}
-              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-white/[0.06]">
-                <span className="text-[10px] text-white/25">Estado:</span>
+              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-foreground/[0.06]">
+                <span className="text-[10px] text-faint">Estado:</span>
                 {(['in-progress', 'submitted', 'reviewed', 'featured'] as const).map((s) => (
                   <button
                     key={s}
@@ -197,7 +197,7 @@ export default function AdminCourseProjectsPage() {
                     className={`text-[10px] px-2 py-0.5 rounded transition-colors cursor-pointer ${
                       p.status === s
                         ? 'bg-cyan-500/15 text-cyan-400'
-                        : 'text-white/25 hover:text-white/50'
+                        : 'text-faint hover:text-muted'
                     }`}
                   >
                     {s === 'in-progress' ? 'En progreso' : s === 'submitted' ? 'Entregado' : s === 'reviewed' ? 'Revisado' : 'Destacado'}
@@ -237,8 +237,8 @@ function ExternalLink({ href, label }: { href: string; label: string }) {
       target="_blank"
       rel="noopener noreferrer"
       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium
-                 bg-white/[0.04] border border-white/[0.08] text-white/50
-                 hover:bg-white/[0.08] hover:text-white/80 hover:border-white/[0.15]
+                 bg-foreground/[0.04] border border-foreground/[0.08] text-muted
+                 hover:bg-foreground/[0.08] hover:text-foreground/80 hover:border-foreground/[0.15]
                  transition-all"
     >
       {label}
@@ -253,9 +253,9 @@ function ExternalLink({ href, label }: { href: string; label: string }) {
 
 function StatPill({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.06]">
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-foreground/[0.03] border border-foreground/[0.06]">
       <span className={`font-bold ${color}`}>{value}</span>
-      <span className="text-white/30">{label}</span>
+      <span className="text-subtle">{label}</span>
     </div>
   );
 }

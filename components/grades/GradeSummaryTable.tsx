@@ -27,21 +27,21 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
   });
 
   return (
-    <div className={`overflow-x-auto rounded-xl border border-white/[0.08] ${className}`}>
+    <div className={`overflow-x-auto rounded-xl border border-foreground/[0.08] ${className}`}>
       <table className="w-full text-sm text-left">
-        <thead className="bg-white/[0.03] border-b border-white/[0.06]">
+        <thead className="bg-foreground/[0.03] border-b border-foreground/[0.06]">
           {/* Activity names */}
           <tr>
             <th
               rowSpan={2}
-              className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white/50 border-r border-white/[0.06] sticky left-0 bg-white/[0.03] z-10 min-w-[180px]"
+              className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted border-r border-foreground/[0.06] sticky left-0 bg-foreground/[0.03] z-10 min-w-[180px]"
             >
               Estudiante
             </th>
             {activities.map((act) => (
               <th
                 key={act.id}
-                className="px-3 py-2 text-xs font-medium text-center text-white/70 border-r border-white/[0.06] min-w-[90px]"
+                className="px-3 py-2 text-xs font-medium text-center text-muted border-r border-foreground/[0.06] min-w-[90px]"
                 title={act.title}
               >
                 <span className="block truncate max-w-[100px]">{act.title}</span>
@@ -52,15 +52,15 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
               className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-cyan-400 text-center min-w-[100px] bg-cyan-500/[0.04]"
             >
               Definitiva
-              <span className="block text-[10px] font-normal text-white/30">{totalWeight}%</span>
+              <span className="block text-[10px] font-normal text-subtle">{totalWeight}%</span>
             </th>
           </tr>
           {/* Weights row */}
-          <tr className="border-b border-white/[0.06]">
+          <tr className="border-b border-foreground/[0.06]">
             {activities.map((act) => (
               <th
                 key={`w-${act.id}`}
-                className="px-3 py-1.5 text-[10px] text-center text-white/30 border-r border-white/[0.06]"
+                className="px-3 py-1.5 text-[10px] text-center text-subtle border-r border-foreground/[0.06]"
               >
                 {act.weight}%
               </th>
@@ -69,11 +69,11 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
         </thead>
         <tbody className="divide-y divide-white/[0.04]">
           {students.map((student) => (
-            <tr key={student.id} className="hover:bg-white/[0.02] transition-colors">
+            <tr key={student.id} className="hover:bg-foreground/[0.02] transition-colors">
               {/* Student name (sticky left) */}
-              <td className="px-4 py-2.5 border-r border-white/[0.06] sticky left-0 bg-black z-10">
-                <p className="text-sm text-white/90 font-medium">{student.lastName}, {student.firstName}</p>
-                <p className="text-[10px] text-white/30">{student.documentNumber}</p>
+              <td className="px-4 py-2.5 border-r border-foreground/[0.06] sticky left-0 bg-base z-10">
+                <p className="text-sm text-foreground/90 font-medium">{student.lastName}, {student.firstName}</p>
+                <p className="text-[10px] text-subtle">{student.documentNumber}</p>
               </td>
 
               {/* Per-activity score cells */}
@@ -81,7 +81,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
                 const grade = student.grades[act.id];
                 if (!grade) {
                   return (
-                    <td key={act.id} className="px-3 py-2.5 text-center text-xs text-white/20 border-r border-white/[0.06]">
+                    <td key={act.id} className="px-3 py-2.5 text-center text-xs text-faint border-r border-foreground/[0.06]">
                       —
                     </td>
                   );
@@ -91,13 +91,13 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
                 return (
                   <td
                     key={act.id}
-                    className={`px-3 py-2.5 text-center border-r border-white/[0.06] ${cellColor}`}
+                    className={`px-3 py-2.5 text-center border-r border-foreground/[0.06] ${cellColor}`}
                     title={grade.feedback ?? undefined}
                   >
                     <span className="text-sm font-medium tabular-nums">
                       {grade.score.toFixed(1)}
                     </span>
-                    <span className="text-[10px] text-white/25 ml-0.5">/{grade.maxScore}</span>
+                    <span className="text-[10px] text-faint ml-0.5">/{grade.maxScore}</span>
                     {!grade.isPublished && (
                       <span className="ml-1 text-[10px] text-amber-400" title="No publicada">●</span>
                     )}
@@ -124,25 +124,25 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
                     </p>
                   </div>
                 ) : (
-                  <span className="text-xs text-white/20">—</span>
+                  <span className="text-xs text-faint">—</span>
                 )}
               </td>
             </tr>
           ))}
 
           {/* Averages row */}
-          <tr className="bg-white/[0.03] border-t-2 border-white/[0.08]">
-            <td className="px-4 py-2.5 text-xs font-semibold text-white/50 uppercase sticky left-0 bg-white/[0.03] z-10">
+          <tr className="bg-foreground/[0.03] border-t-2 border-foreground/[0.08]">
+            <td className="px-4 py-2.5 text-xs font-semibold text-muted uppercase sticky left-0 bg-foreground/[0.03] z-10">
               Promedio
             </td>
             {activityAverages.map((avg, i) => (
-              <td key={`avg-${activities[i].id}`} className="px-3 py-2.5 text-center border-r border-white/[0.06]">
+              <td key={`avg-${activities[i].id}`} className="px-3 py-2.5 text-center border-r border-foreground/[0.06]">
                 {avg !== null ? (
                   <span className={`text-sm font-medium tabular-nums ${scoreColorClass(avg)}`}>
                     {avg.toFixed(1)}
                   </span>
                 ) : (
-                  <span className="text-xs text-white/20">—</span>
+                  <span className="text-xs text-faint">—</span>
                 )}
               </td>
             ))}
@@ -157,7 +157,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
                     {avg.toFixed(1)}
                   </span>
                 ) : (
-                  <span className="text-xs text-white/20">—</span>
+                  <span className="text-xs text-faint">—</span>
                 );
               })()}
             </td>
@@ -166,7 +166,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
       </table>
 
       {/* Footnote */}
-      <div className="px-4 py-2 border-t border-white/[0.04] text-[10px] text-white/25 flex gap-4">
+      <div className="px-4 py-2 border-t border-foreground/[0.04] text-[10px] text-faint flex gap-4">
         <span>● = No publicada</span>
         <span>* = Nota parcial (faltan actividades)</span>
       </div>

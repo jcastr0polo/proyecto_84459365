@@ -30,19 +30,19 @@ export default function StatCard({
   label,
   description,
   icon,
-  color = 'text-white',
+  color = 'text-foreground',
   details,
   loading = false,
 }: StatCardProps) {
   if (loading) {
     return (
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 animate-pulse">
+      <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-5 animate-pulse">
         <div className="flex items-center justify-between mb-4">
-          <div className="h-3 w-20 rounded bg-white/[0.06]" />
-          <div className="h-8 w-8 rounded-lg bg-white/[0.04]" />
+          <div className="h-3 w-20 rounded bg-foreground/[0.06]" />
+          <div className="h-8 w-8 rounded-lg bg-foreground/[0.04]" />
         </div>
-        <div className="h-9 w-16 rounded bg-white/[0.06] mb-1" />
-        <div className="h-3 w-24 rounded bg-white/[0.04]" />
+        <div className="h-9 w-16 rounded bg-foreground/[0.06] mb-1" />
+        <div className="h-3 w-24 rounded bg-foreground/[0.04]" />
       </div>
     );
   }
@@ -52,13 +52,13 @@ export default function StatCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.03] hover:border-white/[0.1] p-5 transition-colors duration-300"
+      className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] hover:bg-foreground/[0.03] hover:border-foreground/[0.1] p-5 transition-colors duration-300"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[11px] font-medium text-white/35 uppercase tracking-wider">{label}</p>
+        <p className="text-[11px] font-medium text-subtle uppercase tracking-wider">{label}</p>
         {icon && (
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.04] text-base">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-foreground/[0.04] text-base">
             {icon}
           </div>
         )}
@@ -69,16 +69,16 @@ export default function StatCard({
 
       {/* Description */}
       {description && (
-        <p className="text-xs text-white/30 mt-1">{description}</p>
+        <p className="text-xs text-subtle mt-1">{description}</p>
       )}
 
       {/* Detail breakdown */}
       {details && details.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-white/[0.05] space-y-1.5">
+        <div className="mt-4 pt-3 border-t border-foreground/[0.05] space-y-1.5">
           {details.map((d, i) => (
             <div key={i} className="flex items-center justify-between">
-              <span className="text-[11px] text-white/30">{d.label}</span>
-              <span className={`text-[11px] font-medium ${d.color ?? 'text-white/50'}`}>
+              <span className="text-[11px] text-subtle">{d.label}</span>
+              <span className={`text-[11px] font-medium ${d.color ?? 'text-muted'}`}>
                 {d.value}
               </span>
             </div>

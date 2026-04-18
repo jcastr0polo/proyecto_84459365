@@ -84,8 +84,8 @@ export default function CoursesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Cursos</h1>
-          <p className="text-sm text-white/40 mt-1">Gestión de materias y horarios</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Cursos</h1>
+          <p className="text-sm text-subtle mt-1">Gestión de materias y horarios</p>
         </div>
         <div className="flex items-center gap-3">
           {/* Semester filter */}
@@ -93,7 +93,7 @@ export default function CoursesPage() {
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value)}
             aria-label="Filtrar por semestre"
-            className="px-3 py-2 rounded-lg border border-white/10 bg-white/[0.04] text-sm text-white
+            className="px-3 py-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-sm text-foreground
                        outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
           >
             <option value="">Todos los semestres</option>
@@ -112,7 +112,7 @@ export default function CoursesPage() {
       {/* Course grid */}
       {filteredCourses.length === 0 ? (
         <EmptyState
-          icon={<BookOpen className="w-6 h-6 text-white/30" />}
+          icon={<BookOpen className="w-6 h-6 text-subtle" />}
           title="No hay cursos"
           description={
             selectedSemester
@@ -141,10 +141,10 @@ export default function CoursesPage() {
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="min-w-0">
-                    <h3 className="text-base font-semibold text-white/90 truncate">
+                    <h3 className="text-base font-semibold text-foreground/90 truncate">
                       {course.name}
                     </h3>
-                    <p className="text-xs font-mono text-white/40 mt-0.5">{course.code}</p>
+                    <p className="text-xs font-mono text-subtle mt-0.5">{course.code}</p>
                   </div>
                   <Badge variant={categoryToBadgeVariant(course.category)} size="sm">
                     {categoryLabel(course.category)}
@@ -152,22 +152,22 @@ export default function CoursesPage() {
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-white/50 line-clamp-2 mb-4">
+                <p className="text-sm text-muted line-clamp-2 mb-4">
                   {course.description}
                 </p>
 
                 {/* Schedule */}
                 <div className="space-y-1.5">
                   {course.schedule.map((slot: CourseSchedule, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs text-white/50">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-white/30">
+                    <div key={idx} className="flex items-center gap-2 text-xs text-muted">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-subtle">
                         <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                       </svg>
                       <span className="capitalize">{slot.dayOfWeek}</span>
                       <span>{slot.startTime}–{slot.endTime}</span>
                       {slot.room && (
                         <>
-                          <span className="text-white/20">·</span>
+                          <span className="text-faint">·</span>
                           <span>{slot.room}</span>
                         </>
                       )}
@@ -176,11 +176,11 @@ export default function CoursesPage() {
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/[0.06]">
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-foreground/[0.06]">
                   <Badge variant={course.isActive ? 'success' : 'neutral'} size="sm" dot>
                     {course.isActive ? 'Activo' : 'Inactivo'}
                   </Badge>
-                  <span className="text-[10px] text-white/30 uppercase tracking-wider">
+                  <span className="text-[10px] text-subtle uppercase tracking-wider">
                     {course.schedule[0]?.modality ?? 'N/A'}
                   </span>
                 </div>
@@ -209,7 +209,7 @@ function categoryStripeColor(category: Course['category']): string {
     design: 'bg-purple-500',
     management: 'bg-amber-500',
     leadership: 'bg-rose-500',
-    other: 'bg-white/20',
+    other: 'bg-foreground/20',
   };
   return map[category] ?? map.other;
 }

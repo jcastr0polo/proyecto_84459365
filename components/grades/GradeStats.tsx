@@ -37,17 +37,17 @@ export default function GradeStats({ stats, className = '' }: GradeStatsProps) {
       <StatBox label="Más baja" value={stats.lowest.toFixed(1)} color={scoreColor(stats.lowest)} />
       <StatBox label="Aprobados" value={`${approvedPercent}%`} sub={`${stats.approvedCount}/${stats.totalStudents}`} color="text-emerald-400" />
       <StatBox label="Reprobados" value={`${failedPercent}%`} sub={`${stats.failedCount}/${stats.totalStudents}`} color="text-red-400" />
-      <StatBox label="Sin nota" value={String(stats.pendingCount)} color="text-white/50" />
+      <StatBox label="Sin nota" value={String(stats.pendingCount)} color="text-muted" />
     </div>
   );
 }
 
 function StatBox({ label, value, sub, color }: { label: string; value: string; sub?: string; color: string }) {
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-center">
-      <p className="text-[10px] uppercase tracking-wider text-white/40 mb-1">{label}</p>
+    <div className="rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] p-3 text-center">
+      <p className="text-[10px] uppercase tracking-wider text-subtle mb-1">{label}</p>
       <p className={`text-lg font-bold ${color}`}>{value}</p>
-      {sub && <p className="text-[10px] text-white/30 mt-0.5">{sub}</p>}
+      {sub && <p className="text-[10px] text-subtle mt-0.5">{sub}</p>}
     </div>
   );
 }

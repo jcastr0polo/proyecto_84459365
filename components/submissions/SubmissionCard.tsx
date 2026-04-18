@@ -30,24 +30,24 @@ export default function SubmissionCard({ submission, activityTitle, activityDueD
     <div
       onClick={onClick}
       className={`
-        p-4 rounded-xl border border-white/[0.08] bg-white/[0.03]
-        transition-all duration-200 hover:border-white/15 hover:bg-white/[0.06]
+        p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03]
+        transition-all duration-200 hover:border-foreground/15 hover:bg-foreground/[0.06]
         ${onClick ? 'cursor-pointer' : ''}
       `}
     >
       {/* Top row */}
       <div className="flex items-center justify-between gap-2 mb-2">
         <Badge variant={status.variant} size="sm" dot>{status.label}</Badge>
-        <span className="text-[11px] text-white/30 font-mono">v{submission.version}</span>
+        <span className="text-[11px] text-subtle font-mono">v{submission.version}</span>
       </div>
 
       {/* Title */}
       {activityTitle && (
-        <h3 className="text-sm font-semibold text-white/90 mb-1 line-clamp-1">{activityTitle}</h3>
+        <h3 className="text-sm font-semibold text-foreground/90 mb-1 line-clamp-1">{activityTitle}</h3>
       )}
 
       {/* Info row */}
-      <div className="flex items-center gap-3 text-xs text-white/40 mt-2">
+      <div className="flex items-center gap-3 text-xs text-subtle mt-2">
         {/* Submitted date */}
         <span className="flex items-center gap-1">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

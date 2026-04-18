@@ -91,7 +91,7 @@ export default function ScoreInput({
   const ratio = value !== null && maxScore > 0 ? value / maxScore : null;
   const colorClass =
     ratio === null
-      ? 'border-white/10'
+      ? 'border-foreground/10'
       : ratio >= 0.8
         ? 'border-emerald-500/40 bg-emerald-500/5'
         : ratio >= 0.6
@@ -114,7 +114,7 @@ export default function ScoreInput({
         aria-label={`Nota (0-${maxScore})`}
         className={`
           w-20 px-2.5 py-1.5 rounded-lg border text-center text-sm font-medium
-          bg-white/[0.04] text-white outline-none transition-all
+          bg-foreground/[0.04] text-foreground outline-none transition-all
           focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25
           disabled:opacity-50 disabled:cursor-not-allowed
           ${error ? 'border-red-500/60 bg-red-500/10' : colorClass}

@@ -124,14 +124,14 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black px-4">
+    <div className="min-h-screen flex items-center justify-center bg-base px-4">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="w-full max-w-md"
       >
-        <div className="rounded-2xl border border-white/10 bg-zinc-950 p-8 shadow-2xl">
+        <div className="rounded-2xl border border-foreground/10 bg-base p-8 shadow-2xl">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mb-4">
@@ -140,10 +140,10 @@ export default function ChangePasswordPage() {
                 <path d="M7 11V7a5 5 0 0110 0v4" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+            <h1 className="text-xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               Cambiar Contraseña
             </h1>
-            <p className="text-sm text-white/40 mt-1">
+            <p className="text-sm text-subtle mt-1">
               Por seguridad, actualiza tu contraseña
             </p>
           </div>
@@ -158,13 +158,13 @@ export default function ChangePasswordPage() {
               <p className="text-sm font-medium text-emerald-400">
                 Contraseña actualizada correctamente
               </p>
-              <p className="text-xs text-white/30 mt-1">Redirigiendo...</p>
+              <p className="text-xs text-subtle mt-1">Redirigiendo...</p>
             </motion.div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Current password */}
               <div>
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-white/60 mb-2">
+                <label htmlFor="currentPassword" className="block text-sm font-medium text-muted mb-2">
                   Contraseña actual
                 </label>
                 <div className="relative">
@@ -176,8 +176,8 @@ export default function ChangePasswordPage() {
                     required
                     autoFocus
                     autoComplete="current-password"
-                    className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03]
-                               text-white text-sm placeholder-white/20
+                    className="w-full px-4 py-3 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03]
+                               text-foreground text-sm placeholder-faint
                                focus:outline-none focus:border-cyan-500/30 focus:ring-1 focus:ring-cyan-500/20
                                transition-all"
                     placeholder="Ingresa tu contraseña actual"
@@ -185,7 +185,7 @@ export default function ChangePasswordPage() {
                   <button
                     type="button"
                     onClick={() => setShowCurrentPw(!showCurrentPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50 transition-colors cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-muted transition-colors cursor-pointer"
                     tabIndex={-1}
                     aria-label={showCurrentPw ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
@@ -207,7 +207,7 @@ export default function ChangePasswordPage() {
 
               {/* New password */}
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-white/60 mb-2">
+                <label htmlFor="newPassword" className="block text-sm font-medium text-muted mb-2">
                   Nueva contraseña
                 </label>
                 <div className="relative">
@@ -219,8 +219,8 @@ export default function ChangePasswordPage() {
                     required
                     minLength={8}
                     autoComplete="new-password"
-                    className="w-full px-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.03]
-                               text-white text-sm placeholder-white/20
+                    className="w-full px-4 py-3 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03]
+                               text-foreground text-sm placeholder-faint
                                focus:outline-none focus:border-cyan-500/30 focus:ring-1 focus:ring-cyan-500/20
                                transition-all"
                     placeholder="Mínimo 8 caracteres"
@@ -228,7 +228,7 @@ export default function ChangePasswordPage() {
                   <button
                     type="button"
                     onClick={() => setShowNewPw(!showNewPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50 transition-colors cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-muted transition-colors cursor-pointer"
                     tabIndex={-1}
                     aria-label={showNewPw ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
@@ -251,7 +251,7 @@ export default function ChangePasswordPage() {
                 {newPassword.length > 0 && (
                   <div className="mt-3">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] text-white/30">Fortaleza</span>
+                      <span className="text-[11px] text-subtle">Fortaleza</span>
                       <span className={`text-[11px] font-medium ${strength.color}`}>{strength.label}</span>
                     </div>
                     <div className="flex gap-1">
@@ -259,7 +259,7 @@ export default function ChangePasswordPage() {
                         <div
                           key={seg}
                           className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                            seg <= strength.score ? strength.bgColor : 'bg-white/[0.06]'
+                            seg <= strength.score ? strength.bgColor : 'bg-foreground/[0.06]'
                           }`}
                         />
                       ))}
@@ -270,7 +270,7 @@ export default function ChangePasswordPage() {
 
               {/* Confirm password */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/60 mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-muted mb-2">
                   Confirmar nueva contraseña
                 </label>
                 <input
@@ -281,14 +281,14 @@ export default function ChangePasswordPage() {
                   required
                   minLength={8}
                   autoComplete="new-password"
-                  className={`w-full px-4 py-3 rounded-xl border bg-white/[0.03]
-                             text-white text-sm placeholder-white/20
+                  className={`w-full px-4 py-3 rounded-xl border bg-foreground/[0.03]
+                             text-foreground text-sm placeholder-faint
                              focus:outline-none focus:ring-1 transition-all
                              ${confirmPassword.length > 0 && newPassword !== confirmPassword
                                ? 'border-red-500/30 focus:border-red-500/30 focus:ring-red-500/20'
                                : confirmPassword.length > 0 && newPassword === confirmPassword
                                  ? 'border-emerald-500/30 focus:border-emerald-500/30 focus:ring-emerald-500/20'
-                                 : 'border-white/[0.08] focus:border-cyan-500/30 focus:ring-cyan-500/20'
+                                 : 'border-foreground/[0.08] focus:border-cyan-500/30 focus:ring-cyan-500/20'
                              }`}
                   placeholder="Repite la nueva contraseña"
                 />
@@ -299,15 +299,15 @@ export default function ChangePasswordPage() {
 
               {/* Password rules */}
               {newPassword.length > 0 && (
-                <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5">
-                  <p className="text-[10px] font-medium text-white/30 uppercase tracking-wider mb-2">Requisitos</p>
+                <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-3.5">
+                  <p className="text-[10px] font-medium text-subtle uppercase tracking-wider mb-2">Requisitos</p>
                   <div className="space-y-1.5">
                     {rules.map((rule, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <span className={`text-xs transition-colors ${rule.pass ? 'text-emerald-400' : 'text-white/20'}`}>
+                        <span className={`text-xs transition-colors ${rule.pass ? 'text-emerald-400' : 'text-faint'}`}>
                           {rule.pass ? '✓' : '○'}
                         </span>
-                        <span className={`text-xs transition-colors ${rule.pass ? 'text-white/50' : 'text-white/25'}`}>
+                        <span className={`text-xs transition-colors ${rule.pass ? 'text-muted' : 'text-faint'}`}>
                           {rule.label}
                         </span>
                       </div>
@@ -327,13 +327,13 @@ export default function ChangePasswordPage() {
               <button
                 type="submit"
                 disabled={loading || newPassword.length < 8 || newPassword !== confirmPassword}
-                className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:bg-white/[0.06]
-                           disabled:text-white/20 text-white text-sm font-semibold
+                className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:bg-foreground/[0.06]
+                           disabled:text-faint text-white text-sm font-semibold
                            transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-foreground/20 border-t-white" />
                     Actualizando...
                   </span>
                 ) : (
@@ -346,7 +346,7 @@ export default function ChangePasswordPage() {
                 <button
                   type="button"
                   onClick={() => router.back()}
-                  className="text-xs text-white/30 hover:text-white/50 transition-colors cursor-pointer"
+                  className="text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
                 >
                   ← Volver
                 </button>

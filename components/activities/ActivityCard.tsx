@@ -53,8 +53,8 @@ export default function ActivityCard({ activity, onClick }: ActivityCardProps) {
     <div
       onClick={onClick}
       className={`
-        p-4 rounded-xl border border-white/[0.08] bg-white/[0.03]
-        transition-all duration-200 hover:border-white/15 hover:bg-white/[0.06]
+        p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03]
+        transition-all duration-200 hover:border-foreground/15 hover:bg-foreground/[0.06]
         ${onClick ? 'cursor-pointer' : ''}
       `}
     >
@@ -74,20 +74,20 @@ export default function ActivityCard({ activity, onClick }: ActivityCardProps) {
       </div>
 
       {/* Title */}
-      <h3 className="text-sm font-semibold text-white/90 mb-1 line-clamp-1">
+      <h3 className="text-sm font-semibold text-foreground/90 mb-1 line-clamp-1">
         {activity.title}
       </h3>
 
       {/* Description preview */}
       {activity.description && (
-        <p className="text-xs text-white/40 line-clamp-2 mb-3">
+        <p className="text-xs text-subtle line-clamp-2 mb-3">
           {activity.description.replace(/[#*_`]/g, '').substring(0, 120)}
         </p>
       )}
 
       {/* Bottom row: date + weight + attachments */}
       <div className="flex items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-3 text-white/40">
+        <div className="flex items-center gap-3 text-subtle">
           {/* Due date */}
           <span className="flex items-center gap-1">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

@@ -9,15 +9,22 @@
     "schedule": [
       {
         "dayOfWeek": "lunes",
-        "startTime": "08:00",
-        "endTime": "10:00",
-        "room": "Lab 301",
+        "startTime": "06:00",
+        "endTime": "08:00",
+        "room": "Lab B202",
+        "modality": "presencial"
+      },
+      {
+        "dayOfWeek": "viernes",
+        "startTime": "06:00",
+        "endTime": "08:00",
+        "room": "Lab A201",
         "modality": "presencial"
       }
     ],
     "isActive": true,
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "updatedAt": "2026-04-01T00:00:00.000Z"
+    "updatedAt": "2026-04-18T00:19:22.940Z"
   },
   {
     "id": "course-dis-202601",
@@ -28,16 +35,16 @@
     "category": "design",
     "schedule": [
       {
-        "dayOfWeek": "martes",
-        "startTime": "10:00",
-        "endTime": "12:00",
-        "room": "Lab 205",
+        "dayOfWeek": "miércoles",
+        "startTime": "18:00",
+        "endTime": "21:00",
+        "room": "Lab D305",
         "modality": "presencial"
       }
     ],
     "isActive": true,
     "createdAt": "2026-04-01T00:00:00.000Z",
-    "updatedAt": "2026-04-01T00:00:00.000Z"
+    "updatedAt": "2026-04-18T00:21:07.146Z"
   },
   {
     "id": "course-ger-202601",

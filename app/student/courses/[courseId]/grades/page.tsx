@@ -52,7 +52,7 @@ export default function StudentGradesPage() {
   if (!data) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <p className="text-white/40">No se pudieron cargar tus notas.</p>
+        <p className="text-subtle">No se pudieron cargar tus notas.</p>
       </div>
     );
   }
@@ -67,29 +67,29 @@ export default function StudentGradesPage() {
       <div className="mb-8">
         <button
           onClick={() => router.back()}
-          className="text-xs text-white/40 hover:text-white/60 transition-colors mb-2 cursor-pointer"
+          className="text-xs text-subtle hover:text-muted transition-colors mb-2 cursor-pointer"
         >
           ← Volver al curso
         </button>
-        <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair)' }}>
+        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
           Mis Notas
         </h1>
-        <p className="text-sm text-white/50 mt-1">{data.courseName}</p>
+        <p className="text-sm text-muted mt-1">{data.courseName}</p>
       </div>
 
       {/* Progress summary */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 mb-6"
+        className="rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 mb-6"
       >
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs uppercase tracking-wider text-white/40">Progreso de calificación</p>
-          <p className="text-xs text-white/50">
+          <p className="text-xs uppercase tracking-wider text-subtle">Progreso de calificación</p>
+          <p className="text-xs text-muted">
             {gradedCount} de {data.activities.length} actividades
           </p>
         </div>
-        <div className="relative h-2 rounded-full bg-white/[0.06] overflow-hidden">
+        <div className="relative h-2 rounded-full bg-foreground/[0.06] overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progressPercent}%` }}
@@ -107,8 +107,8 @@ export default function StudentGradesPage() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 rounded-xl border border-white/[0.08] bg-white/[0.02] mb-8">
-          <p className="text-white/30">No hay actividades calificables en este curso aún.</p>
+        <div className="text-center py-12 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] mb-8">
+          <p className="text-subtle">No hay actividades calificables en este curso aún.</p>
         </div>
       )}
 
@@ -117,15 +117,15 @@ export default function StudentGradesPage() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.5, duration: 0.4 }}
-        className="rounded-xl border-2 border-white/[0.1] bg-white/[0.02] p-8 text-center"
+        className="rounded-xl border-2 border-foreground/[0.1] bg-foreground/[0.02] p-8 text-center"
       >
-        <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Nota Definitiva</p>
+        <p className="text-xs uppercase tracking-wider text-subtle mb-2">Nota Definitiva</p>
         {data.finalScore !== null ? (
           <>
             <p className={`text-5xl font-bold tabular-nums ${definitiveColor(data.finalScore)}`}>
               {data.finalScore.toFixed(1)}
             </p>
-            <p className="text-sm text-white/30 mt-1">/ 5.0</p>
+            <p className="text-sm text-subtle mt-1">/ 5.0</p>
             {data.isPartial && (
               <p className="text-xs text-amber-400 mt-2">* Nota parcial — faltan actividades por calificar</p>
             )}
@@ -142,7 +142,7 @@ export default function StudentGradesPage() {
             </div>
           </>
         ) : (
-          <p className="text-lg text-white/20 italic">Sin notas publicadas</p>
+          <p className="text-lg text-faint italic">Sin notas publicadas</p>
         )}
       </motion.div>
     </div>

@@ -47,7 +47,7 @@ export default function TagInput({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.04] cursor-text min-h-[42px] focus-within:border-cyan-500/50 focus-within:ring-1 focus-within:ring-cyan-500/25 transition-all"
+      className="flex flex-wrap items-center gap-1.5 px-3 py-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] cursor-text min-h-[42px] focus-within:border-cyan-500/50 focus-within:ring-1 focus-within:ring-cyan-500/25 transition-all"
       onClick={() => inputRef.current?.focus()}
     >
       {tags.map((tag, i) => (
@@ -60,7 +60,7 @@ export default function TagInput({
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); removeTag(i); }}
-              className="hover:text-white transition-colors cursor-pointer"
+              className="hover:text-foreground transition-colors cursor-pointer"
               aria-label={`Eliminar tag ${tag}`}
             >
               ×
@@ -77,10 +77,10 @@ export default function TagInput({
         onBlur={() => { if (input.trim()) addTag(input); }}
         disabled={disabled}
         placeholder={tags.length === 0 ? placeholder : ''}
-        className="flex-1 min-w-[80px] bg-transparent text-sm text-white/80 placeholder:text-white/20 outline-none disabled:cursor-not-allowed"
+        className="flex-1 min-w-[80px] bg-transparent text-sm text-foreground/80 placeholder:text-faint outline-none disabled:cursor-not-allowed"
       />
       {tags.length > 0 && (
-        <span className="text-[10px] text-white/20 ml-auto">{tags.length}/{maxTags}</span>
+        <span className="text-[10px] text-faint ml-auto">{tags.length}/{maxTags}</span>
       )}
     </div>
   );

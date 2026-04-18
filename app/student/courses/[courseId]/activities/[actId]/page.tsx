@@ -83,7 +83,7 @@ export default function StudentActivityDetailPage() {
       {/* Back link */}
       <button
         onClick={() => router.push(`/student/courses/${courseId}/activities`)}
-        className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <polyline points="15 18 9 12 15 6" />
@@ -97,7 +97,7 @@ export default function StudentActivityDetailPage() {
         promptSlot={
           prompt ? (
             <Card padding="lg">
-              <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
+              <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-4">
                 Prompt de IA
               </h3>
               <PromptViewer
@@ -147,7 +147,7 @@ function SubmissionSection({
 
   return (
     <Card padding="lg">
-      <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4">
+      <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-4">
         Mi Entrega
       </h3>
 
@@ -159,14 +159,14 @@ function SubmissionSection({
       )}
 
       {isClosed ? (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-white/[0.02] border border-white/[0.06]">
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-foreground/[0.02] border border-foreground/[0.06]">
           <Badge variant="neutral" size="md">Actividad cerrada</Badge>
-          <span className="text-sm text-white/40">Ya no se aceptan entregas</span>
+          <span className="text-sm text-subtle">Ya no se aceptan entregas</span>
         </div>
       ) : !submission ? (
         <div className="space-y-4">
           {/* No submission yet */}
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-white/[0.02] border border-white/[0.06]">
+          <div className="flex items-center gap-3 p-4 rounded-lg bg-foreground/[0.02] border border-foreground/[0.06]">
             <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-400">
                 <circle cx="12" cy="12" r="10" />
@@ -175,8 +175,8 @@ function SubmissionSection({
               </svg>
             </div>
             <div>
-              <p className="text-sm text-white/70 font-medium">Sin entrega</p>
-              <p className="text-xs text-white/35">
+              <p className="text-sm text-muted font-medium">Sin entrega</p>
+              <p className="text-xs text-subtle">
                 {canSubmit
                   ? 'Aún puedes enviar tu trabajo'
                   : 'El plazo ha vencido y no se permiten entregas tardías'
@@ -187,7 +187,7 @@ function SubmissionSection({
 
           {/* Requirements */}
           {(activity.requiresFileUpload || activity.requiresLinkSubmission) && (
-            <div className="text-xs text-white/30 space-y-1">
+            <div className="text-xs text-subtle space-y-1">
               {activity.requiresFileUpload && <p className="flex items-center gap-1"><Paperclip className="w-3 h-3" /> Debes adjuntar un archivo</p>}
               {activity.requiresLinkSubmission && <p className="flex items-center gap-1"><LinkIcon className="w-3 h-3" /> Debes enviar un enlace</p>}
             </div>
@@ -211,7 +211,7 @@ function SubmissionSection({
           )}
         </div>
       ) : canResubmit && canSubmit ? (
-        <div className="pt-3 border-t border-white/[0.06]">
+        <div className="pt-3 border-t border-foreground/[0.06]">
           <Button
             variant="secondary"
             size="sm"

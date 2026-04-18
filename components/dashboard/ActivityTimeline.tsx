@@ -36,12 +36,12 @@ export default function ActivityTimeline({ events, loading = false }: ActivityTi
       <div className="space-y-4">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex items-start gap-3 animate-pulse">
-            <div className="w-6 h-6 rounded-full bg-white/[0.06] flex-shrink-0 mt-0.5" />
+            <div className="w-6 h-6 rounded-full bg-foreground/[0.06] flex-shrink-0 mt-0.5" />
             <div className="flex-1 space-y-1.5">
-              <div className="h-3 w-48 rounded bg-white/[0.06]" />
-              <div className="h-2.5 w-32 rounded bg-white/[0.04]" />
+              <div className="h-3 w-48 rounded bg-foreground/[0.06]" />
+              <div className="h-2.5 w-32 rounded bg-foreground/[0.04]" />
             </div>
-            <div className="h-2.5 w-12 rounded bg-white/[0.04]" />
+            <div className="h-2.5 w-12 rounded bg-foreground/[0.04]" />
           </div>
         ))}
       </div>
@@ -51,8 +51,8 @@ export default function ActivityTimeline({ events, loading = false }: ActivityTi
   if (events.length === 0) {
     return (
       <div className="text-center py-8">
-        <Inbox className="w-6 h-6 text-white/20 mx-auto mb-2" />
-        <p className="text-xs text-white/30">Sin actividad reciente</p>
+        <Inbox className="w-6 h-6 text-faint mx-auto mb-2" />
+        <p className="text-xs text-subtle">Sin actividad reciente</p>
       </div>
     );
   }
@@ -60,7 +60,7 @@ export default function ActivityTimeline({ events, loading = false }: ActivityTi
   return (
     <div className="relative">
       {/* Timeline line */}
-      <div className="absolute left-3 top-2 bottom-2 w-px bg-white/[0.04]" />
+      <div className="absolute left-3 top-2 bottom-2 w-px bg-foreground/[0.04]" />
 
       <div className="space-y-3">
         {events.map((event, i) => {
@@ -74,26 +74,26 @@ export default function ActivityTimeline({ events, loading = false }: ActivityTi
               className="flex items-start gap-3 relative"
             >
               {/* Dot */}
-              <div className="w-6 h-6 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center flex-shrink-0 z-10">
+              <div className="w-6 h-6 rounded-full bg-foreground/[0.03] border border-foreground/[0.06] flex items-center justify-center flex-shrink-0 z-10">
                 <div className={`w-2 h-2 rounded-full ${config.dotColor}`} />
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0 pt-0.5">
-                <p className="text-xs text-white/70 leading-relaxed">
+                <p className="text-xs text-muted leading-relaxed">
                   <span className="mr-1">{config.icon}</span>
                   {event.title}
                 </p>
-                <p className="text-[10px] text-white/25 mt-0.5">
+                <p className="text-[10px] text-faint mt-0.5">
                   {event.description}
                   {event.courseName && (
-                    <span className="text-white/15"> · {event.courseName}</span>
+                    <span className="text-faint"> · {event.courseName}</span>
                   )}
                 </p>
               </div>
 
               {/* Time */}
-              <span className="text-[10px] text-white/15 flex-shrink-0 pt-1">
+              <span className="text-[10px] text-faint flex-shrink-0 pt-1">
                 {formatRelativeTime(event.timestamp)}
               </span>
             </motion.div>

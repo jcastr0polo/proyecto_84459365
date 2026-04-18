@@ -90,10 +90,10 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
   }
 
   const inputClass = (field: string) =>
-    `w-full px-3 py-2 rounded-lg border bg-white/[0.04] text-white text-sm
-     placeholder:text-white/30 outline-none transition-colors
+    `w-full px-3 py-2 rounded-lg border bg-foreground/[0.04] text-foreground text-sm
+     placeholder:text-subtle outline-none transition-colors
      focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25
-     ${errors[field] ? 'border-red-500/50' : 'border-white/10'}`;
+     ${errors[field] ? 'border-red-500/50' : 'border-foreground/10'}`;
 
   const selectClass = (field: string) =>
     `${inputClass(field)} appearance-none cursor-pointer`;
@@ -103,7 +103,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
       {/* Code + Name row */}
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label htmlFor="course-code" className="block text-xs font-medium text-white/60 mb-1.5">
+          <label htmlFor="course-code" className="block text-xs font-medium text-muted mb-1.5">
             Código
           </label>
           <input
@@ -118,7 +118,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
           {errors.code && <p className="mt-1 text-xs text-red-400">{errors.code}</p>}
         </div>
         <div className="col-span-2">
-          <label htmlFor="course-name" className="block text-xs font-medium text-white/60 mb-1.5">
+          <label htmlFor="course-name" className="block text-xs font-medium text-muted mb-1.5">
             Nombre
           </label>
           <input
@@ -135,7 +135,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
 
       {/* Description */}
       <div>
-        <label htmlFor="course-desc" className="block text-xs font-medium text-white/60 mb-1.5">
+        <label htmlFor="course-desc" className="block text-xs font-medium text-muted mb-1.5">
           Descripción
         </label>
         <textarea
@@ -152,7 +152,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
       {/* Semester + Category row */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="course-semester" className="block text-xs font-medium text-white/60 mb-1.5">
+          <label htmlFor="course-semester" className="block text-xs font-medium text-muted mb-1.5">
             Semestre
           </label>
           <select
@@ -172,7 +172,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
           {errors.semesterId && <p className="mt-1 text-xs text-red-400">{errors.semesterId}</p>}
         </div>
         <div>
-          <label htmlFor="course-category" className="block text-xs font-medium text-white/60 mb-1.5">
+          <label htmlFor="course-category" className="block text-xs font-medium text-muted mb-1.5">
             Categoría
           </label>
           <select
@@ -190,7 +190,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
 
       {/* Schedule */}
       <fieldset>
-        <legend className="text-xs font-medium text-white/60 mb-2">
+        <legend className="text-xs font-medium text-muted mb-2">
           Horarios
         </legend>
         {errors.schedule && <p className="mb-2 text-xs text-red-400">{errors.schedule}</p>}
@@ -198,7 +198,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
           {formData.schedule.map((slot, idx) => (
             <div key={idx} className="grid grid-cols-[1fr_0.6fr_0.6fr_0.8fr_0.8fr_auto] gap-2 items-end">
               <div>
-                {idx === 0 && <span className="block text-[10px] text-white/40 mb-1">Día</span>}
+                {idx === 0 && <span className="block text-[10px] text-subtle mb-1">Día</span>}
                 <select
                   value={slot.dayOfWeek}
                   onChange={(e) => updateSlot(idx, 'dayOfWeek', e.target.value)}
@@ -211,7 +211,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
                 </select>
               </div>
               <div>
-                {idx === 0 && <span className="block text-[10px] text-white/40 mb-1">Inicio</span>}
+                {idx === 0 && <span className="block text-[10px] text-subtle mb-1">Inicio</span>}
                 <input
                   type="time"
                   value={slot.startTime}
@@ -221,7 +221,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
                 />
               </div>
               <div>
-                {idx === 0 && <span className="block text-[10px] text-white/40 mb-1">Fin</span>}
+                {idx === 0 && <span className="block text-[10px] text-subtle mb-1">Fin</span>}
                 <input
                   type="time"
                   value={slot.endTime}
@@ -231,7 +231,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
                 />
               </div>
               <div>
-                {idx === 0 && <span className="block text-[10px] text-white/40 mb-1">Salón</span>}
+                {idx === 0 && <span className="block text-[10px] text-subtle mb-1">Salón</span>}
                 <input
                   type="text"
                   placeholder="Lab 301"
@@ -242,7 +242,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
                 />
               </div>
               <div>
-                {idx === 0 && <span className="block text-[10px] text-white/40 mb-1">Modalidad</span>}
+                {idx === 0 && <span className="block text-[10px] text-subtle mb-1">Modalidad</span>}
                 <select
                   value={slot.modality}
                   onChange={(e) => updateSlot(idx, 'modality', e.target.value)}
@@ -261,7 +261,7 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
                   onClick={() => removeSlot(idx)}
                   disabled={formData.schedule.length <= 1}
                   aria-label="Eliminar horario"
-                  className="p-2 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 
+                  className="p-2 rounded-lg text-subtle hover:text-red-400 hover:bg-red-500/10 
                              disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

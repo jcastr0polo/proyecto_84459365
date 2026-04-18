@@ -29,8 +29,8 @@ export default function Card({
     <Tag
       onClick={onClick}
       className={`
-        rounded-xl border border-white/[0.08] bg-white/[0.03]
-        ${hover ? 'transition-all duration-200 hover:border-white/15 hover:bg-white/[0.06] cursor-pointer' : ''}
+        rounded-xl border border-foreground/[0.08] bg-foreground/[0.03]
+        ${hover ? 'transition-all duration-200 hover:border-foreground/15 hover:bg-foreground/[0.06] cursor-pointer' : ''}
         ${paddingClasses[padding]}
         ${onClick ? 'text-left w-full' : ''}
         ${className}
@@ -51,7 +51,7 @@ export function CardHeader({ children, className = '' }: { children: React.React
 
 export function CardTitle({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <h3 className={`text-sm font-semibold text-white/90 tracking-wide uppercase ${className}`}>
+    <h3 className={`text-sm font-semibold text-foreground/90 tracking-wide uppercase ${className}`}>
       {children}
     </h3>
   );

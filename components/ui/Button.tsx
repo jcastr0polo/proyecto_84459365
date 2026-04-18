@@ -16,11 +16,11 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary:
     'bg-cyan-500 text-white hover:bg-cyan-400 focus-visible:ring-cyan-500/50 active:bg-cyan-600',
   secondary:
-    'bg-white/10 text-white hover:bg-white/15 focus-visible:ring-white/30 active:bg-white/20 border border-white/10',
+    'bg-foreground/10 text-foreground hover:bg-foreground/15 focus-visible:ring-foreground/30 active:bg-foreground/20 border border-foreground/10',
   danger:
     'bg-red-600 text-white hover:bg-red-500 focus-visible:ring-red-500/50 active:bg-red-700',
   ghost:
-    'bg-transparent text-white/70 hover:bg-white/5 hover:text-white focus-visible:ring-white/20',
+    'bg-transparent text-muted hover:bg-foreground/5 hover:text-foreground focus-visible:ring-foreground/20',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

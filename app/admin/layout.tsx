@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
 import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeProvider';
 import type { Semester } from '@/lib/types';
 
 interface UserInfo {
@@ -96,19 +97,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/10 border-t-cyan-400" />
+      <div className="flex items-center justify-center min-h-screen bg-base">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-foreground/10 border-t-cyan-400" />
       </div>
     );
   }
 
   return (
     <ToastProvider>
-      <div className="flex h-screen bg-black overflow-hidden">
+      <div className="flex h-screen bg-base overflow-hidden">
         {/* Mobile backdrop */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-30 bg-base/60 backdrop-blur-sm lg:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           />
@@ -118,18 +119,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <aside
           className={`
             fixed inset-y-0 left-0 z-40 w-60 flex flex-col
-            bg-zinc-950 border-r border-white/10
+            bg-base border-r border-foreground/10
             transform transition-transform duration-200 ease-out
             lg:relative lg:translate-x-0
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           `}
         >
           {/* Logo */}
-          <div className="flex items-center gap-3 px-5 h-16 border-b border-white/10 shrink-0">
+          <div className="flex items-center gap-3 px-5 h-16 border-b border-foreground/10 shrink-0">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
               <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
             </div>
-            <span className="text-sm font-bold text-white tracking-tight">
+            <span className="text-sm font-bold text-foreground tracking-tight">
               NEXUS
             </span>
           </div>
@@ -147,7 +148,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       transition-all duration-150
                       ${isActive(item.href)
                         ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                        : 'text-white/40 hover:text-white/60 hover:bg-white/[0.04] border border-transparent'
+                        : 'text-subtle hover:text-muted hover:bg-foreground/[0.04] border border-transparent'
                       }
                     `}
                   >
@@ -160,23 +161,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t border-white/10 shrink-0">
+          <div className="p-4 border-t border-foreground/10 shrink-0">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center text-xs font-bold text-cyan-400">
                 {user.firstName.charAt(0)}{user.lastName.charAt(0)}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {user.firstName} {user.lastName}
                 </p>
-                <p className="text-[10px] text-white/20 uppercase tracking-wider">Administrador</p>
+                <p className="text-[10px] text-faint uppercase tracking-wider">Administrador</p>
               </div>
             </div>
             <div className="space-y-1">
               <Link
                 href="/change-password"
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium
-                           text-white/40 hover:text-white/60 hover:bg-white/[0.04]
+                           text-subtle hover:text-muted hover:bg-foreground/[0.04]
                            transition-colors"
               >
                 <Lock className="w-3.5 h-3.5" />
@@ -186,7 +187,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 onClick={handleLogout}
                 disabled={loggingOut}
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium
-                           text-white/40 hover:text-red-400 hover:bg-red-500/10
+                           text-subtle hover:text-red-400 hover:bg-red-500/10
                            transition-colors cursor-pointer disabled:opacity-50"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -199,12 +200,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* ═══ Main content area ═══ */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <header className="h-16 shrink-0 flex items-center justify-between px-4 lg:px-6 border-b border-white/10 bg-zinc-950/80 backdrop-blur-lg">
+          <header className="h-16 shrink-0 flex items-center justify-between px-4 lg:px-6 border-b border-foreground/10 bg-base/80 backdrop-blur-lg">
             {/* Left: hamburger + breadcrumbs */}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer"
+                className="lg:hidden p-2 rounded-lg text-subtle hover:text-foreground hover:bg-foreground/[0.04] transition-colors cursor-pointer"
                 aria-label="Abrir menú"
               >
                 <Menu className="w-5 h-5" />
@@ -213,16 +214,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {/* Breadcrumbs (desktop) */}
               {breadcrumbs.length > 0 && (
                 <nav className="hidden lg:flex items-center gap-1.5 text-xs" aria-label="Migas de pan">
-                  <Link href="/admin" className="text-white/20 hover:text-white/40 transition-colors">
+                  <Link href="/admin" className="text-faint hover:text-subtle transition-colors">
                     Panel
                   </Link>
                   {breadcrumbs.map((crumb, i) => (
                     <React.Fragment key={crumb.href}>
-                      <ChevronRight className="w-3 h-3 text-white/15" />
+                      <ChevronRight className="w-3 h-3 text-faint" />
                       {i === breadcrumbs.length - 1 ? (
-                        <span className="text-white/60 font-medium">{crumb.label}</span>
+                        <span className="text-muted font-medium">{crumb.label}</span>
                       ) : (
-                        <Link href={crumb.href} className="text-white/20 hover:text-white/40 transition-colors">
+                        <Link href={crumb.href} className="text-faint hover:text-subtle transition-colors">
                           {crumb.label}
                         </Link>
                       )}
@@ -235,13 +236,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {/* Right: semester + theme + user */}
             <div className="flex items-center gap-2">
               {semester && (
-                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 bg-white/5">
+                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-foreground/10 bg-foreground/5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-medium text-white/40">
+                  <span className="text-[10px] font-medium text-subtle">
                     {semester.label || semester.id}
                   </span>
                 </div>
               )}
+              <ThemeToggle />
               <div className="flex items-center gap-2 lg:hidden">
                 <div className="w-7 h-7 rounded-full bg-cyan-500/10 flex items-center justify-center text-[10px] font-bold text-cyan-400">
                   {user.firstName.charAt(0)}{user.lastName.charAt(0)}

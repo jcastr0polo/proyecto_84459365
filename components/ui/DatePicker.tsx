@@ -36,7 +36,7 @@ export default function DatePicker({
 }: DatePickerProps) {
   return (
     <div>
-      <label htmlFor={id} className="block text-xs font-medium text-white/60 mb-1.5">
+      <label htmlFor={id} className="block text-xs font-medium text-muted mb-1.5">
         {label}
         {required && <span className="text-red-400/70 ml-0.5">*</span>}
       </label>
@@ -50,16 +50,16 @@ export default function DatePicker({
         max={max}
         disabled={disabled}
         className={`
-          w-full px-3 py-2.5 rounded-lg border bg-white/[0.04] text-white text-sm
+          w-full px-3 py-2.5 rounded-lg border bg-foreground/[0.04] text-foreground text-sm
           outline-none transition-colors
           focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25
           disabled:opacity-50 disabled:cursor-not-allowed
           [color-scheme:dark]
-          ${error ? 'border-red-500/50' : 'border-white/10'}
+          ${error ? 'border-red-500/50' : 'border-foreground/10'}
         `}
       />
       {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
-      {!error && hint && <p className="mt-1 text-[11px] text-white/25">{hint}</p>}
+      {!error && hint && <p className="mt-1 text-[11px] text-faint">{hint}</p>}
     </div>
   );
 }

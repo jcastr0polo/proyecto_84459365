@@ -161,7 +161,7 @@ export default function StudentCourseDashboardPage() {
       {/* Back */}
       <button
         onClick={() => router.push('/student/courses')}
-        className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <polyline points="15 18 9 12 15 6" />
@@ -178,24 +178,24 @@ export default function StudentCourseDashboardPage() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Badge variant={badge.variant} size="sm">{badge.label}</Badge>
-            <span className="text-[11px] text-white/25 font-mono">{course.code}</span>
+            <span className="text-[11px] text-faint font-mono">{course.code}</span>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
             {course.name}
           </h1>
           {course.description && (
-            <p className="text-sm text-white/40 mt-1 max-w-lg">{course.description}</p>
+            <p className="text-sm text-subtle mt-1 max-w-lg">{course.description}</p>
           )}
         </div>
 
         {/* Accumulated grade */}
         {gradeData && gradeData.finalScore !== null && (
-          <div className="shrink-0 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 text-center min-w-[120px]">
-            <p className="text-[10px] font-medium text-white/30 uppercase tracking-wider mb-1">Mi Nota</p>
+          <div className="shrink-0 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] p-4 text-center min-w-[120px]">
+            <p className="text-[10px] font-medium text-subtle uppercase tracking-wider mb-1">Mi Nota</p>
             <p className={`text-3xl font-bold ${getScoreColor(gradeData.finalScore)}`}>
               {gradeData.finalScore.toFixed(1)}
             </p>
-            <p className="text-[10px] text-white/25 mt-1">
+            <p className="text-[10px] text-faint mt-1">
               {gradeData.isPartial ? 'Parcial' : 'Definitiva'}
             </p>
           </div>
@@ -207,20 +207,20 @@ export default function StudentCourseDashboardPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5"
+        className="rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] p-5"
       >
-        <h2 className="text-xs font-medium text-white/35 uppercase tracking-wider mb-3">Horario</h2>
+        <h2 className="text-xs font-medium text-subtle uppercase tracking-wider mb-3">Horario</h2>
         <div className="space-y-2">
           {course.schedule.map((s, i) => (
             <div key={i} className="flex items-center gap-3 text-sm">
-              <span className="bg-white/[0.06] text-white/60 px-2.5 py-1 rounded-lg font-medium text-xs min-w-[40px] text-center">
+              <span className="bg-foreground/[0.06] text-muted px-2.5 py-1 rounded-lg font-medium text-xs min-w-[40px] text-center">
                 {DAY_SHORT[s.dayOfWeek] ?? s.dayOfWeek}
               </span>
-              <span className="text-white/70">{s.startTime} – {s.endTime}</span>
+              <span className="text-muted">{s.startTime} – {s.endTime}</span>
               {s.room && (
-                <span className="text-white/40 text-xs flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {s.room}</span>
+                <span className="text-subtle text-xs flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {s.room}</span>
               )}
-              <span className="text-white/25 text-xs">{MODALITY_LABELS[s.modality] ?? s.modality}</span>
+              <span className="text-faint text-xs">{MODALITY_LABELS[s.modality] ?? s.modality}</span>
             </div>
           ))}
         </div>
@@ -254,7 +254,7 @@ export default function StudentCourseDashboardPage() {
       {/* Activities list */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white tracking-tight">
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">
             Actividades ({sortedActivities.length})
           </h2>
           {pendingCount > 0 && (
@@ -263,9 +263,9 @@ export default function StudentCourseDashboardPage() {
         </div>
 
         {sortedActivities.length === 0 ? (
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-8 text-center">
-            <FileText className="w-8 h-8 text-white/20 mx-auto mb-3" />
-            <p className="text-sm text-white/40">No hay actividades publicadas aún.</p>
+          <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-8 text-center">
+            <FileText className="w-8 h-8 text-faint mx-auto mb-3" />
+            <p className="text-sm text-subtle">No hay actividades publicadas aún.</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -288,8 +288,8 @@ export default function StudentCourseDashboardPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
                   onClick={() => router.push(`/student/courses/${courseId}/activities/${activity.id}`)}
-                  className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.02]
-                             hover:border-white/15 hover:bg-white/[0.04] transition-all cursor-pointer"
+                  className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02]
+                             hover:border-foreground/15 hover:bg-foreground/[0.04] transition-all cursor-pointer"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -298,16 +298,16 @@ export default function StudentCourseDashboardPage() {
                         <Badge variant={cfg.variant} size="sm" dot>
                           {cfg.icon} {cfg.label}
                         </Badge>
-                        <span className="text-[10px] text-white/20">{activity.type}</span>
+                        <span className="text-[10px] text-faint">{activity.type}</span>
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-sm font-semibold text-white/90 line-clamp-1">
+                      <h3 className="text-sm font-semibold text-foreground/90 line-clamp-1">
                         {activity.title}
                       </h3>
 
                       {/* Meta row */}
-                      <div className="flex items-center gap-3 mt-1.5 text-[11px] text-white/30">
+                      <div className="flex items-center gap-3 mt-1.5 text-[11px] text-subtle">
                         <span><Calendar className="w-3 h-3 inline" /> {formatDate(activity.dueDate)}</span>
                         <span>{activity.weight}%</span>
                         <span>Máx: {activity.maxScore}</span>
@@ -326,14 +326,14 @@ export default function StudentCourseDashboardPage() {
                           <p className={`text-lg font-bold ${getScoreColor(gradeInfo.score)}`}>
                             {gradeInfo.score.toFixed(1)}
                           </p>
-                          <p className="text-[10px] text-white/25">/ {gradeInfo.maxScore.toFixed(1)}</p>
+                          <p className="text-[10px] text-faint">/ {gradeInfo.maxScore.toFixed(1)}</p>
                         </div>
                       ) : deliveryStatus === 'pending' && !isPastDue ? (
                         <div className="text-right">
-                          <p className={`text-sm font-bold ${daysLeft <= 2 ? 'text-red-400' : daysLeft <= 7 ? 'text-amber-400' : 'text-white/50'}`}>
+                          <p className={`text-sm font-bold ${daysLeft <= 2 ? 'text-red-400' : daysLeft <= 7 ? 'text-amber-400' : 'text-muted'}`}>
                             {daysLeft}
                           </p>
-                          <p className="text-[10px] text-white/25">días</p>
+                          <p className="text-[10px] text-faint">días</p>
                         </div>
                       ) : null}
                     </div>

@@ -64,17 +64,17 @@ export default function SemesterForm({ semester, onSubmit, onCancel, loading = f
   }
 
   const inputClass = (field: string) =>
-    `w-full px-3 py-2 rounded-lg border bg-white/[0.04] text-white text-sm
-     placeholder:text-white/30 outline-none transition-colors
+    `w-full px-3 py-2 rounded-lg border bg-foreground/[0.04] text-foreground text-sm
+     placeholder:text-subtle outline-none transition-colors
      focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25
-     ${errors[field] ? 'border-red-500/50' : 'border-white/10'}`;
+     ${errors[field] ? 'border-red-500/50' : 'border-foreground/10'}`;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* ID — solo en creación */}
       {!isEdit && (
         <div>
-          <label htmlFor="sem-id" className="block text-xs font-medium text-white/60 mb-1.5">
+          <label htmlFor="sem-id" className="block text-xs font-medium text-muted mb-1.5">
             ID del Semestre
           </label>
           <input
@@ -92,7 +92,7 @@ export default function SemesterForm({ semester, onSubmit, onCancel, loading = f
 
       {/* Label */}
       <div>
-        <label htmlFor="sem-label" className="block text-xs font-medium text-white/60 mb-1.5">
+        <label htmlFor="sem-label" className="block text-xs font-medium text-muted mb-1.5">
           Etiqueta
         </label>
         <input
@@ -109,7 +109,7 @@ export default function SemesterForm({ semester, onSubmit, onCancel, loading = f
       {/* Dates row */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="sem-start" className="block text-xs font-medium text-white/60 mb-1.5">
+          <label htmlFor="sem-start" className="block text-xs font-medium text-muted mb-1.5">
             Fecha inicio
           </label>
           <input
@@ -122,7 +122,7 @@ export default function SemesterForm({ semester, onSubmit, onCancel, loading = f
           {errors.startDate && <p className="mt-1 text-xs text-red-400">{errors.startDate}</p>}
         </div>
         <div>
-          <label htmlFor="sem-end" className="block text-xs font-medium text-white/60 mb-1.5">
+          <label htmlFor="sem-end" className="block text-xs font-medium text-muted mb-1.5">
             Fecha fin
           </label>
           <input
@@ -145,10 +145,10 @@ export default function SemesterForm({ semester, onSubmit, onCancel, loading = f
             onChange={(e) => update('isActive', e.target.checked)}
             className="sr-only peer"
           />
-          <div className="w-9 h-5 rounded-full bg-white/10 peer-checked:bg-cyan-500/60 transition-colors" />
-          <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white/60 peer-checked:translate-x-4 peer-checked:bg-white transition-all" />
+          <div className="w-9 h-5 rounded-full bg-foreground/10 peer-checked:bg-cyan-500/60 transition-colors" />
+          <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-foreground/60 peer-checked:translate-x-4 peer-checked:bg-white transition-all" />
         </div>
-        <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
+        <span className="text-sm text-muted group-hover:text-foreground/90 transition-colors">
           Semestre activo
         </span>
       </label>

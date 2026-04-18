@@ -97,10 +97,10 @@ export default function EnrollForm({ onSubmit, loading = false }: EnrollFormProp
   }
 
   const inputClass = (field: string) =>
-    `w-full px-3 py-2.5 rounded-lg border bg-white/[0.04] text-white text-sm
-     placeholder:text-white/25 outline-none transition-colors
+    `w-full px-3 py-2.5 rounded-lg border bg-foreground/[0.04] text-foreground text-sm
+     placeholder:text-faint outline-none transition-colors
      focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25
-     ${errors[field] && touched[field] ? 'border-red-500/50' : 'border-white/10'}`;
+     ${errors[field] && touched[field] ? 'border-red-500/50' : 'border-foreground/10'}`;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -221,13 +221,13 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-xs font-medium text-white/60 mb-1.5">
+      <label htmlFor={id} className="block text-xs font-medium text-muted mb-1.5">
         {label}
         {required && <span className="text-red-400/70 ml-0.5">*</span>}
       </label>
       {children}
       {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
-      {!error && hint && <p className="mt-1 text-[11px] text-white/25">{hint}</p>}
+      {!error && hint && <p className="mt-1 text-[11px] text-faint">{hint}</p>}
     </div>
   );
 }

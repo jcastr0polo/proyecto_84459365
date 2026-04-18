@@ -103,7 +103,7 @@ export default function StudentActivitiesPage() {
       {/* Back link */}
       <button
         onClick={() => router.push(`/student/courses/${courseId}`)}
-        className="inline-flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <polyline points="15 18 9 12 15 6" />
@@ -111,7 +111,7 @@ export default function StudentActivitiesPage() {
         Volver al curso
       </button>
 
-      <h1 className="text-2xl font-bold text-white tracking-tight">Mis Actividades</h1>
+      <h1 className="text-2xl font-bold text-foreground tracking-tight">Mis Actividades</h1>
 
       {/* Summary counters */}
       {activities.length > 0 && (
@@ -136,7 +136,7 @@ export default function StudentActivitiesPage() {
       {/* Activities list */}
       {activities.length === 0 ? (
         <EmptyState
-          icon={<ClipboardList className="w-6 h-6 text-white/30" />}
+          icon={<ClipboardList className="w-6 h-6 text-subtle" />}
           title="Sin actividades"
           description="No hay actividades publicadas para este curso."
         />
@@ -152,8 +152,8 @@ export default function StudentActivitiesPage() {
               <div
                 key={activity.id}
                 onClick={() => router.push(`/student/courses/${courseId}/activities/${activity.id}`)}
-                className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.03]
-                         hover:border-white/15 hover:bg-white/[0.06] transition-all cursor-pointer"
+                className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03]
+                         hover:border-foreground/15 hover:bg-foreground/[0.06] transition-all cursor-pointer"
               >
                 {/* Top row: type + delivery status */}
                 <div className="flex items-center justify-between gap-2 mb-2">
@@ -165,19 +165,19 @@ export default function StudentActivitiesPage() {
                       {badge.icon} {badge.label}
                     </Badge>
                     {sub && (
-                      <span className="text-[10px] text-white/25 font-mono">v{sub.version}</span>
+                      <span className="text-[10px] text-faint font-mono">v{sub.version}</span>
                     )}
                   </div>
                 </div>
 
                 {/* Title */}
-                <h3 className="text-sm font-semibold text-white/90 mb-1 line-clamp-1">
+                <h3 className="text-sm font-semibold text-foreground/90 mb-1 line-clamp-1">
                   {activity.title}
                 </h3>
 
                 {/* Info row */}
                 <div className="flex items-center justify-between gap-3 text-xs mt-2">
-                  <div className="flex items-center gap-3 text-white/40">
+                  <div className="flex items-center gap-3 text-subtle">
                     <span>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="inline mr-1 align-[-2px]">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -195,7 +195,7 @@ export default function StudentActivitiesPage() {
                     <Countdown targetDate={activity.dueDate} compact className="text-xs" />
                   )}
                   {sub && (
-                    <span className="text-[11px] text-white/30">
+                    <span className="text-[11px] text-subtle">
                       {sub.isLate ? <><AlertTriangle className="w-3 h-3 inline" /> tardía</> : ''} {formatDate(sub.submittedAt)}
                     </span>
                   )}

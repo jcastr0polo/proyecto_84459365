@@ -117,8 +117,8 @@ export default function SemestersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Semestres</h1>
-          <p className="text-sm text-white/40 mt-1">Gestión de períodos académicos</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Semestres</h1>
+          <p className="text-sm text-subtle mt-1">Gestión de períodos académicos</p>
         </div>
         <Button variant="primary" size="sm" onClick={openCreate}>
           + Nuevo Semestre
@@ -153,10 +153,10 @@ export default function SemestersPage() {
             {semesters.map((sem) => (
               <Tr key={sem.id}>
                 <Td>
-                  <span className="font-mono text-xs text-white/60">{sem.id}</span>
+                  <span className="font-mono text-xs text-muted">{sem.id}</span>
                 </Td>
                 <Td>
-                  <span className="font-medium text-white/90">{sem.label}</span>
+                  <span className="font-medium text-foreground/90">{sem.label}</span>
                 </Td>
                 <Td>{formatDate(sem.startDate)}</Td>
                 <Td>{formatDate(sem.endDate)}</Td>

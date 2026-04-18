@@ -83,10 +83,10 @@ export default function AdminStudentsPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
             Estudiantes ({students.length})
           </h1>
-          <p className="text-sm text-white/40 mt-1">
+          <p className="text-sm text-subtle mt-1">
             Búsqueda global de estudiantes inscritos en todos los cursos
           </p>
         </div>
@@ -94,7 +94,7 @@ export default function AdminStudentsPage() {
 
       {/* Search */}
       <div className="relative">
-        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/20" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-faint" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <input
@@ -103,9 +103,9 @@ export default function AdminStudentsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-4 py-3 rounded-xl
-                     border border-white/10 bg-white/5
-                     text-white text-sm
-                     placeholder-white/20
+                     border border-foreground/10 bg-foreground/5
+                     text-foreground text-sm
+                     placeholder-faint
                      focus:outline-none focus:border-cyan-500/20 focus:ring-1 focus:ring-cyan-500/20
                      transition-all"
         />
@@ -114,7 +114,7 @@ export default function AdminStudentsPage() {
       {/* Results */}
       {filtered.length === 0 ? (
         <EmptyState
-          icon={<Users className="w-8 h-8 text-white/30" />}
+          icon={<Users className="w-8 h-8 text-subtle" />}
           title={search ? 'Sin resultados' : 'No hay estudiantes'}
           description={search ? `No se encontraron estudiantes para "${search}"` : 'Aún no hay estudiantes inscritos en ningún curso.'}
         />
@@ -127,8 +127,8 @@ export default function AdminStudentsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i * 0.03, 0.3) }}
               className="flex items-center justify-between gap-4 p-4 rounded-xl
-                         border border-white/10 bg-white/5
-                         hover:bg-white/[0.04] hover:border-white/20
+                         border border-foreground/10 bg-foreground/5
+                         hover:bg-foreground/[0.04] hover:border-foreground/20
                          transition-all"
             >
               <div className="flex items-center gap-3 min-w-0">
@@ -136,10 +136,10 @@ export default function AdminStudentsPage() {
                   {item.student.firstName.charAt(0)}{item.student.lastName.charAt(0)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">
+                  <p className="text-sm font-semibold text-foreground truncate">
                     {item.student.firstName} {item.student.lastName}
                   </p>
-                  <p className="text-[11px] text-white/20 truncate">
+                  <p className="text-[11px] text-faint truncate">
                     {item.student.email} · {item.student.documentNumber}
                   </p>
                 </div>

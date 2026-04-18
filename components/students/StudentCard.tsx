@@ -18,17 +18,17 @@ export default function StudentCard({ enrollment, onWithdraw }: StudentCardProps
   const isActive = enrollment.status === 'active';
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+    <div className="rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] p-4">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-full bg-cyan-500/15 flex items-center justify-center text-xs font-bold text-cyan-400 shrink-0">
             {student.firstName.charAt(0)}{student.lastName.charAt(0)}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-white/90 truncate">
+            <p className="text-sm font-medium text-foreground/90 truncate">
               {student.firstName} {student.lastName}
             </p>
-            <p className="text-xs text-white/40 truncate">{student.email}</p>
+            <p className="text-xs text-subtle truncate">{student.email}</p>
           </div>
         </div>
         <Badge variant={isActive ? 'success' : 'danger'} size="sm" dot>
@@ -38,12 +38,12 @@ export default function StudentCard({ enrollment, onWithdraw }: StudentCardProps
 
       <div className="grid grid-cols-2 gap-2 text-xs mb-3">
         <div>
-          <span className="text-white/30">Documento</span>
-          <p className="text-white/60 font-mono">{student.documentNumber}</p>
+          <span className="text-subtle">Documento</span>
+          <p className="text-muted font-mono">{student.documentNumber}</p>
         </div>
         <div>
-          <span className="text-white/30">Inscrito</span>
-          <p className="text-white/60">{formatDate(enrollment.enrolledAt)}</p>
+          <span className="text-subtle">Inscrito</span>
+          <p className="text-muted">{formatDate(enrollment.enrolledAt)}</p>
         </div>
       </div>
 
