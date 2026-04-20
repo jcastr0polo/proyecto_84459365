@@ -33,6 +33,7 @@ export const DATA_FILES = [
   'grades.json',
   'prompts.json',
   'projects.json',
+  'audit.json',
 ];
 
 // ═══════════════════════════════════════════════════════════
@@ -178,6 +179,13 @@ export async function writeToBlob(filename: string, content: string): Promise<vo
  * También actualiza el caché en memoria.
  */
 export async function seedAllToBlob(): Promise<Record<string, { status: string; size?: number; error?: string }>> {
+  return seedFilesToBlob(DATA_FILES);
+}
+
+/**
+ * Sube archivos específicos de data/ al Blob (seed selectivo).
+ */
+export async function seedFilesToBlob(files: string[]): Promise<Record<string, { status: string; size?: number; error?: string }>> {
   const token = getBlobToken();
   if (!token) {
     throw new Error('NEXUS_READ_WRITE_TOKEN no está configurado');
@@ -185,7 +193,7 @@ export async function seedAllToBlob(): Promise<Record<string, { status: string; 
 
   const results: Record<string, { status: string; size?: number; error?: string }> = {};
 
-  for (const file of DATA_FILES) {
+  for (const file of files) {
     try {
       const srcPath = path.join(SOURCE_DATA_DIR, file);
       if (!fs.existsSync(srcPath)) {

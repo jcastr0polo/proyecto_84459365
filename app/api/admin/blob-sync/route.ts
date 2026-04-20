@@ -7,7 +7,8 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { list } from '@vercel/blob';
-import { seedAllToBlob, DATA_FILES, isCacheReady } from '@/lib/blobSync';
+import { seedAllToBlob, seedFilesToBlob, DATA_FILES, isCacheReady } from '@/lib/blobSync';
+import { logAudit } from '@/lib/auditService';
 import type { User } from '@/lib/types';
 
 function getBlobToken() { return process.env.NEXUS_READ_WRITE_TOKEN; }
@@ -56,9 +57,9 @@ export async function GET(request: Request): Promise<NextResponse> {
   }, 'admin');
 }
 
-/** POST — Seed manual: sube todos los JSON al Blob */
+/** POST — Seed manual: sube archivos JSON al Blob */
 export async function POST(request: Request): Promise<NextResponse> {
-  return withAuth(request, async (_user: User) => {
+  return withAuth(request, async (user: User) => {
     if (!getBlobToken()) {
       return NextResponse.json(
         { error: 'NEXUS_READ_WRITE_TOKEN no está configurado' },
@@ -67,7 +68,37 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     try {
-      const results = await seedAllToBlob();
+      // Soporte para seed selectivo: body { files: ['users.json', 'courses.json'] }
+      let results;
+      let selectedFiles: string[] = [];
+      
+      try {
+        const body = await request.json();
+        if (body.files && Array.isArray(body.files)) {
+          // Validar que solo archivos permitidos
+          selectedFiles = body.files.filter((f: string) => DATA_FILES.includes(f));
+          if (selectedFiles.length === 0) {
+            return NextResponse.json({ error: 'Ningún archivo válido seleccionado' }, { status: 400 });
+          }
+          results = await seedFilesToBlob(selectedFiles);
+        } else {
+          results = await seedAllToBlob();
+          selectedFiles = DATA_FILES;
+        }
+      } catch {
+        // No body or invalid JSON → seed all
+        results = await seedAllToBlob();
+        selectedFiles = DATA_FILES;
+      }
+
+      await logAudit({
+        action: 'seed',
+        entity: 'blob',
+        userId: user.id,
+        userName: `${user.firstName} ${user.lastName}`,
+        details: `Seed de ${selectedFiles.length} archivo(s): ${selectedFiles.join(', ')}`,
+      });
+
       return NextResponse.json({ results });
     } catch (err) {
       return NextResponse.json(

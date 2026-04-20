@@ -11,6 +11,7 @@ import { toSafeUser } from '@/lib/withAuth';
 import { enrollStudentSchema } from '@/lib/schemas';
 import { getEnrollmentsByCourse, getCourseById, getUserById } from '@/lib/dataService';
 import { enrollStudent, EnrollmentError } from '@/lib/enrollmentService';
+import { logAudit } from '@/lib/auditService';
 import type { EnrollmentWithStudent } from '@/lib/types';
 
 /**
@@ -84,6 +85,15 @@ export async function POST(
       }
 
       const result = await enrollStudent(id, parsed.data, user.id);
+
+      await logAudit({
+        action: result.created ? 'create' : 'update',
+        entity: 'enrollment',
+        entityId: result.enrollment.id,
+        userId: user.id,
+        userName: `${user.firstName} ${user.lastName}`,
+        details: `Inscribió a ${parsed.data.firstName} ${parsed.data.lastName} en curso ${id}${result.created ? ' (nuevo usuario)' : ''}`,
+      });
 
       return NextResponse.json(
         {

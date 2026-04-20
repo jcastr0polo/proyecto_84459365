@@ -17,6 +17,7 @@ import { getUserByEmail, readUsers, writeUsers } from '@/lib/dataService';
 import { verifyPassword, createSession, setSessionCookie, cleanExpiredSessions, generateSessionToken } from '@/lib/auth';
 import { toSafeUser } from '@/lib/withAuth';
 import { ensureDataReady } from '@/lib/blobSync';
+import { logAudit } from '@/lib/auditService';
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
@@ -87,6 +88,16 @@ export async function POST(request: Request): Promise<NextResponse> {
     } catch (err) {
       console.error('[login] Failed to update lastLoginAt:', err);
     }
+
+    // 7b. Auditoría
+    await logAudit({
+      action: 'login',
+      entity: 'user',
+      entityId: user.id,
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+      details: `Login exitoso (${user.role})`,
+    });
 
     // 8. Preparar respuesta con cookie
     const response = NextResponse.json({
