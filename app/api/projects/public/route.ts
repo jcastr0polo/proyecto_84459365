@@ -15,7 +15,7 @@ export async function GET(): Promise<NextResponse> {
   const courses = readCourses();
   const semesters = readSemesters();
 
-  const featured = projects.filter((p) => p.isPublic && p.isFeatured);
+  const featured = projects.filter((p) => p.isPublic && p.isFeatured && !p.isBlockedFromShowcase);
 
   const userMap = new Map(users.map((u) => [u.id, `${u.firstName} ${u.lastName}`]));
   const courseMap = new Map(courses.map((c) => [c.id, c.name]));
@@ -23,10 +23,11 @@ export async function GET(): Promise<NextResponse> {
   const enriched = featured.map((p) => ({
     id: p.id,
     projectName: p.projectName,
-    description: p.description,
+    description: p.showcaseDescription || p.description,
     githubUrl: p.githubUrl,
     vercelUrl: p.vercelUrl,
     figmaUrl: p.figmaUrl,
+    showcaseImageUrl: p.showcaseImageUrl,
     studentName: userMap.get(p.studentId) ?? 'Estudiante',
     courseName: courseMap.get(p.courseId) ?? 'Curso',
     courseId: p.courseId,

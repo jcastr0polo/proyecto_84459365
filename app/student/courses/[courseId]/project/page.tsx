@@ -228,9 +228,11 @@ export default function StudentProjectPage() {
                   {project.isFeatured && <Badge variant="success" size="sm"><Star className="w-3 h-3 inline fill-current" /> Destacado</Badge>}
                 </div>
               </div>
-              <Button variant="secondary" size="sm" onClick={() => setEditMode(true)}>
-                <Pencil className="w-4 h-4 inline mr-1" /> Editar
-              </Button>
+              {project.status === 'in-progress' && (
+                <Button variant="secondary" size="sm" onClick={() => setEditMode(true)}>
+                  <Pencil className="w-4 h-4 inline mr-1" /> Editar
+                </Button>
+              )}
             </div>
 
             {project.description && (
@@ -251,21 +253,27 @@ export default function StudentProjectPage() {
                   <FileText className="w-3.5 h-3.5" />
                   Documento del Proyecto (.md)
                 </p>
-                <label className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all
-                  ${uploading
-                    ? 'bg-foreground/5 text-faint cursor-not-allowed'
-                    : 'bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20'
-                  }`}>
-                  <Upload className={`w-3.5 h-3.5 ${uploading ? 'animate-pulse' : ''}`} />
-                  {uploading ? 'Subiendo...' : (project.documentUrl ? 'Reemplazar' : 'Subir MD')}
-                  <input
-                    type="file"
-                    accept=".md,.txt"
-                    onChange={handleUploadDoc}
-                    disabled={uploading}
-                    className="sr-only"
-                  />
-                </label>
+                {project.status === 'in-progress' ? (
+                  <label className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all
+                    ${uploading
+                      ? 'bg-foreground/5 text-faint cursor-not-allowed'
+                      : 'bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20'
+                    }`}>
+                    <Upload className={`w-3.5 h-3.5 ${uploading ? 'animate-pulse' : ''}`} />
+                    {uploading ? 'Subiendo...' : (project.documentUrl ? 'Reemplazar' : 'Subir MD')}
+                    <input
+                      type="file"
+                      accept=".md,.txt"
+                      onChange={handleUploadDoc}
+                      disabled={uploading}
+                      className="sr-only"
+                    />
+                  </label>
+                ) : (
+                  <span className="text-[10px] text-faint bg-foreground/5 px-2.5 py-1 rounded-lg">
+                    Edición cerrada por el docente
+                  </span>
+                )}
               </div>
 
               {project.documentUrl ? (

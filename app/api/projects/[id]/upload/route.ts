@@ -56,6 +56,14 @@ export async function POST(
       return NextResponse.json({ error: 'No tienes permiso para subir archivos a este proyecto' }, { status: 403 });
     }
 
+    // Bloquear upload si el proyecto ya no está en progreso (solo admin puede override)
+    if (user.role === 'student' && project.status !== 'in-progress') {
+      return NextResponse.json(
+        { error: 'No puedes subir documentos porque el proyecto ya fue cerrado por el docente' },
+        { status: 403 }
+      );
+    }
+
     // Leer FormData
     const formData = await request.formData();
     const file = formData.get('file');

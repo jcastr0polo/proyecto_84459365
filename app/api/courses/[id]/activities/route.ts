@@ -18,6 +18,7 @@ import {
   readActivities,
   writeActivities,
   isStudentEnrolled,
+  getProjectByStudentAndCourse,
 } from '@/lib/dataService';
 import type { Activity } from '@/lib/types';
 
@@ -54,6 +55,12 @@ export async function GET(
       activities = activities.filter(
         (a) => a.status === 'published' && new Date(a.publishDate) <= now
       );
+
+      // Filtrar actividades que requieren proyecto si el estudiante no tiene uno
+      const hasProject = !!getProjectByStudentAndCourse(user.id, id);
+      if (!hasProject) {
+        activities = activities.filter((a) => !a.projectRequired);
+      }
     }
 
     return NextResponse.json({
@@ -112,6 +119,7 @@ export async function POST(
         status: 'draft',
         requiresFileUpload: data.requiresFileUpload,
         requiresLinkSubmission: data.requiresLinkSubmission,
+        projectRequired: data.projectRequired,
         createdAt: now,
         updatedAt: now,
       };

@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
-import { Rocket, Star } from 'lucide-react';
+import { Rocket, Star, Eye, EyeOff, Ban, Image, FileText } from 'lucide-react';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import EmptyState from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
@@ -79,26 +79,62 @@ export default function AdminCourseProjectsPage() {
     }
   }, [toast]);
 
-  const updateStatus = useCallback(async (project: EnrichedProject, status: string) => {
+  const updateProject = useCallback(async (projectId: string, updates: Record<string, unknown>) => {
     try {
-      const res = await fetch(`/api/projects/${project.id}`, {
+      const res = await fetch(`/api/projects/${projectId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(updates),
       });
 
       if (res.ok) {
+        const data = await res.json();
         setProjects((prev) =>
-          prev.map((p) =>
-            p.id === project.id ? { ...p, status: status as StudentProject['status'] } : p
-          )
+          prev.map((p) => p.id === projectId ? { ...p, ...data.project } : p)
         );
-        toast('Estado actualizado', 'success');
+        toast('Proyecto actualizado', 'success');
+        return true;
+      } else {
+        toast('Error al actualizar', 'error');
+        return false;
       }
     } catch {
       toast('Error de conexión', 'error');
+      return false;
     }
   }, [toast]);
+
+  const updateStatus = useCallback(async (project: EnrichedProject, status: string) => {
+    await updateProject(project.id, { status });
+  }, [updateProject]);
+
+  const togglePublic = useCallback(async (project: EnrichedProject) => {
+    await updateProject(project.id, { isPublic: !project.isPublic });
+  }, [updateProject]);
+
+  const toggleBlockShowcase = useCallback(async (project: EnrichedProject) => {
+    await updateProject(project.id, { isBlockedFromShowcase: !project.isBlockedFromShowcase });
+  }, [updateProject]);
+
+  // Showcase editing
+  const [editingShowcase, setEditingShowcase] = useState<string | null>(null);
+  const [showcaseDesc, setShowcaseDesc] = useState('');
+  const [showcaseImg, setShowcaseImg] = useState('');
+
+  const openShowcaseEdit = (p: EnrichedProject) => {
+    setEditingShowcase(p.id);
+    setShowcaseDesc(p.showcaseDescription ?? '');
+    setShowcaseImg(p.showcaseImageUrl ?? '');
+  };
+
+  const saveShowcase = async () => {
+    if (!editingShowcase) return;
+    const ok = await updateProject(editingShowcase, {
+      showcaseDescription: showcaseDesc,
+      showcaseImageUrl: showcaseImg,
+    });
+    if (ok) setEditingShowcase(null);
+  };
 
   if (loading) return <PageLoader />;
 
@@ -173,6 +209,8 @@ export default function AdminCourseProjectsPage() {
                 <StatusBadge status={p.status} />
                 {p.isPublic && <Badge variant="info" size="sm">Público</Badge>}
                 {p.isFeatured && <Badge variant="success" size="sm">Destacado</Badge>}
+                {p.isBlockedFromShowcase && <Badge variant="danger" size="sm">Bloqueado</Badge>}
+                {p.documentUrl && <Badge variant="neutral" size="sm"><FileText className="w-3 h-3 inline" /> Doc</Badge>}
               </div>
 
               {/* Description */}
@@ -187,8 +225,86 @@ export default function AdminCourseProjectsPage() {
                 {p.figmaUrl && <ExternalLink href={p.figmaUrl} label="Figma" />}
               </div>
 
+              {/* Admin controls */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-4 pt-3 border-t border-foreground/[0.06]">
+                {/* Public toggle */}
+                <button
+                  onClick={() => togglePublic(p)}
+                  className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded transition-colors cursor-pointer ${
+                    p.isPublic
+                      ? 'bg-emerald-500/10 text-emerald-400'
+                      : 'text-faint hover:text-muted hover:bg-foreground/[0.05]'
+                  }`}
+                  title={p.isPublic ? 'Quitar de vitrina' : 'Publicar en vitrina'}
+                >
+                  {p.isPublic ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                  {p.isPublic ? 'Público' : 'Privado'}
+                </button>
+
+                {/* Block from showcase */}
+                <button
+                  onClick={() => toggleBlockShowcase(p)}
+                  className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded transition-colors cursor-pointer ${
+                    p.isBlockedFromShowcase
+                      ? 'bg-red-500/10 text-red-400'
+                      : 'text-faint hover:text-muted hover:bg-foreground/[0.05]'
+                  }`}
+                  title={p.isBlockedFromShowcase ? 'Desbloquear vitrina' : 'Bloquear de vitrina'}
+                >
+                  <Ban className="w-3 h-3" />
+                  {p.isBlockedFromShowcase ? 'Desbloq' : 'Bloq'}
+                </button>
+
+                {/* Edit showcase appearance */}
+                <button
+                  onClick={() => openShowcaseEdit(p)}
+                  className="flex items-center gap-1 text-[10px] px-2 py-1 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors cursor-pointer"
+                  title="Editar apariencia en vitrina"
+                >
+                  <Image className="w-3 h-3" />
+                  Vitrina
+                </button>
+              </div>
+
+              {/* Showcase edit inline */}
+              {editingShowcase === p.id && (
+                <div className="mt-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.08] space-y-2">
+                  <label className="text-[10px] text-subtle block">Descripción para vitrina</label>
+                  <textarea
+                    value={showcaseDesc}
+                    onChange={(e) => setShowcaseDesc(e.target.value)}
+                    rows={2}
+                    maxLength={500}
+                    placeholder="Descripción personalizada para la vitrina..."
+                    className="w-full px-2 py-1.5 text-xs bg-foreground/[0.04] border border-foreground/[0.08] rounded text-foreground placeholder:text-faint focus:outline-none focus:border-cyan-500/30"
+                  />
+                  <label className="text-[10px] text-subtle block">URL imagen vitrina</label>
+                  <input
+                    type="url"
+                    value={showcaseImg}
+                    onChange={(e) => setShowcaseImg(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full px-2 py-1.5 text-xs bg-foreground/[0.04] border border-foreground/[0.08] rounded text-foreground placeholder:text-faint focus:outline-none focus:border-cyan-500/30"
+                  />
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={saveShowcase}
+                      className="text-[10px] px-3 py-1 rounded bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25 transition-colors cursor-pointer"
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => setEditingShowcase(null)}
+                      className="text-[10px] px-3 py-1 rounded text-faint hover:text-muted transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Status control */}
-              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-foreground/[0.06]">
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-foreground/[0.06]">
                 <span className="text-[10px] text-faint">Estado:</span>
                 {(['in-progress', 'submitted', 'reviewed', 'featured'] as const).map((s) => (
                   <button

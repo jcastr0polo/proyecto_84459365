@@ -249,6 +249,7 @@ export const activitySchema = z.object({
   status: z.enum(['draft', 'published', 'closed']),
   requiresFileUpload: z.boolean(),
   requiresLinkSubmission: z.boolean(),
+  projectRequired: z.boolean().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -270,6 +271,7 @@ export const createActivitySchema = z.object({
   latePenaltyPercent: z.number().min(0).max(100).optional(),
   requiresFileUpload: z.boolean().optional().default(false),
   requiresLinkSubmission: z.boolean().optional().default(false),
+  projectRequired: z.boolean().optional().default(false),
 }).refine((data) => new Date(data.dueDate) > new Date(data.publishDate), {
   message: 'La fecha límite debe ser posterior a la fecha de publicación',
   path: ['dueDate'],
@@ -291,6 +293,7 @@ export const updateActivitySchema = z.object({
   latePenaltyPercent: z.number().min(0).max(100).optional(),
   requiresFileUpload: z.boolean().optional(),
   requiresLinkSubmission: z.boolean().optional(),
+  projectRequired: z.boolean().optional(),
   status: z.enum(['draft', 'published', 'closed']).optional(),
 });
 
@@ -515,6 +518,9 @@ export const projectSchema = z.object({
   documentUrl: z.string().optional(),
   isPublic: z.boolean(),
   isFeatured: z.boolean(),
+  isBlockedFromShowcase: z.boolean().optional(),
+  showcaseDescription: z.string().optional(),
+  showcaseImageUrl: z.string().optional(),
   status: z.enum(['in-progress', 'submitted', 'reviewed', 'featured']),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -545,6 +551,9 @@ export const updateProjectSchema = z.object({
   figmaUrl: z.string().url().optional().or(z.literal('')),
   isPublic: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
+  isBlockedFromShowcase: z.boolean().optional(),
+  showcaseDescription: z.string().max(500).optional().or(z.literal('')),
+  showcaseImageUrl: z.string().url().optional().or(z.literal('')),
   status: z.enum(['in-progress', 'submitted', 'reviewed', 'featured']).optional(),
 });
 

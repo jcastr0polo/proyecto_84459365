@@ -68,10 +68,18 @@ export async function PUT(
 
     const updates = parsed.data;
 
-    // Students cannot change isFeatured or status (RN-PRY-04)
+    // Students cannot change admin-only fields
     if (user.role === 'student') {
       delete updates.isFeatured;
       delete updates.status;
+      delete updates.isBlockedFromShowcase;
+      delete updates.showcaseDescription;
+      delete updates.showcaseImageUrl;
+    }
+
+    // If admin blocks from showcase, force isPublic = false
+    if (updates.isBlockedFromShowcase === true) {
+      updates.isPublic = false;
     }
 
     // Apply updates
@@ -83,6 +91,8 @@ export async function PUT(
       // Clean empty strings for optional URL fields
       vercelUrl: updates.vercelUrl === '' ? undefined : (updates.vercelUrl ?? project.vercelUrl),
       figmaUrl: updates.figmaUrl === '' ? undefined : (updates.figmaUrl ?? project.figmaUrl),
+      showcaseDescription: updates.showcaseDescription === '' ? undefined : (updates.showcaseDescription ?? project.showcaseDescription),
+      showcaseImageUrl: updates.showcaseImageUrl === '' ? undefined : (updates.showcaseImageUrl ?? project.showcaseImageUrl),
       updatedAt: new Date().toISOString(),
     };
 

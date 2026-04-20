@@ -300,6 +300,7 @@ export interface Activity {
   status: 'draft' | 'published' | 'closed';
   requiresFileUpload: boolean;         // ¿Requiere subir archivo?
   requiresLinkSubmission: boolean;     // ¿Requiere enviar enlace (GitHub/Vercel)?
+  projectRequired?: boolean;           // Solo visible para estudiantes con proyecto registrado
   createdAt: string;                   // ISO 8601
   updatedAt: string;                   // ISO 8601
 }
@@ -631,6 +632,9 @@ export interface StudentProject {
   documentUrl?: string;                // URL del archivo MD subido al Blob
   isPublic: boolean;                   // ¿Compartir en vitrina pública?
   isFeatured: boolean;                 // ¿Destacado por el docente?
+  isBlockedFromShowcase?: boolean;     // Admin bloquea publicación en vitrina
+  showcaseDescription?: string;        // Descripción para la vitrina (editable por admin)
+  showcaseImageUrl?: string;           // Imagen para la vitrina (editable por admin)
   status: 'in-progress' | 'submitted' | 'reviewed' | 'featured';
   createdAt: string;                   // ISO 8601
   updatedAt: string;                   // ISO 8601
@@ -659,5 +663,8 @@ export interface UpdateProjectRequest {
   figmaUrl?: string;
   isPublic?: boolean;
   isFeatured?: boolean;
+  isBlockedFromShowcase?: boolean;
+  showcaseDescription?: string;
+  showcaseImageUrl?: string;
   status?: StudentProject['status'];
 }
