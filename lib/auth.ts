@@ -70,7 +70,7 @@ export async function generateSessionToken(session: Session): Promise<string> {
     createdAt: session.createdAt,
   })
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime(session.expiresAt)
+    .setExpirationTime('24h')
     .setIssuedAt()
     .sign(JWT_SECRET);
 }
