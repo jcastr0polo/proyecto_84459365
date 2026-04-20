@@ -11,6 +11,7 @@
     "validate": "npm run typecheck && npm run lint"
   },
   "dependencies": {
+    "@vercel/blob": "^2.3.3",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.38.0",
     "jose": "^6.2.2",

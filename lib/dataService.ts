@@ -4,6 +4,7 @@ import { HomeDataSchema, AppConfigSchema } from './validators';
 import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject } from './types';
 import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema } from './schemas';
 import { z } from 'zod';
+import { syncToBlob } from './blobSync';
 
 // ────────────────────────────────────────────────────────────
 // Vercel read-only filesystem workaround
@@ -94,7 +95,9 @@ export function readAppConfig(): AppConfig {
  */
 export function writeJsonFile<T>(filename: string, data: T): void {
   const filePath = getDataFilePath(filename);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf-8');
+  const content = JSON.stringify(data, null, 2) + '\n';
+  fs.writeFileSync(filePath, content, 'utf-8');
+  syncToBlob(filename, content);
 }
 
 // ────────────────────────────────────────────────────────────

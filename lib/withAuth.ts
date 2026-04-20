@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { validateSession } from '@/lib/auth';
 import { getUserById } from '@/lib/dataService';
+import { ensureDataReady } from '@/lib/blobSync';
 import type { User, SafeUser } from '@/lib/types';
 
 /**
@@ -37,6 +38,9 @@ export async function withAuth(
   requiredRole?: 'admin' | 'student'
 ): Promise<NextResponse> {
   try {
+    // 0. Asegurar datos disponibles (Blob → /tmp en Vercel)
+    await ensureDataReady();
+
     // 1. Validar sesión
     const session = await validateSession(request);
     if (!session) {
