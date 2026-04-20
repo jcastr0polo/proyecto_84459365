@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
-import { Star, Pencil, Rocket } from 'lucide-react';
+import { Star, Pencil, Rocket, Upload, FileText, CheckCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
@@ -35,6 +35,11 @@ export default function StudentProjectPage() {
   const [vercelUrl, setVercelUrl] = useState('');
   const [figmaUrl, setFigmaUrl] = useState('');
   const [isPublic, setIsPublic] = useState(false);
+
+  // Document upload state
+  const [uploading, setUploading] = useState(false);
+  const [docContent, setDocContent] = useState<string | null>(null);
+  const [showDoc, setShowDoc] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -129,6 +134,64 @@ export default function StudentProjectPage() {
     }
   }, [isFormValid, saving, courseId, projectName, description, githubUrl, vercelUrl, figmaUrl, isPublic, project, toast]);
 
+  const handleUploadDoc = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !project) return;
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'md' && ext !== 'txt') {
+      toast('Solo se permiten archivos .md o .txt', 'error');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast('El archivo excede 5MB', 'error');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch(`/api/projects/${project.id}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setProject(data.project);
+        toast('Documento cargado exitosamente', 'success');
+      } else {
+        toast(data.error ?? 'Error al subir documento', 'error');
+      }
+    } catch {
+      toast('Error de conexión', 'error');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  }, [project, toast]);
+
+  const handleViewDoc = useCallback(async () => {
+    if (!project) return;
+    if (docContent !== null) {
+      setShowDoc(!showDoc);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/projects/${project.id}/document`);
+      if (res.ok) {
+        const data = await res.json();
+        setDocContent(data.content);
+        setShowDoc(true);
+      } else {
+        toast('No se pudo cargar el documento', 'error');
+      }
+    } catch {
+      toast('Error de conexión', 'error');
+    }
+  }, [project, docContent, showDoc, toast]);
+
   if (loading) return <PageLoader />;
 
   const showForm = !project || editMode;
@@ -179,6 +242,56 @@ export default function StudentProjectPage() {
               <LinkRow icon="github" label="GitHub" url={project.githubUrl} />
               {project.vercelUrl && <LinkRow icon="vercel" label="Vercel" url={project.vercelUrl} />}
               {project.figmaUrl && <LinkRow icon="figma" label="Figma" url={project.figmaUrl} />}
+            </div>
+
+            {/* Document upload section */}
+            <div className="mt-6 pt-6 border-t border-foreground/[0.06]">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] text-subtle uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5" />
+                  Documento del Proyecto (.md)
+                </p>
+                <label className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all
+                  ${uploading
+                    ? 'bg-foreground/5 text-faint cursor-not-allowed'
+                    : 'bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20'
+                  }`}>
+                  <Upload className={`w-3.5 h-3.5 ${uploading ? 'animate-pulse' : ''}`} />
+                  {uploading ? 'Subiendo...' : (project.documentUrl ? 'Reemplazar' : 'Subir MD')}
+                  <input
+                    type="file"
+                    accept=".md,.txt"
+                    onChange={handleUploadDoc}
+                    disabled={uploading}
+                    className="sr-only"
+                  />
+                </label>
+              </div>
+
+              {project.documentUrl ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+                    <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span className="text-xs text-emerald-300">Documento cargado</span>
+                    <button
+                      onClick={handleViewDoc}
+                      className="ml-auto text-xs text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
+                    >
+                      {showDoc ? 'Ocultar' : 'Ver contenido'}
+                    </button>
+                  </div>
+
+                  {showDoc && docContent && (
+                    <div className="p-4 rounded-lg bg-foreground/[0.03] border border-foreground/[0.08] max-h-96 overflow-y-auto">
+                      <pre className="text-xs text-muted whitespace-pre-wrap font-mono leading-relaxed">{docContent}</pre>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-faint">
+                  Sube tu archivo .md con la documentación de tu proyecto (máx 5MB)
+                </p>
+              )}
             </div>
 
             {/* Preview card */}

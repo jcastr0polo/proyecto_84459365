@@ -628,6 +628,7 @@ export interface StudentProject {
   githubUrl: string;                   // URL del repositorio (obligatorio)
   vercelUrl?: string;                  // URL del deploy en Vercel
   figmaUrl?: string;                   // URL de prototipo en Figma
+  documentUrl?: string;                // URL del archivo MD subido al Blob
   isPublic: boolean;                   // ¿Compartir en vitrina pública?
   isFeatured: boolean;                 // ¿Destacado por el docente?
   status: 'in-progress' | 'submitted' | 'reviewed' | 'featured';

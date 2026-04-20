@@ -103,6 +103,29 @@ export async function PATCH(
       });
     }
 
+    if (action === 'updateEmail') {
+      const { email } = body as { email?: string };
+      if (!email || typeof email !== 'string') {
+        return NextResponse.json({ error: 'Email requerido' }, { status: 400 });
+      }
+      const trimmed = email.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+        return NextResponse.json({ error: 'Email no válido' }, { status: 400 });
+      }
+      // Check unique
+      const duplicate = users.find((u) => u.email === trimmed && u.id !== id);
+      if (duplicate) {
+        return NextResponse.json({ error: 'Ese email ya está registrado por otro usuario' }, { status: 409 });
+      }
+      users[idx].email = trimmed;
+      users[idx].updatedAt = now;
+      await writeUsers(users);
+      return NextResponse.json({
+        message: `Email actualizado a ${trimmed}`,
+        student: toSafeUser(users[idx]),
+      });
+    }
+
     return NextResponse.json({ error: 'Acción no válida' }, { status: 400 });
   }, 'admin');
 }

@@ -512,6 +512,7 @@ export const projectSchema = z.object({
   githubUrl: githubUrlSchema,
   vercelUrl: vercelUrlSchema.optional(),
   figmaUrl: z.string().url().optional(),
+  documentUrl: z.string().optional(),
   isPublic: z.boolean(),
   isFeatured: z.boolean(),
   status: z.enum(['in-progress', 'submitted', 'reviewed', 'featured']),

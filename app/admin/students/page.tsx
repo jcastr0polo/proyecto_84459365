@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Users, RotateCcw, ShieldCheck, ShieldOff, Search, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { Users, RotateCcw, ShieldCheck, ShieldOff, Search, AlertCircle, CheckCircle2, Clock, Pencil, X, Check } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -14,6 +14,7 @@ export default function AdminStudentsPage() {
   const [search, setSearch] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
+  const [editingEmail, setEditingEmail] = useState<{ id: string; value: string } | null>(null);
 
   const fetchStudents = useCallback(async () => {
     try {
@@ -57,6 +58,29 @@ export default function AdminStudentsPage() {
       if (res.ok) {
         setToast({ msg: data.message, type: 'ok' });
         setStudents((prev) => prev.map((s) => s.id === id ? { ...s, ...data.student } : s));
+      } else {
+        setToast({ msg: data.error || 'Error', type: 'err' });
+      }
+    } catch {
+      setToast({ msg: 'Error de conexión', type: 'err' });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleUpdateEmail(id: string, newEmail: string) {
+    setActionLoading(`${id}-email`);
+    try {
+      const res = await fetch(`/api/students/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateEmail', email: newEmail }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setToast({ msg: data.message, type: 'ok' });
+        setStudents((prev) => prev.map((s) => s.id === id ? { ...s, ...data.student } : s));
+        setEditingEmail(null);
       } else {
         setToast({ msg: data.error || 'Error', type: 'err' });
       }
@@ -169,8 +193,48 @@ export default function AdminStudentsPage() {
                       {!student.isActive && <Badge variant="danger" size="sm">Inactivo</Badge>}
                       {student.mustChangePassword && <Badge variant="warning" size="sm">Debe cambiar pass</Badge>}
                     </div>
-                    <p className="text-[11px] text-faint truncate mt-0.5">
-                      {student.email}
+                    <p className="text-[11px] text-faint truncate mt-0.5 flex items-center gap-1.5">
+                      {editingEmail?.id === student.id ? (
+                        <span className="flex items-center gap-1">
+                          <input
+                            type="email"
+                            value={editingEmail.value}
+                            onChange={(e) => setEditingEmail({ ...editingEmail, value: e.target.value })}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleUpdateEmail(student.id, editingEmail.value);
+                              if (e.key === 'Escape') setEditingEmail(null);
+                            }}
+                            autoFocus
+                            className="px-1.5 py-0.5 rounded border border-cyan-500/30 bg-foreground/5
+                                       text-foreground text-[11px] w-52
+                                       focus:outline-none focus:border-cyan-500/50"
+                          />
+                          <button
+                            onClick={() => handleUpdateEmail(student.id, editingEmail.value)}
+                            disabled={actionLoading === `${student.id}-email`}
+                            className="p-0.5 rounded text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setEditingEmail(null)}
+                            className="p-0.5 rounded text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </span>
+                      ) : (
+                        <>
+                          {student.email}
+                          <button
+                            onClick={() => setEditingEmail({ id: student.id, value: student.email })}
+                            title="Editar email"
+                            className="p-0.5 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors cursor-pointer"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        </>
+                      )}
                     </p>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-[11px] text-subtle">
                       <span className="flex items-center gap-1">
