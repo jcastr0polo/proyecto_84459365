@@ -114,6 +114,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         await put(`data/${file}`, content, {
           access: 'private',
           addRandomSuffix: false,
+          allowOverwrite: true,
           token: BLOB_TOKEN,
         });
 

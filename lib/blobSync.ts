@@ -108,7 +108,7 @@ async function pullDataToTmp(): Promise<void> {
               await put(`data/${file}`, content, {
                 access: 'private',
                 addRandomSuffix: false,
-                token: BLOB_TOKEN!,
+                allowOverwrite: true,
               });
               console.log(`[blobSync] Seeded ${file} to Blob`);
             } catch (err) {
@@ -142,7 +142,7 @@ export async function syncToBlob(filename: string, content: string): Promise<voi
     await put(`data/${filename}`, content, {
       access: 'private',
       addRandomSuffix: false,
-      token: BLOB_TOKEN,
+      allowOverwrite: true,
     });
     console.log(`[blobSync] Synced ${filename} to Blob`);
   } catch (err) {

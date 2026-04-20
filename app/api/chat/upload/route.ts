@@ -61,6 +61,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const blob = await put(`chat/${storedName}`, buffer, {
         access: 'private',
         addRandomSuffix: false,
+        allowOverwrite: true,
         token: BLOB_TOKEN,
         contentType: file.type || 'application/octet-stream',
       });

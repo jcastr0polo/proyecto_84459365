@@ -224,6 +224,7 @@ export async function uploadFile(
     const blob = await put(relativePath, buffer, {
       access: 'private',
       addRandomSuffix: false,
+      allowOverwrite: true,
       token: BLOB_TOKEN,
       contentType: mimeType,
     });
