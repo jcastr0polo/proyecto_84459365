@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
-import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import type { Semester } from '@/lib/types';
 
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { href: '/admin/courses', label: 'Cursos', icon: BookOpen },
   { href: '/admin/students', label: 'Estudiantes', icon: Users },
   { href: '/admin/prompts', label: 'Prompts IA', icon: Sparkles },
+  { href: '/admin/audit', label: 'Auditoría', icon: Shield },
   { href: '/admin/semesters', label: 'Configuración', icon: Settings },
 ];
 
@@ -29,6 +30,7 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   students: 'Estudiantes',
   prompts: 'Prompts',
   semesters: 'Configuración',
+  audit: 'Auditoría',
   activities: 'Actividades',
   grades: 'Calificaciones',
   projects: 'Proyectos',
