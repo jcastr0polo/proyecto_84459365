@@ -7,15 +7,11 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { list } from '@vercel/blob';
-import { seedAllToBlob, DATA_FILES } from '@/lib/blobSync';
-import fs from 'fs';
-import path from 'path';
+import { seedAllToBlob, DATA_FILES, isCacheReady } from '@/lib/blobSync';
 import type { User } from '@/lib/types';
 
 function getBlobToken() { return process.env.NEXUS_READ_WRITE_TOKEN; }
 const IS_VERCEL = !!process.env.VERCEL;
-const SOURCE_DATA_DIR = path.join(process.cwd(), 'data');
-const TMP_DATA_DIR = '/tmp/data';
 
 /** GET — Diagnóstico */
 export async function GET(request: Request): Promise<NextResponse> {
@@ -26,24 +22,10 @@ export async function GET(request: Request): Promise<NextResponse> {
         HAS_BLOB_TOKEN: !!getBlobToken(),
         BLOB_TOKEN_PREFIX: getBlobToken() ? getBlobToken()!.substring(0, 12) + '...' : 'NOT SET',
         NODE_ENV: process.env.NODE_ENV,
-        CWD: process.cwd(),
+        CACHE_READY: isCacheReady(),
       },
-      sourceFiles: {} as Record<string, boolean>,
-      tmpFiles: {} as Record<string, boolean>,
-      blobFiles: {} as Record<string, { exists: boolean; size?: number; url?: string }>,
+      blobFiles: {} as Record<string, { exists: boolean; size?: number }>,
     };
-
-    // Check source files
-    for (const file of DATA_FILES) {
-      (diagnostics.sourceFiles as Record<string, boolean>)[file] =
-        fs.existsSync(path.join(SOURCE_DATA_DIR, file));
-    }
-
-    // Check /tmp files
-    for (const file of DATA_FILES) {
-      (diagnostics.tmpFiles as Record<string, boolean>)[file] =
-        fs.existsSync(path.join(TMP_DATA_DIR, file));
-    }
 
     // Check Blob files
     if (getBlobToken()) {
@@ -54,9 +36,10 @@ export async function GET(request: Request): Promise<NextResponse> {
         for (const file of DATA_FILES) {
           const blob = blobMap.get(`data/${file}`);
           (diagnostics.blobFiles as Record<string, unknown>)[file] = blob
-            ? { exists: true, size: blob.size, url: blob.url }
+            ? { exists: true, size: blob.size }
             : { exists: false };
         }
+        (diagnostics as Record<string, unknown>).totalBlobFiles = blobs.length;
         (diagnostics as Record<string, unknown>).blobListRaw = blobs.map((b) => ({
           pathname: b.pathname,
           size: b.size,

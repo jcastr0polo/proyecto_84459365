@@ -38,7 +38,7 @@ export async function withAuth(
   requiredRole?: 'admin' | 'student'
 ): Promise<NextResponse> {
   try {
-    // 0. Asegurar datos disponibles (Blob → /tmp en Vercel)
+    // 0. Asegurar datos disponibles (Blob → memoria en Vercel)
     await ensureDataReady();
 
     // 1. Validar sesión

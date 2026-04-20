@@ -4,37 +4,27 @@ import { HomeDataSchema, AppConfigSchema } from './validators';
 import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject } from './types';
 import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema } from './schemas';
 import { z } from 'zod';
-import { writeToBlob } from './blobSync';
+import { writeToBlob, readFromCache } from './blobSync';
 
 // ────────────────────────────────────────────────────────────
-// Vercel read-only filesystem workaround
-// En Vercel, /tmp es caché de lectura (poblado desde Blob en cold start).
-// Escrituras van a Blob primero, luego actualizan /tmp.
+// Lectura/escritura de datos
+// En Vercel: lectura de caché en memoria, escritura a Blob
+// En local: lectura/escritura directa al filesystem
 // ────────────────────────────────────────────────────────────
 const IS_VERCEL = !!process.env.VERCEL;
 const SOURCE_DATA_DIR = path.join(process.cwd(), 'data');
-const TMP_DATA_DIR = path.join('/tmp', 'data');
-
-function getDataFilePath(filename: string): string {
-  if (!IS_VERCEL) {
-    return path.join(SOURCE_DATA_DIR, filename);
-  }
-  const tmpPath = path.join(TMP_DATA_DIR, filename);
-  if (!fs.existsSync(tmpPath)) {
-    fs.mkdirSync(TMP_DATA_DIR, { recursive: true });
-    const srcPath = path.join(SOURCE_DATA_DIR, filename);
-    if (fs.existsSync(srcPath)) {
-      fs.copyFileSync(srcPath, tmpPath);
-    }
-  }
-  return tmpPath;
-}
 
 /**
- * Lee un archivo JSON de la carpeta /data y lo parsea con tipado genérico.
+ * Lee un archivo JSON.
+ * En Vercel: lee del caché en memoria (poblado desde Blob).
+ * En local: lee del filesystem.
  */
 export function readJsonFile<T>(filename: string): T {
-  const filePath = getDataFilePath(filename);
+  if (IS_VERCEL) {
+    const raw = readFromCache(filename);
+    return JSON.parse(raw) as T;
+  }
+  const filePath = path.join(SOURCE_DATA_DIR, filename);
   const raw = fs.readFileSync(filePath, 'utf-8');
   return JSON.parse(raw) as T;
 }
@@ -90,18 +80,20 @@ export function readAppConfig(): AppConfig {
 
 /**
  * Escribe un objeto como JSON.
- * En Vercel: escribe a Blob (base de datos) PRIMERO, luego actualiza caché /tmp.
+ * En Vercel: escribe a Blob (BD) + actualiza caché en memoria.
  * En local: escribe directo al filesystem.
  */
 export async function writeJsonFile<T>(filename: string, data: T): Promise<void> {
   const content = JSON.stringify(data, null, 2) + '\n';
 
-  // En Vercel: Blob primero (si falla, la operación falla)
-  await writeToBlob(filename, content);
-
-  // Luego actualizar filesystem/caché
-  const filePath = getDataFilePath(filename);
-  fs.writeFileSync(filePath, content, 'utf-8');
+  if (IS_VERCEL) {
+    // Blob primero (si falla, la operación falla)
+    await writeToBlob(filename, content);
+  } else {
+    // Local: filesystem directo
+    const filePath = path.join(SOURCE_DATA_DIR, filename);
+    fs.writeFileSync(filePath, content, 'utf-8');
+  }
 }
 
 // ────────────────────────────────────────────────────────────

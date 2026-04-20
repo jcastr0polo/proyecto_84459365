@@ -126,18 +126,11 @@ export async function PUT(
       // Comprobar si hay entregas (submissions) asociadas para advertir
       let hasSubmissions = false;
       try {
-        // Intentar leer submissions si existen (pueden no existir aún en Fase 13)
-        const fs = await import('fs');
-        const path = await import('path');
-        const submissionsBase = process.env.VERCEL ? '/tmp/data' : path.join(process.cwd(), 'data');
-        const submissionsPath = path.join(submissionsBase, 'submissions.json');
-        if (fs.existsSync(submissionsPath)) {
-          const raw = fs.readFileSync(submissionsPath, 'utf-8');
-          const submissions = JSON.parse(raw) as { activityId: string }[];
-          hasSubmissions = submissions.some((s) => s.activityId === id);
-        }
+        const { readSubmissions } = await import('@/lib/dataService');
+        const submissions = readSubmissions();
+        hasSubmissions = submissions.some((s) => s.activityId === id);
       } catch {
-        // Submissions file may not exist yet — that's fine
+        // Submissions may not be loaded yet — that's fine
       }
 
       // Aplicar cambios

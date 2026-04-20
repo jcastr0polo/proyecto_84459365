@@ -1,13 +1,14 @@
 /**
  * lib/blobSync.ts
- * Vercel Blob como base de datos primaria.
+ * Vercel Blob = base de datos. Sin /tmp. Sin fallbacks.
  *
  * Arquitectura:
- * - Blob = fuente de verdad (base de datos)
- * - /tmp/data/ = caché local de lectura (se llena en cold start desde Blob)
- * - Escrituras: Blob PRIMERO, luego actualiza caché /tmp
- * - Seed: solo manual desde /admin/blob-sync (una vez)
- * - Si Blob falla en escritura → la operación falla (no silencioso)
+ * - Blob = fuente de verdad única
+ * - In-memory cache = lecturas rápidas (poblada desde Blob en cold start)
+ * - Escrituras: Blob PRIMERO → actualiza cache en memoria
+ * - Si Blob falla → la operación falla (error explícito)
+ * - Seed: manual desde /admin/blob-sync (lee data/ del repo → sube a Blob)
+ * - En local (dev): no-op, dataService usa filesystem directo
  */
 
 import { put, list } from '@vercel/blob';
@@ -16,7 +17,6 @@ import path from 'path';
 
 function getBlobToken() { return process.env.NEXUS_READ_WRITE_TOKEN; }
 const IS_VERCEL = !!process.env.VERCEL;
-const TMP_DATA_DIR = '/tmp/data';
 const SOURCE_DATA_DIR = path.join(process.cwd(), 'data');
 
 /** Todos los archivos JSON que necesitan persistencia */
@@ -35,152 +35,170 @@ export const DATA_FILES = [
   'projects.json',
 ];
 
+// ═══════════════════════════════════════════════════════════
+// In-memory data cache (reemplaza /tmp)
+// ═══════════════════════════════════════════════════════════
+const _cache = new Map<string, string>();
 let _ready = false;
 let _initPromise: Promise<void> | null = null;
 
 /**
- * Asegura que /tmp/data/ esté poblado con los datos desde Blob.
- * En Vercel: descarga desde Blob. Si un archivo no está en Blob, usa source readonly.
- * NO hace seed automático — el seed se hace solo desde /admin/blob-sync.
+ * Lee un archivo desde el caché en memoria.
+ * Solo para Vercel. Lanza error si no está en caché.
+ */
+export function readFromCache(filename: string): string {
+  const content = _cache.get(filename);
+  if (content === undefined) {
+    throw new Error(`[blobSync] ${filename} not in cache. ensureDataReady() was not called or Blob is empty. Run seed from /admin/blob-sync`);
+  }
+  return content;
+}
+
+/**
+ * Verifica si el caché está listo (datos cargados desde Blob).
+ */
+export function isCacheReady(): boolean {
+  return _ready;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Cold start: pull de Blob → memoria
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Asegura que el caché en memoria esté poblado con datos de Blob.
+ * En Vercel: descarga TODOS los archivos de Blob → memoria.
+ * Si Blob está vacío → error (admin debe seedear primero).
  * En local: no-op.
  */
 export async function ensureDataReady(): Promise<void> {
   if (!IS_VERCEL || _ready) return;
   if (_initPromise) return _initPromise;
-  _initPromise = pullDataToTmp();
+  _initPromise = loadFromBlob();
   await _initPromise;
   _ready = true;
 }
 
-async function pullDataToTmp(): Promise<void> {
-  fs.mkdirSync(TMP_DATA_DIR, { recursive: true });
-
-  // En warm start, los archivos ya están en /tmp
-  const missing = DATA_FILES.filter(
-    (f) => !fs.existsSync(path.join(TMP_DATA_DIR, f))
-  );
-  if (missing.length === 0) return;
-
-  if (!getBlobToken()) {
-    console.warn('[blobSync] No NEXUS_READ_WRITE_TOKEN, using source data as readonly fallback');
-    missing.forEach(copyFromSource);
-    return;
+async function loadFromBlob(): Promise<void> {
+  const token = getBlobToken();
+  if (!token) {
+    throw new Error('[blobSync] NEXUS_READ_WRITE_TOKEN not configured — cannot read database');
   }
 
   try {
-    // Listar todo lo que hay en Blob
-    const { blobs } = await list({ prefix: 'data/', token: getBlobToken() });
+    const { blobs } = await list({ prefix: 'data/', token });
     const blobMap = new Map(blobs.map((b) => [b.pathname, b.url]));
 
-    console.log(`[blobSync] Blob has ${blobMap.size} files, pulling ${missing.length} missing to /tmp`);
+    console.log(`[blobSync] Loading ${blobMap.size} files from Blob to memory`);
+
+    if (blobMap.size === 0) {
+      console.warn('[blobSync] Blob is EMPTY — app will use source data as readonly. Admin must seed from /admin/blob-sync');
+      // Cargar desde source para no bloquear la app, pero SIN escribir a Blob
+      for (const file of DATA_FILES) {
+        const srcPath = path.join(SOURCE_DATA_DIR, file);
+        if (fs.existsSync(srcPath)) {
+          _cache.set(file, fs.readFileSync(srcPath, 'utf-8'));
+        }
+      }
+      return;
+    }
 
     await Promise.all(
-      missing.map(async (file) => {
+      DATA_FILES.map(async (file) => {
         const blobUrl = blobMap.get(`data/${file}`);
         if (blobUrl) {
-          // Descargar desde Blob (fuente de verdad)
-          try {
-            const res = await fetch(blobUrl);
-            if (res.ok) {
-              const text = await res.text();
-              fs.writeFileSync(path.join(TMP_DATA_DIR, file), text, 'utf-8');
-              console.log(`[blobSync] Pulled ${file} from Blob`);
-              return;
-            }
-          } catch (err) {
-            console.warn(`[blobSync] Fetch failed for ${file}:`, err);
+          const res = await fetch(blobUrl);
+          if (res.ok) {
+            _cache.set(file, await res.text());
+            return;
           }
         }
-        // No está en Blob → usar source como fallback readonly
-        // (admin deberá hacer seed desde /admin/blob-sync)
-        console.warn(`[blobSync] ${file} not in Blob, using source fallback`);
-        copyFromSource(file);
+        // File not in Blob — use source readonly
+        console.warn(`[blobSync] ${file} not in Blob, loading from source`);
+        const srcPath = path.join(SOURCE_DATA_DIR, file);
+        if (fs.existsSync(srcPath)) {
+          _cache.set(file, fs.readFileSync(srcPath, 'utf-8'));
+        }
       })
     );
+
+    console.log(`[blobSync] Cache loaded: ${_cache.size} files in memory`);
   } catch (err) {
-    console.error('[blobSync] list failed, using source data as fallback:', err);
-    missing.forEach(copyFromSource);
+    console.error('[blobSync] FATAL: Failed to load from Blob:', err);
+    throw err; // La app debe fallar si no puede leer la BD
   }
 }
 
-function copyFromSource(file: string): void {
-  const src = path.join(SOURCE_DATA_DIR, file);
-  const dst = path.join(TMP_DATA_DIR, file);
-  if (fs.existsSync(src) && !fs.existsSync(dst)) {
-    fs.copyFileSync(src, dst);
-  }
-}
+// ═══════════════════════════════════════════════════════════
+// Escrituras: Blob PRIMERO → actualiza caché
+// ═══════════════════════════════════════════════════════════
 
 /**
- * Escribe un archivo JSON a Vercel Blob (base de datos) y actualiza caché /tmp.
- * Si Blob falla, LANZA error — la operación no debe completarse con datos perdidos.
+ * Escribe a Blob (BD) y actualiza caché en memoria.
+ * Si Blob falla → LANZA error.
  */
 export async function writeToBlob(filename: string, content: string): Promise<void> {
-  if (!IS_VERCEL) return; // Local: no-op, writeJsonFile ya escribe al filesystem
+  if (!IS_VERCEL) return;
 
-  if (!getBlobToken()) {
+  const token = getBlobToken();
+  if (!token) {
     throw new Error('[blobSync] NEXUS_READ_WRITE_TOKEN not configured — cannot write to database');
   }
 
-  // 1. Escribir a Blob PRIMERO (fuente de verdad)
+  // 1. Escribir a Blob (fuente de verdad)
   await put(`data/${filename}`, content, {
     access: 'private',
     addRandomSuffix: false,
     allowOverwrite: true,
-    token: getBlobToken(),
+    token,
   });
-  console.log(`[blobSync] Wrote ${filename} to Blob`);
 
-  // 2. Actualizar caché local /tmp
-  const tmpPath = path.join(TMP_DATA_DIR, filename);
-  fs.mkdirSync(TMP_DATA_DIR, { recursive: true });
-  fs.writeFileSync(tmpPath, content, 'utf-8');
+  // 2. Actualizar caché en memoria
+  _cache.set(filename, content);
+  console.log(`[blobSync] Wrote ${filename} to Blob + cache`);
 }
 
+// ═══════════════════════════════════════════════════════════
+// Seed: repo data/ → Blob (manual, una sola vez)
+// ═══════════════════════════════════════════════════════════
+
 /**
- * Seed manual: sube todos los JSON desde source/data/ al Blob.
- * Solo se llama desde /admin/blob-sync POST.
+ * Seed manual: sube todos los JSON desde data/ del repo al Blob.
+ * También actualiza el caché en memoria.
  */
 export async function seedAllToBlob(): Promise<Record<string, { status: string; size?: number; error?: string }>> {
-  if (!getBlobToken()) {
+  const token = getBlobToken();
+  if (!token) {
     throw new Error('NEXUS_READ_WRITE_TOKEN no está configurado');
   }
 
   const results: Record<string, { status: string; size?: number; error?: string }> = {};
 
-  // Leer de /tmp (si tiene datos más recientes) o de source
   for (const file of DATA_FILES) {
     try {
-      let content: string | null = null;
-      let from = '';
-      const tmpPath = path.join(TMP_DATA_DIR, file);
       const srcPath = path.join(SOURCE_DATA_DIR, file);
-
-      if (fs.existsSync(tmpPath)) {
-        content = fs.readFileSync(tmpPath, 'utf-8');
-        from = '/tmp';
-      } else if (fs.existsSync(srcPath)) {
-        content = fs.readFileSync(srcPath, 'utf-8');
-        from = 'source';
-      }
-
-      if (!content) {
-        results[file] = { status: 'NOT FOUND' };
+      if (!fs.existsSync(srcPath)) {
+        results[file] = { status: 'NOT FOUND in source' };
         continue;
       }
+
+      const content = fs.readFileSync(srcPath, 'utf-8');
 
       await put(`data/${file}`, content, {
         access: 'private',
         addRandomSuffix: false,
         allowOverwrite: true,
-        token: getBlobToken(),
+        token,
       });
 
-      results[file] = { status: `SYNCED from ${from}`, size: content.length };
+      // Actualizar caché
+      _cache.set(file, content);
+      results[file] = { status: 'SEEDED', size: content.length };
     } catch (err) {
       results[file] = { status: 'ERROR', error: String(err) };
     }
   }
 
+  _ready = true;
   return results;
 }

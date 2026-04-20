@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Database, RefreshCw, CheckCircle, XCircle, Loader2, HardDrive, Cloud, Server } from 'lucide-react';
+import { Database, RefreshCw, CheckCircle, XCircle, Loader2, Cloud, Server } from 'lucide-react';
 
 interface DiagnosticData {
   environment: {
@@ -9,11 +9,10 @@ interface DiagnosticData {
     HAS_BLOB_TOKEN: boolean;
     BLOB_TOKEN_PREFIX: string;
     NODE_ENV: string;
-    CWD: string;
+    CACHE_READY: boolean;
   };
-  sourceFiles: Record<string, boolean>;
-  tmpFiles: Record<string, boolean>;
-  blobFiles: Record<string, { exists: boolean; size?: number; url?: string }>;
+  blobFiles: Record<string, { exists: boolean; size?: number }>;
+  totalBlobFiles?: number;
   blobListRaw?: { pathname: string; size: number; uploadedAt: string }[];
   blobError?: string;
 }
@@ -51,7 +50,6 @@ export default function BlobSyncPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setSyncResult(data);
-      // Re-run diagnostics after sync
       await runDiagnostics();
     } catch (err) {
       setError(`Error al sincronizar: ${err}`);
@@ -66,8 +64,8 @@ export default function BlobSyncPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Blob Storage — Diagnóstico y Sync</h1>
-        <p className="text-sm text-muted mt-1">Verifica el estado de los archivos JSON en Source, /tmp y Vercel Blob.</p>
+        <h1 className="text-2xl font-bold">Blob Storage — Base de Datos</h1>
+        <p className="text-sm text-muted mt-1">Diagnóstico y seed de los archivos JSON en Vercel Blob.</p>
       </div>
 
       {/* Actions */}
@@ -75,7 +73,7 @@ export default function BlobSyncPage() {
         <button
           onClick={runDiagnostics}
           disabled={loading !== 'idle'}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-foreground/[0.06] hover:bg-foreground/[0.1] text-sm font-medium transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-foreground/[0.06] hover:bg-foreground/[0.1] text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
         >
           {loading === 'diagnosing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
           Diagnosticar
@@ -83,10 +81,10 @@ export default function BlobSyncPage() {
         <button
           onClick={forceSync}
           disabled={loading !== 'idle'}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 text-sm font-medium transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
         >
           {loading === 'syncing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          Forzar Sync a Blob
+          Seed a Blob (data/ → Blob)
         </button>
       </div>
 
@@ -99,11 +97,11 @@ export default function BlobSyncPage() {
       {/* Sync Result */}
       {syncResult && (
         <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-          <h3 className="text-sm font-bold text-emerald-400 mb-3">Resultado del Sync</h3>
+          <h3 className="text-sm font-bold text-emerald-400 mb-3">Resultado del Seed</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {Object.entries(syncResult.results).map(([file, result]) => (
               <div key={file} className="flex items-center gap-2 text-xs">
-                <StatusIcon ok={result.status === 'SYNCED'} />
+                <StatusIcon ok={result.status === 'SEEDED'} />
                 <span className="font-mono">{file}</span>
                 {result.size && <span className="text-muted">({(result.size / 1024).toFixed(1)}KB)</span>}
               </div>
@@ -125,7 +123,7 @@ export default function BlobSyncPage() {
               <div>HAS_BLOB_TOKEN: <StatusIcon ok={diagnostics.environment.HAS_BLOB_TOKEN} /></div>
               <div>TOKEN: <span className="font-mono">{diagnostics.environment.BLOB_TOKEN_PREFIX}</span></div>
               <div>NODE_ENV: <span className="font-mono">{diagnostics.environment.NODE_ENV}</span></div>
-              <div className="col-span-2">CWD: <span className="font-mono text-muted">{diagnostics.environment.CWD}</span></div>
+              <div>CACHE_READY: <StatusIcon ok={diagnostics.environment.CACHE_READY} /></div>
             </div>
           </div>
 
@@ -136,29 +134,17 @@ export default function BlobSyncPage() {
                 <tr className="border-b border-foreground/[0.08]">
                   <th className="text-left py-2 px-3 font-medium">Archivo</th>
                   <th className="text-center py-2 px-3 font-medium">
-                    <div className="flex items-center justify-center gap-1"><HardDrive className="w-3 h-3" /> Source</div>
-                  </th>
-                  <th className="text-center py-2 px-3 font-medium">
-                    <div className="flex items-center justify-center gap-1"><Server className="w-3 h-3" /> /tmp</div>
-                  </th>
-                  <th className="text-center py-2 px-3 font-medium">
                     <div className="flex items-center justify-center gap-1"><Cloud className="w-3 h-3" /> Blob</div>
                   </th>
-                  <th className="text-right py-2 px-3 font-medium">Tamaño Blob</th>
+                  <th className="text-right py-2 px-3 font-medium">Tamaño</th>
                 </tr>
               </thead>
               <tbody>
-                {Object.keys(diagnostics.sourceFiles).map((file) => {
+                {Object.keys(diagnostics.blobFiles).map((file) => {
                   const blobInfo = diagnostics.blobFiles[file] || { exists: false };
                   return (
                     <tr key={file} className="border-b border-foreground/[0.04] hover:bg-foreground/[0.02]">
                       <td className="py-2 px-3 font-mono">{file}</td>
-                      <td className="py-2 px-3 text-center">
-                        <StatusIcon ok={diagnostics.sourceFiles[file]} />
-                      </td>
-                      <td className="py-2 px-3 text-center">
-                        <StatusIcon ok={diagnostics.tmpFiles[file]} />
-                      </td>
                       <td className="py-2 px-3 text-center">
                         <StatusIcon ok={blobInfo.exists} />
                       </td>

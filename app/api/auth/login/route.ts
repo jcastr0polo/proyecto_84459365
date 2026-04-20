@@ -20,7 +20,7 @@ import { ensureDataReady } from '@/lib/blobSync';
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
-    // 0. Asegurar datos disponibles (Blob → /tmp en Vercel)
+    // 0. Asegurar datos disponibles (Blob → memoria en Vercel)
     await ensureDataReady();
 
     // 1. Parsear y validar body
