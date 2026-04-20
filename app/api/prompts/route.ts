@@ -86,7 +86,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
       const prompts = readPrompts();
       prompts.push(prompt);
-      writePrompts(prompts);
+      await writePrompts(prompts);
 
       return NextResponse.json({ prompt }, { status: 201 });
     } catch (error) {

@@ -88,7 +88,7 @@ export async function PUT(
       if (updates.isActive !== undefined) courses[index].isActive = updates.isActive;
 
       courses[index].updatedAt = new Date().toISOString();
-      writeCourses(courses);
+      await writeCourses(courses);
 
       return NextResponse.json({ course: courses[index] });
     } catch (error) {

@@ -77,7 +77,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       if (userIndex !== -1) {
         users[userIndex].lastLoginAt = new Date().toISOString();
         users[userIndex].updatedAt = new Date().toISOString();
-        writeUsers(users);
+        await writeUsers(users);
       }
     } catch { /* ignore on read-only fs */ }
 

@@ -162,7 +162,7 @@ export async function POST(
       }
 
       // Execute submission logic
-      const submission = submitWork(
+      const submission = await submitWork(
         activityId,
         user.id,
         activity.courseId,

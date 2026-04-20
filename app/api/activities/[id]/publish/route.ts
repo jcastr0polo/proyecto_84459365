@@ -64,7 +64,7 @@ export async function POST(
       updatedAt: new Date().toISOString(),
     };
 
-    writeActivities(activities);
+    await writeActivities(activities);
 
     return NextResponse.json({
       activity: activities[index],

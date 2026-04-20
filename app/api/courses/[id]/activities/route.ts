@@ -118,7 +118,7 @@ export async function POST(
 
       const activities = readActivities();
       activities.push(activity);
-      writeActivities(activities);
+      await writeActivities(activities);
 
       return NextResponse.json(
         { activity, message: 'Actividad creada exitosamente' },

@@ -39,7 +39,7 @@ export async function PUT(
         );
       }
 
-      const grade = updateGrade(id, parsed.data, user.id);
+      const grade = await updateGrade(id, parsed.data, user.id);
 
       return NextResponse.json({ grade });
     } catch (error) {

@@ -21,7 +21,7 @@ export async function POST(
     try {
       const { id: activityId } = await params;
 
-      const result = publishGrades(activityId);
+      const result = await publishGrades(activityId);
 
       return NextResponse.json({
         message: `${result.published} nota(s) publicada(s) exitosamente`,

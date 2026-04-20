@@ -87,7 +87,7 @@ export async function PUT(
     };
 
     projects[index] = updated;
-    writeProjects(projects);
+    await writeProjects(projects);
 
     return NextResponse.json({ project: updated });
   });

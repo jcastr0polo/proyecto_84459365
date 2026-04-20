@@ -68,7 +68,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       users[userIndex].passwordHash = newHash;
       users[userIndex].mustChangePassword = false;
       users[userIndex].updatedAt = new Date().toISOString();
-      writeUsers(users);
+      await writeUsers(users);
 
       return NextResponse.json({ success: true });
     } catch (error) {

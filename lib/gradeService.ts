@@ -76,7 +76,7 @@ function roundTo1Decimal(value: number): number {
  * 6. Guardar con isPublished: false (RN-CAL-02)
  * 7. Marcar submission como 'reviewed'
  */
-export function gradeSubmission(data: CreateGradeRequest, adminId: string): Grade {
+export async function gradeSubmission(data: CreateGradeRequest, adminId: string): Promise<Grade> {
   // 1. Verificar submission
   const submission = getSubmissionById(data.submissionId);
   if (!submission) {
@@ -139,7 +139,7 @@ export function gradeSubmission(data: CreateGradeRequest, adminId: string): Grad
       gradedAt: now,
       updatedAt: now,
     };
-    writeGrades(grades);
+    await writeGrades(grades);
     grade = grades[idx];
   } else {
     // 6. Crear nueva calificación con isPublished: false (RN-CAL-02)
@@ -159,7 +159,7 @@ export function gradeSubmission(data: CreateGradeRequest, adminId: string): Grad
     };
     const grades = readGrades();
     grades.push(grade);
-    writeGrades(grades);
+    await writeGrades(grades);
   }
 
   // 7. Marcar submission como 'reviewed'
@@ -171,7 +171,7 @@ export function gradeSubmission(data: CreateGradeRequest, adminId: string): Grad
       status: 'reviewed',
       updatedAt: now,
     };
-    writeSubmissions(submissions);
+    await writeSubmissions(submissions);
   }
 
   return grade;
@@ -184,7 +184,7 @@ export function gradeSubmission(data: CreateGradeRequest, adminId: string): Grad
 /**
  * updateGrade — Editar una calificación existente
  */
-export function updateGrade(gradeId: string, data: UpdateGradeRequest, adminId: string): Grade {
+export async function updateGrade(gradeId: string, data: UpdateGradeRequest, adminId: string): Promise<Grade> {
   const existing = getGradeById(gradeId);
   if (!existing) {
     throw new GradeError('Calificación no encontrada', 404);
@@ -216,7 +216,7 @@ export function updateGrade(gradeId: string, data: UpdateGradeRequest, adminId: 
     updatedAt: now,
   };
 
-  writeGrades(grades);
+  await writeGrades(grades);
   return grades[idx];
 }
 
@@ -228,7 +228,7 @@ export function updateGrade(gradeId: string, data: UpdateGradeRequest, adminId: 
  * publishGrades — Publicar todas las notas de una actividad
  * RN-CAL-03: Publicación masiva
  */
-export function publishGrades(activityId: string): { published: number } {
+export async function publishGrades(activityId: string): Promise<{ published: number }> {
   const activity = getActivityById(activityId);
   if (!activity) {
     throw new GradeError('Actividad no encontrada', 404);
@@ -254,7 +254,7 @@ export function publishGrades(activityId: string): { published: number } {
     throw new GradeError('No hay notas pendientes de publicar para esta actividad', 400);
   }
 
-  writeGrades(grades);
+  await writeGrades(grades);
   return { published };
 }
 

@@ -72,7 +72,7 @@ export async function PUT(
         updatedAt: now,
       };
 
-      writePrompts(prompts);
+      await writePrompts(prompts);
 
       return NextResponse.json({ prompt: prompts[idx] });
     } catch (error) {

@@ -93,7 +93,7 @@ export async function PUT(
       if (updates.endDate !== undefined) semesters[index].endDate = updates.endDate;
       if (updates.isActive !== undefined) semesters[index].isActive = updates.isActive;
 
-      writeSemesters(semesters);
+      await writeSemesters(semesters);
 
       return NextResponse.json({ semester: semesters[index] });
     } catch (error) {

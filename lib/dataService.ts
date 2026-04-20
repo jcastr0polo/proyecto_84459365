@@ -93,11 +93,11 @@ export function readAppConfig(): AppConfig {
  * @param filename - Nombre del archivo (ej: "users.json")
  * @param data - Objeto a serializar
  */
-export function writeJsonFile<T>(filename: string, data: T): void {
+export async function writeJsonFile<T>(filename: string, data: T): Promise<void> {
   const filePath = getDataFilePath(filename);
   const content = JSON.stringify(data, null, 2) + '\n';
   fs.writeFileSync(filePath, content, 'utf-8');
-  syncToBlob(filename, content);
+  await syncToBlob(filename, content);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -115,8 +115,8 @@ export function readUsers(): User[] {
 /**
  * Escribe el array completo de usuarios en /data/users.json
  */
-export function writeUsers(users: User[]): void {
-  writeJsonFile('users.json', users);
+export async function writeUsers(users: User[]): Promise<void> {
+  await writeJsonFile('users.json', users);
 }
 
 /**
@@ -150,8 +150,8 @@ export function readSessions(): Session[] {
 /**
  * Escribe el array completo de sesiones en /data/sessions.json
  */
-export function writeSessions(sessions: Session[]): void {
-  writeJsonFile('sessions.json', sessions);
+export async function writeSessions(sessions: Session[]): Promise<void> {
+  await writeJsonFile('sessions.json', sessions);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -169,8 +169,8 @@ export function readSemesters(): Semester[] {
 /**
  * Escribe el array completo de semestres en /data/semesters.json
  */
-export function writeSemesters(semesters: Semester[]): void {
-  writeJsonFile('semesters.json', semesters);
+export async function writeSemesters(semesters: Semester[]): Promise<void> {
+  await writeJsonFile('semesters.json', semesters);
 }
 
 /**
@@ -204,8 +204,8 @@ export function readCourses(): Course[] {
 /**
  * Escribe el array completo de cursos en /data/courses.json
  */
-export function writeCourses(courses: Course[]): void {
-  writeJsonFile('courses.json', courses);
+export async function writeCourses(courses: Course[]): Promise<void> {
+  await writeJsonFile('courses.json', courses);
 }
 
 /**
@@ -239,8 +239,8 @@ export function readEnrollments(): Enrollment[] {
 /**
  * Escribe el array completo de enrollments en /data/enrollments.json
  */
-export function writeEnrollments(enrollments: Enrollment[]): void {
-  writeJsonFile('enrollments.json', enrollments);
+export async function writeEnrollments(enrollments: Enrollment[]): Promise<void> {
+  await writeJsonFile('enrollments.json', enrollments);
 }
 
 /**
@@ -285,8 +285,8 @@ export function readActivities(): Activity[] {
 /**
  * Escribe el array completo de actividades en /data/activities.json
  */
-export function writeActivities(activities: Activity[]): void {
-  writeJsonFile('activities.json', activities);
+export async function writeActivities(activities: Activity[]): Promise<void> {
+  await writeJsonFile('activities.json', activities);
 }
 
 /**
@@ -320,8 +320,8 @@ export function readSubmissions(): Submission[] {
 /**
  * Escribe el array completo de entregas en /data/submissions.json
  */
-export function writeSubmissions(submissions: Submission[]): void {
-  writeJsonFile('submissions.json', submissions);
+export async function writeSubmissions(submissions: Submission[]): Promise<void> {
+  await writeJsonFile('submissions.json', submissions);
 }
 
 /**
@@ -374,8 +374,8 @@ export function readGrades(): Grade[] {
 /**
  * Escribe el array completo de calificaciones en /data/grades.json
  */
-export function writeGrades(grades: Grade[]): void {
-  writeJsonFile('grades.json', grades);
+export async function writeGrades(grades: Grade[]): Promise<void> {
+  await writeJsonFile('grades.json', grades);
 }
 
 /**
@@ -425,8 +425,8 @@ export function readPrompts(): AIPrompt[] {
 /**
  * Escribe el array completo de prompts en /data/prompts.json
  */
-export function writePrompts(prompts: AIPrompt[]): void {
-  writeJsonFile('prompts.json', prompts);
+export async function writePrompts(prompts: AIPrompt[]): Promise<void> {
+  await writeJsonFile('prompts.json', prompts);
 }
 
 /**
@@ -468,8 +468,8 @@ export function readProjects(): StudentProject[] {
 /**
  * Escribe el array completo de proyectos en /data/projects.json
  */
-export function writeProjects(projects: StudentProject[]): void {
-  writeJsonFile('projects.json', projects);
+export async function writeProjects(projects: StudentProject[]): Promise<void> {
+  await writeJsonFile('projects.json', projects);
 }
 
 /**

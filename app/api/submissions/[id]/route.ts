@@ -86,7 +86,7 @@ export async function PUT(
         );
       }
 
-      const submission = returnSubmission(id);
+      const submission = await returnSubmission(id);
 
       return NextResponse.json({
         submission,

@@ -32,7 +32,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       }
 
       // Calificar (RN-CAL-01 validado en servicio)
-      const grade = gradeSubmission(parsed.data, user.id);
+      const grade = await gradeSubmission(parsed.data, user.id);
 
       // Enriquecer respuesta
       const student = getUserById(grade.studentId);

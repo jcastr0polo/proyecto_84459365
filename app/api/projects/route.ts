@@ -121,7 +121,7 @@ export async function POST(request: Request) {
 
     const projects = readProjects();
     projects.push(newProject);
-    writeProjects(projects);
+    await writeProjects(projects);
 
     return NextResponse.json({ project: newProject }, { status: 201 });
   });

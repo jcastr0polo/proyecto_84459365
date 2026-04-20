@@ -111,7 +111,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
       const courses = readCourses();
       courses.push(newCourse);
-      writeCourses(courses);
+      await writeCourses(courses);
 
       return NextResponse.json({ course: newCourse }, { status: 201 });
     } catch (error) {

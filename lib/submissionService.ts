@@ -127,14 +127,14 @@ function validateRequirements(
  * 5. Validar requisitos (archivos/enlaces)
  * 6. Guardar
  */
-export function submitWork(
+export async function submitWork(
   activityId: string,
   studentId: string,
   courseId: string,
   content: string | undefined,
   attachments: SubmissionAttachment[],
   links: SubmissionLink[]
-): Submission {
+): Promise<Submission> {
   // 1. Verificar actividad
   const activity = getActivityById(activityId);
   if (!activity) {
@@ -189,7 +189,7 @@ export function submitWork(
     const index = submissions.findIndex((s) => s.id === existing.id);
     if (index !== -1) {
       submissions[index] = updatedSubmission;
-      writeSubmissions(submissions);
+      await writeSubmissions(submissions);
     }
 
     return updatedSubmission;
@@ -217,7 +217,7 @@ export function submitWork(
 
   const submissions = readSubmissions();
   submissions.push(submission);
-  writeSubmissions(submissions);
+  await writeSubmissions(submissions);
 
   return submission;
 }
@@ -232,7 +232,7 @@ export function submitWork(
  * Solo admin puede devolver.
  * Cambia status a "returned" → habilita re-entrega del estudiante.
  */
-export function returnSubmission(submissionId: string): Submission {
+export async function returnSubmission(submissionId: string): Promise<Submission> {
   const submissions = readSubmissions();
   const index = submissions.findIndex((s) => s.id === submissionId);
 
@@ -254,7 +254,7 @@ export function returnSubmission(submissionId: string): Submission {
   };
 
   submissions[index] = updatedSubmission;
-  writeSubmissions(submissions);
+  await writeSubmissions(submissions);
 
   return updatedSubmission;
 }

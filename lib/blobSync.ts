@@ -4,8 +4,8 @@
  *
  * Estrategia:
  * - En cold start: descarga todos los JSON desde Blob → /tmp/data/
- * - Si Blob está vacío (primer deploy): copia desde data/ del repo
- * - En cada escritura: escribe a /tmp (sync) + sube a Blob (fire-and-forget)
+ * - Si Blob está vacío (primer deploy): copia desde data/ del repo y sube a Blob (seed)
+ * - En cada escritura: escribe a /tmp (sync) + sube a Blob (awaited)
  * - En warm start: /tmp ya tiene los datos, no hace nada
  */
 
@@ -39,9 +39,8 @@ let _initPromise: Promise<void> | null = null;
 
 /**
  * Asegura que /tmp/data/ esté poblado con los datos más recientes.
- * En Vercel: descarga desde Blob, fallback a data/ del repo.
+ * En Vercel: descarga desde Blob, fallback a data/ del repo + seed a Blob.
  * En local: no-op.
- * Debe llamarse al inicio de cada request API.
  */
 export async function ensureDataReady(): Promise<void> {
   if (!IS_VERCEL || _ready) return;
@@ -60,36 +59,69 @@ async function pullDataToTmp(): Promise<void> {
   );
   if (missing.length === 0) return;
 
-  // Intentar descargar desde Blob
-  if (BLOB_TOKEN) {
-    try {
-      const { blobs } = await list({ prefix: 'data/', token: BLOB_TOKEN });
-      const blobMap = new Map(blobs.map((b) => [b.pathname, b.url]));
-
-      await Promise.all(
-        missing.map(async (file) => {
-          const blobUrl = blobMap.get(`data/${file}`);
-          if (blobUrl) {
-            try {
-              const res = await fetch(blobUrl);
-              if (res.ok) {
-                const text = await res.text();
-                fs.writeFileSync(path.join(TMP_DATA_DIR, file), text, 'utf-8');
-                return;
-              }
-            } catch { /* fall through to source */ }
-          }
-          copyFromSource(file);
-        })
-      );
-      return;
-    } catch (err) {
-      console.warn('[blobSync] list failed, using source data:', err);
-    }
+  if (!BLOB_TOKEN) {
+    console.warn('[blobSync] No NEXUS_READ_WRITE_TOKEN, using source data only');
+    missing.forEach(copyFromSource);
+    return;
   }
 
-  // Sin token o fallo — copiar todo desde source
-  missing.forEach(copyFromSource);
+  try {
+    // Listar todo lo que hay en Blob
+    const { blobs } = await list({ prefix: 'data/', token: BLOB_TOKEN });
+    const blobMap = new Map(blobs.map((b) => [b.pathname, b.url]));
+
+    console.log(`[blobSync] Blob has ${blobMap.size} files, need ${missing.length} missing files`);
+
+    const needSeed: string[] = [];
+
+    await Promise.all(
+      missing.map(async (file) => {
+        const blobUrl = blobMap.get(`data/${file}`);
+        if (blobUrl) {
+          // Descargar desde Blob
+          try {
+            const res = await fetch(blobUrl);
+            if (res.ok) {
+              const text = await res.text();
+              fs.writeFileSync(path.join(TMP_DATA_DIR, file), text, 'utf-8');
+              return;
+            }
+          } catch (err) {
+            console.warn(`[blobSync] fetch failed for ${file}:`, err);
+          }
+        }
+        // No está en Blob → copiar de source y marcar para seed
+        copyFromSource(file);
+        needSeed.push(file);
+      })
+    );
+
+    // Seed: subir archivos que no estaban en Blob
+    if (needSeed.length > 0) {
+      console.log(`[blobSync] Seeding ${needSeed.length} files to Blob:`, needSeed);
+      await Promise.all(
+        needSeed.map(async (file) => {
+          const tmpPath = path.join(TMP_DATA_DIR, file);
+          if (fs.existsSync(tmpPath)) {
+            const content = fs.readFileSync(tmpPath, 'utf-8');
+            try {
+              await put(`data/${file}`, content, {
+                access: 'public',
+                addRandomSuffix: false,
+                token: BLOB_TOKEN!,
+              });
+              console.log(`[blobSync] Seeded ${file} to Blob`);
+            } catch (err) {
+              console.error(`[blobSync] Seed failed for ${file}:`, err);
+            }
+          }
+        })
+      );
+    }
+  } catch (err) {
+    console.error('[blobSync] list failed, using source data:', err);
+    missing.forEach(copyFromSource);
+  }
 }
 
 function copyFromSource(file: string): void {
@@ -101,16 +133,19 @@ function copyFromSource(file: string): void {
 }
 
 /**
- * Sube un archivo JSON a Vercel Blob (fire-and-forget).
- * Se llama después de cada writeJsonFile para persistir cambios.
+ * Sube un archivo JSON a Vercel Blob.
+ * Awaitable para garantizar persistencia antes de responder al cliente.
  */
-export function syncToBlob(filename: string, content: string): void {
+export async function syncToBlob(filename: string, content: string): Promise<void> {
   if (!IS_VERCEL || !BLOB_TOKEN) return;
-  put(`data/${filename}`, content, {
-    access: 'public',
-    addRandomSuffix: false,
-    token: BLOB_TOKEN,
-  }).catch((err) =>
-    console.error(`[blobSync] put failed for ${filename}:`, err)
-  );
+  try {
+    await put(`data/${filename}`, content, {
+      access: 'public',
+      addRandomSuffix: false,
+      token: BLOB_TOKEN,
+    });
+    console.log(`[blobSync] Synced ${filename} to Blob`);
+  } catch (err) {
+    console.error(`[blobSync] put FAILED for ${filename}:`, err);
+  }
 }

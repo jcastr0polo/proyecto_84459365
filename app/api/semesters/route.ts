@@ -82,7 +82,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       };
 
       semesters.push(newSemester);
-      writeSemesters(semesters);
+      await writeSemesters(semesters);
 
       return NextResponse.json({ semester: newSemester }, { status: 201 });
     } catch (error) {

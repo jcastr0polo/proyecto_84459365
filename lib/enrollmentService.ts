@@ -87,7 +87,7 @@ export async function enrollStudent(
 
     const users = readUsers();
     users.push(newUser);
-    writeUsers(users);
+    await writeUsers(users);
     user = newUser;
     created = true;
   }
@@ -113,7 +113,7 @@ export async function enrollStudent(
 
   const enrollments = readEnrollments();
   enrollments.push(enrollment);
-  writeEnrollments(enrollments);
+  await writeEnrollments(enrollments);
 
   // 5. Retornar resultado
   return {

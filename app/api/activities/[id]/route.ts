@@ -148,7 +148,7 @@ export async function PUT(
       };
 
       activities[index] = updatedActivity;
-      writeActivities(activities);
+      await writeActivities(activities);
 
       return NextResponse.json({
         activity: updatedActivity,

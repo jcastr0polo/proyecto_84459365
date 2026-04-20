@@ -47,7 +47,7 @@ export async function DELETE(
     // RN-INS-05: Soft-delete
     enrollments[index].status = 'withdrawn';
     enrollments[index].withdrawnAt = new Date().toISOString();
-    writeEnrollments(enrollments);
+    await writeEnrollments(enrollments);
 
     return NextResponse.json({
       message: 'Estudiante retirado del curso',
