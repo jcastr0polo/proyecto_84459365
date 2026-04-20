@@ -11,7 +11,7 @@
  * - En local (dev): no-op, dataService usa filesystem directo
  */
 
-import { put, list } from '@vercel/blob';
+import { put, list, get } from '@vercel/blob';
 import fs from 'fs';
 import path from 'path';
 
@@ -74,9 +74,15 @@ export function isCacheReady(): boolean {
 export async function ensureDataReady(): Promise<void> {
   if (!IS_VERCEL || _ready) return;
   if (_initPromise) return _initPromise;
-  _initPromise = loadFromBlob();
-  await _initPromise;
-  _ready = true;
+  _initPromise = loadFromBlob()
+    .then(() => { _ready = true; })
+    .catch((err) => {
+      // Reset para permitir reintentos en la misma instancia
+      _initPromise = null;
+      _ready = false;
+      throw err;
+    });
+  return _initPromise;
 }
 
 async function loadFromBlob(): Promise<void> {
@@ -86,14 +92,14 @@ async function loadFromBlob(): Promise<void> {
   }
 
   try {
+    // Verificar si Blob tiene datos
     const { blobs } = await list({ prefix: 'data/', token });
-    const blobMap = new Map(blobs.map((b) => [b.pathname, b.url]));
+    const blobPathnames = new Set(blobs.map((b) => b.pathname));
 
-    console.log(`[blobSync] Loading ${blobMap.size} files from Blob to memory`);
+    console.log(`[blobSync] Found ${blobPathnames.size} files in Blob`);
 
-    if (blobMap.size === 0) {
-      console.warn('[blobSync] Blob is EMPTY — app will use source data as readonly. Admin must seed from /admin/blob-sync');
-      // Cargar desde source para no bloquear la app, pero SIN escribir a Blob
+    if (blobPathnames.size === 0) {
+      console.warn('[blobSync] Blob is EMPTY — loading source data as readonly. Admin must seed from /admin/blob-sync');
       for (const file of DATA_FILES) {
         const srcPath = path.join(SOURCE_DATA_DIR, file);
         if (fs.existsSync(srcPath)) {
@@ -103,17 +109,22 @@ async function loadFromBlob(): Promise<void> {
       return;
     }
 
+    // Usar get() del SDK para descargar con autenticación (blobs privados)
     await Promise.all(
       DATA_FILES.map(async (file) => {
-        const blobUrl = blobMap.get(`data/${file}`);
-        if (blobUrl) {
-          const res = await fetch(blobUrl);
-          if (res.ok) {
-            _cache.set(file, await res.text());
+        const blobKey = `data/${file}`;
+        if (blobPathnames.has(blobKey)) {
+          const result = await get(blobKey, { token, access: 'private' });
+          if (result && result.statusCode === 200) {
+            const text = await new Response(result.stream).text();
+            _cache.set(file, text);
             return;
           }
+          // get() devolvió null o 304 — error inesperado
+          console.error(`[blobSync] FAILED to download ${file} from Blob (status: ${result?.statusCode ?? 'null'})`);
+          throw new Error(`[blobSync] Cannot read ${file} from Blob — data integrity error`);
         }
-        // File not in Blob — use source readonly
+        // Archivo no existe en Blob — usar source solo si Blob tiene datos parciales
         console.warn(`[blobSync] ${file} not in Blob, loading from source`);
         const srcPath = path.join(SOURCE_DATA_DIR, file);
         if (fs.existsSync(srcPath)) {
@@ -125,7 +136,7 @@ async function loadFromBlob(): Promise<void> {
     console.log(`[blobSync] Cache loaded: ${_cache.size} files in memory`);
   } catch (err) {
     console.error('[blobSync] FATAL: Failed to load from Blob:', err);
-    throw err; // La app debe fallar si no puede leer la BD
+    throw err;
   }
 }
 
