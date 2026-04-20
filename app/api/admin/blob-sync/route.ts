@@ -1,12 +1,13 @@
 /**
- * POST /api/admin/blob-sync — Forzar seed/sync de data a Vercel Blob
+ * POST /api/admin/blob-sync — Seed manual: sube data/ al Blob (una sola vez)
  * GET  /api/admin/blob-sync — Diagnóstico: estado de archivos en Blob
  * Protegido por withAuth (admin)
  */
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { put, list } from '@vercel/blob';
+import { list } from '@vercel/blob';
+import { seedAllToBlob, DATA_FILES } from '@/lib/blobSync';
 import fs from 'fs';
 import path from 'path';
 import type { User } from '@/lib/types';
@@ -15,12 +16,6 @@ const BLOB_TOKEN = process.env.NEXUS_READ_WRITE_TOKEN;
 const IS_VERCEL = !!process.env.VERCEL;
 const SOURCE_DATA_DIR = path.join(process.cwd(), 'data');
 const TMP_DATA_DIR = '/tmp/data';
-
-const DATA_FILES = [
-  'config.json', 'home.json', 'users.json', 'sessions.json',
-  'semesters.json', 'courses.json', 'enrollments.json', 'activities.json',
-  'submissions.json', 'grades.json', 'prompts.json', 'projects.json',
-];
 
 /** GET — Diagnóstico */
 export async function GET(request: Request): Promise<NextResponse> {
@@ -78,7 +73,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   }, 'admin');
 }
 
-/** POST — Forzar sync: leer desde source/tmp y subir a Blob */
+/** POST — Seed manual: sube todos los JSON al Blob */
 export async function POST(request: Request): Promise<NextResponse> {
   return withAuth(request, async (_user: User) => {
     if (!BLOB_TOKEN) {
@@ -88,48 +83,14 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    const results: Record<string, { status: string; size?: number; error?: string }> = {};
-
-    for (const file of DATA_FILES) {
-      try {
-        // Intentar leer de /tmp primero, luego de source
-        let content: string | null = null;
-        const tmpPath = path.join(TMP_DATA_DIR, file);
-        const srcPath = path.join(SOURCE_DATA_DIR, file);
-
-        if (fs.existsSync(tmpPath)) {
-          content = fs.readFileSync(tmpPath, 'utf-8');
-          results[file] = { status: 'reading from /tmp' };
-        } else if (fs.existsSync(srcPath)) {
-          content = fs.readFileSync(srcPath, 'utf-8');
-          results[file] = { status: 'reading from source' };
-        }
-
-        if (!content) {
-          results[file] = { status: 'NOT FOUND in /tmp or source' };
-          continue;
-        }
-
-        // Subir a Blob
-        await put(`data/${file}`, content, {
-          access: 'private',
-          addRandomSuffix: false,
-          allowOverwrite: true,
-          token: BLOB_TOKEN,
-        });
-
-        results[file] = {
-          status: 'SYNCED',
-          size: content.length,
-        };
-      } catch (err) {
-        results[file] = {
-          status: 'ERROR',
-          error: String(err),
-        };
-      }
+    try {
+      const results = await seedAllToBlob();
+      return NextResponse.json({ results });
+    } catch (err) {
+      return NextResponse.json(
+        { error: String(err) },
+        { status: 500 }
+      );
     }
-
-    return NextResponse.json({ results });
   }, 'admin');
 }

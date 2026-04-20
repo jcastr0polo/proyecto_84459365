@@ -4,12 +4,12 @@ import { HomeDataSchema, AppConfigSchema } from './validators';
 import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject } from './types';
 import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema } from './schemas';
 import { z } from 'zod';
-import { syncToBlob } from './blobSync';
+import { writeToBlob } from './blobSync';
 
 // ────────────────────────────────────────────────────────────
 // Vercel read-only filesystem workaround
-// En Vercel, /tmp es el único directorio escribible.
-// Copiamos los JSON al primer acceso y leemos/escribimos desde /tmp.
+// En Vercel, /tmp es caché de lectura (poblado desde Blob en cold start).
+// Escrituras van a Blob primero, luego actualizan /tmp.
 // ────────────────────────────────────────────────────────────
 const IS_VERCEL = !!process.env.VERCEL;
 const SOURCE_DATA_DIR = path.join(process.cwd(), 'data');
@@ -89,15 +89,19 @@ export function readAppConfig(): AppConfig {
 // ────────────────────────────────────────────────────────────
 
 /**
- * Escribe un objeto como JSON en la carpeta /data
- * @param filename - Nombre del archivo (ej: "users.json")
- * @param data - Objeto a serializar
+ * Escribe un objeto como JSON.
+ * En Vercel: escribe a Blob (base de datos) PRIMERO, luego actualiza caché /tmp.
+ * En local: escribe directo al filesystem.
  */
 export async function writeJsonFile<T>(filename: string, data: T): Promise<void> {
-  const filePath = getDataFilePath(filename);
   const content = JSON.stringify(data, null, 2) + '\n';
+
+  // En Vercel: Blob primero (si falla, la operación falla)
+  await writeToBlob(filename, content);
+
+  // Luego actualizar filesystem/caché
+  const filePath = getDataFilePath(filename);
   fs.writeFileSync(filePath, content, 'utf-8');
-  await syncToBlob(filename, content);
 }
 
 // ────────────────────────────────────────────────────────────
