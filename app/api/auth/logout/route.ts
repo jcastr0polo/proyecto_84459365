@@ -11,7 +11,7 @@ import { validateSession, destroySession, clearSessionCookie } from '@/lib/auth'
 export async function POST(request: Request): Promise<NextResponse> {
   try {
     // 1. Validar sesión actual
-    const session = validateSession(request);
+    const session = await validateSession(request);
 
     if (session) {
       // 2. Destruir sesión en sessions.json

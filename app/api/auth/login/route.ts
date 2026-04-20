@@ -14,7 +14,7 @@
 import { NextResponse } from 'next/server';
 import { loginRequestSchema } from '@/lib/schemas';
 import { getUserByEmail, readUsers, writeUsers } from '@/lib/dataService';
-import { verifyPassword, createSession, setSessionCookie, cleanExpiredSessions } from '@/lib/auth';
+import { verifyPassword, createSession, setSessionCookie, cleanExpiredSessions, generateSessionToken } from '@/lib/auth';
 import { toSafeUser } from '@/lib/withAuth';
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -59,19 +59,12 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // 5. Limpiar sesiones expiradas (puede fallar en filesystem read-only)
-    try { cleanExpiredSessions(); } catch { /* ignore on read-only fs */ }
+    // 5. Limpiar sesiones expiradas (no-op con JWT)
+    cleanExpiredSessions();
 
     // 6. Crear nueva sesión
-    let session;
-    try {
-      session = createSession(user.id);
-    } catch {
-      return NextResponse.json(
-        { error: 'No se pudo crear la sesión. El sistema puede estar en modo de solo lectura.' },
-        { status: 503 }
-      );
-    }
+    const session = await createSession(user.id);
+    const token = await generateSessionToken(session);
 
     // 7. Actualizar lastLoginAt (puede fallar en filesystem read-only)
     try {
@@ -90,7 +83,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       mustChangePassword: user.mustChangePassword,
     });
 
-    setSessionCookie(response, session.id);
+    setSessionCookie(response, token);
 
     return response;
   } catch (error) {

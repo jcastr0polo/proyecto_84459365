@@ -38,7 +38,7 @@ export async function withAuth(
 ): Promise<NextResponse> {
   try {
     // 1. Validar sesión
-    const session = validateSession(request);
+    const session = await validateSession(request);
     if (!session) {
       return NextResponse.json(
         { error: 'No autorizado' },
