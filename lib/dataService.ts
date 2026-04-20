@@ -4,11 +4,12 @@ import { HomeDataSchema, AppConfigSchema } from './validators';
 import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject } from './types';
 import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema } from './schemas';
 import { z } from 'zod';
-import { writeToBlob, readFromCache } from './blobSync';
+import { writeToBlob, readFromCache, isCacheReady } from './blobSync';
 
 // ────────────────────────────────────────────────────────────
 // Lectura/escritura de datos
-// En Vercel: lectura de caché en memoria, escritura a Blob
+// En Vercel runtime: lectura de caché en memoria (Blob), escritura a Blob
+// En Vercel build: lectura del filesystem data/ (disponible durante build)
 // En local: lectura/escritura directa al filesystem
 // ────────────────────────────────────────────────────────────
 const IS_VERCEL = !!process.env.VERCEL;
@@ -16,14 +17,17 @@ const SOURCE_DATA_DIR = path.join(process.cwd(), 'data');
 
 /**
  * Lee un archivo JSON.
- * En Vercel: lee del caché en memoria (poblado desde Blob).
+ * En Vercel runtime: lee del caché en memoria (poblado desde Blob).
+ * En Vercel build (o si caché no está listo): lee del filesystem data/.
  * En local: lee del filesystem.
  */
 export function readJsonFile<T>(filename: string): T {
-  if (IS_VERCEL) {
+  if (IS_VERCEL && isCacheReady()) {
+    // Runtime: caché en memoria desde Blob
     const raw = readFromCache(filename);
     return JSON.parse(raw) as T;
   }
+  // Build time o local: filesystem directo
   const filePath = path.join(SOURCE_DATA_DIR, filename);
   const raw = fs.readFileSync(filePath, 'utf-8');
   return JSON.parse(raw) as T;
