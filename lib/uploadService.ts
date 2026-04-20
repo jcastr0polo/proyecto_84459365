@@ -19,7 +19,7 @@ import type { ActivityAttachment } from '@/lib/types';
 // En local: archivos van al filesystem (data/uploads/).
 // ────────────────────────────────────────────────────────────
 const IS_VERCEL = !!process.env.VERCEL;
-const BLOB_TOKEN = process.env.NEXUS_READ_WRITE_TOKEN;
+function getBlobToken() { return process.env.NEXUS_READ_WRITE_TOKEN; }
 
 function getDataDir(...segments: string[]): string {
   const base = IS_VERCEL ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
@@ -219,13 +219,13 @@ export async function uploadFile(
   const relativePath = `uploads/${safeDest}/${finalFileName}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  if (IS_VERCEL && BLOB_TOKEN) {
+  if (IS_VERCEL && getBlobToken()) {
     // Vercel: subir a Blob
     const blob = await put(relativePath, buffer, {
       access: 'private',
       addRandomSuffix: false,
       allowOverwrite: true,
-      token: BLOB_TOKEN,
+      token: getBlobToken(),
       contentType: mimeType,
     });
 
@@ -267,9 +267,9 @@ export async function deleteFile(relativePath: string): Promise<boolean> {
   }
 
   // Si es una URL de Blob, eliminar de Blob
-  if (relativePath.startsWith('http') && BLOB_TOKEN) {
+  if (relativePath.startsWith('http') && getBlobToken()) {
     try {
-      await del(relativePath, { token: BLOB_TOKEN });
+      await del(relativePath, { token: getBlobToken() });
       return true;
     } catch {
       return false;

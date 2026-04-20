@@ -12,7 +12,7 @@ import fs from 'fs';
 import path from 'path';
 import type { User } from '@/lib/types';
 
-const BLOB_TOKEN = process.env.NEXUS_READ_WRITE_TOKEN;
+function getBlobToken() { return process.env.NEXUS_READ_WRITE_TOKEN; }
 const IS_VERCEL = !!process.env.VERCEL;
 const SOURCE_DATA_DIR = path.join(process.cwd(), 'data');
 const TMP_DATA_DIR = '/tmp/data';
@@ -23,8 +23,8 @@ export async function GET(request: Request): Promise<NextResponse> {
     const diagnostics: Record<string, unknown> = {
       environment: {
         IS_VERCEL,
-        HAS_BLOB_TOKEN: !!BLOB_TOKEN,
-        BLOB_TOKEN_PREFIX: BLOB_TOKEN ? BLOB_TOKEN.substring(0, 12) + '...' : 'NOT SET',
+        HAS_BLOB_TOKEN: !!getBlobToken(),
+        BLOB_TOKEN_PREFIX: getBlobToken() ? getBlobToken()!.substring(0, 12) + '...' : 'NOT SET',
         NODE_ENV: process.env.NODE_ENV,
         CWD: process.cwd(),
       },
@@ -46,9 +46,9 @@ export async function GET(request: Request): Promise<NextResponse> {
     }
 
     // Check Blob files
-    if (BLOB_TOKEN) {
+    if (getBlobToken()) {
       try {
-        const { blobs } = await list({ prefix: 'data/', token: BLOB_TOKEN });
+        const { blobs } = await list({ prefix: 'data/', token: getBlobToken() });
         const blobMap = new Map(blobs.map((b) => [b.pathname, b]));
 
         for (const file of DATA_FILES) {
@@ -76,7 +76,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 /** POST — Seed manual: sube todos los JSON al Blob */
 export async function POST(request: Request): Promise<NextResponse> {
   return withAuth(request, async (_user: User) => {
-    if (!BLOB_TOKEN) {
+    if (!getBlobToken()) {
       return NextResponse.json(
         { error: 'NEXUS_READ_WRITE_TOKEN no está configurado' },
         { status: 500 }

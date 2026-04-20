@@ -12,7 +12,7 @@ import { put } from '@vercel/blob';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const IS_VERCEL = !!process.env.VERCEL;
-const BLOB_TOKEN = process.env.NEXUS_READ_WRITE_TOKEN;
+function getBlobToken() { return process.env.NEXUS_READ_WRITE_TOKEN; }
 const CHAT_UPLOAD_DIR = IS_VERCEL
   ? path.join('/tmp', 'data', 'uploads', 'chat')
   : path.join(process.cwd(), 'data', 'uploads', 'chat');
@@ -57,12 +57,12 @@ export async function POST(request: Request): Promise<NextResponse> {
     const storedName = `${id}-${safeName}${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    if (IS_VERCEL && BLOB_TOKEN) {
+    if (IS_VERCEL && getBlobToken()) {
       const blob = await put(`chat/${storedName}`, buffer, {
         access: 'private',
         addRandomSuffix: false,
         allowOverwrite: true,
-        token: BLOB_TOKEN,
+        token: getBlobToken(),
         contentType: file.type || 'application/octet-stream',
       });
 

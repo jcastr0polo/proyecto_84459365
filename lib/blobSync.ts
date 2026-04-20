@@ -14,7 +14,7 @@ import { put, list } from '@vercel/blob';
 import fs from 'fs';
 import path from 'path';
 
-const BLOB_TOKEN = process.env.NEXUS_READ_WRITE_TOKEN;
+function getBlobToken() { return process.env.NEXUS_READ_WRITE_TOKEN; }
 const IS_VERCEL = !!process.env.VERCEL;
 const TMP_DATA_DIR = '/tmp/data';
 const SOURCE_DATA_DIR = path.join(process.cwd(), 'data');
@@ -61,7 +61,7 @@ async function pullDataToTmp(): Promise<void> {
   );
   if (missing.length === 0) return;
 
-  if (!BLOB_TOKEN) {
+  if (!getBlobToken()) {
     console.warn('[blobSync] No NEXUS_READ_WRITE_TOKEN, using source data as readonly fallback');
     missing.forEach(copyFromSource);
     return;
@@ -69,7 +69,7 @@ async function pullDataToTmp(): Promise<void> {
 
   try {
     // Listar todo lo que hay en Blob
-    const { blobs } = await list({ prefix: 'data/', token: BLOB_TOKEN });
+    const { blobs } = await list({ prefix: 'data/', token: getBlobToken() });
     const blobMap = new Map(blobs.map((b) => [b.pathname, b.url]));
 
     console.log(`[blobSync] Blob has ${blobMap.size} files, pulling ${missing.length} missing to /tmp`);
@@ -118,7 +118,7 @@ function copyFromSource(file: string): void {
 export async function writeToBlob(filename: string, content: string): Promise<void> {
   if (!IS_VERCEL) return; // Local: no-op, writeJsonFile ya escribe al filesystem
 
-  if (!BLOB_TOKEN) {
+  if (!getBlobToken()) {
     throw new Error('[blobSync] NEXUS_READ_WRITE_TOKEN not configured — cannot write to database');
   }
 
@@ -127,7 +127,7 @@ export async function writeToBlob(filename: string, content: string): Promise<vo
     access: 'private',
     addRandomSuffix: false,
     allowOverwrite: true,
-    token: BLOB_TOKEN,
+    token: getBlobToken(),
   });
   console.log(`[blobSync] Wrote ${filename} to Blob`);
 
@@ -142,7 +142,7 @@ export async function writeToBlob(filename: string, content: string): Promise<vo
  * Solo se llama desde /admin/blob-sync POST.
  */
 export async function seedAllToBlob(): Promise<Record<string, { status: string; size?: number; error?: string }>> {
-  if (!BLOB_TOKEN) {
+  if (!getBlobToken()) {
     throw new Error('NEXUS_READ_WRITE_TOKEN no está configurado');
   }
 
@@ -173,7 +173,7 @@ export async function seedAllToBlob(): Promise<Record<string, { status: string; 
         access: 'private',
         addRandomSuffix: false,
         allowOverwrite: true,
-        token: BLOB_TOKEN,
+        token: getBlobToken(),
       });
 
       results[file] = { status: `SYNCED from ${from}`, size: content.length };
