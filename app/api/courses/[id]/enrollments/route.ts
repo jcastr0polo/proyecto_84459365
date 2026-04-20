@@ -15,13 +15,14 @@ import type { EnrollmentWithStudent } from '@/lib/types';
 
 /**
  * GET /api/courses/[id]/enrollments
- * Lista estudiantes inscritos con datos completos (admin only)
+ * Admin: lista todos los inscritos con datos completos
+ * Student: solo retorna su propia inscripción (si existe)
  */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     const { id } = await params;
 
     const course = getCourseById(id);
@@ -31,14 +32,24 @@ export async function GET(
 
     const enrollments = getEnrollmentsByCourse(id);
 
-    // Enriquecer con datos del estudiante
+    // Estudiantes solo ven su propia inscripción
+    if (user.role === 'student') {
+      const mine = enrollments.filter((e) => e.studentId === user.id);
+      return NextResponse.json({
+        enrollments: mine,
+        total: mine.length,
+        active: mine.filter((e) => e.status === 'active').length,
+      });
+    }
+
+    // Admin: enriquecer con datos del estudiante
     const enriched: EnrollmentWithStudent[] = [];
     for (const enrollment of enrollments) {
-      const user = getUserById(enrollment.studentId);
-      if (user) {
+      const student = getUserById(enrollment.studentId);
+      if (student) {
         enriched.push({
           ...enrollment,
-          student: toSafeUser(user),
+          student: toSafeUser(student),
         });
       }
     }
@@ -48,7 +59,7 @@ export async function GET(
       total: enriched.length,
       active: enriched.filter((e) => e.status === 'active').length,
     });
-  }, 'admin');
+  });
 }
 
 /**
