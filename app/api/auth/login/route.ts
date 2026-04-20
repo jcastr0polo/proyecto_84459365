@@ -39,6 +39,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     // 2. Buscar usuario por email
     const user = getUserByEmail(email);
     if (!user) {
+      console.warn(`[auth] LOGIN FAILED — email not found: ${email}`);
       // No especificar si el email no existe (seguridad)
       return NextResponse.json(
         { error: 'Email o contraseña incorrectos' },
@@ -48,6 +49,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     // 3. Verificar cuenta activa (RN-AUTH-07)
     if (!user.isActive) {
+      console.warn(`[auth] LOGIN BLOCKED — account inactive: ${email} (${user.id})`);
       return NextResponse.json(
         { error: 'Cuenta desactivada. Contacte al administrador.' },
         { status: 403 }
@@ -57,11 +59,14 @@ export async function POST(request: Request): Promise<NextResponse> {
     // 4. Verificar contraseña
     const passwordValid = await verifyPassword(password, user.passwordHash);
     if (!passwordValid) {
+      console.warn(`[auth] LOGIN FAILED — wrong password: ${email} (${user.id})`);
       return NextResponse.json(
         { error: 'Email o contraseña incorrectos' },
         { status: 401 }
       );
     }
+
+    console.log(`[auth] LOGIN OK — ${email} (${user.id}, ${user.role})`);
 
     // 5. Limpiar sesiones expiradas (no-op con JWT)
     cleanExpiredSessions();
