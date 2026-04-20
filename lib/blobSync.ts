@@ -106,7 +106,7 @@ async function pullDataToTmp(): Promise<void> {
             const content = fs.readFileSync(tmpPath, 'utf-8');
             try {
               await put(`data/${file}`, content, {
-                access: 'public',
+                access: 'private',
                 addRandomSuffix: false,
                 token: BLOB_TOKEN!,
               });
@@ -140,7 +140,7 @@ export async function syncToBlob(filename: string, content: string): Promise<voi
   if (!IS_VERCEL || !BLOB_TOKEN) return;
   try {
     await put(`data/${filename}`, content, {
-      access: 'public',
+      access: 'private',
       addRandomSuffix: false,
       token: BLOB_TOKEN,
     });

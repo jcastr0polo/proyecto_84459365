@@ -59,7 +59,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     if (IS_VERCEL && BLOB_TOKEN) {
       const blob = await put(`chat/${storedName}`, buffer, {
-        access: 'public',
+        access: 'private',
         addRandomSuffix: false,
         token: BLOB_TOKEN,
         contentType: file.type || 'application/octet-stream',

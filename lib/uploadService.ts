@@ -222,7 +222,7 @@ export async function uploadFile(
   if (IS_VERCEL && BLOB_TOKEN) {
     // Vercel: subir a Blob
     const blob = await put(relativePath, buffer, {
-      access: 'public',
+      access: 'private',
       addRandomSuffix: false,
       token: BLOB_TOKEN,
       contentType: mimeType,
