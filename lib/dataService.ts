@@ -17,17 +17,18 @@ const SOURCE_DATA_DIR = path.join(process.cwd(), 'data');
 
 /**
  * Lee un archivo JSON.
- * En Vercel runtime: lee del caché en memoria (poblado desde Blob).
- * En Vercel build (o si caché no está listo): lee del filesystem data/.
+ * En Vercel: lee del caché en memoria (Blob). Falla si caché no está listo.
  * En local: lee del filesystem.
  */
 export function readJsonFile<T>(filename: string): T {
-  if (IS_VERCEL && isCacheReady()) {
-    // Runtime: caché en memoria desde Blob
+  if (IS_VERCEL) {
+    if (!isCacheReady()) {
+      throw new Error(`[dataService] Cache not ready for ${filename}. Call ensureDataReady() first. If this is build time, this file should not be read server-side.`);
+    }
     const raw = readFromCache(filename);
     return JSON.parse(raw) as T;
   }
-  // Build time o local: filesystem directo
+  // Local: filesystem directo
   const filePath = path.join(SOURCE_DATA_DIR, filename);
   const raw = fs.readFileSync(filePath, 'utf-8');
   return JSON.parse(raw) as T;

@@ -1,57 +1,46 @@
-import { readProjects, readUsers, readCourses, readSemesters } from '@/lib/dataService';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import ShowcaseClient from './ShowcaseClient';
 import type { ShowcaseProject } from './ShowcaseClient';
 
 /**
  * /showcase — Vitrina Pública de Proyectos Estudiantiles
- * Fase 19 — Ruta PÚBLICA, sin autenticación
- * Server Component: lee datos directamente de dataService
- * RN-PRY-03: Solo muestra proyectos con isPublic && isFeatured
+ * Client component: fetch data from API (Blob) at runtime
  */
 export default function ShowcasePage() {
-  const projects = readProjects();
-  const users = readUsers();
-  const courses = readCourses();
-  const semesters = readSemesters();
+  const [projects, setProjects] = useState<ShowcaseProject[]>([]);
+  const [courses, setCourses] = useState<{ id: string; name: string }[]>([]);
+  const [semesterLabel, setSemesterLabel] = useState('2026');
+  const [loaded, setLoaded] = useState(false);
 
-  // Only show public + featured projects
-  const featured = projects.filter((p) => p.isPublic && p.isFeatured);
+  useEffect(() => {
+    fetch('/api/projects/public')
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data) {
+          setProjects(data.projects ?? []);
+          setCourses(data.courses ?? []);
+          setSemesterLabel(data.semesterLabel ?? '2026');
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, []);
 
-  // Build lookup maps
-  const userMap = new Map(users.map((u) => [u.id, `${u.firstName} ${u.lastName}`]));
-  const courseMap = new Map(courses.map((c) => [c.id, c.name]));
-
-  // Enrich projects
-  const enriched: ShowcaseProject[] = featured.map((p) => ({
-    id: p.id,
-    projectName: p.projectName,
-    description: p.description,
-    githubUrl: p.githubUrl,
-    vercelUrl: p.vercelUrl,
-    figmaUrl: p.figmaUrl,
-    studentName: userMap.get(p.studentId) ?? 'Estudiante',
-    courseName: courseMap.get(p.courseId) ?? 'Curso',
-    courseId: p.courseId,
-  }));
-
-  // Courses that have featured projects (for filter buttons)
-  const coursesWithProjects = Array.from(new Set(featured.map((p) => p.courseId)))
-    .map((id) => ({ id, name: courseMap.get(id) ?? 'Curso' }));
-
-  // Active semester label
-  const activeSemester = semesters.find((s) => s.isActive);
-  const semesterLabel = activeSemester?.label ?? '2026';
+  if (!loaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-base">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-foreground/10 border-t-cyan-400" />
+      </div>
+    );
+  }
 
   return (
     <ShowcaseClient
-      projects={enriched}
+      projects={projects}
       semesterLabel={semesterLabel}
-      courses={coursesWithProjects}
+      courses={courses}
     />
   );
 }
-
-export const metadata = {
-  title: 'Vitrina de Proyectos Estudiantiles',
-  description: 'Proyectos fullstack destacados construidos por estudiantes con Next.js, TypeScript y asistentes de IA.',
-};

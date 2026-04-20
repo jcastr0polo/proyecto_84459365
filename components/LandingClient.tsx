@@ -69,11 +69,24 @@ const categoryConfig: Record<string, { gradient: string; border: string; badge: 
   other: { gradient: 'from-white/5 to-white/[0.02]', border: 'hover:border-foreground/20', badge: 'Otro', badgeClass: 'bg-foreground/10 text-muted border-foreground/20', icon: BookOpen },
 };
 
-export default function LandingClient({ heroTitle, heroSubtitle, heroDescription }: {
-  heroTitle: string;
-  heroSubtitle: string;
-  heroDescription: string;
-}) {
+export default function LandingClient() {
+  const [heroTitle, setHeroTitle] = React.useState('NEXUS');
+  const [heroSubtitle, setHeroSubtitle] = React.useState('');
+  const [heroDescription, setHeroDescription] = React.useState('');
+
+  React.useEffect(() => {
+    fetch('/api/data')
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.hero) {
+          setHeroTitle(data.hero.title || 'NEXUS');
+          setHeroSubtitle(data.hero.subtitle || '');
+          setHeroDescription(data.hero.description || '');
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const courses = FALLBACK_COURSES;
   const titleAnimationDuration = heroTitle.length * 0.08 + 0.6;
 
