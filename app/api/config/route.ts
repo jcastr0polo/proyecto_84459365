@@ -18,6 +18,7 @@
 
 import { NextResponse, NextRequest } from 'next/server';
 import { readAppConfig } from '@/lib/dataService';
+import { ensureDataReady } from '@/lib/blobSync';
 import type { AppConfig } from '@/lib/types';
 
 /**
@@ -38,6 +39,7 @@ import type { AppConfig } from '@/lib/types';
  */
 export async function GET(request: NextRequest): Promise<NextResponse<AppConfig | { error: string }>> {
   try {
+    await ensureDataReady();
     // Leer y validar config.json desde el servidor
     const appConfig = readAppConfig();
 

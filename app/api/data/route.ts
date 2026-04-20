@@ -18,6 +18,7 @@
 
 import { NextResponse, NextRequest } from 'next/server';
 import { readHomeData } from '@/lib/dataService';
+import { ensureDataReady } from '@/lib/blobSync';
 import type { HomeData } from '@/lib/types';
 
 /**
@@ -44,6 +45,7 @@ import type { HomeData } from '@/lib/types';
  */
 export async function GET(request: NextRequest): Promise<NextResponse<HomeData | { error: string }>> {
   try {
+    await ensureDataReady();
     // Leer y validar home.json desde el servidor
     const homeData = readHomeData();
 

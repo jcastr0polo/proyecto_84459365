@@ -10,12 +10,16 @@
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { put, del } from '@vercel/blob';
 import type { ActivityAttachment } from '@/lib/types';
 
 // ────────────────────────────────────────────────────────────
-// Vercel read-only filesystem workaround
+// Vercel Blob + filesystem hybrid
+// En Vercel: archivos van a Blob (persistente).
+// En local: archivos van al filesystem (data/uploads/).
 // ────────────────────────────────────────────────────────────
 const IS_VERCEL = !!process.env.VERCEL;
+const BLOB_TOKEN = process.env.NEXUS_READ_WRITE_TOKEN;
 
 function getDataDir(...segments: string[]): string {
   const base = IS_VERCEL ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
@@ -205,24 +209,40 @@ export async function uploadFile(
   const uuid = uuidv4().split('-')[0]; // Primeros 8 chars del UUID
   const finalFileName = `${timestamp}-${uuid}-${sanitizedName}${ext}`;
 
-  // 6. Sanitizar destino (prevenir path traversal)
+  // 7. Sanitizar destino (prevenir path traversal)
   const safeDest = destination
     .replace(/\.\./g, '')
     .replace(/[\\]/g, '/')
     .replace(/\/+/g, '/')
     .replace(/^\/+|\/+$/g, '');
 
-  // 7. Crear directorio si no existe
+  const relativePath = `uploads/${safeDest}/${finalFileName}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  if (IS_VERCEL && BLOB_TOKEN) {
+    // Vercel: subir a Blob
+    const blob = await put(relativePath, buffer, {
+      access: 'public',
+      addRandomSuffix: false,
+      token: BLOB_TOKEN,
+      contentType: mimeType,
+    });
+
+    return {
+      id: uuidv4(),
+      fileName: file.name,
+      filePath: blob.url, // URL completa de Blob
+      fileSize: file.size,
+      mimeType,
+      uploadedAt: new Date().toISOString(),
+    };
+  }
+
+  // Local: guardar en filesystem
   const uploadDir = getDataDir('uploads', safeDest);
   fs.mkdirSync(uploadDir, { recursive: true });
-
-  // 8. Escribir archivo
   const filePath = path.join(uploadDir, finalFileName);
-  const buffer = Buffer.from(await file.arrayBuffer());
   fs.writeFileSync(filePath, buffer);
-
-  // 9. Retornar metadata
-  const relativePath = `uploads/${safeDest}/${finalFileName}`;
 
   return {
     id: uuidv4(),
@@ -235,18 +255,28 @@ export async function uploadFile(
 }
 
 /**
- * Elimina un archivo del sistema de archivos
- * @param relativePath - Ruta relativa desde /data/ (ej: "uploads/activities/act-xxx/file.pdf")
+ * Elimina un archivo del almacenamiento
+ * @param relativePath - Ruta relativa o URL de Blob
  * @returns true si se eliminó, false si no existía
  */
-export function deleteFile(relativePath: string): boolean {
+export async function deleteFile(relativePath: string): Promise<boolean> {
   // Prevenir path traversal
   if (relativePath.includes('..')) {
     throw new UploadError('Ruta inválida', 400);
   }
 
-  const absolutePath = getDataDir(relativePath);
+  // Si es una URL de Blob, eliminar de Blob
+  if (relativePath.startsWith('http') && BLOB_TOKEN) {
+    try {
+      await del(relativePath, { token: BLOB_TOKEN });
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
+  // Local: eliminar del filesystem
+  const absolutePath = getDataDir(relativePath);
   if (fs.existsSync(absolutePath)) {
     fs.unlinkSync(absolutePath);
     return true;
@@ -256,25 +286,37 @@ export function deleteFile(relativePath: string): boolean {
 
 /**
  * Lee un archivo y retorna su contenido como Buffer
- * @param relativePath - Ruta relativa desde /data/ (ej: "uploads/activities/act-xxx/file.pdf")
+ * @param relativePath - Ruta relativa desde /data/ o URL de Blob
  * @returns Buffer con el contenido del archivo
  * @throws UploadError si el archivo no existe o la ruta es inválida
  */
-export function readUploadedFile(relativePath: string): { buffer: Buffer; mimeType: string } {
+export async function readUploadedFile(relativePath: string): Promise<{ buffer: Buffer; mimeType: string }> {
   // Prevenir path traversal
   if (relativePath.includes('..')) {
     throw new UploadError('Ruta inválida', 403);
   }
 
-  const absolutePath = getDataDir(relativePath);
+  // Si es una URL de Blob, descargar directamente
+  if (relativePath.startsWith('http')) {
+    try {
+      const res = await fetch(relativePath);
+      if (!res.ok) throw new UploadError('Archivo no encontrado', 404);
+      const buffer = Buffer.from(await res.arrayBuffer());
+      const contentType = res.headers.get('content-type') || 'application/octet-stream';
+      return { buffer, mimeType: contentType };
+    } catch (err) {
+      if (err instanceof UploadError) throw err;
+      throw new UploadError('Error al descargar archivo', 500);
+    }
+  }
 
-  // Verificar que el path resuelto esté dentro de data/uploads/
+  // Local: leer del filesystem
+  const absolutePath = getDataDir(relativePath);
   const uploadsRoot = getDataDir('uploads');
   const resolved = path.resolve(absolutePath);
   if (!resolved.startsWith(uploadsRoot)) {
     throw new UploadError('Acceso no autorizado', 403);
   }
-
   if (!fs.existsSync(absolutePath)) {
     throw new UploadError('Archivo no encontrado', 404);
   }

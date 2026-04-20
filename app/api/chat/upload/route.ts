@@ -1,16 +1,18 @@
 /**
  * POST /api/chat/upload — Subir archivo desde el chat público
  * No requiere autenticación.
- * Archivos se guardan en data/uploads/chat/ con un UUID.
+ * En Vercel: archivos van a Blob. En local: filesystem.
  */
 
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { put } from '@vercel/blob';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const IS_VERCEL = !!process.env.VERCEL;
+const BLOB_TOKEN = process.env.NEXUS_READ_WRITE_TOKEN;
 const CHAT_UPLOAD_DIR = IS_VERCEL
   ? path.join('/tmp', 'data', 'uploads', 'chat')
   : path.join(process.cwd(), 'data', 'uploads', 'chat');
@@ -53,12 +55,28 @@ export async function POST(request: Request): Promise<NextResponse> {
     const id = uuidv4();
     const safeName = sanitize(path.basename(file.name, ext));
     const storedName = `${id}-${safeName}${ext}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
 
+    if (IS_VERCEL && BLOB_TOKEN) {
+      const blob = await put(`chat/${storedName}`, buffer, {
+        access: 'public',
+        addRandomSuffix: false,
+        token: BLOB_TOKEN,
+        contentType: file.type || 'application/octet-stream',
+      });
+
+      return NextResponse.json({
+        fileName: file.name,
+        storedName,
+        size: file.size,
+        url: blob.url,
+      }, { status: 201 });
+    }
+
+    // Local: filesystem
     if (!fs.existsSync(CHAT_UPLOAD_DIR)) {
       fs.mkdirSync(CHAT_UPLOAD_DIR, { recursive: true });
     }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
     fs.writeFileSync(path.join(CHAT_UPLOAD_DIR, storedName), buffer);
 
     return NextResponse.json({

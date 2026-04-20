@@ -36,7 +36,7 @@ export async function GET(
       }
 
       const relativePath = `uploads/${pathSegments.join('/')}`;
-      const { buffer, mimeType } = readUploadedFile(relativePath);
+      const { buffer, mimeType } = await readUploadedFile(relativePath);
 
       // Obtener nombre del archivo (último segmento)
       const fileName = pathSegments[pathSegments.length - 1];
