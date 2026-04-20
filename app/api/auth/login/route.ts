@@ -75,7 +75,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const session = await createSession(user.id);
     const token = await generateSessionToken(session);
 
-    // 7. Actualizar lastLoginAt (puede fallar en filesystem read-only)
+    // 7. Actualizar lastLoginAt
     try {
       const users = readUsers();
       const userIndex = users.findIndex((u) => u.id === user.id);
@@ -84,7 +84,9 @@ export async function POST(request: Request): Promise<NextResponse> {
         users[userIndex].updatedAt = new Date().toISOString();
         await writeUsers(users);
       }
-    } catch { /* ignore on read-only fs */ }
+    } catch (err) {
+      console.error('[login] Failed to update lastLoginAt:', err);
+    }
 
     // 8. Preparar respuesta con cookie
     const response = NextResponse.json({
