@@ -7,7 +7,10 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-const CHAT_UPLOAD_DIR = path.join(process.cwd(), 'data', 'uploads', 'chat');
+const IS_VERCEL = !!process.env.VERCEL;
+const CHAT_UPLOAD_DIR = IS_VERCEL
+  ? path.join('/tmp', 'data', 'uploads', 'chat')
+  : path.join(process.cwd(), 'data', 'uploads', 'chat');
 
 const MIME_MAP: Record<string, string> = {
   '.pdf': 'application/pdf',

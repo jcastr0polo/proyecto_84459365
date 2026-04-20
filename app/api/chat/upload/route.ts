@@ -10,7 +10,10 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-const CHAT_UPLOAD_DIR = path.join(process.cwd(), 'data', 'uploads', 'chat');
+const IS_VERCEL = !!process.env.VERCEL;
+const CHAT_UPLOAD_DIR = IS_VERCEL
+  ? path.join('/tmp', 'data', 'uploads', 'chat')
+  : path.join(process.cwd(), 'data', 'uploads', 'chat');
 
 const ALLOWED_EXTENSIONS = new Set([
   '.pdf', '.docx', '.pptx', '.xlsx',

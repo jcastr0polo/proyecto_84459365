@@ -5,19 +5,35 @@ import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, 
 import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema } from './schemas';
 import { z } from 'zod';
 
+// ────────────────────────────────────────────────────────────
+// Vercel read-only filesystem workaround
+// En Vercel, /tmp es el único directorio escribible.
+// Copiamos los JSON al primer acceso y leemos/escribimos desde /tmp.
+// ────────────────────────────────────────────────────────────
+const IS_VERCEL = !!process.env.VERCEL;
+const SOURCE_DATA_DIR = path.join(process.cwd(), 'data');
+const TMP_DATA_DIR = path.join('/tmp', 'data');
+
+function getDataFilePath(filename: string): string {
+  if (!IS_VERCEL) {
+    return path.join(SOURCE_DATA_DIR, filename);
+  }
+  const tmpPath = path.join(TMP_DATA_DIR, filename);
+  if (!fs.existsSync(tmpPath)) {
+    fs.mkdirSync(TMP_DATA_DIR, { recursive: true });
+    const srcPath = path.join(SOURCE_DATA_DIR, filename);
+    if (fs.existsSync(srcPath)) {
+      fs.copyFileSync(srcPath, tmpPath);
+    }
+  }
+  return tmpPath;
+}
+
 /**
  * Lee un archivo JSON de la carpeta /data y lo parsea con tipado genérico.
- * 
- * @param filename - Nombre del archivo JSON (ej: "config.json", "home.json")
- * @returns Objeto parseado con tipo T
- * @throws Error si el archivo no existe o el JSON es inválido
- * 
- * Uso (bajo nivel):
- *   const config = readJsonFile<AppConfig>('config.json');
- *   const home = readJsonFile<HomeData>('home.json');
  */
 export function readJsonFile<T>(filename: string): T {
-  const filePath = path.join(process.cwd(), 'data', filename);
+  const filePath = getDataFilePath(filename);
   const raw = fs.readFileSync(filePath, 'utf-8');
   return JSON.parse(raw) as T;
 }
@@ -77,7 +93,7 @@ export function readAppConfig(): AppConfig {
  * @param data - Objeto a serializar
  */
 export function writeJsonFile<T>(filename: string, data: T): void {
-  const filePath = path.join(process.cwd(), 'data', filename);
+  const filePath = getDataFilePath(filename);
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf-8');
 }
 

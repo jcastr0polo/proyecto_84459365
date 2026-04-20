@@ -13,6 +13,16 @@ import { v4 as uuidv4 } from 'uuid';
 import type { ActivityAttachment } from '@/lib/types';
 
 // ────────────────────────────────────────────────────────────
+// Vercel read-only filesystem workaround
+// ────────────────────────────────────────────────────────────
+const IS_VERCEL = !!process.env.VERCEL;
+
+function getDataDir(...segments: string[]): string {
+  const base = IS_VERCEL ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
+  return path.join(base, ...segments);
+}
+
+// ────────────────────────────────────────────────────────────
 // CONSTANTES
 // ────────────────────────────────────────────────────────────
 
@@ -203,7 +213,7 @@ export async function uploadFile(
     .replace(/^\/+|\/+$/g, '');
 
   // 7. Crear directorio si no existe
-  const uploadDir = path.join(process.cwd(), 'data', 'uploads', safeDest);
+  const uploadDir = getDataDir('uploads', safeDest);
   fs.mkdirSync(uploadDir, { recursive: true });
 
   // 8. Escribir archivo
@@ -235,7 +245,7 @@ export function deleteFile(relativePath: string): boolean {
     throw new UploadError('Ruta inválida', 400);
   }
 
-  const absolutePath = path.join(process.cwd(), 'data', relativePath);
+  const absolutePath = getDataDir(relativePath);
 
   if (fs.existsSync(absolutePath)) {
     fs.unlinkSync(absolutePath);
@@ -256,10 +266,10 @@ export function readUploadedFile(relativePath: string): { buffer: Buffer; mimeTy
     throw new UploadError('Ruta inválida', 403);
   }
 
-  const absolutePath = path.join(process.cwd(), 'data', relativePath);
+  const absolutePath = getDataDir(relativePath);
 
   // Verificar que el path resuelto esté dentro de data/uploads/
-  const uploadsRoot = path.join(process.cwd(), 'data', 'uploads');
+  const uploadsRoot = getDataDir('uploads');
   const resolved = path.resolve(absolutePath);
   if (!resolved.startsWith(uploadsRoot)) {
     throw new UploadError('Acceso no autorizado', 403);
