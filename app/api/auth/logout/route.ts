@@ -7,18 +7,34 @@
 
 import { NextResponse } from 'next/server';
 import { validateSession, destroySession, clearSessionCookie } from '@/lib/auth';
+import { logAudit } from '@/lib/auditService';
+import { ensureDataReady } from '@/lib/blobSync';
+import { getUserById } from '@/lib/dataService';
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
+    await ensureDataReady();
+
     // 1. Validar sesión actual
     const session = await validateSession(request);
 
     if (session) {
       // 2. Destruir sesión en sessions.json
       destroySession(session.id);
+
+      // 3. Auditoría
+      const user = getUserById(session.userId);
+      await logAudit({
+        action: 'logout',
+        entity: 'user',
+        entityId: session.userId,
+        userId: session.userId,
+        userName: user ? `${user.firstName} ${user.lastName}` : session.userId,
+        details: 'Cerró sesión',
+      });
     }
 
-    // 3. Limpiar cookie (siempre, incluso si la sesión ya no existía)
+    // 4. Limpiar cookie (siempre, incluso si la sesión ya no existía)
     const response = NextResponse.json({ success: true });
     clearSessionCookie(response);
 

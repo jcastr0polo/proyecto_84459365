@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateSemesterSchema } from '@/lib/schemas';
 import { readSemesters, writeSemesters, getSemesterById } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 
 /**
  * GET /api/semesters/[id] — Detalle de un semestre
@@ -44,7 +45,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     try {
       const { id } = await params;
       const body = await request.json();
@@ -93,7 +94,10 @@ export async function PUT(
       if (updates.endDate !== undefined) semesters[index].endDate = updates.endDate;
       if (updates.isActive !== undefined) semesters[index].isActive = updates.isActive;
 
-      await writeSemesters(semesters);
+      await dispatchWrite(
+        () => writeSemesters(semesters),
+        { action: 'update', entity: 'semester', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó semestre "${semesters[index].label}"` }
+      );
 
       return NextResponse.json({ semester: semesters[index] });
     } catch (error) {

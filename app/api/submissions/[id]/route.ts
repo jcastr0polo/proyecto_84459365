@@ -15,6 +15,7 @@ import {
   getUserById,
 } from '@/lib/dataService';
 import { returnSubmission, SubmissionError } from '@/lib/submissionService';
+import { logAudit } from '@/lib/auditService';
 import type { SubmissionWithDetails } from '@/lib/types';
 
 /**
@@ -72,7 +73,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     try {
       const { id } = await params;
 
@@ -87,6 +88,12 @@ export async function PUT(
       }
 
       const submission = await returnSubmission(id);
+
+      await logAudit({
+        action: 'update', entity: 'submission', entityId: id,
+        userId: user.id, userName: `${user.firstName} ${user.lastName}`,
+        details: `Devolvió entrega para re-envío`,
+      });
 
       return NextResponse.json({
         submission,

@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createSemesterSchema } from '@/lib/schemas';
 import { readSemesters, writeSemesters, getSemesterById } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 import type { Semester } from '@/lib/types';
 
 /**
@@ -32,7 +33,7 @@ export async function GET(request: Request): Promise<NextResponse> {
  * Solo admin. Aplica RN-SEM-01 (si isActive=true, desactiva los demás).
  */
 export async function POST(request: Request): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     try {
       const body = await request.json();
       const parsed = createSemesterSchema.safeParse(body);
@@ -82,7 +83,10 @@ export async function POST(request: Request): Promise<NextResponse> {
       };
 
       semesters.push(newSemester);
-      await writeSemesters(semesters);
+      await dispatchWrite(
+        () => writeSemesters(semesters),
+        { action: 'create', entity: 'semester', entityId: newSemester.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó semestre "${newSemester.label}"` }
+      );
 
       return NextResponse.json({ semester: newSemester }, { status: 201 });
     } catch (error) {

@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updatePromptSchema } from '@/lib/schemas';
 import { getPromptById, readPrompts, writePrompts } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 
 export async function GET(
   request: Request,
@@ -36,7 +37,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     try {
       const { id } = await params;
       const body = await request.json();
@@ -72,7 +73,10 @@ export async function PUT(
         updatedAt: now,
       };
 
-      await writePrompts(prompts);
+      await dispatchWrite(
+        () => writePrompts(prompts),
+        { action: 'update', entity: 'prompt', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó prompt "${prompts[idx].title}" (v${prompts[idx].version})` }
+      );
 
       return NextResponse.json({ prompt: prompts[idx] });
     } catch (error) {

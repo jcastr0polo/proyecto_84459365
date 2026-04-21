@@ -9,12 +9,13 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { readActivities, writeActivities } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     const { id } = await params;
 
     const activities = readActivities();
@@ -64,7 +65,10 @@ export async function POST(
       updatedAt: new Date().toISOString(),
     };
 
-    await writeActivities(activities);
+    await dispatchWrite(
+      () => writeActivities(activities),
+      { action: 'update', entity: 'activity', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Publicó actividad "${activity.title}"` }
+    );
 
     return NextResponse.json({
       activity: activities[index],

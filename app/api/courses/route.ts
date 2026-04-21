@@ -23,6 +23,7 @@ import {
   getCoursesBySemester,
   getSemesterById,
 } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 import type { Course, User } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -60,7 +61,7 @@ export async function GET(request: Request): Promise<NextResponse> {
  * Solo admin. Valida unicidad de código por semestre (RN-CUR-01).
  */
 export async function POST(request: Request): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     try {
       const body = await request.json();
       const parsed = createCourseSchema.safeParse(body);
@@ -111,7 +112,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
       const courses = readCourses();
       courses.push(newCourse);
-      await writeCourses(courses);
+      await dispatchWrite(
+        () => writeCourses(courses),
+        { action: 'create', entity: 'course', entityId: newCourse.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó curso "${newCourse.name}" (${newCourse.code})` }
+      );
 
       return NextResponse.json({ course: newCourse }, { status: 201 });
     } catch (error) {

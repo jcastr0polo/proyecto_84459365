@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateCourseSchema } from '@/lib/schemas';
 import { readCourses, writeCourses, getCourseById } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 import type { User } from '@/lib/types';
 
 /**
@@ -56,7 +57,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     try {
       const { id } = await params;
       const body = await request.json();
@@ -88,7 +89,10 @@ export async function PUT(
       if (updates.isActive !== undefined) courses[index].isActive = updates.isActive;
 
       courses[index].updatedAt = new Date().toISOString();
-      await writeCourses(courses);
+      await dispatchWrite(
+        () => writeCourses(courses),
+        { action: 'update', entity: 'course', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó curso "${courses[index].name}"` }
+      );
 
       return NextResponse.json({ course: courses[index] });
     } catch (error) {

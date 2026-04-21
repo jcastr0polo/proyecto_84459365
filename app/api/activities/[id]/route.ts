@@ -17,6 +17,7 @@ import {
   getCourseById,
   isStudentEnrolled,
 } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 
 /**
  * GET /api/activities/[id]
@@ -74,7 +75,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     try {
       const { id } = await params;
 
@@ -141,7 +142,10 @@ export async function PUT(
       };
 
       activities[index] = updatedActivity;
-      await writeActivities(activities);
+      await dispatchWrite(
+        () => writeActivities(activities),
+        { action: 'update', entity: 'activity', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó actividad "${updatedActivity.title}"` }
+      );
 
       return NextResponse.json({
         activity: updatedActivity,

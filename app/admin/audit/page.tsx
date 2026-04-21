@@ -62,9 +62,11 @@ export default function AuditPage() {
         >
           <option value="">Todas las acciones</option>
           <option value="login">Login</option>
+          <option value="logout">Logout</option>
           <option value="create">Crear</option>
           <option value="update">Actualizar</option>
           <option value="delete">Eliminar</option>
+          <option value="password">Contraseña</option>
           <option value="seed">Seed</option>
           <option value="upload">Upload</option>
         </select>

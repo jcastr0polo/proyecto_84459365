@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { readProjects, writeProjects, getProjectByStudentAndCourse, readCourses, readUsers, readEnrollments } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 import { createProjectSchema } from '@/lib/schemas';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -121,7 +122,10 @@ export async function POST(request: Request) {
 
     const projects = readProjects();
     projects.push(newProject);
-    await writeProjects(projects);
+    await dispatchWrite(
+      () => writeProjects(projects),
+      { action: 'create', entity: 'project', entityId: newProject.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Registró proyecto "${newProject.projectName}"` }
+    );
 
     return NextResponse.json({ project: newProject }, { status: 201 });
   });

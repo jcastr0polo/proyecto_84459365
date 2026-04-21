@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { readProjects, writeProjects, getCourseById } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 import { put } from '@vercel/blob';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -131,7 +132,10 @@ export async function POST(
       documentUrl,
       updatedAt: new Date().toISOString(),
     };
-    await writeProjects(projects);
+    await dispatchWrite(
+      () => writeProjects(projects),
+      { action: 'upload', entity: 'project', entityId: project.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Subió documento al proyecto "${project.projectName}"` }
+    );
 
     return NextResponse.json({
       message: 'Documento subido exitosamente',

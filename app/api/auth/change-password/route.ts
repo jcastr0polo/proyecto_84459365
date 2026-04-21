@@ -15,6 +15,7 @@ import { withAuth } from '@/lib/withAuth';
 import { changePasswordRequestSchema } from '@/lib/schemas';
 import { verifyPassword, hashPassword } from '@/lib/auth';
 import { readUsers, writeUsers } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 import type { User } from '@/lib/types';
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -68,7 +69,10 @@ export async function POST(request: Request): Promise<NextResponse> {
       users[userIndex].passwordHash = newHash;
       users[userIndex].mustChangePassword = false;
       users[userIndex].updatedAt = new Date().toISOString();
-      await writeUsers(users);
+      await dispatchWrite(
+        () => writeUsers(users),
+        { action: 'password', entity: 'user', entityId: user.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: 'Cambió su contraseña' }
+      );
 
       return NextResponse.json({ success: true });
     } catch (error) {

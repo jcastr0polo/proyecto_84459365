@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { withAuth } from '@/lib/withAuth';
 import { createPromptSchema } from '@/lib/schemas';
 import { readPrompts, writePrompts, getPromptsByCourse, getCourseById } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 import type { AIPrompt } from '@/lib/types';
 
 export async function GET(request: Request): Promise<NextResponse> {
@@ -52,7 +53,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     try {
       const body = await request.json();
 
@@ -86,7 +87,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
       const prompts = readPrompts();
       prompts.push(prompt);
-      await writePrompts(prompts);
+      await dispatchWrite(
+        () => writePrompts(prompts),
+        { action: 'create', entity: 'prompt', entityId: prompt.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó prompt "${prompt.title}"` }
+      );
 
       return NextResponse.json({ prompt }, { status: 201 });
     } catch (error) {

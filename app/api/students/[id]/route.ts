@@ -13,7 +13,7 @@ import { withAuth } from '@/lib/withAuth';
 import { toSafeUser } from '@/lib/withAuth';
 import { getUserById, getEnrollmentsByStudent, getCourseById, readUsers, writeUsers } from '@/lib/dataService';
 import { hashPassword } from '@/lib/auth';
-import { logAudit } from '@/lib/auditService';
+import { dispatchWrite } from '@/lib/auditService';
 
 /**
  * GET /api/students/[id]
@@ -87,12 +87,10 @@ export async function PATCH(
       users[idx].passwordHash = await hashPassword(users[idx].documentNumber);
       users[idx].mustChangePassword = true;
       users[idx].updatedAt = now;
-      await writeUsers(users);
-      await logAudit({
-        action: 'update', entity: 'user', entityId: id,
-        userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`,
-        details: `Reset password de ${studentName}`,
-      });
+      await dispatchWrite(
+        () => writeUsers(users),
+        { action: 'password', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `Reset password de ${studentName}` }
+      );
       return NextResponse.json({
         message: `Contraseña restablecida al documento (${users[idx].documentNumber})`,
         student: toSafeUser(users[idx]),
@@ -102,12 +100,10 @@ export async function PATCH(
     if (action === 'toggleActive') {
       users[idx].isActive = !users[idx].isActive;
       users[idx].updatedAt = now;
-      await writeUsers(users);
-      await logAudit({
-        action: 'update', entity: 'user', entityId: id,
-        userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`,
-        details: `${users[idx].isActive ? 'Activó' : 'Desactivó'} a ${studentName}`,
-      });
+      await dispatchWrite(
+        () => writeUsers(users),
+        { action: 'update', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `${users[idx].isActive ? 'Activó' : 'Desactivó'} a ${studentName}` }
+      );
       return NextResponse.json({
         message: users[idx].isActive ? 'Estudiante activado' : 'Estudiante desactivado',
         student: toSafeUser(users[idx]),
@@ -129,12 +125,10 @@ export async function PATCH(
       }
       users[idx].email = trimmed;
       users[idx].updatedAt = now;
-      await writeUsers(users);
-      await logAudit({
-        action: 'update', entity: 'user', entityId: id,
-        userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`,
-        details: `Email de ${studentName} → ${trimmed}`,
-      });
+      await dispatchWrite(
+        () => writeUsers(users),
+        { action: 'update', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `Email de ${studentName} → ${trimmed}` }
+      );
       return NextResponse.json({
         message: `Email actualizado a ${trimmed}`,
         student: toSafeUser(users[idx]),

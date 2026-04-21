@@ -14,6 +14,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createGradeSchema } from '@/lib/schemas';
 import { gradeSubmission, GradeError } from '@/lib/gradeService';
+import { logAudit } from '@/lib/auditService';
 import { toSafeUser } from '@/lib/withAuth';
 import { getUserById } from '@/lib/dataService';
 
@@ -34,8 +35,13 @@ export async function POST(request: Request): Promise<NextResponse> {
       // Calificar (RN-CAL-01 validado en servicio)
       const grade = await gradeSubmission(parsed.data, user.id);
 
-      // Enriquecer respuesta
+      // Auditoría
       const student = getUserById(grade.studentId);
+      await logAudit({
+        action: 'create', entity: 'grade', entityId: grade.id,
+        userId: user.id, userName: `${user.firstName} ${user.lastName}`,
+        details: `Calificó a ${student ? `${student.firstName} ${student.lastName}` : grade.studentId} con ${grade.score}`,
+      });
       const grader = toSafeUser(user);
 
       return NextResponse.json({

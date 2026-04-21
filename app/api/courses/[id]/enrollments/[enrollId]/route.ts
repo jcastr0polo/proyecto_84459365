@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { readEnrollments, writeEnrollments, getCourseById } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 
 /**
  * DELETE /api/courses/[id]/enrollments/[enrollId]
@@ -18,7 +19,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string; enrollId: string }> }
 ): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     const { id, enrollId } = await params;
 
     // Verificar curso
@@ -47,7 +48,10 @@ export async function DELETE(
     // RN-INS-05: Soft-delete
     enrollments[index].status = 'withdrawn';
     enrollments[index].withdrawnAt = new Date().toISOString();
-    await writeEnrollments(enrollments);
+    await dispatchWrite(
+      () => writeEnrollments(enrollments),
+      { action: 'delete', entity: 'enrollment', entityId: enrollId, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Retiró estudiante del curso ${course.name}` }
+    );
 
     return NextResponse.json({
       message: 'Estudiante retirado del curso',

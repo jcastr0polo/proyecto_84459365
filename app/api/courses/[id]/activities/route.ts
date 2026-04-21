@@ -20,6 +20,7 @@ import {
   isStudentEnrolled,
   getProjectByStudentAndCourse,
 } from '@/lib/dataService';
+import { dispatchWrite } from '@/lib/auditService';
 import type { Activity } from '@/lib/types';
 
 /**
@@ -78,7 +79,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
-  return withAuth(request, async () => {
+  return withAuth(request, async (user) => {
     try {
       const { id } = await params;
 
@@ -126,7 +127,10 @@ export async function POST(
 
       const activities = readActivities();
       activities.push(activity);
-      await writeActivities(activities);
+      await dispatchWrite(
+        () => writeActivities(activities),
+        { action: 'create', entity: 'activity', entityId: activity.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó actividad "${activity.title}" en curso ${id}` }
+      );
 
       return NextResponse.json(
         { activity, message: 'Actividad creada exitosamente' },
