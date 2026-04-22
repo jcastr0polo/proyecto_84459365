@@ -42,6 +42,11 @@ export const DATA_FILES = [
 const _cache = new Map<string, string>();
 let _ready = false;
 let _initPromise: Promise<void> | null = null;
+let _lastLoadedAt = 0;
+let _refreshPromise: Promise<void> | null = null;
+
+/** Tiempo máximo de vida del caché antes de recargar de Blob (30s) */
+const CACHE_TTL_MS = 30_000;
 
 /**
  * Lee un archivo desde el caché en memoria.
@@ -63,27 +68,41 @@ export function isCacheReady(): boolean {
 }
 
 // ═══════════════════════════════════════════════════════════
-// Cold start: pull de Blob → memoria
+// Cold start + cache refresh: pull de Blob → memoria
 // ═══════════════════════════════════════════════════════════
 
 /**
- * Asegura que el caché en memoria esté poblado con datos de Blob.
- * En Vercel: descarga TODOS los archivos de Blob → memoria.
- * Si Blob está vacío → error (admin debe seedear primero).
- * En local: no-op.
+ * Asegura que el caché en memoria esté poblado y fresco.
+ * - Primera vez: carga TODO desde Blob (cold start).
+ * - Después: si el caché tiene más de CACHE_TTL_MS, recarga de Blob.
+ * - Esto evita que instancias warm sirvan datos stale.
  */
 export async function ensureDataReady(): Promise<void> {
-  if (!IS_VERCEL || _ready) return;
-  if (_initPromise) return _initPromise;
-  _initPromise = loadFromBlob()
-    .then(() => { _ready = true; })
-    .catch((err) => {
-      // Reset para permitir reintentos en la misma instancia
-      _initPromise = null;
-      _ready = false;
-      throw err;
-    });
-  return _initPromise;
+  if (!IS_VERCEL) return;
+
+  // Primera carga — debe esperar
+  if (!_ready) {
+    if (_initPromise) return _initPromise;
+    _initPromise = loadFromBlob()
+      .then(() => { _ready = true; _lastLoadedAt = Date.now(); })
+      .catch((err) => {
+        _initPromise = null;
+        _ready = false;
+        throw err;
+      });
+    return _initPromise;
+  }
+
+  // Caché listo pero potencialmente stale — refrescar si TTL expiró
+  if (Date.now() - _lastLoadedAt > CACHE_TTL_MS) {
+    if (!_refreshPromise) {
+      _refreshPromise = loadFromBlob()
+        .then(() => { _lastLoadedAt = Date.now(); })
+        .catch((err) => { console.error('[blobSync] Cache refresh failed:', err); })
+        .finally(() => { _refreshPromise = null; });
+    }
+    await _refreshPromise;
+  }
 }
 
 async function loadFromBlob(): Promise<void> {
@@ -244,5 +263,6 @@ export async function seedFilesToBlob(files: string[]): Promise<Record<string, {
   }
 
   _ready = true;
+  _lastLoadedAt = Date.now();
   return results;
 }
