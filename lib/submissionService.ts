@@ -16,6 +16,7 @@ import {
   readSubmissionsFresh,
   writeSubmissions,
 } from '@/lib/dataService';
+import { withFileLock } from '@/lib/blobSync';
 import type {
   Submission,
   SubmissionAttachment,
@@ -185,13 +186,15 @@ export async function submitWork(
       updatedAt: now,
     };
 
-    // Reemplazar en array
-    const submissions = await readSubmissionsFresh();
-    const index = submissions.findIndex((s) => s.id === existing.id);
-    if (index !== -1) {
-      submissions[index] = updatedSubmission;
-      await writeSubmissions(submissions);
-    }
+    // Reemplazar en array (con lock para evitar escrituras concurrentes)
+    await withFileLock('submissions.json', async () => {
+      const submissions = await readSubmissionsFresh();
+      const index = submissions.findIndex((s) => s.id === existing.id);
+      if (index !== -1) {
+        submissions[index] = updatedSubmission;
+        await writeSubmissions(submissions);
+      }
+    });
 
     return updatedSubmission;
   }
@@ -216,9 +219,11 @@ export async function submitWork(
     updatedAt: now,
   };
 
-  const submissions = await readSubmissionsFresh();
-  submissions.push(submission);
-  await writeSubmissions(submissions);
+  await withFileLock('submissions.json', async () => {
+    const submissions = await readSubmissionsFresh();
+    submissions.push(submission);
+    await writeSubmissions(submissions);
+  });
 
   return submission;
 }
@@ -234,28 +239,30 @@ export async function submitWork(
  * Cambia status a "returned" → habilita re-entrega del estudiante.
  */
 export async function returnSubmission(submissionId: string): Promise<Submission> {
-  const submissions = await readSubmissionsFresh();
-  const index = submissions.findIndex((s) => s.id === submissionId);
+  return withFileLock('submissions.json', async () => {
+    const submissions = await readSubmissionsFresh();
+    const index = submissions.findIndex((s) => s.id === submissionId);
 
-  if (index === -1) {
-    throw new SubmissionError('Entrega no encontrada', 404);
-  }
+    if (index === -1) {
+      throw new SubmissionError('Entrega no encontrada', 404);
+    }
 
-  const submission = submissions[index];
+    const submission = submissions[index];
 
-  // Solo se puede devolver si está en status "submitted", "reviewed" o "resubmitted"
-  if (submission.status === 'returned') {
-    throw new SubmissionError('Esta entrega ya fue devuelta', 400);
-  }
+    // Solo se puede devolver si está en status "submitted", "reviewed" o "resubmitted"
+    if (submission.status === 'returned') {
+      throw new SubmissionError('Esta entrega ya fue devuelta', 400);
+    }
 
-  const updatedSubmission: Submission = {
-    ...submission,
-    status: 'returned',
-    updatedAt: new Date().toISOString(),
-  };
+    const updatedSubmission: Submission = {
+      ...submission,
+      status: 'returned',
+      updatedAt: new Date().toISOString(),
+    };
 
-  submissions[index] = updatedSubmission;
-  await writeSubmissions(submissions);
+    submissions[index] = updatedSubmission;
+    await writeSubmissions(submissions);
 
-  return updatedSubmission;
+    return updatedSubmission;
+  });
 }

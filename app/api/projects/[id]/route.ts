@@ -3,6 +3,7 @@ import { withAuth } from '@/lib/withAuth';
 import { readProjects, readProjectsFresh, writeProjects, getProjectById, readUsers, readCourses } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { updateProjectSchema } from '@/lib/schemas';
+import { withFileLock } from '@/lib/blobSync';
 
 /**
  * GET /api/projects/[id] — Detalle de un proyecto
@@ -43,20 +44,6 @@ export async function PUT(
 ) {
   return withAuth(request, async (user) => {
     const { id } = await params;
-    const projects = await readProjectsFresh();
-    const index = projects.findIndex((p) => p.id === id);
-
-    if (index === -1) {
-      return NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 });
-    }
-
-    const project = projects[index];
-
-    // Students can only edit their own project
-    if (user.role === 'student' && project.studentId !== user.id) {
-      return NextResponse.json({ error: 'No tienes permiso para editar este proyecto' }, { status: 403 });
-    }
-
     const body = await request.json();
     const parsed = updateProjectSchema.safeParse(body);
 
@@ -83,26 +70,42 @@ export async function PUT(
       updates.isPublic = false;
     }
 
-    // Apply updates
-    const updated = {
-      ...project,
-      ...Object.fromEntries(
-        Object.entries(updates).filter(([, v]) => v !== undefined)
-      ),
-      // Clean empty strings for optional URL fields
-      vercelUrl: updates.vercelUrl === '' ? undefined : (updates.vercelUrl ?? project.vercelUrl),
-      figmaUrl: updates.figmaUrl === '' ? undefined : (updates.figmaUrl ?? project.figmaUrl),
-      showcaseDescription: updates.showcaseDescription === '' ? undefined : (updates.showcaseDescription ?? project.showcaseDescription),
-      showcaseImageUrl: updates.showcaseImageUrl === '' ? undefined : (updates.showcaseImageUrl ?? project.showcaseImageUrl),
-      updatedAt: new Date().toISOString(),
-    };
+    return withFileLock('projects.json', async () => {
+      const projects = await readProjectsFresh();
+      const index = projects.findIndex((p) => p.id === id);
 
-    projects[index] = updated;
-    await dispatchWrite(
-      () => writeProjects(projects),
-      { action: 'update', entity: 'project', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Actualizó proyecto "${updated.projectName}"` }
-    );
+      if (index === -1) {
+        return NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 });
+      }
 
-    return NextResponse.json({ project: updated });
+      const project = projects[index];
+
+      // Students can only edit their own project
+      if (user.role === 'student' && project.studentId !== user.id) {
+        return NextResponse.json({ error: 'No tienes permiso para editar este proyecto' }, { status: 403 });
+      }
+
+      // Apply updates
+      const updated = {
+        ...project,
+        ...Object.fromEntries(
+          Object.entries(updates).filter(([, v]) => v !== undefined)
+        ),
+        // Clean empty strings for optional URL fields
+        vercelUrl: updates.vercelUrl === '' ? undefined : (updates.vercelUrl ?? project.vercelUrl),
+        figmaUrl: updates.figmaUrl === '' ? undefined : (updates.figmaUrl ?? project.figmaUrl),
+        showcaseDescription: updates.showcaseDescription === '' ? undefined : (updates.showcaseDescription ?? project.showcaseDescription),
+        showcaseImageUrl: updates.showcaseImageUrl === '' ? undefined : (updates.showcaseImageUrl ?? project.showcaseImageUrl),
+        updatedAt: new Date().toISOString(),
+      };
+
+      projects[index] = updated;
+      await dispatchWrite(
+        () => writeProjects(projects),
+        { action: 'update', entity: 'project', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Actualizó proyecto "${updated.projectName}"` }
+      );
+
+      return NextResponse.json({ project: updated });
+    });
   });
 }

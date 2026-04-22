@@ -48,6 +48,39 @@ let _refreshPromise: Promise<void> | null = null;
 /** Siempre leer de Blob — 0 = sin caché, cada request recarga de Blob */
 const CACHE_TTL_MS = 0;
 
+// ═══════════════════════════════════════════════════════════
+// Per-file write lock — serializa operaciones read-modify-write
+// para evitar que escrituras concurrentes se sobreescriban.
+// ═══════════════════════════════════════════════════════════
+const _fileLocks = new Map<string, Promise<unknown>>();
+
+/**
+ * Ejecuta `fn` con acceso exclusivo al archivo `filename`.
+ * Si otra operación está en curso para el mismo archivo,
+ * espera a que termine antes de ejecutar.
+ * Esto solo serializa dentro de la MISMA instancia serverless.
+ * Entre instancias distintas no hay lock compartido, pero
+ * con TTL=0 cada request lee fresh de Blob antes de escribir,
+ * minimizando la ventana de race condition.
+ */
+export async function withFileLock<T>(filename: string, fn: () => Promise<T>): Promise<T> {
+  const prev = _fileLocks.get(filename) ?? Promise.resolve();
+  let resolve: () => void;
+  const lock = new Promise<void>((r) => { resolve = r; });
+  _fileLocks.set(filename, lock);
+
+  try {
+    await prev; // esperar operación anterior
+    return await fn();
+  } finally {
+    resolve!();
+    // limpiar si somos el último en la cola
+    if (_fileLocks.get(filename) === lock) {
+      _fileLocks.delete(filename);
+    }
+  }
+}
+
 /**
  * Lee un archivo desde el caché en memoria.
  * Solo para Vercel. Lanza error si no está en caché.

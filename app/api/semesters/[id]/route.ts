@@ -12,8 +12,9 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateSemesterSchema } from '@/lib/schemas';
-import { readSemesters, writeSemesters, getSemesterById } from '@/lib/dataService';
+import { readSemesters, readSemestersFresh, writeSemesters, getSemesterById } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
+import { withFileLock } from '@/lib/blobSync';
 
 /**
  * GET /api/semesters/[id] — Detalle de un semestre
@@ -59,47 +60,50 @@ export async function PUT(
       }
 
       const updates = parsed.data;
-      const semesters = readSemesters();
-      const index = semesters.findIndex((s) => s.id === id);
 
-      if (index === -1) {
-        return NextResponse.json(
-          { error: 'Semestre no encontrado' },
-          { status: 404 }
-        );
-      }
+      return withFileLock('semesters.json', async () => {
+        const semesters = await readSemestersFresh();
+        const index = semesters.findIndex((s) => s.id === id);
 
-      // Validar fechas si se proporcionan
-      const newStartDate = updates.startDate ?? semesters[index].startDate;
-      const newEndDate = updates.endDate ?? semesters[index].endDate;
-      if (newStartDate >= newEndDate) {
-        return NextResponse.json(
-          { error: 'La fecha de inicio debe ser anterior a la fecha de fin' },
-          { status: 400 }
-        );
-      }
+        if (index === -1) {
+          return NextResponse.json(
+            { error: 'Semestre no encontrado' },
+            { status: 404 }
+          );
+        }
 
-      // RN-SEM-01: Si se activa este semestre, desactivar todos los demás
-      if (updates.isActive === true) {
-        for (let i = 0; i < semesters.length; i++) {
-          if (i !== index) {
-            semesters[i].isActive = false;
+        // Validar fechas si se proporcionan
+        const newStartDate = updates.startDate ?? semesters[index].startDate;
+        const newEndDate = updates.endDate ?? semesters[index].endDate;
+        if (newStartDate >= newEndDate) {
+          return NextResponse.json(
+            { error: 'La fecha de inicio debe ser anterior a la fecha de fin' },
+            { status: 400 }
+          );
+        }
+
+        // RN-SEM-01: Si se activa este semestre, desactivar todos los demás
+        if (updates.isActive === true) {
+          for (let i = 0; i < semesters.length; i++) {
+            if (i !== index) {
+              semesters[i].isActive = false;
+            }
           }
         }
-      }
 
-      // Aplicar actualizaciones
-      if (updates.label !== undefined) semesters[index].label = updates.label;
-      if (updates.startDate !== undefined) semesters[index].startDate = updates.startDate;
-      if (updates.endDate !== undefined) semesters[index].endDate = updates.endDate;
-      if (updates.isActive !== undefined) semesters[index].isActive = updates.isActive;
+        // Aplicar actualizaciones
+        if (updates.label !== undefined) semesters[index].label = updates.label;
+        if (updates.startDate !== undefined) semesters[index].startDate = updates.startDate;
+        if (updates.endDate !== undefined) semesters[index].endDate = updates.endDate;
+        if (updates.isActive !== undefined) semesters[index].isActive = updates.isActive;
 
-      await dispatchWrite(
-        () => writeSemesters(semesters),
-        { action: 'update', entity: 'semester', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó semestre "${semesters[index].label}"` }
-      );
+        await dispatchWrite(
+          () => writeSemesters(semesters),
+          { action: 'update', entity: 'semester', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó semestre "${semesters[index].label}"` }
+        );
 
-      return NextResponse.json({ semester: semesters[index] });
+        return NextResponse.json({ semester: semesters[index] });
+      });
     } catch (error) {
       console.error('Error editando semestre:', error);
       return NextResponse.json(

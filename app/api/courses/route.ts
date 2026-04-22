@@ -19,11 +19,13 @@ import { withAuth } from '@/lib/withAuth';
 import { createCourseSchema } from '@/lib/schemas';
 import {
   readCourses,
+  readCoursesFresh,
   writeCourses,
   getCoursesBySemester,
   getSemesterById,
 } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
+import { withFileLock } from '@/lib/blobSync';
 import type { Course, User } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -110,12 +112,14 @@ export async function POST(request: Request): Promise<NextResponse> {
         updatedAt: now,
       };
 
-      const courses = readCourses();
-      courses.push(newCourse);
-      await dispatchWrite(
-        () => writeCourses(courses),
-        { action: 'create', entity: 'course', entityId: newCourse.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó curso "${newCourse.name}" (${newCourse.code})` }
-      );
+      await withFileLock('courses.json', async () => {
+        const courses = await readCoursesFresh();
+        courses.push(newCourse);
+        await dispatchWrite(
+          () => writeCourses(courses),
+          { action: 'create', entity: 'course', entityId: newCourse.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó curso "${newCourse.name}" (${newCourse.code})` }
+        );
+      });
 
       return NextResponse.json({ course: newCourse }, { status: 201 });
     } catch (error) {

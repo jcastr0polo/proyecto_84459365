@@ -4,7 +4,7 @@ import { HomeDataSchema, AppConfigSchema } from './validators';
 import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject } from './types';
 import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema } from './schemas';
 import { z } from 'zod';
-import { writeToBlob, readFromCache, isCacheReady, readFromBlobDirect } from './blobSync';
+import { writeToBlob, readFromCache, isCacheReady, readFromBlobDirect, withFileLock } from './blobSync';
 
 // ────────────────────────────────────────────────────────────
 // Lectura/escritura de datos
@@ -197,6 +197,11 @@ export function readSemesters(): Semester[] {
   return z.array(semesterSchema).parse(raw) as Semester[];
 }
 
+export async function readSemestersFresh(): Promise<Semester[]> {
+  const raw = await readJsonFileFresh<unknown[]>('semesters.json');
+  return z.array(semesterSchema).parse(raw) as Semester[];
+}
+
 /**
  * Escribe el array completo de semestres en /data/semesters.json
  */
@@ -229,6 +234,11 @@ export function getActiveSemester(): Semester | null {
  */
 export function readCourses(): Course[] {
   const raw = readJsonFile<unknown[]>('courses.json');
+  return z.array(courseSchema).parse(raw) as Course[];
+}
+
+export async function readCoursesFresh(): Promise<Course[]> {
+  const raw = await readJsonFileFresh<unknown[]>('courses.json');
   return z.array(courseSchema).parse(raw) as Course[];
 }
 
@@ -315,6 +325,11 @@ export function isStudentEnrolled(studentId: string, courseId: string): boolean 
  */
 export function readActivities(): Activity[] {
   const raw = readJsonFile<unknown[]>('activities.json');
+  return z.array(activitySchema).parse(raw) as Activity[];
+}
+
+export async function readActivitiesFresh(): Promise<Activity[]> {
+  const raw = await readJsonFileFresh<unknown[]>('activities.json');
   return z.array(activitySchema).parse(raw) as Activity[];
 }
 
@@ -465,6 +480,11 @@ export function getGradeById(id: string): Grade | null {
  */
 export function readPrompts(): AIPrompt[] {
   const raw = readJsonFile<unknown[]>('prompts.json');
+  return z.array(promptSchema).parse(raw) as AIPrompt[];
+}
+
+export async function readPromptsFresh(): Promise<AIPrompt[]> {
+  const raw = await readJsonFileFresh<unknown[]>('prompts.json');
   return z.array(promptSchema).parse(raw) as AIPrompt[];
 }
 

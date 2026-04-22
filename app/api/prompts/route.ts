@@ -11,8 +11,9 @@ import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { withAuth } from '@/lib/withAuth';
 import { createPromptSchema } from '@/lib/schemas';
-import { readPrompts, writePrompts, getPromptsByCourse, getCourseById } from '@/lib/dataService';
+import { readPrompts, readPromptsFresh, writePrompts, getPromptsByCourse, getCourseById } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
+import { withFileLock } from '@/lib/blobSync';
 import type { AIPrompt } from '@/lib/types';
 
 export async function GET(request: Request): Promise<NextResponse> {
@@ -85,12 +86,14 @@ export async function POST(request: Request): Promise<NextResponse> {
         updatedAt: now,
       };
 
-      const prompts = readPrompts();
-      prompts.push(prompt);
-      await dispatchWrite(
-        () => writePrompts(prompts),
-        { action: 'create', entity: 'prompt', entityId: prompt.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó prompt "${prompt.title}"` }
-      );
+      await withFileLock('prompts.json', async () => {
+        const prompts = await readPromptsFresh();
+        prompts.push(prompt);
+        await dispatchWrite(
+          () => writePrompts(prompts),
+          { action: 'create', entity: 'prompt', entityId: prompt.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó prompt "${prompt.title}"` }
+        );
+      });
 
       return NextResponse.json({ prompt }, { status: 201 });
     } catch (error) {

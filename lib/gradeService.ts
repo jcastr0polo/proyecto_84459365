@@ -26,6 +26,7 @@ import {
   getUserById,
 } from '@/lib/dataService';
 import { readSubmissions, readSubmissionsFresh, writeSubmissions } from '@/lib/dataService';
+import { withFileLock } from '@/lib/blobSync';
 import type {
   Grade,
   CreateGradeRequest,
@@ -129,19 +130,21 @@ export async function gradeSubmission(data: CreateGradeRequest, adminId: string)
 
   if (existingGrade) {
     // Actualizar la nota existente
-    const grades = await readGradesFresh();
-    const idx = grades.findIndex((g) => g.id === existingGrade.id);
-    grades[idx] = {
-      ...existingGrade,
-      score: finalScore,
-      maxScore: activity.maxScore,
-      feedback: data.feedback,
-      gradedBy: adminId,
-      gradedAt: now,
-      updatedAt: now,
-    };
-    await writeGrades(grades);
-    grade = grades[idx];
+    grade = await withFileLock('grades.json', async () => {
+      const grades = await readGradesFresh();
+      const idx = grades.findIndex((g) => g.id === existingGrade.id);
+      grades[idx] = {
+        ...existingGrade,
+        score: finalScore,
+        maxScore: activity.maxScore,
+        feedback: data.feedback,
+        gradedBy: adminId,
+        gradedAt: now,
+        updatedAt: now,
+      };
+      await writeGrades(grades);
+      return grades[idx];
+    });
   } else {
     // 6. Crear nueva calificación con isPublished: false (RN-CAL-02)
     grade = {
@@ -158,22 +161,26 @@ export async function gradeSubmission(data: CreateGradeRequest, adminId: string)
       gradedAt: now,
       updatedAt: now,
     };
-    const grades = await readGradesFresh();
-    grades.push(grade);
-    await writeGrades(grades);
+    await withFileLock('grades.json', async () => {
+      const grades = await readGradesFresh();
+      grades.push(grade);
+      await writeGrades(grades);
+    });
   }
 
   // 7. Marcar submission como 'reviewed'
-  const submissions = await readSubmissionsFresh();
-  const subIdx = submissions.findIndex((s) => s.id === submission.id);
-  if (subIdx !== -1) {
-    submissions[subIdx] = {
-      ...submissions[subIdx],
-      status: 'reviewed',
-      updatedAt: now,
-    };
-    await writeSubmissions(submissions);
-  }
+  await withFileLock('submissions.json', async () => {
+    const submissions = await readSubmissionsFresh();
+    const subIdx = submissions.findIndex((s) => s.id === submission.id);
+    if (subIdx !== -1) {
+      submissions[subIdx] = {
+        ...submissions[subIdx],
+        status: 'reviewed',
+        updatedAt: now,
+      };
+      await writeSubmissions(submissions);
+    }
+  });
 
   return grade;
 }
@@ -205,20 +212,23 @@ export async function updateGrade(gradeId: string, data: UpdateGradeRequest, adm
   }
 
   const now = new Date().toISOString();
-  const grades = await readGradesFresh();
-  const idx = grades.findIndex((g) => g.id === gradeId);
 
-  grades[idx] = {
-    ...existing,
-    score: data.score !== undefined ? data.score : existing.score,
-    feedback: data.feedback !== undefined ? data.feedback : existing.feedback,
-    gradedBy: adminId,
-    gradedAt: now,
-    updatedAt: now,
-  };
+  return withFileLock('grades.json', async () => {
+    const grades = await readGradesFresh();
+    const idx = grades.findIndex((g) => g.id === gradeId);
 
-  await writeGrades(grades);
-  return grades[idx];
+    grades[idx] = {
+      ...existing,
+      score: data.score !== undefined ? data.score : existing.score,
+      feedback: data.feedback !== undefined ? data.feedback : existing.feedback,
+      gradedBy: adminId,
+      gradedAt: now,
+      updatedAt: now,
+    };
+
+    await writeGrades(grades);
+    return grades[idx];
+  });
 }
 
 // ────────────────────────────────────────────────────────────
@@ -235,28 +245,30 @@ export async function publishGrades(activityId: string): Promise<{ published: nu
     throw new GradeError('Actividad no encontrada', 404);
   }
 
-  const grades = await readGradesFresh();
-  const now = new Date().toISOString();
-  let published = 0;
+  return withFileLock('grades.json', async () => {
+    const grades = await readGradesFresh();
+    const now = new Date().toISOString();
+    let published = 0;
 
-  for (let i = 0; i < grades.length; i++) {
-    if (grades[i].activityId === activityId && !grades[i].isPublished) {
-      grades[i] = {
-        ...grades[i],
-        isPublished: true,
-        publishedAt: now,
-        updatedAt: now,
-      };
-      published++;
+    for (let i = 0; i < grades.length; i++) {
+      if (grades[i].activityId === activityId && !grades[i].isPublished) {
+        grades[i] = {
+          ...grades[i],
+          isPublished: true,
+          publishedAt: now,
+          updatedAt: now,
+        };
+        published++;
+      }
     }
-  }
 
-  if (published === 0) {
-    throw new GradeError('No hay notas pendientes de publicar para esta actividad', 400);
-  }
+    if (published === 0) {
+      throw new GradeError('No hay notas pendientes de publicar para esta actividad', 400);
+    }
 
-  await writeGrades(grades);
-  return { published };
+    await writeGrades(grades);
+    return { published };
+  });
 }
 
 // ────────────────────────────────────────────────────────────

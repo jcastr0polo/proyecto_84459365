@@ -17,6 +17,7 @@ import { getUserByEmail, readUsers, readUsersFresh, writeUsers } from '@/lib/dat
 import { verifyPassword, createSession, setSessionCookie, cleanExpiredSessions, generateSessionToken } from '@/lib/auth';
 import { toSafeUser } from '@/lib/withAuth';
 import { ensureDataReady } from '@/lib/blobSync';
+import { withFileLock } from '@/lib/blobSync';
 import { logAudit } from '@/lib/auditService';
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -78,13 +79,15 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     // 7. Actualizar lastLoginAt
     try {
-      const users = await readUsersFresh();
-      const userIndex = users.findIndex((u) => u.id === user.id);
-      if (userIndex !== -1) {
-        users[userIndex].lastLoginAt = new Date().toISOString();
-        users[userIndex].updatedAt = new Date().toISOString();
-        await writeUsers(users);
-      }
+      await withFileLock('users.json', async () => {
+        const users = await readUsersFresh();
+        const userIndex = users.findIndex((u) => u.id === user.id);
+        if (userIndex !== -1) {
+          users[userIndex].lastLoginAt = new Date().toISOString();
+          users[userIndex].updatedAt = new Date().toISOString();
+          await writeUsers(users);
+        }
+      });
     } catch (err) {
       console.error('[login] Failed to update lastLoginAt:', err);
     }

@@ -16,11 +16,13 @@ import {
   getCourseById,
   getActivitiesByCourse,
   readActivities,
+  readActivitiesFresh,
   writeActivities,
   isStudentEnrolled,
   getProjectByStudentAndCourse,
 } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
+import { withFileLock } from '@/lib/blobSync';
 import type { Activity } from '@/lib/types';
 
 /**
@@ -125,12 +127,14 @@ export async function POST(
         updatedAt: now,
       };
 
-      const activities = readActivities();
-      activities.push(activity);
-      await dispatchWrite(
-        () => writeActivities(activities),
-        { action: 'create', entity: 'activity', entityId: activity.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó actividad "${activity.title}" en curso ${id}` }
-      );
+      await withFileLock('activities.json', async () => {
+        const activities = await readActivitiesFresh();
+        activities.push(activity);
+        await dispatchWrite(
+          () => writeActivities(activities),
+          { action: 'create', entity: 'activity', entityId: activity.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó actividad "${activity.title}" en curso ${id}` }
+        );
+      });
 
       return NextResponse.json(
         { activity, message: 'Actividad creada exitosamente' },

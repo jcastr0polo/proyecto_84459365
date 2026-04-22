@@ -25,6 +25,7 @@ import {
   writeEnrollments,
   isStudentEnrolled,
 } from '@/lib/dataService';
+import { withFileLock } from '@/lib/blobSync';
 import type {
   User,
   SafeUser,
@@ -67,6 +68,7 @@ export async function enrollStudent(
   // 2. Buscar o crear usuario
   let user = getUserByEmail(data.email);
   let created = false;
+  let enrollmentResult: Enrollment | undefined;
 
   if (!user) {
     // Crear nuevo usuario student
@@ -87,39 +89,49 @@ export async function enrollStudent(
       updatedAt: now,
     };
 
-    const users = await readUsersFresh();
-    users.push(newUser);
-    await writeUsers(users);
+    await withFileLock('users.json', async () => {
+      const users = await readUsersFresh();
+      users.push(newUser);
+      await writeUsers(users);
+    });
     user = newUser;
     created = true;
   }
 
   // 3. Verificar no inscrito activo (RN-INS-02)
-  if (isStudentEnrolled(user.id, courseId)) {
-    throw new EnrollmentError(
-      `El estudiante ${data.email} ya está inscrito en este curso`,
-      409,
-      'ALREADY_ENROLLED'
+  // Verificar dentro del lock para evitar duplicados concurrentes
+  await withFileLock('enrollments.json', async () => {
+    const enrollments = await readEnrollmentsFresh();
+    const alreadyEnrolled = enrollments.some(
+      (e) => e.studentId === user!.id && e.courseId === courseId && e.status === 'active'
     );
-  }
+    if (alreadyEnrolled) {
+      throw new EnrollmentError(
+        `El estudiante ${data.email} ya está inscrito en este curso`,
+        409,
+        'ALREADY_ENROLLED'
+      );
+    }
 
-  // 4. Crear enrollment
-  const enrollment: Enrollment = {
-    id: `enroll-${uuidv4()}`,
-    courseId,
-    studentId: user.id,
-    status: 'active',
-    enrolledAt: new Date().toISOString(),
-    enrolledBy: adminId,
-  };
+    // 4. Crear enrollment
+    const enrollment: Enrollment = {
+      id: `enroll-${uuidv4()}`,
+      courseId,
+      studentId: user!.id,
+      status: 'active',
+      enrolledAt: new Date().toISOString(),
+      enrolledBy: adminId,
+    };
 
-  const enrollments = await readEnrollmentsFresh();
-  enrollments.push(enrollment);
-  await writeEnrollments(enrollments);
+    enrollments.push(enrollment);
+    await writeEnrollments(enrollments);
+
+    enrollmentResult = enrollment;
+  });
 
   // 5. Retornar resultado
   return {
-    enrollment,
+    enrollment: enrollmentResult!,
     student: toSafeUser(user),
     created,
   };

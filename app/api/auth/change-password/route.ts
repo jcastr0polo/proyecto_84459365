@@ -16,6 +16,7 @@ import { changePasswordRequestSchema } from '@/lib/schemas';
 import { verifyPassword, hashPassword } from '@/lib/auth';
 import { readUsers, readUsersFresh, writeUsers } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
+import { withFileLock } from '@/lib/blobSync';
 import type { User } from '@/lib/types';
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -56,23 +57,27 @@ export async function POST(request: Request): Promise<NextResponse> {
       const newHash = await hashPassword(newPassword);
 
       // 5. Actualizar en users.json
-      const users = await readUsersFresh();
-      const userIndex = users.findIndex((u) => u.id === user.id);
+      await withFileLock('users.json', async () => {
+        const users = await readUsersFresh();
+        const userIndex = users.findIndex((u) => u.id === user.id);
 
-      if (userIndex === -1) {
-        return NextResponse.json(
-          { error: 'Usuario no encontrado' },
-          { status: 404 }
+        if (userIndex === -1) {
+          throw new Error('USER_NOT_FOUND');
+        }
+
+        users[userIndex].passwordHash = newHash;
+        users[userIndex].mustChangePassword = false;
+        users[userIndex].updatedAt = new Date().toISOString();
+        await dispatchWrite(
+          () => writeUsers(users),
+          { action: 'password', entity: 'user', entityId: user.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: 'Cambió su contraseña' }
         );
-      }
-
-      users[userIndex].passwordHash = newHash;
-      users[userIndex].mustChangePassword = false;
-      users[userIndex].updatedAt = new Date().toISOString();
-      await dispatchWrite(
-        () => writeUsers(users),
-        { action: 'password', entity: 'user', entityId: user.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: 'Cambió su contraseña' }
-      );
+      }).catch((err) => {
+        if (err.message === 'USER_NOT_FOUND') {
+          throw { notFound: true };
+        }
+        throw err;
+      });
 
       return NextResponse.json({ success: true });
     } catch (error) {

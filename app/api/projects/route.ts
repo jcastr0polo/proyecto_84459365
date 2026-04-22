@@ -3,6 +3,7 @@ import { withAuth } from '@/lib/withAuth';
 import { readProjects, readProjectsFresh, writeProjects, getProjectByStudentAndCourse, readCourses, readUsers, readEnrollments } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { createProjectSchema } from '@/lib/schemas';
+import { withFileLock } from '@/lib/blobSync';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -88,12 +89,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
     }
 
-    // Check if student already has a project in this course
-    const existing = getProjectByStudentAndCourse(user.id, courseId);
-    if (existing) {
-      return NextResponse.json({ error: 'Ya tienes un proyecto registrado en este curso. Usa PUT para actualizar.' }, { status: 409 });
-    }
-
     // Validate body
     const parsed = createProjectSchema.safeParse(body);
     if (!parsed.success) {
@@ -120,12 +115,27 @@ export async function POST(request: Request) {
       updatedAt: now,
     };
 
-    const projects = await readProjectsFresh();
-    projects.push(newProject);
-    await dispatchWrite(
-      () => writeProjects(projects),
-      { action: 'create', entity: 'project', entityId: newProject.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Registró proyecto "${newProject.projectName}"` }
-    );
+    const projects = await withFileLock('projects.json', async () => {
+      const pjs = await readProjectsFresh();
+      // Check if student already has a project (inside lock to avoid duplicates)
+      const existing = pjs.find((p) => p.studentId === user.id && p.courseId === courseId);
+      if (existing) {
+        throw new Error('ALREADY_EXISTS');
+      }
+      pjs.push(newProject);
+      await dispatchWrite(
+        () => writeProjects(pjs),
+        { action: 'create', entity: 'project', entityId: newProject.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Registró proyecto "${newProject.projectName}"` }
+      );
+      return pjs;
+    }).catch((err) => {
+      if (err.message === 'ALREADY_EXISTS') return null;
+      throw err;
+    });
+
+    if (!projects) {
+      return NextResponse.json({ error: 'Ya tienes un proyecto registrado en este curso. Usa PUT para actualizar.' }, { status: 409 });
+    }
 
     return NextResponse.json({ project: newProject }, { status: 201 });
   });

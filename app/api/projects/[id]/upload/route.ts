@@ -11,6 +11,7 @@ import { withAuth } from '@/lib/withAuth';
 import { readProjects, readProjectsFresh, writeProjects, getCourseById } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { put } from '@vercel/blob';
+import { withFileLock } from '@/lib/blobSync';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
@@ -126,25 +127,28 @@ export async function POST(
       documentUrl = `uploads/projects/${semesterId}/${project.courseId}/${project.studentId}/${finalFileName}`;
     }
 
-    // Actualizar proyecto con la URL del documento — leer fresco de Blob
-    const freshProjects = await readProjectsFresh();
-    const freshIndex = freshProjects.findIndex((p) => p.id === id);
-    if (freshIndex !== -1) {
-      freshProjects[freshIndex] = {
-        ...freshProjects[freshIndex],
-        documentUrl,
-        updatedAt: new Date().toISOString(),
-      };
-    }
-    await dispatchWrite(
-      () => writeProjects(freshProjects),
-      { action: 'upload', entity: 'project', entityId: project.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Subió documento al proyecto "${project.projectName}"` }
-    );
+    // Actualizar proyecto con la URL del documento — leer fresco con lock
+    const updatedProject = await withFileLock('projects.json', async () => {
+      const freshProjects = await readProjectsFresh();
+      const freshIndex = freshProjects.findIndex((p) => p.id === id);
+      if (freshIndex !== -1) {
+        freshProjects[freshIndex] = {
+          ...freshProjects[freshIndex],
+          documentUrl,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+      await dispatchWrite(
+        () => writeProjects(freshProjects),
+        { action: 'upload', entity: 'project', entityId: project.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Subió documento al proyecto "${project.projectName}"` }
+      );
+      return freshProjects[freshIndex !== -1 ? freshIndex : 0];
+    });
 
     return NextResponse.json({
       message: 'Documento subido exitosamente',
       documentUrl,
-      project: freshProjects[freshIndex !== -1 ? freshIndex : 0],
+      project: updatedProject,
     }, { status: 201 });
   });
 }

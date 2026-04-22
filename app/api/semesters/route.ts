@@ -12,8 +12,9 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createSemesterSchema } from '@/lib/schemas';
-import { readSemesters, writeSemesters, getSemesterById } from '@/lib/dataService';
+import { readSemesters, readSemestersFresh, writeSemesters, getSemesterById } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
+import { withFileLock } from '@/lib/blobSync';
 import type { Semester } from '@/lib/types';
 
 /**
@@ -64,15 +65,6 @@ export async function POST(request: Request): Promise<NextResponse> {
         );
       }
 
-      const semesters = readSemesters();
-
-      // RN-SEM-01: Si el nuevo semestre se marca como activo, desactivar todos los demás
-      if (isActive) {
-        for (const sem of semesters) {
-          sem.isActive = false;
-        }
-      }
-
       const newSemester: Semester = {
         id,
         label,
@@ -82,11 +74,23 @@ export async function POST(request: Request): Promise<NextResponse> {
         createdAt: new Date().toISOString(),
       };
 
-      semesters.push(newSemester);
-      await dispatchWrite(
-        () => writeSemesters(semesters),
-        { action: 'create', entity: 'semester', entityId: newSemester.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó semestre "${newSemester.label}"` }
-      );
+      await withFileLock('semesters.json', async () => {
+        const sems = await readSemestersFresh();
+
+        // RN-SEM-01: Si el nuevo semestre se marca como activo, desactivar todos los demás
+        if (isActive) {
+          for (const sem of sems) {
+            sem.isActive = false;
+          }
+        }
+
+        sems.push(newSemester);
+        await dispatchWrite(
+          () => writeSemesters(sems),
+          { action: 'create', entity: 'semester', entityId: newSemester.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó semestre "${newSemester.label}"` }
+        );
+        return sems;
+      });
 
       return NextResponse.json({ semester: newSemester }, { status: 201 });
     } catch (error) {

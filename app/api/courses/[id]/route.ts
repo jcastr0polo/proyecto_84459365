@@ -12,8 +12,9 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateCourseSchema } from '@/lib/schemas';
-import { readCourses, writeCourses, getCourseById } from '@/lib/dataService';
+import { readCourses, readCoursesFresh, writeCourses, getCourseById } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
+import { withFileLock } from '@/lib/blobSync';
 import type { User } from '@/lib/types';
 
 /**
@@ -71,30 +72,33 @@ export async function PUT(
       }
 
       const updates = parsed.data;
-      const courses = readCourses();
-      const index = courses.findIndex((c) => c.id === id);
 
-      if (index === -1) {
-        return NextResponse.json(
-          { error: 'Curso no encontrado' },
-          { status: 404 }
+      return withFileLock('courses.json', async () => {
+        const courses = await readCoursesFresh();
+        const index = courses.findIndex((c) => c.id === id);
+
+        if (index === -1) {
+          return NextResponse.json(
+            { error: 'Curso no encontrado' },
+            { status: 404 }
+          );
+        }
+
+        // Aplicar actualizaciones
+        if (updates.name !== undefined) courses[index].name = updates.name;
+        if (updates.description !== undefined) courses[index].description = updates.description;
+        if (updates.category !== undefined) courses[index].category = updates.category;
+        if (updates.schedule !== undefined) courses[index].schedule = updates.schedule;
+        if (updates.isActive !== undefined) courses[index].isActive = updates.isActive;
+
+        courses[index].updatedAt = new Date().toISOString();
+        await dispatchWrite(
+          () => writeCourses(courses),
+          { action: 'update', entity: 'course', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó curso "${courses[index].name}"` }
         );
-      }
 
-      // Aplicar actualizaciones
-      if (updates.name !== undefined) courses[index].name = updates.name;
-      if (updates.description !== undefined) courses[index].description = updates.description;
-      if (updates.category !== undefined) courses[index].category = updates.category;
-      if (updates.schedule !== undefined) courses[index].schedule = updates.schedule;
-      if (updates.isActive !== undefined) courses[index].isActive = updates.isActive;
-
-      courses[index].updatedAt = new Date().toISOString();
-      await dispatchWrite(
-        () => writeCourses(courses),
-        { action: 'update', entity: 'course', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó curso "${courses[index].name}"` }
-      );
-
-      return NextResponse.json({ course: courses[index] });
+        return NextResponse.json({ course: courses[index] });
+      });
     } catch (error) {
       console.error('Error editando curso:', error);
       return NextResponse.json(
