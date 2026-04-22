@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readProjects, writeProjects, getProjectByStudentAndCourse, readCourses, readUsers, readEnrollments } from '@/lib/dataService';
+import { readProjects, readProjectsFresh, writeProjects, getProjectByStudentAndCourse, readCourses, readUsers, readEnrollments } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { createProjectSchema } from '@/lib/schemas';
 import { v4 as uuidv4 } from 'uuid';
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
       updatedAt: now,
     };
 
-    const projects = readProjects();
+    const projects = await readProjectsFresh();
     projects.push(newProject);
     await dispatchWrite(
       () => writeProjects(projects),

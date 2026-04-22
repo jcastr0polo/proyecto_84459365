@@ -14,7 +14,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { changePasswordRequestSchema } from '@/lib/schemas';
 import { verifyPassword, hashPassword } from '@/lib/auth';
-import { readUsers, writeUsers } from '@/lib/dataService';
+import { readUsers, readUsersFresh, writeUsers } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import type { User } from '@/lib/types';
 
@@ -56,7 +56,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const newHash = await hashPassword(newPassword);
 
       // 5. Actualizar en users.json
-      const users = readUsers();
+      const users = await readUsersFresh();
       const userIndex = users.findIndex((u) => u.id === user.id);
 
       if (userIndex === -1) {

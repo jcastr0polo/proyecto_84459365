@@ -8,7 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readEnrollments, writeEnrollments, getCourseById } from '@/lib/dataService';
+import { readEnrollments, readEnrollmentsFresh, writeEnrollments, getCourseById } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 
 /**
@@ -29,7 +29,7 @@ export async function DELETE(
     }
 
     // Buscar enrollment
-    const enrollments = readEnrollments();
+    const enrollments = await readEnrollmentsFresh();
     const index = enrollments.findIndex(
       (e) => e.id === enrollId && e.courseId === id
     );

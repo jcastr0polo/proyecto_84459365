@@ -4,7 +4,7 @@ import { HomeDataSchema, AppConfigSchema } from './validators';
 import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject } from './types';
 import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema } from './schemas';
 import { z } from 'zod';
-import { writeToBlob, readFromCache, isCacheReady } from './blobSync';
+import { writeToBlob, readFromCache, isCacheReady, readFromBlobDirect } from './blobSync';
 
 // ────────────────────────────────────────────────────────────
 // Lectura/escritura de datos
@@ -27,6 +27,27 @@ export function readJsonFile<T>(filename: string): T {
     }
     const raw = readFromCache(filename);
     return JSON.parse(raw) as T;
+  }
+  // Local: filesystem directo
+  const filePath = path.join(SOURCE_DATA_DIR, filename);
+  const raw = fs.readFileSync(filePath, 'utf-8');
+  return JSON.parse(raw) as T;
+}
+
+/**
+ * Lee un archivo JSON FRESCO directamente de Blob (sin caché).
+ * Usar SOLO en ciclos read-modify-write donde la data puede estar stale
+ * por concurrencia entre instancias serverless.
+ * En local: lee del filesystem (no hay concurrencia).
+ */
+export async function readJsonFileFresh<T>(filename: string): Promise<T> {
+  if (IS_VERCEL) {
+    const raw = await readFromBlobDirect(filename);
+    if (raw !== null) {
+      return JSON.parse(raw) as T;
+    }
+    // Fallback a caché si Blob no responde
+    return readJsonFile<T>(filename);
   }
   // Local: filesystem directo
   const filePath = path.join(SOURCE_DATA_DIR, filename);
@@ -110,6 +131,15 @@ export async function writeJsonFile<T>(filename: string, data: T): Promise<void>
  */
 export function readUsers(): User[] {
   const raw = readJsonFile<unknown[]>('users.json');
+  return z.array(userSchema).parse(raw) as User[];
+}
+
+/**
+ * Lee users.json FRESCO directo de Blob (sin caché).
+ * Usar antes de write para evitar sobrescribir datos de otra instancia.
+ */
+export async function readUsersFresh(): Promise<User[]> {
+  const raw = await readJsonFileFresh<unknown[]>('users.json');
   return z.array(userSchema).parse(raw) as User[];
 }
 
@@ -237,6 +267,11 @@ export function readEnrollments(): Enrollment[] {
   return z.array(enrollmentSchema).parse(raw) as Enrollment[];
 }
 
+export async function readEnrollmentsFresh(): Promise<Enrollment[]> {
+  const raw = await readJsonFileFresh<unknown[]>('enrollments.json');
+  return z.array(enrollmentSchema).parse(raw) as Enrollment[];
+}
+
 /**
  * Escribe el array completo de enrollments en /data/enrollments.json
  */
@@ -318,6 +353,11 @@ export function readSubmissions(): Submission[] {
   return z.array(submissionSchema).parse(raw) as Submission[];
 }
 
+export async function readSubmissionsFresh(): Promise<Submission[]> {
+  const raw = await readJsonFileFresh<unknown[]>('submissions.json');
+  return z.array(submissionSchema).parse(raw) as Submission[];
+}
+
 /**
  * Escribe el array completo de entregas en /data/submissions.json
  */
@@ -369,6 +409,11 @@ export function getSubmissionById(id: string): Submission | null {
  */
 export function readGrades(): Grade[] {
   const raw = readJsonFile<unknown[]>('grades.json');
+  return z.array(gradeSchema).parse(raw) as Grade[];
+}
+
+export async function readGradesFresh(): Promise<Grade[]> {
+  const raw = await readJsonFileFresh<unknown[]>('grades.json');
   return z.array(gradeSchema).parse(raw) as Grade[];
 }
 
@@ -463,6 +508,11 @@ export function getPromptByActivity(activityId: string): AIPrompt | null {
  */
 export function readProjects(): StudentProject[] {
   const raw = readJsonFile<unknown[]>('projects.json');
+  return z.array(projectSchema).parse(raw) as StudentProject[];
+}
+
+export async function readProjectsFresh(): Promise<StudentProject[]> {
+  const raw = await readJsonFileFresh<unknown[]>('projects.json');
   return z.array(projectSchema).parse(raw) as StudentProject[];
 }
 

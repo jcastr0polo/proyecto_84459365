@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readProjects, writeProjects, getProjectById, readUsers, readCourses } from '@/lib/dataService';
+import { readProjects, readProjectsFresh, writeProjects, getProjectById, readUsers, readCourses } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { updateProjectSchema } from '@/lib/schemas';
 
@@ -43,7 +43,7 @@ export async function PUT(
 ) {
   return withAuth(request, async (user) => {
     const { id } = await params;
-    const projects = readProjects();
+    const projects = await readProjectsFresh();
     const index = projects.findIndex((p) => p.id === id);
 
     if (index === -1) {

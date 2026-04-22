@@ -13,7 +13,7 @@
 
 import { NextResponse } from 'next/server';
 import { loginRequestSchema } from '@/lib/schemas';
-import { getUserByEmail, readUsers, writeUsers } from '@/lib/dataService';
+import { getUserByEmail, readUsers, readUsersFresh, writeUsers } from '@/lib/dataService';
 import { verifyPassword, createSession, setSessionCookie, cleanExpiredSessions, generateSessionToken } from '@/lib/auth';
 import { toSafeUser } from '@/lib/withAuth';
 import { ensureDataReady } from '@/lib/blobSync';
@@ -78,7 +78,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     // 7. Actualizar lastLoginAt
     try {
-      const users = readUsers();
+      const users = await readUsersFresh();
       const userIndex = users.findIndex((u) => u.id === user.id);
       if (userIndex !== -1) {
         users[userIndex].lastLoginAt = new Date().toISOString();

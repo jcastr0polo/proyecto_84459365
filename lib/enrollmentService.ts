@@ -17,9 +17,11 @@ import { toSafeUser } from '@/lib/withAuth';
 import {
   getCourseById,
   readUsers,
+  readUsersFresh,
   writeUsers,
   getUserByEmail,
   readEnrollments,
+  readEnrollmentsFresh,
   writeEnrollments,
   isStudentEnrolled,
 } from '@/lib/dataService';
@@ -85,7 +87,7 @@ export async function enrollStudent(
       updatedAt: now,
     };
 
-    const users = readUsers();
+    const users = await readUsersFresh();
     users.push(newUser);
     await writeUsers(users);
     user = newUser;
@@ -111,7 +113,7 @@ export async function enrollStudent(
     enrolledBy: adminId,
   };
 
-  const enrollments = readEnrollments();
+  const enrollments = await readEnrollmentsFresh();
   enrollments.push(enrollment);
   await writeEnrollments(enrollments);
 

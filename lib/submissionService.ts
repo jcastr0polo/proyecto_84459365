@@ -13,6 +13,7 @@ import {
   isStudentEnrolled,
   getSubmission,
   readSubmissions,
+  readSubmissionsFresh,
   writeSubmissions,
 } from '@/lib/dataService';
 import type {
@@ -185,7 +186,7 @@ export async function submitWork(
     };
 
     // Reemplazar en array
-    const submissions = readSubmissions();
+    const submissions = await readSubmissionsFresh();
     const index = submissions.findIndex((s) => s.id === existing.id);
     if (index !== -1) {
       submissions[index] = updatedSubmission;
@@ -215,7 +216,7 @@ export async function submitWork(
     updatedAt: now,
   };
 
-  const submissions = readSubmissions();
+  const submissions = await readSubmissionsFresh();
   submissions.push(submission);
   await writeSubmissions(submissions);
 
@@ -233,7 +234,7 @@ export async function submitWork(
  * Cambia status a "returned" → habilita re-entrega del estudiante.
  */
 export async function returnSubmission(submissionId: string): Promise<Submission> {
-  const submissions = readSubmissions();
+  const submissions = await readSubmissionsFresh();
   const index = submissions.findIndex((s) => s.id === submissionId);
 
   if (index === -1) {

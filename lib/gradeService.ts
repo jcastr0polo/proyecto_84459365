@@ -18,13 +18,14 @@ import {
   getGradesByStudent,
   getGradeById,
   readGrades,
+  readGradesFresh,
   writeGrades,
   getActivitiesByCourse,
   getEnrollmentsByCourse,
   getCourseById,
   getUserById,
 } from '@/lib/dataService';
-import { readSubmissions, writeSubmissions } from '@/lib/dataService';
+import { readSubmissions, readSubmissionsFresh, writeSubmissions } from '@/lib/dataService';
 import type {
   Grade,
   CreateGradeRequest,
@@ -128,7 +129,7 @@ export async function gradeSubmission(data: CreateGradeRequest, adminId: string)
 
   if (existingGrade) {
     // Actualizar la nota existente
-    const grades = readGrades();
+    const grades = await readGradesFresh();
     const idx = grades.findIndex((g) => g.id === existingGrade.id);
     grades[idx] = {
       ...existingGrade,
@@ -157,13 +158,13 @@ export async function gradeSubmission(data: CreateGradeRequest, adminId: string)
       gradedAt: now,
       updatedAt: now,
     };
-    const grades = readGrades();
+    const grades = await readGradesFresh();
     grades.push(grade);
     await writeGrades(grades);
   }
 
   // 7. Marcar submission como 'reviewed'
-  const submissions = readSubmissions();
+  const submissions = await readSubmissionsFresh();
   const subIdx = submissions.findIndex((s) => s.id === submission.id);
   if (subIdx !== -1) {
     submissions[subIdx] = {
@@ -204,7 +205,7 @@ export async function updateGrade(gradeId: string, data: UpdateGradeRequest, adm
   }
 
   const now = new Date().toISOString();
-  const grades = readGrades();
+  const grades = await readGradesFresh();
   const idx = grades.findIndex((g) => g.id === gradeId);
 
   grades[idx] = {
@@ -234,7 +235,7 @@ export async function publishGrades(activityId: string): Promise<{ published: nu
     throw new GradeError('Actividad no encontrada', 404);
   }
 
-  const grades = readGrades();
+  const grades = await readGradesFresh();
   const now = new Date().toISOString();
   let published = 0;
 
