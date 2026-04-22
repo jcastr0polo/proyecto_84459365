@@ -531,7 +531,7 @@ export const projectSchema = z.object({
  * RN-PRY-01: GitHub URL obligatorio
  */
 export const createProjectSchema = z.object({
-  projectName: z.string().min(1, 'El nombre del proyecto es requerido').max(150).trim(),
+  projectName: z.string().min(1, 'El nombre del proyecto es requerido').max(300).trim(),
   description: z.string().max(1000, 'La descripción no puede exceder 1000 caracteres').optional(),
   githubUrl: githubUrlSchema,
   vercelUrl: vercelUrlSchema.optional().or(z.literal('')),
@@ -544,7 +544,7 @@ export const createProjectSchema = z.object({
  * RN-PRY-04: isFeatured solo puede ser seteado por admin (validar en API)
  */
 export const updateProjectSchema = z.object({
-  projectName: z.string().min(1).max(150).trim().optional(),
+  projectName: z.string().min(1).max(300).trim().optional(),
   description: z.string().max(1000).optional(),
   githubUrl: githubUrlSchema.optional(),
   vercelUrl: vercelUrlSchema.optional().or(z.literal('')),
