@@ -45,8 +45,8 @@ let _initPromise: Promise<void> | null = null;
 let _lastLoadedAt = 0;
 let _refreshPromise: Promise<void> | null = null;
 
-/** Tiempo máximo de vida del caché antes de recargar de Blob (30s) */
-const CACHE_TTL_MS = 30_000;
+/** Siempre leer de Blob — 0 = sin caché, cada request recarga de Blob */
+const CACHE_TTL_MS = 0;
 
 /**
  * Lee un archivo desde el caché en memoria.
