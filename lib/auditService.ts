@@ -8,6 +8,7 @@
  */
 
 import { readJsonFile, writeJsonFile } from './dataService';
+import { readFromBlobDirect } from './blobSync';
 
 const MAX_AUDIT_ENTRIES = 1000;
 
@@ -47,11 +48,21 @@ export function readAudit(): AuditEntry[] {
 
 /**
  * Registra una entrada de auditoría.
+ * Lee directamente desde Blob (no caché) para evitar datos stale
+ * cuando múltiples instancias serverless escriben concurrentemente.
  * No lanza error si falla (la auditoría nunca debe romper el flujo principal).
  */
 export async function logAudit(ctx: AuditContext): Promise<void> {
   try {
-    const audit = readAudit();
+    // Leer directo de Blob para evitar datos stale entre instancias
+    let audit: AuditEntry[];
+    try {
+      const raw = await readFromBlobDirect('audit.json');
+      audit = raw ? JSON.parse(raw) as AuditEntry[] : [];
+    } catch {
+      // Fallback a caché/local si Blob no responde
+      audit = readAudit();
+    }
 
     const newEntry: AuditEntry = {
       id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

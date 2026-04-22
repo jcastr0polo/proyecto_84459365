@@ -142,6 +142,31 @@ async function loadFromBlob(): Promise<void> {
 }
 
 // ═══════════════════════════════════════════════════════════
+// Lectura directa desde Blob (bypass caché)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Lee un archivo directamente desde Blob, sin pasar por el caché.
+ * Útil para datos de alta concurrencia (audit) donde múltiples
+ * instancias serverless escriben y el caché puede estar stale.
+ * Retorna null si el archivo no existe o hay error.
+ */
+export async function readFromBlobDirect(filename: string): Promise<string | null> {
+  if (!IS_VERCEL) return null;
+  const token = getBlobToken();
+  if (!token) return null;
+  try {
+    const result = await get(`data/${filename}`, { token, access: 'private' });
+    if (result && result.statusCode === 200) {
+      return new Response(result.stream).text();
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // Escrituras: Blob PRIMERO → actualiza caché
 // ═══════════════════════════════════════════════════════════
 
