@@ -50,7 +50,7 @@ export async function GET(
           'Content-Type': mimeType,
           'Content-Length': buffer.length.toString(),
           'Content-Disposition': `inline; filename="${fileName}"`,
-          'Cache-Control': 'private, max-age=3600',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
         },
       });
     } catch (error) {

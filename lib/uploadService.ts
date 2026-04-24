@@ -10,7 +10,7 @@
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { put, del } from '@vercel/blob';
+import { put, del, get } from '@vercel/blob';
 import type { ActivityAttachment } from '@/lib/types';
 
 // ────────────────────────────────────────────────────────────
@@ -219,14 +219,16 @@ export async function uploadFile(
   const relativePath = `uploads/${safeDest}/${finalFileName}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  if (IS_VERCEL && getBlobToken()) {
-    // Vercel: subir a Blob
+  const token = getBlobToken();
+  if (token) {
+    // Siempre subir a Blob cuando hay token (Vercel o local)
     const blob = await put(relativePath, buffer, {
       access: 'private',
       addRandomSuffix: false,
       allowOverwrite: true,
-      token: getBlobToken(),
+      token,
       contentType: mimeType,
+      cacheControlMaxAge: 0, // Sin caché en Blob CDN
     });
 
     return {
@@ -239,7 +241,7 @@ export async function uploadFile(
     };
   }
 
-  // Local: guardar en filesystem
+  // Fallback local solo si NO hay token (dev sin Blob)
   const uploadDir = getDataDir('uploads', safeDest);
   fs.mkdirSync(uploadDir, { recursive: true });
   const filePath = path.join(uploadDir, finalFileName);
@@ -267,9 +269,10 @@ export async function deleteFile(relativePath: string): Promise<boolean> {
   }
 
   // Si es una URL de Blob, eliminar de Blob
-  if (relativePath.startsWith('http') && getBlobToken()) {
+  const token = getBlobToken();
+  if (relativePath.startsWith('http') && token) {
     try {
-      await del(relativePath, { token: getBlobToken() });
+      await del(relativePath, { token });
       return true;
     } catch {
       return false;
@@ -297,17 +300,22 @@ export async function readUploadedFile(relativePath: string): Promise<{ buffer: 
     throw new UploadError('Ruta inválida', 403);
   }
 
-  // Si es una URL de Blob, descargar directamente
+  // Si es una URL de Blob, descargar usando get() del SDK (blobs privados)
   if (relativePath.startsWith('http')) {
+    const token = getBlobToken();
+    if (!token) throw new UploadError('Token de Blob no configurado', 500);
     try {
-      const res = await fetch(relativePath);
-      if (!res.ok) throw new UploadError('Archivo no encontrado', 404);
-      const buffer = Buffer.from(await res.arrayBuffer());
-      const contentType = res.headers.get('content-type') || 'application/octet-stream';
+      const result = await get(relativePath, { token, access: 'private' });
+      if (!result || result.statusCode !== 200) {
+        throw new UploadError('Archivo no encontrado en Blob', 404);
+      }
+      const arrayBuf = await new Response(result.stream).arrayBuffer();
+      const buffer = Buffer.from(arrayBuf);
+      const contentType = result.blob.contentType || 'application/octet-stream';
       return { buffer, mimeType: contentType };
     } catch (err) {
       if (err instanceof UploadError) throw err;
-      throw new UploadError('Error al descargar archivo', 500);
+      throw new UploadError('Error al descargar archivo desde Blob', 500);
     }
   }
 

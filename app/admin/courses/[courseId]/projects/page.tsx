@@ -116,6 +116,37 @@ export default function AdminCourseProjectsPage() {
     await updateProject(project.id, { isBlockedFromShowcase: !project.isBlockedFromShowcase });
   }, [updateProject]);
 
+  // Document viewing
+  const [viewingDocId, setViewingDocId] = useState<string | null>(null);
+  const [docContent, setDocContent] = useState<string | null>(null);
+  const [loadingDoc, setLoadingDoc] = useState(false);
+
+  const handleViewDoc = useCallback(async (projectId: string) => {
+    if (viewingDocId === projectId) {
+      setViewingDocId(null);
+      return;
+    }
+    setViewingDocId(projectId);
+    setDocContent(null);
+    setLoadingDoc(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/document`);
+      if (res.ok) {
+        const data = await res.json();
+        setDocContent(data.content);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(err.error ?? 'No se pudo cargar el documento', 'error');
+        setViewingDocId(null);
+      }
+    } catch {
+      toast('Error de conexión', 'error');
+      setViewingDocId(null);
+    } finally {
+      setLoadingDoc(false);
+    }
+  }, [viewingDocId, toast]);
+
   // Showcase editing
   const [editingShowcase, setEditingShowcase] = useState<string | null>(null);
   const [showcaseDesc, setShowcaseDesc] = useState('');
@@ -264,7 +295,37 @@ export default function AdminCourseProjectsPage() {
                   <Image className="w-3 h-3" />
                   Vitrina
                 </button>
+
+                {/* View document */}
+                {p.documentUrl && (
+                  <button
+                    onClick={() => handleViewDoc(p.id)}
+                    disabled={loadingDoc && viewingDocId === p.id}
+                    className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded transition-colors cursor-pointer ${
+                      viewingDocId === p.id
+                        ? 'bg-violet-500/10 text-violet-400'
+                        : 'text-faint hover:text-violet-400 hover:bg-violet-500/10'
+                    } ${loadingDoc && viewingDocId === p.id ? 'opacity-50' : ''}`}
+                    title="Ver documento del proyecto"
+                  >
+                    <FileText className="w-3 h-3" />
+                    {viewingDocId === p.id ? 'Ocultar Doc' : 'Ver Doc'}
+                  </button>
+                )}
               </div>
+
+              {/* Document viewer inline */}
+              {viewingDocId === p.id && (
+                <div className="mt-3 p-4 rounded-lg bg-foreground/[0.03] border border-foreground/[0.08]">
+                  {loadingDoc ? (
+                    <p className="text-xs text-subtle animate-pulse">Cargando documento...</p>
+                  ) : docContent ? (
+                    <pre className="text-xs text-muted whitespace-pre-wrap font-mono leading-relaxed max-h-96 overflow-y-auto">{docContent}</pre>
+                  ) : (
+                    <p className="text-xs text-faint">No se pudo cargar el contenido</p>
+                  )}
+                </div>
+              )}
 
               {/* Showcase edit inline */}
               {editingShowcase === p.id && (

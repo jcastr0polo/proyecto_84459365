@@ -107,19 +107,21 @@ export async function POST(
     const buffer = Buffer.from(await file.arrayBuffer());
 
     let documentUrl: string;
+    const token = getBlobToken();
 
-    if (IS_VERCEL && getBlobToken()) {
-      // Subir a Blob
+    if (token) {
+      // Subir a Blob (funciona tanto en Vercel como local con token)
       const blob = await put(blobPath, buffer, {
         access: 'private',
         addRandomSuffix: false,
         allowOverwrite: true,
-        token: getBlobToken(),
+        token,
         contentType: 'text/markdown',
+        cacheControlMaxAge: 0, // Sin caché en Blob CDN
       });
       documentUrl = blob.url;
     } else {
-      // Local: guardar en data/uploads/projects/...
+      // Local sin token: guardar en data/uploads/projects/...
       const uploadDir = path.join(process.cwd(), 'data', 'uploads', 'projects', semesterId, project.courseId, project.studentId);
       fs.mkdirSync(uploadDir, { recursive: true });
       const filePath = path.join(uploadDir, finalFileName);
