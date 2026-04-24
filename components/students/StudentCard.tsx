@@ -1,19 +1,22 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import { Eye } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import type { EnrollmentWithStudent } from '@/lib/types';
 
 interface StudentCardProps {
   enrollment: EnrollmentWithStudent;
   onWithdraw?: (enrollId: string) => void;
+  courseId?: string;
 }
 
 /**
  * StudentCard — Vista mobile-friendly de un estudiante inscrito
  * Se muestra en lugar de la tabla en pantallas pequeñas
  */
-export default function StudentCard({ enrollment, onWithdraw }: StudentCardProps) {
+export default function StudentCard({ enrollment, onWithdraw, courseId }: StudentCardProps) {
   const { student } = enrollment;
   const isActive = enrollment.status === 'active';
 
@@ -47,15 +50,24 @@ export default function StudentCard({ enrollment, onWithdraw }: StudentCardProps
         </div>
       </div>
 
-      {isActive && onWithdraw && (
-        <button
-          onClick={() => onWithdraw(enrollment.id)}
-          className="w-full text-xs text-red-400/70 hover:text-red-400 hover:bg-red-500/10
-                     py-1.5 rounded-lg transition-colors cursor-pointer"
+      <div className="flex items-center gap-2">
+        <Link
+          href={`/admin/students/${student.id}${courseId ? `?from=${courseId}` : ''}`}
+          className="flex-1 text-center text-xs text-cyan-400/70 hover:text-cyan-400 hover:bg-cyan-500/10
+                     py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
         >
-          Retirar del curso
-        </button>
-      )}
+          <Eye className="w-3.5 h-3.5" /> Ver detalle
+        </Link>
+        {isActive && onWithdraw && (
+          <button
+            onClick={() => onWithdraw(enrollment.id)}
+            className="flex-1 text-center text-xs text-red-400/70 hover:text-red-400 hover:bg-red-500/10
+                       py-1.5 rounded-lg transition-colors cursor-pointer"
+          >
+            Retirar del curso
+          </button>
+        )}
+      </div>
     </div>
   );
 }

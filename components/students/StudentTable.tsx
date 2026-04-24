@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import { Eye } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Table, { Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table';
@@ -10,13 +12,14 @@ import type { EnrollmentWithStudent } from '@/lib/types';
 interface StudentTableProps {
   enrollments: EnrollmentWithStudent[];
   onWithdraw?: (enrollId: string) => void;
+  courseId?: string;
 }
 
 /**
  * StudentTable — Tabla responsiva de estudiantes inscritos
  * Desktop: tabla con columnas  |  Mobile: cards apiladas
  */
-export default function StudentTable({ enrollments, onWithdraw }: StudentTableProps) {
+export default function StudentTable({ enrollments, onWithdraw, courseId }: StudentTableProps) {
   return (
     <>
       {/* Desktop table */}
@@ -63,20 +66,29 @@ export default function StudentTable({ enrollments, onWithdraw }: StudentTablePr
                     <span className="text-xs text-muted">{formatDate(enrollment.enrolledAt)}</span>
                   </Td>
                   <Td className="text-right">
-                    {isActive && onWithdraw && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onWithdraw(enrollment.id)}
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={`/admin/students/${student.id}${courseId ? `?from=${courseId}` : ''}`}
+                        className="p-1.5 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+                        title="Ver detalle del estudiante"
                       >
-                        Retirar
-                      </Button>
-                    )}
-                    {!isActive && enrollment.withdrawnAt && (
-                      <span className="text-[10px] text-subtle">
-                        {formatDate(enrollment.withdrawnAt)}
-                      </span>
-                    )}
+                        <Eye className="w-4 h-4" />
+                      </Link>
+                      {isActive && onWithdraw && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onWithdraw(enrollment.id)}
+                        >
+                          Retirar
+                        </Button>
+                      )}
+                      {!isActive && enrollment.withdrawnAt && (
+                        <span className="text-[10px] text-subtle">
+                          {formatDate(enrollment.withdrawnAt)}
+                        </span>
+                      )}
+                    </div>
                   </Td>
                 </Tr>
               );
@@ -92,6 +104,7 @@ export default function StudentTable({ enrollments, onWithdraw }: StudentTablePr
             key={enrollment.id}
             enrollment={enrollment}
             onWithdraw={onWithdraw}
+            courseId={courseId}
           />
         ))}
       </div>

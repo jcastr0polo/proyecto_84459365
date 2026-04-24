@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -93,6 +93,8 @@ interface StudentInfo {
 export default function AdminStudentDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromCourse = searchParams.get('from'); // courseId if navigated from a course
   const [student, setStudent] = useState<StudentInfo | null>(null);
   const [courses, setCourses] = useState<CourseDetail[]>([]);
   const [loading, setLoading] = useState(true);
@@ -160,12 +162,22 @@ export default function AdminStudentDetailPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Back */}
-      <button
-        onClick={() => router.push('/admin/students')}
-        className="flex items-center gap-1.5 text-sm text-subtle hover:text-foreground transition-colors cursor-pointer"
-      >
-        <ArrowLeft className="w-4 h-4" /> Volver a estudiantes
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => router.push(fromCourse ? `/admin/courses/${fromCourse}/students` : '/admin/students')}
+          className="flex items-center gap-1.5 text-sm text-subtle hover:text-foreground transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" /> {fromCourse ? 'Volver al curso' : 'Volver a estudiantes'}
+        </button>
+        {fromCourse && (
+          <Link
+            href="/admin/students"
+            className="text-xs text-cyan-400 hover:underline flex items-center gap-1"
+          >
+            <ExternalLink className="w-3 h-3" /> Ir a lista general
+          </Link>
+        )}
+      </div>
 
       {/* Student Header */}
       <motion.div

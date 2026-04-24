@@ -234,7 +234,7 @@ export default function CourseStudentsPage() {
           }
         />
       ) : (
-        <StudentTable enrollments={filtered} onWithdraw={handleWithdraw} />
+        <StudentTable enrollments={filtered} onWithdraw={handleWithdraw} courseId={courseId} />
       )}
     </div>
   );
