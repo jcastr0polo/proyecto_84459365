@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Users, RotateCcw, ShieldCheck, ShieldOff, Search, AlertCircle, CheckCircle2, Clock, Pencil, X, Check } from 'lucide-react';
+import { Users, RotateCcw, ShieldCheck, ShieldOff, Search, AlertCircle, CheckCircle2, Clock, Pencil, X, Check, Eye } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -15,6 +16,7 @@ export default function AdminStudentsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
   const [editingEmail, setEditingEmail] = useState<{ id: string; value: string } | null>(null);
+  const router = useRouter();
 
   const fetchStudents = useCallback(async () => {
     try {
@@ -262,6 +264,14 @@ export default function AdminStudentsPage() {
 
                 {/* Right: actions */}
                 <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => router.push(`/admin/students/${student.id}`)}
+                    title="Ver detalle del estudiante"
+                    className="p-2 rounded-lg text-subtle hover:text-cyan-400 hover:bg-cyan-500/10
+                               transition-colors cursor-pointer"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={() => handleAction(student.id, 'resetPassword')}
                     disabled={actionLoading === `${student.id}-resetPassword`}
