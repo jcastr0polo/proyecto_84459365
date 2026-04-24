@@ -1,16 +1,15 @@
 /**
  * GET /api/chat/upload/[filename] — Descargar archivo del chat
- * Sirve archivos desde data/uploads/chat/ sin autenticación.
+ * Lee desde Blob (get() SDK) o filesystem local.
  */
 
 import { NextResponse } from 'next/server';
+import { get } from '@vercel/blob';
 import fs from 'fs';
 import path from 'path';
 
-const IS_VERCEL = !!process.env.VERCEL;
-const CHAT_UPLOAD_DIR = IS_VERCEL
-  ? path.join('/tmp', 'data', 'uploads', 'chat')
-  : path.join(process.cwd(), 'data', 'uploads', 'chat');
+function getBlobToken() { return process.env.NEXUS_READ_WRITE_TOKEN; }
+const CHAT_UPLOAD_DIR = path.join(process.cwd(), 'data', 'uploads', 'chat');
 
 const MIME_MAP: Record<string, string> = {
   '.pdf': 'application/pdf',
@@ -34,7 +33,7 @@ const MIME_MAP: Record<string, string> = {
 };
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ filename: string }> }
 ): Promise<NextResponse> {
   const { filename } = await params;
@@ -45,6 +44,33 @@ export async function GET(
     return NextResponse.json({ error: 'Nombre inválido' }, { status: 400 });
   }
 
+  // Check query param for Blob URL (used when filePath is a Blob URL)
+  const url = new URL(request.url);
+  const blobUrl = url.searchParams.get('blobUrl');
+
+  const token = getBlobToken();
+
+  if (blobUrl && token) {
+    try {
+      const result = await get(blobUrl, { token, access: 'private' });
+      if (!result || result.statusCode !== 200) {
+        return NextResponse.json({ error: 'Archivo no encontrado en Blob' }, { status: 404 });
+      }
+      const arrayBuf = await new Response(result.stream).arrayBuffer();
+      const contentType = result.blob.contentType || 'application/octet-stream';
+      return new NextResponse(new Uint8Array(arrayBuf), {
+        headers: {
+          'Content-Type': contentType,
+          'Content-Disposition': `attachment; filename="${safe}"`,
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      });
+    } catch {
+      return NextResponse.json({ error: 'Error al leer archivo desde Blob' }, { status: 500 });
+    }
+  }
+
+  // Fallback local: filesystem
   const filePath = path.join(CHAT_UPLOAD_DIR, safe);
   if (!fs.existsSync(filePath)) {
     return NextResponse.json({ error: 'Archivo no encontrado' }, { status: 404 });
@@ -58,7 +84,7 @@ export async function GET(
     headers: {
       'Content-Type': contentType,
       'Content-Disposition': `attachment; filename="${safe}"`,
-      'Cache-Control': 'public, max-age=86400',
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
     },
   });
 }

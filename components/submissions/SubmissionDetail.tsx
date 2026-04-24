@@ -77,7 +77,10 @@ export default function SubmissionDetail({ submission, isAdmin = false, onReturn
             {submission.attachments.map((att) => (
               <a
                 key={att.id}
-                href={`/api/upload/${att.filePath.replace('uploads/', '')}`}
+                href={att.filePath.startsWith('http')
+                  ? `/api/upload/download?url=${encodeURIComponent(att.filePath)}`
+                  : `/api/upload/${att.filePath.replace('uploads/', '')}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]

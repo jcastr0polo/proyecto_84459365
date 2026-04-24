@@ -8,6 +8,7 @@ import { Star, Pencil, Rocket, Upload, FileText, CheckCircle } from 'lucide-reac
 import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
+import MarkdownViewer from '@/components/ui/MarkdownViewer';
 import type { StudentProject, Course } from '@/lib/types';
 
 /**
@@ -291,7 +292,7 @@ export default function StudentProjectPage() {
 
                   {showDoc && docContent && (
                     <div className="p-4 rounded-lg bg-foreground/[0.03] border border-foreground/[0.08] max-h-96 overflow-y-auto">
-                      <pre className="text-xs text-muted whitespace-pre-wrap font-mono leading-relaxed">{docContent}</pre>
+                      <MarkdownViewer content={docContent} />
                     </div>
                   )}
                 </div>

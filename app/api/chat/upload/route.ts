@@ -57,13 +57,16 @@ export async function POST(request: Request): Promise<NextResponse> {
     const storedName = `${id}-${safeName}${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    if (IS_VERCEL && getBlobToken()) {
+    const token = getBlobToken();
+    if (token) {
+      // Siempre subir a Blob cuando hay token
       const blob = await put(`chat/${storedName}`, buffer, {
         access: 'private',
         addRandomSuffix: false,
         allowOverwrite: true,
-        token: getBlobToken(),
+        token,
         contentType: file.type || 'application/octet-stream',
+        cacheControlMaxAge: 0,
       });
 
       return NextResponse.json({
@@ -74,7 +77,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       }, { status: 201 });
     }
 
-    // Local: filesystem
+    // Fallback local solo si NO hay token (dev sin Blob)
     if (!fs.existsSync(CHAT_UPLOAD_DIR)) {
       fs.mkdirSync(CHAT_UPLOAD_DIR, { recursive: true });
     }

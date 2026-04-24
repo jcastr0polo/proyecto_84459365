@@ -7,6 +7,7 @@ import { Rocket, Star, Eye, EyeOff, Ban, Image, FileText } from 'lucide-react';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import EmptyState from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
+import MarkdownViewer from '@/components/ui/MarkdownViewer';
 import type { StudentProject, Course } from '@/lib/types';
 
 type EnrichedProject = StudentProject & { studentName: string; courseName: string };
@@ -320,7 +321,7 @@ export default function AdminCourseProjectsPage() {
                   {loadingDoc ? (
                     <p className="text-xs text-subtle animate-pulse">Cargando documento...</p>
                   ) : docContent ? (
-                    <pre className="text-xs text-muted whitespace-pre-wrap font-mono leading-relaxed max-h-96 overflow-y-auto">{docContent}</pre>
+                    <MarkdownViewer content={docContent} className="max-h-96 overflow-y-auto" />
                   ) : (
                     <p className="text-xs text-faint">No se pudo cargar el contenido</p>
                   )}

@@ -46,7 +46,8 @@ const ALLOWED_MIME_TYPES_ACTIVITIES: Record<string, string[]> = {
   'image/jpeg': ['.jpg', '.jpeg'],
   'image/gif': ['.gif'],
   'text/markdown': ['.md'],
-  'text/plain': ['.txt'],
+  'text/plain': ['.txt', '.md'],
+  'application/octet-stream': ['.md'], // browsers envían .md con este MIME
 };
 
 /**
@@ -188,15 +189,19 @@ export async function uploadFile(
 
   // 3. Validar tipo MIME
   const mimeType = file.type || 'application/octet-stream';
-  if (!isAllowedMimeType(mimeType, destination)) {
+  const ext = getExtension(file.name);
+
+  // .md tiene MIME inconsistente entre browsers — aceptar siempre por extensión
+  const isMdFile = ext === '.md';
+  if (!isMdFile && !isAllowedMimeType(mimeType, destination)) {
     const allowed = Object.keys(getAllowedMimeTypes(destination)).join(', ');
     throw new UploadError(
       `Tipo de archivo no permitido: ${mimeType}. Permitidos: ${allowed}`
     );
   }
 
-  // 4. Validar extensión vs MIME
-  if (!isExtensionMatchingMime(file.name, mimeType, destination)) {
+  // 4. Validar extensión vs MIME (skip para .md por inconsistencia de browsers)
+  if (!isMdFile && !isExtensionMatchingMime(file.name, mimeType, destination)) {
     throw new UploadError(
       `La extensión del archivo no coincide con el tipo MIME declarado (${mimeType})`
     );
@@ -204,10 +209,12 @@ export async function uploadFile(
 
   // 5. Sanitizar y generar nombre único
   const sanitizedName = sanitizeFileName(path.basename(file.name, path.extname(file.name)));
-  const ext = getExtension(file.name);
   const timestamp = Date.now();
   const uuid = uuidv4().split('-')[0]; // Primeros 8 chars del UUID
   const finalFileName = `${timestamp}-${uuid}-${sanitizedName}${ext}`;
+
+  // Para .md: forzar contentType correcto (browsers envían inconsistente)
+  const effectiveMimeType = isMdFile ? 'text/markdown' : mimeType;
 
   // 7. Sanitizar destino (prevenir path traversal)
   const safeDest = destination
@@ -227,7 +234,7 @@ export async function uploadFile(
       addRandomSuffix: false,
       allowOverwrite: true,
       token,
-      contentType: mimeType,
+      contentType: effectiveMimeType,
       cacheControlMaxAge: 0, // Sin caché en Blob CDN
     });
 
@@ -236,7 +243,7 @@ export async function uploadFile(
       fileName: file.name,
       filePath: blob.url, // URL completa de Blob
       fileSize: file.size,
-      mimeType,
+      mimeType: effectiveMimeType,
       uploadedAt: new Date().toISOString(),
     };
   }
@@ -252,7 +259,7 @@ export async function uploadFile(
     fileName: file.name,
     filePath: relativePath,
     fileSize: file.size,
-    mimeType,
+    mimeType: effectiveMimeType,
     uploadedAt: new Date().toISOString(),
   };
 }
