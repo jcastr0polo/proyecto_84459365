@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { Paperclip, Link as LinkIcon, Clock, Eye, EyeOff, Download } from 'lucide-react';
+import React from 'react';
+import Link from 'next/link';
+import { Paperclip, Link as LinkIcon, Clock, Eye, Download } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Countdown from '@/components/ui/Countdown';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
-import MarkdownViewer from '@/components/ui/MarkdownViewer';
 import { TYPE_LABELS, TYPE_VARIANTS, STATUS_CONFIG } from '@/components/activities/ActivityCard';
 import type { Activity } from '@/lib/types';
 
@@ -192,10 +192,6 @@ export default function ActivityDetail({
 /* ─── Sub-components ─── */
 
 function AttachmentsSection({ attachments }: { attachments: Activity['attachments'] }) {
-  const [viewingId, setViewingId] = useState<string | null>(null);
-  const [mdContent, setMdContent] = useState<Record<string, string>>({});
-  const [loadingId, setLoadingId] = useState<string | null>(null);
-
   const isMdOrTxt = (mime: string, name: string) => {
     const ext = name.split('.').pop()?.toLowerCase();
     return mime === 'text/markdown' || mime === 'text/plain' || ext === 'md' || ext === 'txt';
@@ -206,95 +202,50 @@ function AttachmentsSection({ attachments }: { attachments: Activity['attachment
       ? `/api/upload/download?url=${encodeURIComponent(filePath)}`
       : `/api/upload/${filePath.replace('uploads/', '')}`;
 
-  const handleView = useCallback(async (att: Activity['attachments'][0]) => {
-    if (viewingId === att.id) {
-      setViewingId(null);
-      return;
-    }
-    if (mdContent[att.id]) {
-      setViewingId(att.id);
-      return;
-    }
-    setLoadingId(att.id);
-    setViewingId(att.id);
-    try {
-      const url = getDownloadUrl(att.filePath);
-      const res = await fetch(url);
-      if (res.ok) {
-        const text = await res.text();
-        setMdContent((prev) => ({ ...prev, [att.id]: text }));
-      }
-    } catch { /* silent */ } finally {
-      setLoadingId(null);
-    }
-  }, [viewingId, mdContent]);
+  const getViewerUrl = (att: Activity['attachments'][0]) =>
+    `/admin/viewer?url=${encodeURIComponent(att.filePath)}&name=${encodeURIComponent(att.fileName)}`;
 
   return (
     <Card padding="lg">
       <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-4">
         Archivos Adjuntos ({attachments.length})
       </h3>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {attachments.map((att) => {
           const canPreview = isMdOrTxt(att.mimeType, att.fileName);
-          const isViewing = viewingId === att.id;
 
           return (
-            <div key={att.id} className="space-y-2">
-              <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                isViewing
-                  ? 'bg-cyan-500/[0.04] border-cyan-500/20'
-                  : 'bg-foreground/[0.03] border-foreground/[0.06] hover:bg-foreground/[0.06] hover:border-foreground/[0.12]'
-              }`}>
-                <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center shrink-0">
-                  <FileIcon mimeType={att.mimeType} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground/80 truncate">{att.fileName}</p>
-                  <p className="text-[11px] text-subtle">
-                    {formatFileSize(att.fileSize)} · {att.mimeType.split('/')[1]?.toUpperCase()}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  {canPreview && (
-                    <button
-                      onClick={() => handleView(att)}
-                      className={`p-2 rounded-lg transition-colors cursor-pointer ${
-                        isViewing
-                          ? 'bg-cyan-500/15 text-cyan-400'
-                          : 'text-faint hover:text-cyan-400 hover:bg-cyan-500/10'
-                      }`}
-                      title={isViewing ? 'Ocultar vista previa' : 'Ver contenido'}
-                    >
-                      {isViewing ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  )}
-                  <a
-                    href={getDownloadUrl(att.filePath)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-lg text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
-                    title="Descargar"
-                  >
-                    <Download className="w-4 h-4" />
-                  </a>
-                </div>
+            <div key={att.id} className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]
+                       hover:bg-foreground/[0.06] hover:border-foreground/[0.12] transition-all group">
+              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center shrink-0">
+                <FileIcon mimeType={att.mimeType} />
               </div>
-
-              {/* Inline preview */}
-              {isViewing && (
-                <div className="ml-2 p-4 rounded-lg bg-foreground/[0.03] border border-foreground/[0.08] max-h-[500px] overflow-y-auto">
-                  {loadingId === att.id ? (
-                    <p className="text-xs text-subtle animate-pulse">Cargando contenido...</p>
-                  ) : mdContent[att.id] ? (
-                    att.fileName.endsWith('.md')
-                      ? <MarkdownViewer content={mdContent[att.id]} />
-                      : <pre className="text-xs text-muted whitespace-pre-wrap font-mono leading-relaxed">{mdContent[att.id]}</pre>
-                  ) : (
-                    <p className="text-xs text-faint">No se pudo cargar el contenido</p>
-                  )}
-                </div>
-              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-foreground/80 group-hover:text-foreground truncate">{att.fileName}</p>
+                <p className="text-[11px] text-subtle">
+                  {formatFileSize(att.fileSize)} · {att.mimeType.split('/')[1]?.toUpperCase()}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                {canPreview && (
+                  <Link
+                    href={getViewerUrl(att)}
+                    className="p-2 rounded-lg text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+                    title="Ver documento"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Link>
+                )}
+                <a
+                  href={getDownloadUrl(att.filePath)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+                  title="Descargar"
+                >
+                  <Download className="w-4 h-4" />
+                </a>
+              </div>
             </div>
           );
         })}

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface MarkdownViewerProps {
   content: string;
@@ -9,7 +10,7 @@ interface MarkdownViewerProps {
 }
 
 /**
- * MarkdownViewer — Renderiza contenido Markdown con estilos
+ * MarkdownViewer — Renderiza contenido Markdown con estilos (GFM: tablas, tareas, strikethrough)
  */
 export default function MarkdownViewer({ content, className = '' }: MarkdownViewerProps) {
   return (
@@ -28,12 +29,14 @@ export default function MarkdownViewer({ content, className = '' }: MarkdownView
       prose-li:text-muted
       prose-blockquote:border-cyan-500/30 prose-blockquote:text-subtle prose-blockquote:text-sm
       prose-hr:border-foreground/10
-      prose-table:text-sm
-      prose-th:text-foreground/80 prose-th:border-foreground/10
-      prose-td:text-muted prose-td:border-foreground/10
+      prose-table:text-sm prose-table:w-full
+      prose-thead:border-b prose-thead:border-foreground/15
+      prose-th:text-foreground/80 prose-th:border-foreground/10 prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:font-semibold prose-th:bg-foreground/[0.04]
+      prose-td:text-muted prose-td:border-foreground/[0.06] prose-td:px-3 prose-td:py-2
+      prose-tr:border-b prose-tr:border-foreground/[0.06]
       ${className}`}
     >
-      <ReactMarkdown>{content}</ReactMarkdown>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
     </div>
   );
 }

@@ -63,9 +63,11 @@ export async function GET(
                 status: studentSubmission.status,
                 version: studentSubmission.version,
                 submittedAt: studentSubmission.submittedAt,
+                updatedAt: studentSubmission.updatedAt,
                 isLate: studentSubmission.isLate,
-                attachments: studentSubmission.attachments.length,
-                links: studentSubmission.links.length,
+                content: studentSubmission.content || null,
+                attachments: studentSubmission.attachments,
+                links: studentSubmission.links,
               }
             : null,
         };
