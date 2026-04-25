@@ -12,25 +12,22 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import {
-  getSubmissionById,
-  getActivityById,
-  getGradeForSubmission,
-  getGradesByStudent,
-  getGradeById,
-  readGrades,
+  readSubmissionsFresh,
+  readActivitiesFresh,
   readGradesFresh,
+  readCoursesFresh,
+  readEnrollmentsFresh,
+  readUsersFresh,
+  readCortesFresh,
   writeGrades,
-  getActivitiesByCourse,
-  getEnrollmentsByCourse,
-  getCourseById,
-  getUserById,
+  writeSubmissions,
 } from '@/lib/dataService';
-import { readSubmissions, readSubmissionsFresh, writeSubmissions } from '@/lib/dataService';
 import { withFileLock } from '@/lib/blobSync';
 import type {
   Grade,
   Submission,
   Activity,
+  Corte,
   CreateGradeRequest,
   UpdateGradeRequest,
   FinalGradeResult,
@@ -81,14 +78,21 @@ function roundTo1Decimal(value: number): number {
  * 7. Marcar submission como 'reviewed'
  */
 export async function gradeSubmission(data: CreateGradeRequest, adminId: string): Promise<Grade> {
+  // Batch read: 3 files in parallel (1 Blob request each)
+  const [allSubmissions, allActivities, allGrades] = await Promise.all([
+    readSubmissionsFresh(),
+    readActivitiesFresh(),
+    readGradesFresh(),
+  ]);
+
   // 1. Verificar submission
-  const submission = await getSubmissionById(data.submissionId);
+  const submission = allSubmissions.find((s) => s.id === data.submissionId);
   if (!submission) {
     throw new GradeError('Entrega no encontrada', 404);
   }
 
   // 2. Verificar actividad
-  const activity = await getActivityById(data.activityId);
+  const activity = allActivities.find((a) => a.id === data.activityId);
   if (!activity) {
     throw new GradeError('Actividad no encontrada', 404);
   }
@@ -126,7 +130,7 @@ export async function gradeSubmission(data: CreateGradeRequest, adminId: string)
   const now = new Date().toISOString();
 
   // 5. Verificar si ya existe calificación para esta entrega
-  const existingGrade = await getGradeForSubmission(data.submissionId);
+  const existingGrade = allGrades.find((g) => g.submissionId === data.submissionId) ?? null;
 
   let grade: Grade;
 
@@ -195,12 +199,18 @@ export async function gradeSubmission(data: CreateGradeRequest, adminId: string)
  * updateGrade — Editar una calificación existente
  */
 export async function updateGrade(gradeId: string, data: UpdateGradeRequest, adminId: string): Promise<Grade> {
-  const existing = await getGradeById(gradeId);
+  // Batch read: 2 files in parallel
+  const [allGrades, allActivities] = await Promise.all([
+    readGradesFresh(),
+    readActivitiesFresh(),
+  ]);
+
+  const existing = allGrades.find((g) => g.id === gradeId) ?? null;
   if (!existing) {
     throw new GradeError('Calificación no encontrada', 404);
   }
 
-  const activity = await getActivityById(existing.activityId);
+  const activity = allActivities.find((a) => a.id === existing.activityId) ?? null;
 
   // Validar score si se proporciona
   if (data.score !== undefined) {
@@ -267,6 +277,12 @@ export async function gradeSubmissionBatch(
   const now = new Date().toISOString();
   const errors: { submissionId: string; error: string }[] = [];
 
+  // Batch read: 2 files in parallel (instead of N reads per item)
+  const [allSubmissions, allActivities] = await Promise.all([
+    readSubmissionsFresh(),
+    readActivitiesFresh(),
+  ]);
+
   // Pre-validate all items before writing anything
   const validated: {
     item: BatchGradeItem;
@@ -277,13 +293,13 @@ export async function gradeSubmissionBatch(
   }[] = [];
 
   for (const item of items) {
-    const submission = await getSubmissionById(item.submissionId);
+    const submission = allSubmissions.find((s) => s.id === item.submissionId);
     if (!submission) {
       errors.push({ submissionId: item.submissionId, error: 'Entrega no encontrada' });
       continue;
     }
 
-    const activity = await getActivityById(item.activityId);
+    const activity = allActivities.find((a) => a.id === item.activityId);
     if (!activity) {
       errors.push({ submissionId: item.submissionId, error: 'Actividad no encontrada' });
       continue;
@@ -391,7 +407,8 @@ export async function gradeSubmissionBatch(
  * RN-CAL-03: Publicación masiva
  */
 export async function publishGrades(activityId: string): Promise<{ published: number }> {
-  const activity = await getActivityById(activityId);
+  const allActivities = await readActivitiesFresh();
+  const activity = allActivities.find((a) => a.id === activityId) ?? null;
   if (!activity) {
     throw new GradeError('Actividad no encontrada', 404);
   }
@@ -429,20 +446,22 @@ export async function publishGrades(activityId: string): Promise<{ published: nu
 /**
  * calculateFinalGrade — Calcula el promedio ponderado de un estudiante en un curso
  *
- * Fórmula: Σ(score/maxScore × weight) / Σ(weights de actividades calificadas) × 5.0
- * Escala: 0.0 – 5.0 (estándar colombiano)
- * Aprobación: ≥ 3.0
- * Redondeo: 1 decimal
+ * Acepta arrays pre-cargados para evitar lecturas adicionales a Blob.
+ * Si no se pasan, los lee (pero genera más peticiones).
  */
-export async function calculateFinalGrade(studentId: string, courseId: string, allGrades?: Grade[]): Promise<FinalGradeResult> {
-  // Obtener todas las actividades publicadas del curso
-  const activities = (await getActivitiesByCourse(courseId))
-    .filter((a) => a.status === 'published' || a.status === 'closed');
+export function calculateFinalGrade(
+  studentId: string,
+  courseId: string,
+  allActivities: Activity[],
+  allGrades: Grade[],
+): FinalGradeResult {
+  // Actividades publicadas/cerradas del curso
+  const activities = allActivities
+    .filter((a) => a.courseId === courseId && (a.status === 'published' || a.status === 'closed'));
 
-  // Obtener notas del estudiante en este curso
+  // Notas del estudiante en este curso
   const studentGrades = allGrades
-    ? allGrades.filter((g) => g.studentId === studentId && g.courseId === courseId)
-    : await getGradesByStudent(studentId, courseId);
+    .filter((g) => g.studentId === studentId && g.courseId === courseId);
 
   const details: FinalGradeResult['details'] = [];
   let sumWeightedScores = 0;
@@ -503,35 +522,63 @@ export async function calculateFinalGrade(studentId: string, courseId: string, a
 
 /**
  * getCourseGradeSummary — Tabla pivote de notas por curso (vista admin)
- * Filas: estudiantes, Columnas: actividades, Última columna: definitiva
+ * Filas: estudiantes, Columnas: actividades agrupadas por corte, Última columna: definitiva
+ * Incluye nota por corte para cada estudiante.
+ *
+ * Performance: lee 6 archivos en paralelo (6 requests a Blob), luego todo es cálculo en memoria.
  */
 export async function getCourseGradeSummary(courseId: string): Promise<CourseGradeSummary> {
-  const course = await getCourseById(courseId);
+  // ── Batch read: 6 files in parallel ──
+  const [allCourses, allActivities, allEnrollments, allGrades, allUsers, allCortes] = await Promise.all([
+    readCoursesFresh(),
+    readActivitiesFresh(),
+    readEnrollmentsFresh(),
+    readGradesFresh(),
+    readUsersFresh(),
+    readCortesFresh(),
+  ]);
+
+  const course = allCourses.find((c) => c.id === courseId);
   if (!course) {
     throw new GradeError('Curso no encontrado', 404);
   }
 
-  // Actividades del curso (solo publicadas/cerradas tienen sentido para notas)
-  const activities = (await getActivitiesByCourse(courseId))
-    .filter((a) => a.status === 'published' || a.status === 'closed')
+  // Actividades del curso (publicadas/cerradas)
+  const activities = allActivities
+    .filter((a) => a.courseId === courseId && (a.status === 'published' || a.status === 'closed'))
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
+  // Cortes del curso
+  const courseCortes = allCortes
+    .filter((c) => c.courseId === courseId)
+    .sort((a, b) => a.order - b.order);
+
   // Estudiantes inscritos activos
-  const enrollments = (await getEnrollmentsByCourse(courseId))
-    .filter((e) => e.status === 'active');
+  const enrollments = allEnrollments
+    .filter((e) => e.courseId === courseId && e.status === 'active');
 
-  // Todas las notas del curso — FRESH desde Blob
-  const freshGrades = await readGradesFresh();
-  const allGrades = freshGrades.filter((g) => g.courseId === courseId);
+  // Notas del curso
+  const courseGrades = allGrades.filter((g) => g.courseId === courseId);
 
-  const students = await Promise.all(enrollments.map(async (enrollment) => {
-    const student = await getUserById(enrollment.studentId);
+  // Map de usuarios para lookup rápido
+  const userMap = new Map(allUsers.map((u) => [u.id, u]));
+
+  // ── Build per-corte activity groups ──
+  const cortesInfo: CourseGradeSummary['cortes'] = courseCortes.map((corte) => ({
+    id: corte.id,
+    name: corte.name,
+    weight: corte.weight,
+    order: corte.order,
+  }));
+
+  const students = enrollments.map((enrollment) => {
+    const student = userMap.get(enrollment.studentId);
     if (!student) return null;
 
     // Map de notas por actividad
     const gradesMap: CourseGradeSummary['students'][number]['grades'] = {};
     for (const activity of activities) {
-      const grade = allGrades.find(
+      const grade = courseGrades.find(
         (g) => g.activityId === activity.id && g.studentId === student.id
       );
       gradesMap[activity.id] = grade
@@ -544,8 +591,33 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
         : null;
     }
 
-    // Calcular definitiva (pasar allGrades para evitar leer de caché)
-    const finalResult = await calculateFinalGrade(student.id, courseId, freshGrades);
+    // ── Per-corte score calculation ──
+    const corteScores: Record<string, number | null> = {};
+    for (const corte of courseCortes) {
+      const corteActivities = activities.filter((a) => a.corteId === corte.id);
+      if (corteActivities.length === 0) {
+        corteScores[corte.id] = null;
+        continue;
+      }
+      let sumWeighted = 0;
+      let sumWeights = 0;
+      for (const act of corteActivities) {
+        const grade = courseGrades.find(
+          (g) => g.activityId === act.id && g.studentId === student.id
+        );
+        if (grade) {
+          const normalized = grade.score / grade.maxScore;
+          sumWeighted += normalized * act.weight;
+          sumWeights += act.weight;
+        }
+      }
+      corteScores[corte.id] = sumWeights > 0
+        ? roundTo1Decimal((sumWeighted / sumWeights) * SCALE_MAX)
+        : null;
+    }
+
+    // Definitiva (all activities, pure in-memory)
+    const finalResult = calculateFinalGrade(student.id, courseId, allActivities, allGrades);
 
     return {
       id: student.id,
@@ -554,25 +626,26 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
       documentNumber: student.documentNumber,
       email: student.email,
       grades: gradesMap,
+      corteScores,
       finalScore: finalResult.totalWeight > 0 ? finalResult.finalScore : null,
       isPartial: finalResult.isPartial,
       isApproved: finalResult.totalWeight > 0 ? finalResult.isApproved : null,
     };
-  }));
-
-  const filteredStudents = students.filter((s): s is NonNullable<typeof s> => s !== null);
+  }).filter((s): s is NonNullable<typeof s> => s !== null);
 
   return {
     courseId,
     courseName: course.name,
+    cortes: cortesInfo,
     activities: activities.map((a) => ({
       id: a.id,
       title: a.title,
       type: a.type,
       maxScore: a.maxScore,
       weight: a.weight,
+      corteId: a.corteId,
     })),
-    students: filteredStudents,
+    students,
   };
 }
 
@@ -583,21 +656,36 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
 /**
  * getStudentGradeSummary — Notas de un estudiante en un curso
  * Solo muestra notas publicadas (RN-CAL-02)
+ * Incluye notas por corte.
+ *
+ * Performance: 3 parallel Blob reads, then pure in-memory.
  */
 export async function getStudentGradeSummary(studentId: string, courseId: string): Promise<StudentGradeSummary> {
-  const course = await getCourseById(courseId);
+  // ── Batch read: 3 files in parallel ──
+  const [allCourses, allActivities, allGrades, allCortes] = await Promise.all([
+    readCoursesFresh(),
+    readActivitiesFresh(),
+    readGradesFresh(),
+    readCortesFresh(),
+  ]);
+
+  const course = allCourses.find((c) => c.id === courseId);
   if (!course) {
     throw new GradeError('Curso no encontrado', 404);
   }
 
   // Actividades visibles (publicadas/cerradas)
-  const activities = (await getActivitiesByCourse(courseId))
-    .filter((a) => a.status === 'published' || a.status === 'closed')
+  const activities = allActivities
+    .filter((a) => a.courseId === courseId && (a.status === 'published' || a.status === 'closed'))
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
-  // Notas DEL estudiante en este curso — FRESH desde Blob, solo publicadas
-  const freshGrades = await readGradesFresh();
-  const studentGrades = freshGrades
+  // Cortes del curso
+  const courseCortes = allCortes
+    .filter((c) => c.courseId === courseId)
+    .sort((a, b) => a.order - b.order);
+
+  // Notas publicadas del estudiante
+  const studentGrades = allGrades
     .filter((g) => g.studentId === studentId && g.courseId === courseId && g.isPublished);
 
   const activityDetails: StudentGradeSummary['activities'] = activities.map((activity) => {
@@ -608,6 +696,7 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
       type: activity.type,
       maxScore: activity.maxScore,
       weight: activity.weight,
+      corteId: activity.corteId,
       grade: grade
         ? {
             score: grade.score,
@@ -620,7 +709,29 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
     };
   });
 
-  // Calcular definitiva solo con notas publicadas
+  // Per-corte scores
+  const corteScores: Record<string, number | null> = {};
+  for (const corte of courseCortes) {
+    const corteActs = activityDetails.filter((a) => a.corteId === corte.id);
+    if (corteActs.length === 0) {
+      corteScores[corte.id] = null;
+      continue;
+    }
+    let sumWeighted = 0;
+    let sumWeights = 0;
+    for (const act of corteActs) {
+      if (act.grade) {
+        const normalized = act.grade.score / act.grade.maxScore;
+        sumWeighted += normalized * act.weight;
+        sumWeights += act.weight;
+      }
+    }
+    corteScores[corte.id] = sumWeights > 0
+      ? roundTo1Decimal((sumWeighted / sumWeights) * SCALE_MAX)
+      : null;
+  }
+
+  // Definitiva
   let sumWeighted = 0;
   let sumWeights = 0;
   for (const act of activityDetails) {
@@ -638,6 +749,8 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
     studentId,
     courseId,
     courseName: course.name,
+    cortes: courseCortes.map((c) => ({ id: c.id, name: c.name, weight: c.weight, order: c.order })),
+    corteScores,
     activities: activityDetails,
     finalScore,
     isPartial: sumWeights < totalWeight,

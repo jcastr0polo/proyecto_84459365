@@ -474,12 +474,19 @@ export interface UpdateGradeRequest {
 export interface CourseGradeSummary {
   courseId: string;
   courseName: string;
+  cortes: {
+    id: string;
+    name: string;
+    weight: number;
+    order: number;
+  }[];
   activities: {
     id: string;
     title: string;
     type: Activity['type'];
     maxScore: number;
     weight: number;
+    corteId?: string;
   }[];
   students: {
     id: string;
@@ -493,6 +500,7 @@ export interface CourseGradeSummary {
       isPublished: boolean;
       feedback?: string;
     } | null>;
+    corteScores: Record<string, number | null>;  // corteId → nota 0.0–5.0
     finalScore: number | null;         // Nota definitiva 0.0–5.0 (null si no hay notas)
     isPartial: boolean;                // true si faltan actividades por calificar
     isApproved: boolean | null;        // finalScore ≥ 3.0 (null si no hay notas)
@@ -507,12 +515,20 @@ export interface StudentGradeSummary {
   studentId: string;
   courseId: string;
   courseName: string;
+  cortes: {
+    id: string;
+    name: string;
+    weight: number;
+    order: number;
+  }[];
+  corteScores: Record<string, number | null>;  // corteId → nota 0.0–5.0
   activities: {
     id: string;
     title: string;
     type: Activity['type'];
     maxScore: number;
     weight: number;
+    corteId?: string;
     grade: {
       score: number;
       maxScore: number;
