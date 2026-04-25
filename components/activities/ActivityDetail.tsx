@@ -18,6 +18,7 @@ interface ActivityDetailProps {
   onClose?: () => void;
   onEdit?: () => void;
   onViewSubmissions?: () => void;
+  onGrade?: () => void;
   /** Student submission section */
   submissionSlot?: React.ReactNode;
   /** Prompt section (if activity has linked prompt) */
@@ -45,6 +46,7 @@ export default function ActivityDetail({
   onClose,
   onEdit,
   onViewSubmissions,
+  onGrade,
   submissionSlot,
   promptSlot,
   stats,
@@ -124,6 +126,11 @@ export default function ActivityDetail({
             {onViewSubmissions && (
               <Button variant="ghost" size="sm" onClick={onViewSubmissions}>
                 Ver Entregas
+              </Button>
+            )}
+            {onGrade && (
+              <Button variant="primary" size="sm" onClick={onGrade}>
+                Calificar
               </Button>
             )}
           </div>

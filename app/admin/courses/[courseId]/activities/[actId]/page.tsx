@@ -182,6 +182,9 @@ export default function AdminActivityDetailPage() {
         onViewSubmissions={() => {
           router.push(`/admin/courses/${courseId}/activities/${actId}/submissions`);
         }}
+        onGrade={() => {
+          router.push(`/admin/courses/${courseId}/activities/${actId}/grades`);
+        }}
         publishLoading={publishLoading}
         closeLoading={closeLoading}
         stats={{
