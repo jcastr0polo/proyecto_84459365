@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Paperclip, Link as LinkIcon } from 'lucide-react';
 import ScoreInput from '@/components/grades/ScoreInput';
 
@@ -50,6 +50,12 @@ export default function GradeTable({
 
   // Track which rows have been modified
   const [modified, setModified] = useState<Set<number>>(new Set());
+
+  // Sync rows from parent when they change (e.g. after reloadGrades)
+  useEffect(() => {
+    setRows(initialRows);
+    setModified(new Set());
+  }, [initialRows]);
 
   const updateRow = useCallback((index: number, field: 'score' | 'feedback', value: number | null | string) => {
     setRows((prev) => {
