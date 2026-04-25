@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { FileText, BarChart3, Rocket, MapPin, Clock, Calendar, Building2, Monitor, RefreshCw } from 'lucide-react';
+import { FileText, BarChart3, Rocket, MapPin, Clock, Calendar, Building2, Monitor, RefreshCw, ClipboardList } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -248,6 +248,13 @@ export default function StudentCourseDashboardPage() {
           onClick={() => router.push(`/student/courses/${courseId}/project`)}
         >
           <Rocket className="w-4 h-4 inline mr-1" /> Mi Proyecto
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => router.push(`/student/courses/${courseId}/quizzes`)}
+        >
+          <ClipboardList className="w-4 h-4 inline mr-1" /> Parciales
         </Button>
       </div>
 

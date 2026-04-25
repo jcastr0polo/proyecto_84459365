@@ -604,3 +604,126 @@ export const updateCorteSchema = z.object({
 export type CorteZod = z.infer<typeof corteSchema>;
 export type CreateCorteZod = z.infer<typeof createCorteSchema>;
 export type UpdateCorteZod = z.infer<typeof updateCorteSchema>;
+
+// ────────────────────────────────────────────────────────────
+// QUIZ / PARCIALES SCHEMAS
+// ────────────────────────────────────────────────────────────
+
+const quizOptionSchema = z.object({
+  id: z.string().min(1),
+  text: z.string().min(1),
+  weight: z.number().min(0).max(100),
+});
+
+const quizQuestionSchema = z.object({
+  id: z.string().min(1),
+  text: z.string().min(1),
+  type: z.enum(['single', 'weighted']),
+  options: z.array(quizOptionSchema).min(2),
+  points: z.number().min(0),
+  order: z.number().int().min(0),
+});
+
+export const quizSchema = z.object({
+  id: z.string().min(1),
+  courseId: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  type: z.enum(['training', 'graded']),
+  resultVisibility: z.enum(['immediate', 'after_all', 'manual']),
+  resultsReleased: z.boolean(),
+  questions: z.array(quizQuestionSchema),
+  timeLimit: z.number().int().min(1).nullable().optional(),
+  shuffleQuestions: z.boolean(),
+  shuffleOptions: z.boolean(),
+  lockBrowser: z.boolean(),
+  maxAttempts: z.number().int().min(0),
+  isActive: z.boolean(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+const quizOptionInput = z.object({
+  text: z.string().min(1, 'El texto de la opción es requerido').max(500),
+  weight: z.number().min(0).max(100),
+});
+
+const quizQuestionInput = z.object({
+  text: z.string().min(1, 'El enunciado es requerido').max(2000),
+  type: z.enum(['single', 'weighted']),
+  points: z.number().min(0.1, 'El puntaje mínimo es 0.1'),
+  options: z.array(quizOptionInput).min(2, 'Mínimo 2 opciones'),
+});
+
+export const createQuizSchema = z.object({
+  title: z.string().min(1, 'El título es requerido').max(200).trim(),
+  description: z.string().max(5000).optional(),
+  type: z.enum(['training', 'graded']),
+  resultVisibility: z.enum(['immediate', 'after_all', 'manual']).optional(),
+  timeLimit: z.number().int().min(1).nullable().optional(),
+  lockBrowser: z.boolean().optional(),
+  shuffleQuestions: z.boolean().optional(),
+  shuffleOptions: z.boolean().optional(),
+  maxAttempts: z.number().int().min(0).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  questions: z.array(quizQuestionInput).min(1, 'Al menos una pregunta'),
+});
+
+export const updateQuizSchema = z.object({
+  title: z.string().min(1).max(200).trim().optional(),
+  description: z.string().max(5000).optional(),
+  type: z.enum(['training', 'graded']).optional(),
+  resultVisibility: z.enum(['immediate', 'after_all', 'manual']).optional(),
+  resultsReleased: z.boolean().optional(),
+  timeLimit: z.number().int().min(1).nullable().optional(),
+  lockBrowser: z.boolean().optional(),
+  shuffleQuestions: z.boolean().optional(),
+  shuffleOptions: z.boolean().optional(),
+  maxAttempts: z.number().int().min(0).optional(),
+  isActive: z.boolean().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  questions: z.array(quizQuestionInput).min(1).optional(),
+});
+
+export const submitQuizSchema = z.object({
+  answers: z.array(z.object({
+    questionId: z.string().min(1),
+    selectedOptionId: z.string().min(1),
+  })).min(1, 'Debes responder al menos una pregunta'),
+  blurCount: z.number().int().min(0).optional(),
+  autoSubmitted: z.boolean().optional(),
+});
+
+const quizAnswerSchema = z.object({
+  questionId: z.string().min(1),
+  selectedOptionId: z.string().min(1),
+  pointsEarned: z.number().min(0),
+});
+
+export const quizAttemptSchema = z.object({
+  id: z.string().min(1),
+  quizId: z.string().min(1),
+  studentId: z.string().min(1),
+  courseId: z.string().min(1),
+  answers: z.array(quizAnswerSchema),
+  score: z.number().min(0),
+  maxScore: z.number().min(0),
+  percentage: z.number().min(0).max(100),
+  attemptNumber: z.number().int().min(1),
+  startedAt: z.string(),
+  completedAt: z.string().optional(),
+  blurCount: z.number().int().min(0),
+  autoSubmitted: z.boolean(),
+  flagged: z.boolean(),
+});
+
+// Tipos inferidos — Quizzes
+export type QuizZod = z.infer<typeof quizSchema>;
+export type CreateQuizZod = z.infer<typeof createQuizSchema>;
+export type UpdateQuizZod = z.infer<typeof updateQuizSchema>;
+export type SubmitQuizZod = z.infer<typeof submitQuizSchema>;
+export type QuizAttemptZod = z.infer<typeof quizAttemptSchema>;

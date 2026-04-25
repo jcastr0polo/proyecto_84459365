@@ -729,3 +729,158 @@ export interface UpdateProjectRequest {
   showcaseImageUrl?: string;
   status?: StudentProject['status'];
 }
+
+// ────────────────────────────────────────────────────────────
+// Parciales / Quizzes
+// ────────────────────────────────────────────────────────────
+
+/**
+ * QuizOption — Opción de respuesta para una pregunta
+ * Para tipo 'single': una es correcta (weight=100), las demás weight=0
+ * Para tipo 'weighted': cada opción tiene un peso 0-100 indicando qué tan correcta es
+ */
+export interface QuizOption {
+  id: string;
+  text: string;
+  weight: number;                      // 0-100 (100 = totalmente correcta, 0 = incorrecta)
+}
+
+/**
+ * QuizQuestion — Pregunta de un parcial
+ */
+export interface QuizQuestion {
+  id: string;
+  text: string;                        // Enunciado (soporta Markdown)
+  type: 'single' | 'weighted';        // Única respuesta vs respuestas ponderadas
+  options: QuizOption[];               // Opciones de respuesta (min 2)
+  points: number;                      // Puntaje máximo de la pregunta
+  order: number;                       // Orden de visualización
+}
+
+/**
+ * Quiz — Parcial/examen vinculado a un curso
+ * Se almacena en /data/quizzes.json
+ *
+ * Dos modos:
+ * - training: práctica libre, sin nota, intentos ilimitados, resultados inmediatos
+ * - graded: calificable, intentos limitados, control de visibilidad de resultados
+ *
+ * Visibilidad de resultados (solo modo graded):
+ * - immediate: el estudiante ve su nota al terminar
+ * - after_all: se muestran cuando todos los estudiantes terminan
+ * - manual: el docente libera manualmente los resultados
+ */
+export interface Quiz {
+  id: string;                          // UUID
+  courseId: string;                     // FK a Course.id
+  title: string;                       // "Parcial 1 — Fundamentos TypeScript"
+  description?: string;                // Instrucciones (Markdown)
+  type: 'training' | 'graded';
+  resultVisibility: 'immediate' | 'after_all' | 'manual';
+  resultsReleased: boolean;            // Para modo 'manual': ¿resultados liberados?
+  questions: QuizQuestion[];           // Preguntas embebidas
+  timeLimit?: number;                  // Minutos (null = sin límite)
+  shuffleQuestions: boolean;           // Mezclar orden de preguntas
+  shuffleOptions: boolean;             // Mezclar orden de opciones
+  maxAttempts: number;                 // 1 para graded, 0 = ilimitado
+  lockBrowser: boolean;                // Anti-trampas: auto-enviar si pierde foco
+  isActive: boolean;                   // ¿Visible para estudiantes?
+  startDate?: string;                  // Fecha desde que está disponible
+  endDate?: string;                    // Fecha hasta que se puede responder
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * QuizAnswer — Respuesta del estudiante a una pregunta
+ */
+export interface QuizAnswer {
+  questionId: string;
+  selectedOptionId: string;
+  pointsEarned: number;               // Se calcula automáticamente
+}
+
+/**
+ * QuizAttempt — Intento de un estudiante en un parcial
+ * Se almacena en /data/quiz-attempts.json
+ */
+export interface QuizAttempt {
+  id: string;                          // UUID
+  quizId: string;                      // FK a Quiz.id
+  studentId: string;                   // FK a User.id
+  courseId: string;                     // FK a Course.id
+  answers: QuizAnswer[];
+  score: number;                       // Puntaje obtenido
+  maxScore: number;                    // Puntaje máximo posible
+  percentage: number;                  // score/maxScore * 100
+  attemptNumber: number;               // 1, 2, 3...
+  startedAt: string;                   // ISO 8601
+  completedAt?: string;                // ISO 8601 (null si en progreso)
+  blurCount: number;                   // Veces que perdió foco de la ventana
+  autoSubmitted: boolean;              // true si se envió por pérdida de foco
+  flagged: boolean;                    // Marcado como sospechoso por el sistema
+}
+
+/**
+ * CreateQuizRequest — Datos para crear un parcial
+ */
+export interface CreateQuizRequest {
+  title: string;
+  description?: string;
+  type: 'training' | 'graded';
+  resultVisibility: 'immediate' | 'after_all' | 'manual';
+  timeLimit?: number;
+  lockBrowser?: boolean;
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
+  maxAttempts?: number;
+  startDate?: string;
+  endDate?: string;
+  questions: {
+    text: string;
+    type: 'single' | 'weighted';
+    points: number;
+    options: {
+      text: string;
+      weight: number;
+    }[];
+  }[];
+}
+
+/**
+ * UpdateQuizRequest — Datos para editar un parcial
+ */
+export interface UpdateQuizRequest {
+  title?: string;
+  description?: string;
+  type?: 'training' | 'graded';
+  resultVisibility?: 'immediate' | 'after_all' | 'manual';
+  resultsReleased?: boolean;
+  timeLimit?: number;
+  lockBrowser?: boolean;
+  shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
+  maxAttempts?: number;
+  isActive?: boolean;
+  startDate?: string;
+  endDate?: string;
+  questions?: {
+    text: string;
+    type: 'single' | 'weighted';
+    points: number;
+    options: {
+      text: string;
+      weight: number;
+    }[];
+  }[];
+}
+
+/**
+ * SubmitQuizRequest — Datos para enviar respuestas de un parcial
+ */
+export interface SubmitQuizRequest {
+  answers: {
+    questionId: string;
+    selectedOptionId: string;
+  }[];
+}

@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { HomeDataSchema, AppConfigSchema } from './validators';
-import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject, Corte } from './types';
-import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema, corteSchema } from './schemas';
+import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject, Corte, Quiz, QuizAttempt } from './types';
+import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema, corteSchema, quizSchema, quizAttemptSchema } from './schemas';
 import { z } from 'zod';
 import { writeToBlob, readFromBlobDirect, withFileLock } from './blobSync';
 
@@ -584,6 +584,52 @@ export async function getCortesByCourse(courseId: string): Promise<Corte[]> {
 export async function getCorteById(id: string): Promise<Corte | null> {
   const cortes = await readCortesFresh();
   return cortes.find((c) => c.id === id) ?? null;
+}
+
+// ────────────────────────────────────────────────────────────
+// Parciales / Quizzes
+// ────────────────────────────────────────────────────────────
+
+export async function readQuizzesFresh(): Promise<Quiz[]> {
+  const raw = await readJsonFileFresh<unknown[]>('quizzes.json');
+  return z.array(quizSchema).parse(raw) as Quiz[];
+}
+
+export async function writeQuizzes(quizzes: Quiz[]): Promise<void> {
+  await writeJsonFile('quizzes.json', quizzes);
+}
+
+export async function getQuizzesByCourse(courseId: string): Promise<Quiz[]> {
+  const quizzes = await readQuizzesFresh();
+  return quizzes.filter((q) => q.courseId === courseId);
+}
+
+export async function getQuizById(id: string): Promise<Quiz | null> {
+  const quizzes = await readQuizzesFresh();
+  return quizzes.find((q) => q.id === id) ?? null;
+}
+
+// ────────────────────────────────────────────────────────────
+// Quiz Attempts (Intentos de parcial)
+// ────────────────────────────────────────────────────────────
+
+export async function readQuizAttemptsFresh(): Promise<QuizAttempt[]> {
+  const raw = await readJsonFileFresh<unknown[]>('quiz-attempts.json');
+  return z.array(quizAttemptSchema).parse(raw) as QuizAttempt[];
+}
+
+export async function writeQuizAttempts(attempts: QuizAttempt[]): Promise<void> {
+  await writeJsonFile('quiz-attempts.json', attempts);
+}
+
+export async function getAttemptsByQuiz(quizId: string): Promise<QuizAttempt[]> {
+  const attempts = await readQuizAttemptsFresh();
+  return attempts.filter((a) => a.quizId === quizId);
+}
+
+export async function getAttemptsByStudent(studentId: string, quizId: string): Promise<QuizAttempt[]> {
+  const attempts = await readQuizAttemptsFresh();
+  return attempts.filter((a) => a.studentId === studentId && a.quizId === quizId);
 }
 
 // ────────────────────────────────────────────────────────────
