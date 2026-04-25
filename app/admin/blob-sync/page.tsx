@@ -7,6 +7,7 @@ const DATA_FILES = [
   'config.json', 'home.json', 'users.json', 'sessions.json',
   'semesters.json', 'courses.json', 'enrollments.json', 'activities.json',
   'submissions.json', 'grades.json', 'prompts.json', 'projects.json', 'audit.json',
+  'cortes.json',
 ];
 
 // Archivos sensibles: advertir antes de hacer seed
