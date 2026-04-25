@@ -46,8 +46,8 @@ export async function readJsonFileFresh<T>(filename: string): Promise<T> {
     if (raw !== null) {
       return JSON.parse(raw) as T;
     }
-    // Fallback a caché si Blob no responde
-    return readJsonFile<T>(filename);
+    // Sin fallback a caché — si Blob no responde, es un error real
+    throw new Error(`[dataService] Cannot read ${filename} from Blob. Blob may be down or token invalid.`);
   }
   // Local: filesystem directo
   const filePath = path.join(SOURCE_DATA_DIR, filename);
