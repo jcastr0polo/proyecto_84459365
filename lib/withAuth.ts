@@ -76,7 +76,13 @@ export async function withAuth(
     }
 
     // 5. Ejecutar handler con el usuario autenticado
-    return await handler(user);
+    const response = await handler(user);
+
+    // 6. Datos transaccionales: nunca cachear en CDN ni en browser
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+
+    return response;
   } catch (error) {
     console.error('Error en withAuth:', error);
     return NextResponse.json(
