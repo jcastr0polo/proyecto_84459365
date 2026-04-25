@@ -4,7 +4,7 @@ import { HomeDataSchema, AppConfigSchema } from './validators';
 import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject, Corte } from './types';
 import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema, corteSchema } from './schemas';
 import { z } from 'zod';
-import { writeToBlob, readFromCache, readFromBlobDirect, withFileLock } from './blobSync';
+import { writeToBlob, readFromBlobDirect, withFileLock } from './blobSync';
 
 // ────────────────────────────────────────────────────────────
 // Lectura/escritura de datos

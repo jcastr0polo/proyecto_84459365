@@ -7,7 +7,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { list } from '@vercel/blob';
-import { seedAllToBlob, seedFilesToBlob, DATA_FILES, isCacheReady } from '@/lib/blobSync';
+import { seedAllToBlob, seedFilesToBlob, DATA_FILES } from '@/lib/blobSync';
 import { logAudit } from '@/lib/auditService';
 import type { User } from '@/lib/types';
 
@@ -23,7 +23,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         HAS_BLOB_TOKEN: !!getBlobToken(),
         BLOB_TOKEN_PREFIX: getBlobToken() ? getBlobToken()!.substring(0, 12) + '...' : 'NOT SET',
         NODE_ENV: process.env.NODE_ENV,
-        CACHE_READY: isCacheReady(),
+        CACHE_READY: 'N/A (no cache)',
       },
       blobFiles: {} as Record<string, { exists: boolean; size?: number }>,
     };

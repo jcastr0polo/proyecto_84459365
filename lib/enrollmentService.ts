@@ -16,11 +16,9 @@ import { hashPassword } from '@/lib/auth';
 import { toSafeUser } from '@/lib/withAuth';
 import {
   getCourseById,
-  readUsers,
   readUsersFresh,
   writeUsers,
   getUserByEmail,
-  readEnrollments,
   readEnrollmentsFresh,
   writeEnrollments,
   isStudentEnrolled,

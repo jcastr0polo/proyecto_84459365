@@ -8,13 +8,10 @@
 import { NextResponse } from 'next/server';
 import { validateSession, destroySession, clearSessionCookie } from '@/lib/auth';
 import { logAudit } from '@/lib/auditService';
-import { ensureDataReady } from '@/lib/blobSync';
 import { getUserById } from '@/lib/dataService';
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
-    await ensureDataReady();
-
     // 1. Validar sesión actual
     const session = await validateSession(request);
 

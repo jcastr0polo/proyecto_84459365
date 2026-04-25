@@ -12,7 +12,6 @@ import {
   getActivityById,
   isStudentEnrolled,
   getSubmission,
-  readSubmissions,
   readSubmissionsFresh,
   writeSubmissions,
 } from '@/lib/dataService';

@@ -16,15 +16,11 @@ import { loginRequestSchema } from '@/lib/schemas';
 import { getUserByEmail, readUsersFresh, writeUsers } from '@/lib/dataService';
 import { verifyPassword, createSession, setSessionCookie, cleanExpiredSessions, generateSessionToken } from '@/lib/auth';
 import { toSafeUser } from '@/lib/withAuth';
-import { ensureDataReady } from '@/lib/blobSync';
 import { withFileLock } from '@/lib/blobSync';
 import { logAudit } from '@/lib/auditService';
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
-    // 0. Asegurar datos disponibles (Blob → memoria en Vercel)
-    await ensureDataReady();
-
     // 1. Parsear y validar body
     const body = await request.json();
     const parsed = loginRequestSchema.safeParse(body);

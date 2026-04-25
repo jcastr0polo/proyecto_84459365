@@ -38,13 +38,6 @@ export const DATA_FILES = [
 ];
 
 // ═══════════════════════════════════════════════════════════
-// In-memory cache ELIMINADO — todas las lecturas van directo a Blob
-// Se mantiene _cache SOLO para writeToBlob (actualización post-escritura)
-// y para seed/blob-download (admin).
-// ═══════════════════════════════════════════════════════════
-const _cache = new Map<string, string>();
-
-// ═══════════════════════════════════════════════════════════
 // Per-file write lock — serializa operaciones read-modify-write
 // para evitar que escrituras concurrentes se sobreescriban.
 // ═══════════════════════════════════════════════════════════
@@ -77,35 +70,7 @@ export async function withFileLock<T>(filename: string, fn: () => Promise<T>): P
   }
 }
 
-/**
- * Lee un archivo desde el caché en memoria.
- * @deprecated Solo para admin/blob-download. Negocio usa readFromBlobDirect.
- */
-export function readFromCache(filename: string): string {
-  const content = _cache.get(filename);
-  if (content === undefined) {
-    throw new Error(`[blobSync] ${filename} not in cache.`);
-  }
-  return content;
-}
 
-/**
- * @deprecated Siempre retorna true. El caché fue eliminado.
- */
-export function isCacheReady(): boolean {
-  return true;
-}
-
-/**
- * @deprecated No-op. El caché fue eliminado.
- * Todas las lecturas van directo a Blob via readFromBlobDirect().
- * Se mantiene para no romper callers existentes (withAuth, login, etc.)
- * que lo llaman al inicio del request. Será removido en futuro refactor.
- */
-export async function ensureDataReady(): Promise<void> {
-  // No-op: ya no hay caché que poblar.
-  // Cada readXxxFresh() lee directo de Blob.
-}
 
 // ═══════════════════════════════════════════════════════════
 // Lectura directa desde Blob (ÚNICA forma de leer datos)
@@ -132,12 +97,11 @@ export async function readFromBlobDirect(filename: string): Promise<string | nul
 }
 
 // ═══════════════════════════════════════════════════════════
-// Escrituras: Blob PRIMERO → actualiza caché
+// Escrituras: directo a Blob
 // ═══════════════════════════════════════════════════════════
 
 /**
- * Escribe a Blob (BD) y actualiza caché en memoria.
- * Si Blob falla → LANZA error.
+ * Escribe a Blob (BD). Si Blob falla → LANZA error.
  */
 export async function writeToBlob(filename: string, content: string): Promise<void> {
   if (!IS_VERCEL) return;
@@ -155,9 +119,7 @@ export async function writeToBlob(filename: string, content: string): Promise<vo
     token,
   });
 
-  // 2. Actualizar caché en memoria
-  _cache.set(filename, content);
-  console.log(`[blobSync] Wrote ${filename} to Blob + cache`);
+  console.log(`[blobSync] Wrote ${filename} to Blob`);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -166,7 +128,6 @@ export async function writeToBlob(filename: string, content: string): Promise<vo
 
 /**
  * Seed manual: sube todos los JSON desde data/ del repo al Blob.
- * También actualiza el caché en memoria.
  */
 export async function seedAllToBlob(): Promise<Record<string, { status: string; size?: number; error?: string }>> {
   return seedFilesToBlob(DATA_FILES);
@@ -200,8 +161,6 @@ export async function seedFilesToBlob(files: string[]): Promise<Record<string, {
         token,
       });
 
-      // Actualizar caché
-      _cache.set(file, content);
       results[file] = { status: 'SEEDED', size: content.length };
     } catch (err) {
       results[file] = { status: 'ERROR', error: String(err) };

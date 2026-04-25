@@ -52,7 +52,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<HomeData |
       status: 200,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
       },
     });
   } catch (error: unknown) {
