@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
+import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import ActivityDetail from '@/components/activities/ActivityDetail';
 import ActivityForm from '@/components/activities/ActivityForm';
 import type { ActivityFormData } from '@/components/activities/ActivityForm';
-import type { Activity, Course, ActivityAttachment } from '@/lib/types';
+import type { Activity, Course, ActivityAttachment, Submission, EnrollmentWithStudent } from '@/lib/types';
 
 /**
  * Admin — Activity Detail Page
@@ -24,6 +25,8 @@ export default function AdminActivityDetailPage() {
 
   const [activity, setActivity] = useState<Activity | null>(null);
   const [course, setCourse] = useState<Course | null>(null);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [enrollments, setEnrollments] = useState<EnrollmentWithStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -32,9 +35,11 @@ export default function AdminActivityDetailPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [actRes, courseRes] = await Promise.all([
+      const [actRes, courseRes, subsRes, enrRes] = await Promise.all([
         fetch(`/api/activities/${actId}`),
         fetch(`/api/courses/${courseId}`),
+        fetch(`/api/activities/${actId}/submissions`),
+        fetch(`/api/courses/${courseId}/enrollments`),
       ]);
 
       if (actRes.ok) {
@@ -49,6 +54,16 @@ export default function AdminActivityDetailPage() {
       if (courseRes.ok) {
         const data = await courseRes.json();
         setCourse(data.course);
+      }
+
+      if (subsRes.ok) {
+        const data = await subsRes.json();
+        setSubmissions(data.submissions ?? []);
+      }
+
+      if (enrRes.ok) {
+        const data = await enrRes.json();
+        setEnrollments(data.enrollments ?? []);
       }
     } catch {
       toast('Error al cargar datos', 'error');
@@ -154,6 +169,17 @@ export default function AdminActivityDetailPage() {
 
   if (loading || !activity) return <PageLoader />;
 
+  const activeEnrollments = enrollments.filter((e) => e.status === 'active');
+  const submittedStudentIds = new Set(submissions.map((s) => s.studentId));
+  const pendingStudents = activeEnrollments.filter((e) => !submittedStudentIds.has(e.studentId));
+
+  const stats = {
+    submitted: submissions.length,
+    pending: pendingStudents.length,
+    late: submissions.filter((s) => s.isLate).length,
+    total: activeEnrollments.length,
+  };
+
   return (
     <div className="space-y-6">
       {/* Back link */}
@@ -187,13 +213,33 @@ export default function AdminActivityDetailPage() {
         }}
         publishLoading={publishLoading}
         closeLoading={closeLoading}
-        stats={{
-          submitted: 0,
-          pending: 0,
-          late: 0,
-          total: 0,
-        }}
+        stats={stats}
       />
+
+      {/* ─── Pending students (who hasn't submitted) ─── */}
+      {pendingStudents.length > 0 && (
+        <Card padding="lg">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider">
+              Sin entrega ({pendingStudents.length})
+            </h3>
+            <Badge variant="warning" size="sm">{pendingStudents.length} pendiente{pendingStudents.length !== 1 ? 's' : ''}</Badge>
+          </div>
+          <div className="divide-y divide-foreground/[0.06]">
+            {pendingStudents.map((e) => (
+              <div key={e.id} className="flex items-center gap-3 py-2.5">
+                <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center text-[10px] font-bold text-amber-400 shrink-0">
+                  {e.student.firstName[0]}{e.student.lastName[0]}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-foreground/80 truncate">{e.student.firstName} {e.student.lastName}</p>
+                  <p className="text-[11px] text-subtle truncate">{e.student.email}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Edit Modal */}
       <Modal
