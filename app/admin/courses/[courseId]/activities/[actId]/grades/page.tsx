@@ -118,6 +118,30 @@ export default function AdminGradingPage() {
     load();
   }, [actId, courseId, toast]);
 
+  // Reload grades data after save/publish
+  const reloadGrades = useCallback(async () => {
+    try {
+      const gradesRes = await fetch(`/api/activities/${actId}/grades`, { credentials: 'include' });
+      if (gradesRes.ok) {
+        const gData = await gradesRes.json();
+        const gradesMap = new Map<string, { id: string; score: number; feedback: string }>();
+        for (const g of (gData.grades ?? [])) {
+          gradesMap.set(g.submissionId, g);
+        }
+        setRows((prev) =>
+          prev.map((row) => {
+            const existing = gradesMap.get(row.submissionId);
+            return existing
+              ? { ...row, score: existing.score, feedback: existing.feedback, existingGradeId: existing.id }
+              : row;
+          })
+        );
+      }
+    } catch {
+      // silent — data already saved
+    }
+  }, [actId]);
+
   // Save all modified rows — batch endpoint (single write to Blob)
   const handleSaveAll = useCallback(async (modifiedRows: GradeRow[]) => {
     if (!activity || modifiedRows.length === 0) return;
@@ -151,6 +175,8 @@ export default function AdminGradingPage() {
         } else {
           toast(`${data.saved} calificación(es) guardada(s)`, 'success');
         }
+        // Reload to get existingGradeId for newly created grades
+        await reloadGrades();
       } else {
         toast(data.error || 'Error al guardar calificaciones', 'error');
       }
@@ -159,17 +185,43 @@ export default function AdminGradingPage() {
     } finally {
       setSaving(false);
     }
-  }, [activity, actId, courseId, toast]);
+  }, [activity, actId, courseId, toast, reloadGrades]);
 
   // Save single row
   const handleSaveRow = useCallback(async (row: GradeRow) => {
     await handleSaveAll([row]);
   }, [handleSaveAll]);
 
-  // Publish grades
+  // Publish grades — auto-saves unsaved changes first
   const handlePublish = useCallback(async () => {
     setPublishing(true);
     try {
+      // 1. Auto-save any unsaved grades first
+      const unsaved = rows.filter((r) => r.score !== null);
+      if (unsaved.length > 0) {
+        const saveRes = await fetch('/api/grades/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            items: unsaved.map((row) => ({
+              submissionId: row.submissionId,
+              activityId: actId,
+              studentId: row.studentId,
+              courseId: courseId,
+              score: row.score,
+              feedback: row.feedback || undefined,
+              existingGradeId: row.existingGradeId || undefined,
+            })),
+          }),
+        });
+        if (!saveRes.ok) {
+          const err = await saveRes.json();
+          throw new Error(err.error ?? 'Error al guardar antes de publicar');
+        }
+      }
+
+      // 2. Publish
       const res = await fetch(`/api/activities/${actId}/grades/publish`, {
         method: 'POST',
         credentials: 'include',
@@ -181,12 +233,15 @@ export default function AdminGradingPage() {
       const data = await res.json();
       toast(`${data.published} nota(s) publicada(s)`, 'success');
       setShowPublishModal(false);
+
+      // 3. Reload to reflect published state
+      await reloadGrades();
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Error al publicar', 'error');
     } finally {
       setPublishing(false);
     }
-  }, [actId, toast]);
+  }, [actId, courseId, rows, toast, reloadGrades]);
 
   if (loading) {
     return (
