@@ -378,9 +378,15 @@ function CourseSection({
                           {sub.isLate && <Badge variant="danger" size="sm">Tardía</Badge>}
                           <Link
                             href={`/admin/courses/${course.id}/activities/${act.id}/submissions`}
-                            className="text-cyan-400 hover:underline flex items-center gap-1 ml-auto"
+                            className="text-cyan-400 hover:underline flex items-center gap-1"
                           >
-                            <ExternalLink className="w-3 h-3" /> Ver todas las entregas
+                            <ExternalLink className="w-3 h-3" /> Ver entregas
+                          </Link>
+                          <Link
+                            href={`/admin/courses/${course.id}/activities/${act.id}/grades`}
+                            className="text-emerald-400 hover:underline flex items-center gap-1 ml-auto"
+                          >
+                            <CheckCircle2 className="w-3 h-3" /> Calificar
                           </Link>
                         </div>
 

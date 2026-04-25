@@ -137,6 +137,31 @@ export async function PATCH(
         });
       }
 
+      if (action === 'updateDocument') {
+        const { documentNumber } = body as { documentNumber?: string };
+        if (!documentNumber || typeof documentNumber !== 'string') {
+          return NextResponse.json({ error: 'Número de documento requerido' }, { status: 400 });
+        }
+        const trimmed = documentNumber.trim();
+        if (!/^\d{5,}$/.test(trimmed)) {
+          return NextResponse.json({ error: 'Documento debe ser numérico con mínimo 5 dígitos' }, { status: 400 });
+        }
+        const duplicate = users.find((u) => u.documentNumber === trimmed && u.id !== id);
+        if (duplicate) {
+          return NextResponse.json({ error: 'Ese documento ya está registrado por otro usuario' }, { status: 409 });
+        }
+        users[idx].documentNumber = trimmed;
+        users[idx].updatedAt = now;
+        await dispatchWrite(
+          () => writeUsers(users),
+          { action: 'update', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `Documento de ${studentName} → ${trimmed}` }
+        );
+        return NextResponse.json({
+          message: `Documento actualizado a ${trimmed}`,
+          student: toSafeUser(users[idx]),
+        });
+      }
+
       return NextResponse.json({ error: 'Acción no válida' }, { status: 400 });
     });
   }, 'admin');

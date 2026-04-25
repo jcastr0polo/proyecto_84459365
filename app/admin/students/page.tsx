@@ -16,6 +16,7 @@ export default function AdminStudentsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
   const [editingEmail, setEditingEmail] = useState<{ id: string; value: string } | null>(null);
+  const [editingDoc, setEditingDoc] = useState<{ id: string; value: string } | null>(null);
   const router = useRouter();
 
   const fetchStudents = useCallback(async () => {
@@ -83,6 +84,29 @@ export default function AdminStudentsPage() {
         setToast({ msg: data.message, type: 'ok' });
         setStudents((prev) => prev.map((s) => s.id === id ? { ...s, ...data.student } : s));
         setEditingEmail(null);
+      } else {
+        setToast({ msg: data.error || 'Error', type: 'err' });
+      }
+    } catch {
+      setToast({ msg: 'Error de conexión', type: 'err' });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleUpdateDocument(id: string, newDoc: string) {
+    setActionLoading(`${id}-doc`);
+    try {
+      const res = await fetch(`/api/students/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateDocument', documentNumber: newDoc }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setToast({ msg: data.message, type: 'ok' });
+        setStudents((prev) => prev.map((s) => s.id === id ? { ...s, ...data.student } : s));
+        setEditingDoc(null);
       } else {
         setToast({ msg: data.error || 'Error', type: 'err' });
       }
@@ -241,7 +265,48 @@ export default function AdminStudentsPage() {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-[11px] text-subtle">
                       <span className="flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />
-                        Doc: {student.documentNumber}
+                        Doc: {editingDoc?.id === student.id ? (
+                          <span className="flex items-center gap-1">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={editingDoc.value}
+                              onChange={(e) => setEditingDoc({ ...editingDoc, value: e.target.value })}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleUpdateDocument(student.id, editingDoc.value);
+                                if (e.key === 'Escape') setEditingDoc(null);
+                              }}
+                              autoFocus
+                              className="px-1.5 py-0.5 rounded border border-cyan-500/30 bg-foreground/5
+                                         text-foreground text-[11px] w-32 font-mono
+                                         focus:outline-none focus:border-cyan-500/50"
+                            />
+                            <button
+                              onClick={() => handleUpdateDocument(student.id, editingDoc.value)}
+                              disabled={actionLoading === `${student.id}-doc`}
+                              className="p-0.5 rounded text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setEditingDoc(null)}
+                              className="p-0.5 rounded text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        ) : (
+                          <>
+                            {student.documentNumber}
+                            <button
+                              onClick={() => setEditingDoc({ id: student.id, value: student.documentNumber })}
+                              title="Editar documento"
+                              className="p-0.5 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors cursor-pointer"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </button>
+                          </>
+                        )}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
