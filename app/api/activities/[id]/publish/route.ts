@@ -8,7 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readActivities, readActivitiesFresh, writeActivities } from '@/lib/dataService';
+import { readActivitiesFresh, writeActivities } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { withFileLock } from '@/lib/blobSync';
 

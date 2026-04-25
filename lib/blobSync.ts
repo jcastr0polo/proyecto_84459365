@@ -1,17 +1,17 @@
 /**
  * lib/blobSync.ts
- * Vercel Blob = base de datos. Sin /tmp. Sin fallbacks.
+ * Vercel Blob = base de datos. Sin /tmp. Sin fallbacks. Sin caché.
  *
  * Arquitectura:
  * - Blob = fuente de verdad única
- * - In-memory cache = lecturas rápidas (poblada desde Blob en cold start)
- * - Escrituras: Blob PRIMERO → actualiza cache en memoria
+ * - TODAS las lecturas van directo a Blob (readFromBlobDirect)
+ * - Escrituras: put() directo a Blob
  * - Si Blob falla → la operación falla (error explícito)
  * - Seed: manual desde /admin/blob-sync (lee data/ del repo → sube a Blob)
  * - En local (dev): no-op, dataService usa filesystem directo
  */
 
-import { put, list, get } from '@vercel/blob';
+import { put, get } from '@vercel/blob';
 import fs from 'fs';
 import path from 'path';
 
@@ -38,16 +38,11 @@ export const DATA_FILES = [
 ];
 
 // ═══════════════════════════════════════════════════════════
-// In-memory data cache (reemplaza /tmp)
+// In-memory cache ELIMINADO — todas las lecturas van directo a Blob
+// Se mantiene _cache SOLO para writeToBlob (actualización post-escritura)
+// y para seed/blob-download (admin).
 // ═══════════════════════════════════════════════════════════
 const _cache = new Map<string, string>();
-let _ready = false;
-let _initPromise: Promise<void> | null = null;
-let _lastLoadedAt = 0;
-let _refreshPromise: Promise<void> | null = null;
-
-/** Siempre leer de Blob — 0 = sin caché, cada request recarga de Blob */
-const CACHE_TTL_MS = 0;
 
 // ═══════════════════════════════════════════════════════════
 // Per-file write lock — serializa operaciones read-modify-write
@@ -84,124 +79,41 @@ export async function withFileLock<T>(filename: string, fn: () => Promise<T>): P
 
 /**
  * Lee un archivo desde el caché en memoria.
- * Solo para Vercel. Lanza error si no está en caché.
+ * @deprecated Solo para admin/blob-download. Negocio usa readFromBlobDirect.
  */
 export function readFromCache(filename: string): string {
   const content = _cache.get(filename);
   if (content === undefined) {
-    throw new Error(`[blobSync] ${filename} not in cache. ensureDataReady() was not called or Blob is empty. Run seed from /admin/blob-sync`);
+    throw new Error(`[blobSync] ${filename} not in cache.`);
   }
   return content;
 }
 
 /**
- * Verifica si el caché está listo (datos cargados desde Blob).
+ * @deprecated Siempre retorna true. El caché fue eliminado.
  */
 export function isCacheReady(): boolean {
-  return _ready;
+  return true;
 }
 
-// ═══════════════════════════════════════════════════════════
-// Cold start + cache refresh: pull de Blob → memoria
-// ═══════════════════════════════════════════════════════════
-
 /**
- * Asegura que el caché en memoria esté poblado y fresco.
- * - Primera vez: carga TODO desde Blob (cold start).
- * - Después: si el caché tiene más de CACHE_TTL_MS, recarga de Blob.
- * - Esto evita que instancias warm sirvan datos stale.
+ * @deprecated No-op. El caché fue eliminado.
+ * Todas las lecturas van directo a Blob via readFromBlobDirect().
+ * Se mantiene para no romper callers existentes (withAuth, login, etc.)
+ * que lo llaman al inicio del request. Será removido en futuro refactor.
  */
 export async function ensureDataReady(): Promise<void> {
-  if (!IS_VERCEL) return;
-
-  // Primera carga — debe esperar
-  if (!_ready) {
-    if (_initPromise) return _initPromise;
-    _initPromise = loadFromBlob()
-      .then(() => { _ready = true; _lastLoadedAt = Date.now(); })
-      .catch((err) => {
-        _initPromise = null;
-        _ready = false;
-        throw err;
-      });
-    return _initPromise;
-  }
-
-  // Caché listo pero potencialmente stale — refrescar si TTL expiró
-  if (Date.now() - _lastLoadedAt > CACHE_TTL_MS) {
-    if (!_refreshPromise) {
-      _refreshPromise = loadFromBlob()
-        .then(() => { _lastLoadedAt = Date.now(); })
-        .catch((err) => { console.error('[blobSync] Cache refresh failed:', err); })
-        .finally(() => { _refreshPromise = null; });
-    }
-    await _refreshPromise;
-  }
-}
-
-async function loadFromBlob(): Promise<void> {
-  const token = getBlobToken();
-  if (!token) {
-    throw new Error('[blobSync] NEXUS_READ_WRITE_TOKEN not configured — cannot read database');
-  }
-
-  try {
-    // Verificar si Blob tiene datos
-    const { blobs } = await list({ prefix: 'data/', token });
-    const blobPathnames = new Set(blobs.map((b) => b.pathname));
-
-    console.log(`[blobSync] Found ${blobPathnames.size} files in Blob`);
-
-    if (blobPathnames.size === 0) {
-      console.warn('[blobSync] Blob is EMPTY — loading source data as readonly. Admin must seed from /admin/blob-sync');
-      for (const file of DATA_FILES) {
-        const srcPath = path.join(SOURCE_DATA_DIR, file);
-        if (fs.existsSync(srcPath)) {
-          _cache.set(file, fs.readFileSync(srcPath, 'utf-8'));
-        }
-      }
-      return;
-    }
-
-    // Usar get() del SDK para descargar con autenticación (blobs privados)
-    await Promise.all(
-      DATA_FILES.map(async (file) => {
-        const blobKey = `data/${file}`;
-        if (blobPathnames.has(blobKey)) {
-          const result = await get(blobKey, { token, access: 'private' });
-          if (result && result.statusCode === 200) {
-            const text = await new Response(result.stream).text();
-            _cache.set(file, text);
-            return;
-          }
-          // get() devolvió null o 304 — error inesperado
-          console.error(`[blobSync] FAILED to download ${file} from Blob (status: ${result?.statusCode ?? 'null'})`);
-          throw new Error(`[blobSync] Cannot read ${file} from Blob — data integrity error`);
-        }
-        // Archivo no existe en Blob — usar source solo si Blob tiene datos parciales
-        console.warn(`[blobSync] ${file} not in Blob, loading from source`);
-        const srcPath = path.join(SOURCE_DATA_DIR, file);
-        if (fs.existsSync(srcPath)) {
-          _cache.set(file, fs.readFileSync(srcPath, 'utf-8'));
-        }
-      })
-    );
-
-    console.log(`[blobSync] Cache loaded: ${_cache.size} files in memory`);
-  } catch (err) {
-    console.error('[blobSync] FATAL: Failed to load from Blob:', err);
-    throw err;
-  }
+  // No-op: ya no hay caché que poblar.
+  // Cada readXxxFresh() lee directo de Blob.
 }
 
 // ═══════════════════════════════════════════════════════════
-// Lectura directa desde Blob (bypass caché)
+// Lectura directa desde Blob (ÚNICA forma de leer datos)
 // ═══════════════════════════════════════════════════════════
 
 /**
- * Lee un archivo directamente desde Blob, sin pasar por el caché.
- * Útil para datos de alta concurrencia (audit) donde múltiples
- * instancias serverless escriben y el caché puede estar stale.
+ * Lee un archivo directamente desde Blob.
+ * Esta es la ÚNICA forma de leer datos en producción.
  * Retorna null si el archivo no existe o hay error.
  */
 export async function readFromBlobDirect(filename: string): Promise<string | null> {
@@ -296,7 +208,5 @@ export async function seedFilesToBlob(files: string[]): Promise<Record<string, {
     }
   }
 
-  _ready = true;
-  _lastLoadedAt = Date.now();
   return results;
 }

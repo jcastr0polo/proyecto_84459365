@@ -15,7 +15,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     const action = searchParams.get('action');
     const entity = searchParams.get('entity');
 
-    let entries = readAudit();
+    let entries = await readAudit();
 
     if (action) {
       entries = entries.filter((e) => e.action === action);

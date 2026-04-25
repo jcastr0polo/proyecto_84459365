@@ -14,7 +14,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { changePasswordRequestSchema } from '@/lib/schemas';
 import { verifyPassword, hashPassword } from '@/lib/auth';
-import { readUsers, readUsersFresh, writeUsers } from '@/lib/dataService';
+import { readUsersFresh, writeUsers } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { withFileLock } from '@/lib/blobSync';
 import type { User } from '@/lib/types';

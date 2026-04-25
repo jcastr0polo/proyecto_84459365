@@ -7,7 +7,7 @@
  * Máximo 1000 registros (FIFO: los más antiguos se eliminan).
  */
 
-import { readJsonFile, writeJsonFile } from './dataService';
+import { readJsonFileFresh, writeJsonFile } from './dataService';
 import { readFromBlobDirect } from './blobSync';
 
 const MAX_AUDIT_ENTRIES = 1000;
@@ -38,9 +38,9 @@ export interface AuditContext {
 /**
  * Lee el log de auditoría
  */
-export function readAudit(): AuditEntry[] {
+export async function readAudit(): Promise<AuditEntry[]> {
   try {
-    return readJsonFile<AuditEntry[]>('audit.json');
+    return await readJsonFileFresh<AuditEntry[]>('audit.json');
   } catch {
     return [];
   }
@@ -60,8 +60,7 @@ export async function logAudit(ctx: AuditContext): Promise<void> {
       const raw = await readFromBlobDirect('audit.json');
       audit = raw ? JSON.parse(raw) as AuditEntry[] : [];
     } catch {
-      // Fallback a caché/local si Blob no responde
-      audit = readAudit();
+      audit = await readAudit();
     }
 
     const newEntry: AuditEntry = {

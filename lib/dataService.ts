@@ -4,30 +4,21 @@ import { HomeDataSchema, AppConfigSchema } from './validators';
 import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject, Corte } from './types';
 import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema, corteSchema } from './schemas';
 import { z } from 'zod';
-import { writeToBlob, readFromCache, isCacheReady, readFromBlobDirect, withFileLock } from './blobSync';
+import { writeToBlob, readFromCache, readFromBlobDirect, withFileLock } from './blobSync';
 
 // ────────────────────────────────────────────────────────────
 // Lectura/escritura de datos
-// En Vercel runtime: lectura de caché en memoria (Blob), escritura a Blob
-// En Vercel build: lectura del filesystem data/ (disponible durante build)
+// En Vercel runtime: lectura directa desde Blob (sin caché)
 // En local: lectura/escritura directa al filesystem
 // ────────────────────────────────────────────────────────────
 const IS_VERCEL = !!process.env.VERCEL;
 const SOURCE_DATA_DIR = path.join(process.cwd(), 'data');
 
 /**
- * Lee un archivo JSON.
- * En Vercel: lee del caché en memoria (Blob). Falla si caché no está listo.
- * En local: lee del filesystem.
+ * @deprecated Usa readJsonFileFresh en su lugar.
+ * Solo se mantiene para backward compat en admin/blob-download.
  */
 export function readJsonFile<T>(filename: string): T {
-  if (IS_VERCEL) {
-    if (!isCacheReady()) {
-      throw new Error(`[dataService] Cache not ready for ${filename}. Call ensureDataReady() first. If this is build time, this file should not be read server-side.`);
-    }
-    const raw = readFromCache(filename);
-    return JSON.parse(raw) as T;
-  }
   // Local: filesystem directo
   const filePath = path.join(SOURCE_DATA_DIR, filename);
   const raw = fs.readFileSync(filePath, 'utf-8');
@@ -36,9 +27,8 @@ export function readJsonFile<T>(filename: string): T {
 
 /**
  * Lee un archivo JSON FRESCO directamente de Blob (sin caché).
- * Usar SOLO en ciclos read-modify-write donde la data puede estar stale
- * por concurrencia entre instancias serverless.
- * En local: lee del filesystem (no hay concurrencia).
+ * En Vercel: lee directo de Blob (SIEMPRE fresco).
+ * En local: lee del filesystem.
  */
 export async function readJsonFileFresh<T>(filename: string): Promise<T> {
   if (IS_VERCEL) {
@@ -71,8 +61,8 @@ export async function readJsonFileFresh<T>(filename: string): Promise<T> {
  *   const home = readHomeData();
  *   console.log(home.hero.title);  // Tipado como string ✅
  */
-export function readHomeData(): HomeData {
-  const raw = readJsonFile<HomeData>('home.json');
+export async function readHomeData(): Promise<HomeData> {
+  const raw = await readJsonFileFresh<HomeData>('home.json');
   return HomeDataSchema.parse(raw);
 }
 
@@ -95,8 +85,8 @@ export function readHomeData(): HomeData {
  *   console.log(config.appName);  // Tipado como string ✅
  *   console.log(config.theme);    // Tipado como 'light' | 'dark' ✅
  */
-export function readAppConfig(): AppConfig {
-  const raw = readJsonFile<AppConfig>('config.json');
+export async function readAppConfig(): Promise<AppConfig> {
+  const raw = await readJsonFileFresh<AppConfig>('config.json');
   return AppConfigSchema.parse(raw);
 }
 
