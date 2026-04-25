@@ -49,7 +49,7 @@ export async function GET(
     // Admin: enriquecer con datos del estudiante
     const enriched: EnrollmentWithStudent[] = [];
     for (const enrollment of enrollments) {
-      const student = getUserById(enrollment.studentId);
+      const student = await getUserById(enrollment.studentId);
       if (student) {
         enriched.push({
           ...enrollment,

@@ -12,7 +12,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createSemesterSchema } from '@/lib/schemas';
-import { readSemesters, readSemestersFresh, writeSemesters, getSemesterById } from '@/lib/dataService';
+import { readSemestersFresh, writeSemesters, getSemesterById } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { withFileLock } from '@/lib/blobSync';
 import type { Semester } from '@/lib/types';
@@ -49,7 +49,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const { id, label, startDate, endDate, isActive } = parsed.data;
 
       // Verificar que no exista un semestre con el mismo ID
-      const existing = getSemesterById(id);
+      const existing = await getSemesterById(id);
       if (existing) {
         return NextResponse.json(
           { error: `Ya existe un semestre con ID "${id}"` },

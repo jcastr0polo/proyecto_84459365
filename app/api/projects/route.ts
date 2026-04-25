@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readProjects, readProjectsFresh, writeProjects, getProjectByStudentAndCourse, readCourses, readUsers, readEnrollments } from '@/lib/dataService';
+import { readProjectsFresh, writeProjects, getProjectByStudentAndCourse, readCoursesFresh, readUsersFresh, readEnrollmentsFresh } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { createProjectSchema } from '@/lib/schemas';
 import { withFileLock } from '@/lib/blobSync';
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     const featured = searchParams.get('featured');
     const isPublicFilter = searchParams.get('public');
 
-    let projects = readProjects();
+    let projects = await readProjectsFresh();
 
     // Students only see their own projects (unless it's the public showcase filter)
     if (user.role === 'student' && isPublicFilter !== 'true') {
@@ -38,8 +38,8 @@ export async function GET(request: Request) {
     }
 
     // Enrich with student names, course names
-    const users = readUsers();
-    const courses = readCourses();
+    const users = await readUsersFresh();
+    const courses = await readCoursesFresh();
     const userMap = new Map(users.map((u) => [u.id, { firstName: u.firstName, lastName: u.lastName }]));
     const courseMap = new Map(courses.map((c) => [c.id, c.name]));
 
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     }
 
     // Validate student is enrolled in the course
-    const enrollments = readEnrollments();
+    const enrollments = await readEnrollmentsFresh();
     const enrolled = enrollments.find(
       (e) => e.studentId === user.id && e.courseId === courseId && e.status === 'active'
     );
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
     }
 
     // Validate course exists
-    const courses = readCourses();
+    const courses = await readCoursesFresh();
     const course = courses.find((c) => c.id === courseId);
     if (!course) {
       return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });

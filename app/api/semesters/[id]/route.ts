@@ -12,7 +12,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateSemesterSchema } from '@/lib/schemas';
-import { readSemesters, readSemestersFresh, writeSemesters, getSemesterById } from '@/lib/dataService';
+import { readSemestersFresh, writeSemesters, getSemesterById } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { withFileLock } from '@/lib/blobSync';
 
@@ -25,7 +25,7 @@ export async function GET(
 ): Promise<NextResponse> {
   return withAuth(request, async () => {
     const { id } = await params;
-    const semester = getSemesterById(id);
+    const semester = await getSemesterById(id);
 
     if (!semester) {
       return NextResponse.json(

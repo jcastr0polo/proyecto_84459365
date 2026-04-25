@@ -42,7 +42,7 @@ export async function GET(
     // Si es estudiante, verificar permisos
     if (user.role === 'student') {
       // Verificar inscripción activa en el curso
-      if (!isStudentEnrolled(user.id, activity.courseId)) {
+      if (!(await isStudentEnrolled(user.id, activity.courseId))) {
         return NextResponse.json(
           { error: 'No estás inscrito en este curso' },
           { status: 403 }
@@ -60,7 +60,7 @@ export async function GET(
     }
 
     // Obtener info del curso para contexto
-    const course = getCourseById(activity.courseId);
+    const course = await getCourseById(activity.courseId);
 
     return NextResponse.json({
       activity,
@@ -132,8 +132,8 @@ export async function PUT(
         // Comprobar si hay entregas (submissions) asociadas para advertir
         let hasSubmissions = false;
         try {
-          const { readSubmissions } = await import('@/lib/dataService');
-          const submissions = readSubmissions();
+          const { readSubmissionsFresh } = await import('@/lib/dataService');
+          const submissions = await readSubmissionsFresh();
           hasSubmissions = submissions.some((s) => s.activityId === id);
         } catch {
           // Submissions may not be loaded yet — that's fine

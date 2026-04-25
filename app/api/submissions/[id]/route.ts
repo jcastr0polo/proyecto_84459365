@@ -43,7 +43,7 @@ export async function GET(
     }
 
     // Enrich with student and activity data
-    const student = getUserById(submission.studentId);
+    const student = await getUserById(submission.studentId);
     const allActivities = await readActivitiesFresh();
     const activity = allActivities.find((a) => a.id === submission.activityId) ?? null;
 

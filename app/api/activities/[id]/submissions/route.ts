@@ -60,8 +60,8 @@ export async function GET(
     }
 
     // Enrich with student data
-    const enriched: SubmissionWithDetails[] = filtered.map((s) => {
-      const student = getUserById(s.studentId);
+    const enriched: SubmissionWithDetails[] = await Promise.all(filtered.map(async (s) => {
+      const student = await getUserById(s.studentId);
       return {
         ...s,
         student: {
@@ -77,7 +77,7 @@ export async function GET(
           dueDate: activity.dueDate,
         },
       };
-    });
+    }));
 
     return NextResponse.json({
       submissions: enriched,

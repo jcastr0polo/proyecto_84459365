@@ -13,7 +13,7 @@
 
 import { NextResponse } from 'next/server';
 import { loginRequestSchema } from '@/lib/schemas';
-import { getUserByEmail, readUsers, readUsersFresh, writeUsers } from '@/lib/dataService';
+import { getUserByEmail, readUsersFresh, writeUsers } from '@/lib/dataService';
 import { verifyPassword, createSession, setSessionCookie, cleanExpiredSessions, generateSessionToken } from '@/lib/auth';
 import { toSafeUser } from '@/lib/withAuth';
 import { ensureDataReady } from '@/lib/blobSync';
@@ -39,7 +39,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const { email, password } = parsed.data;
 
     // 2. Buscar usuario por email
-    const user = getUserByEmail(email);
+    const user = await getUserByEmail(email);
     if (!user) {
       console.warn(`[auth] LOGIN FAILED — email not found: ${email}`);
       // No especificar si el email no existe (seguridad)

@@ -151,18 +151,18 @@ export async function writeUsers(users: User[]): Promise<void> {
 }
 
 /**
- * Busca un usuario por email (case-insensitive)
+ * Busca un usuario por email (case-insensitive) — lee fresco de Blob
  */
-export function getUserByEmail(email: string): User | null {
-  const users = readUsers();
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const users = await readUsersFresh();
   return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null;
 }
 
 /**
- * Busca un usuario por ID
+ * Busca un usuario por ID — lee fresco de Blob
  */
-export function getUserById(id: string): User | null {
-  const users = readUsers();
+export async function getUserById(id: string): Promise<User | null> {
+  const users = await readUsersFresh();
   return users.find((u) => u.id === id) ?? null;
 }
 
@@ -210,18 +210,18 @@ export async function writeSemesters(semesters: Semester[]): Promise<void> {
 }
 
 /**
- * Busca un semestre por ID
+ * Busca un semestre por ID — lee fresco de Blob
  */
-export function getSemesterById(id: string): Semester | null {
-  const semesters = readSemesters();
+export async function getSemesterById(id: string): Promise<Semester | null> {
+  const semesters = await readSemestersFresh();
   return semesters.find((s) => s.id === id) ?? null;
 }
 
 /**
- * Retorna el semestre activo (solo debería haber uno, RN-SEM-01)
+ * Retorna el semestre activo (solo debería haber uno, RN-SEM-01) — lee fresco de Blob
  */
-export function getActiveSemester(): Semester | null {
-  const semesters = readSemesters();
+export async function getActiveSemester(): Promise<Semester | null> {
+  const semesters = await readSemestersFresh();
   return semesters.find((s) => s.isActive) ?? null;
 }
 
@@ -250,18 +250,18 @@ export async function writeCourses(courses: Course[]): Promise<void> {
 }
 
 /**
- * Busca un curso por ID
+ * Busca un curso por ID — lee fresco de Blob
  */
-export function getCourseById(id: string): Course | null {
-  const courses = readCourses();
+export async function getCourseById(id: string): Promise<Course | null> {
+  const courses = await readCoursesFresh();
   return courses.find((c) => c.id === id) ?? null;
 }
 
 /**
- * Lista cursos de un semestre específico
+ * Lista cursos de un semestre específico — lee fresco de Blob
  */
-export function getCoursesBySemester(semesterId: string): Course[] {
-  const courses = readCourses();
+export async function getCoursesBySemester(semesterId: string): Promise<Course[]> {
+  const courses = await readCoursesFresh();
   return courses.filter((c) => c.semesterId === semesterId);
 }
 
@@ -290,27 +290,27 @@ export async function writeEnrollments(enrollments: Enrollment[]): Promise<void>
 }
 
 /**
- * Lista inscripciones de un curso específico
+ * Lista inscripciones de un curso específico — lee fresco de Blob
  */
-export function getEnrollmentsByCourse(courseId: string): Enrollment[] {
-  const enrollments = readEnrollments();
+export async function getEnrollmentsByCourse(courseId: string): Promise<Enrollment[]> {
+  const enrollments = await readEnrollmentsFresh();
   return enrollments.filter((e) => e.courseId === courseId);
 }
 
 /**
- * Lista inscripciones de un estudiante específico
+ * Lista inscripciones de un estudiante específico — lee fresco de Blob
  */
-export function getEnrollmentsByStudent(studentId: string): Enrollment[] {
-  const enrollments = readEnrollments();
+export async function getEnrollmentsByStudent(studentId: string): Promise<Enrollment[]> {
+  const enrollments = await readEnrollmentsFresh();
   return enrollments.filter((e) => e.studentId === studentId);
 }
 
 /**
- * Verifica si un estudiante ya está inscrito (activo) en un curso
+ * Verifica si un estudiante ya está inscrito (activo) en un curso — lee fresco de Blob
  * RN-INS-02: No puede haber inscripción duplicada activa
  */
-export function isStudentEnrolled(studentId: string, courseId: string): boolean {
-  const enrollments = readEnrollments();
+export async function isStudentEnrolled(studentId: string, courseId: string): Promise<boolean> {
+  const enrollments = await readEnrollmentsFresh();
   return enrollments.some(
     (e) => e.studentId === studentId && e.courseId === courseId && e.status === 'active'
   );
@@ -341,18 +341,18 @@ export async function writeActivities(activities: Activity[]): Promise<void> {
 }
 
 /**
- * Lista actividades de un curso específico
+ * Lista actividades de un curso específico — lee fresco de Blob
  */
-export function getActivitiesByCourse(courseId: string): Activity[] {
-  const activities = readActivities();
+export async function getActivitiesByCourse(courseId: string): Promise<Activity[]> {
+  const activities = await readActivitiesFresh();
   return activities.filter((a) => a.courseId === courseId);
 }
 
 /**
- * Busca una actividad por ID
+ * Busca una actividad por ID — lee fresco de Blob
  */
-export function getActivityById(id: string): Activity | null {
-  const activities = readActivities();
+export async function getActivityById(id: string): Promise<Activity | null> {
+  const activities = await readActivitiesFresh();
   return activities.find((a) => a.id === id) ?? null;
 }
 
@@ -381,37 +381,37 @@ export async function writeSubmissions(submissions: Submission[]): Promise<void>
 }
 
 /**
- * Lista entregas de una actividad específica
+ * Lista entregas de una actividad específica — lee fresco de Blob
  */
-export function getSubmissionsByActivity(activityId: string): Submission[] {
-  const submissions = readSubmissions();
+export async function getSubmissionsByActivity(activityId: string): Promise<Submission[]> {
+  const submissions = await readSubmissionsFresh();
   return submissions.filter((s) => s.activityId === activityId);
 }
 
 /**
- * Lista entregas de un estudiante específico
+ * Lista entregas de un estudiante específico — lee fresco de Blob
  */
-export function getSubmissionsByStudent(studentId: string): Submission[] {
-  const submissions = readSubmissions();
+export async function getSubmissionsByStudent(studentId: string): Promise<Submission[]> {
+  const submissions = await readSubmissionsFresh();
   return submissions.filter((s) => s.studentId === studentId);
 }
 
 /**
- * Busca una entrega específica por actividad y estudiante
+ * Busca una entrega específica por actividad y estudiante — lee fresco de Blob
  * RN-ENT-01: Una entrega por actividad por estudiante
  */
-export function getSubmission(activityId: string, studentId: string): Submission | null {
-  const submissions = readSubmissions();
+export async function getSubmission(activityId: string, studentId: string): Promise<Submission | null> {
+  const submissions = await readSubmissionsFresh();
   return submissions.find(
     (s) => s.activityId === activityId && s.studentId === studentId
   ) ?? null;
 }
 
 /**
- * Busca una entrega por ID
+ * Busca una entrega por ID — lee fresco de Blob
  */
-export function getSubmissionById(id: string): Submission | null {
-  const submissions = readSubmissions();
+export async function getSubmissionById(id: string): Promise<Submission | null> {
+  const submissions = await readSubmissionsFresh();
   return submissions.find((s) => s.id === id) ?? null;
 }
 
@@ -440,34 +440,34 @@ export async function writeGrades(grades: Grade[]): Promise<void> {
 }
 
 /**
- * Lista calificaciones de una actividad específica
+ * Lista calificaciones de una actividad específica — lee fresco de Blob
  */
-export function getGradesByActivity(activityId: string): Grade[] {
-  const grades = readGrades();
+export async function getGradesByActivity(activityId: string): Promise<Grade[]> {
+  const grades = await readGradesFresh();
   return grades.filter((g) => g.activityId === activityId);
 }
 
 /**
- * Lista calificaciones de un estudiante en un curso específico
+ * Lista calificaciones de un estudiante en un curso específico — lee fresco de Blob
  */
-export function getGradesByStudent(studentId: string, courseId: string): Grade[] {
-  const grades = readGrades();
+export async function getGradesByStudent(studentId: string, courseId: string): Promise<Grade[]> {
+  const grades = await readGradesFresh();
   return grades.filter((g) => g.studentId === studentId && g.courseId === courseId);
 }
 
 /**
- * Busca la calificación de una entrega específica
+ * Busca la calificación de una entrega específica — lee fresco de Blob
  */
-export function getGradeForSubmission(submissionId: string): Grade | null {
-  const grades = readGrades();
+export async function getGradeForSubmission(submissionId: string): Promise<Grade | null> {
+  const grades = await readGradesFresh();
   return grades.find((g) => g.submissionId === submissionId) ?? null;
 }
 
 /**
- * Busca una calificación por ID
+ * Busca una calificación por ID — lee fresco de Blob
  */
-export function getGradeById(id: string): Grade | null {
-  const grades = readGrades();
+export async function getGradeById(id: string): Promise<Grade | null> {
+  const grades = await readGradesFresh();
   return grades.find((g) => g.id === id) ?? null;
 }
 
@@ -496,26 +496,26 @@ export async function writePrompts(prompts: AIPrompt[]): Promise<void> {
 }
 
 /**
- * Busca un prompt por ID
+ * Busca un prompt por ID — lee fresco de Blob
  */
-export function getPromptById(id: string): AIPrompt | null {
-  const prompts = readPrompts();
+export async function getPromptById(id: string): Promise<AIPrompt | null> {
+  const prompts = await readPromptsFresh();
   return prompts.find((p) => p.id === id) ?? null;
 }
 
 /**
- * Lista prompts de un curso específico
+ * Lista prompts de un curso específico — lee fresco de Blob
  */
-export function getPromptsByCourse(courseId: string): AIPrompt[] {
-  const prompts = readPrompts();
+export async function getPromptsByCourse(courseId: string): Promise<AIPrompt[]> {
+  const prompts = await readPromptsFresh();
   return prompts.filter((p) => p.courseId === courseId);
 }
 
 /**
- * Busca un prompt vinculado a una actividad específica
+ * Busca un prompt vinculado a una actividad específica — lee fresco de Blob
  */
-export function getPromptByActivity(activityId: string): AIPrompt | null {
-  const prompts = readPrompts();
+export async function getPromptByActivity(activityId: string): Promise<AIPrompt | null> {
+  const prompts = await readPromptsFresh();
   return prompts.find((p) => p.activityId === activityId) ?? null;
 }
 
@@ -544,27 +544,27 @@ export async function writeProjects(projects: StudentProject[]): Promise<void> {
 }
 
 /**
- * Busca un proyecto por ID
+ * Busca un proyecto por ID — lee fresco de Blob
  */
-export function getProjectById(id: string): StudentProject | null {
-  const projects = readProjects();
+export async function getProjectById(id: string): Promise<StudentProject | null> {
+  const projects = await readProjectsFresh();
   return projects.find((p) => p.id === id) ?? null;
 }
 
 /**
- * Lista proyectos de un curso específico
+ * Lista proyectos de un curso específico — lee fresco de Blob
  */
-export function getProjectsByCourse(courseId: string): StudentProject[] {
-  const projects = readProjects();
+export async function getProjectsByCourse(courseId: string): Promise<StudentProject[]> {
+  const projects = await readProjectsFresh();
   return projects.filter((p) => p.courseId === courseId);
 }
 
 /**
- * Busca el proyecto de un estudiante en un curso específico
+ * Busca el proyecto de un estudiante en un curso específico — lee fresco de Blob
  * Un estudiante solo puede tener un proyecto por curso
  */
-export function getProjectByStudentAndCourse(studentId: string, courseId: string): StudentProject | null {
-  const projects = readProjects();
+export async function getProjectByStudentAndCourse(studentId: string, courseId: string): Promise<StudentProject | null> {
+  const projects = await readProjectsFresh();
   return projects.find((p) => p.studentId === studentId && p.courseId === courseId) ?? null;
 }
 
@@ -586,12 +586,12 @@ export async function writeCortes(cortes: Corte[]): Promise<void> {
   await writeJsonFile('cortes.json', cortes);
 }
 
-export function getCortesByCourse(courseId: string): Corte[] {
-  const cortes = readCortes();
+export async function getCortesByCourse(courseId: string): Promise<Corte[]> {
+  const cortes = await readCortesFresh();
   return cortes.filter((c) => c.courseId === courseId).sort((a, b) => a.order - b.order);
 }
 
-export function getCorteById(id: string): Corte | null {
-  const cortes = readCortes();
+export async function getCorteById(id: string): Promise<Corte | null> {
+  const cortes = await readCortesFresh();
   return cortes.find((c) => c.id === id) ?? null;
 }

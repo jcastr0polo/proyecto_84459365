@@ -51,7 +51,7 @@ export async function withAuth(
     }
 
     // 2. Buscar usuario
-    const user = getUserById(session.userId);
+    const user = await getUserById(session.userId);
     if (!user) {
       return NextResponse.json(
         { error: 'No autorizado' },

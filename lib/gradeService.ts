@@ -82,13 +82,13 @@ function roundTo1Decimal(value: number): number {
  */
 export async function gradeSubmission(data: CreateGradeRequest, adminId: string): Promise<Grade> {
   // 1. Verificar submission
-  const submission = getSubmissionById(data.submissionId);
+  const submission = await getSubmissionById(data.submissionId);
   if (!submission) {
     throw new GradeError('Entrega no encontrada', 404);
   }
 
   // 2. Verificar actividad
-  const activity = getActivityById(data.activityId);
+  const activity = await getActivityById(data.activityId);
   if (!activity) {
     throw new GradeError('Actividad no encontrada', 404);
   }
@@ -126,7 +126,7 @@ export async function gradeSubmission(data: CreateGradeRequest, adminId: string)
   const now = new Date().toISOString();
 
   // 5. Verificar si ya existe calificación para esta entrega
-  const existingGrade = getGradeForSubmission(data.submissionId);
+  const existingGrade = await getGradeForSubmission(data.submissionId);
 
   let grade: Grade;
 
@@ -195,12 +195,12 @@ export async function gradeSubmission(data: CreateGradeRequest, adminId: string)
  * updateGrade — Editar una calificación existente
  */
 export async function updateGrade(gradeId: string, data: UpdateGradeRequest, adminId: string): Promise<Grade> {
-  const existing = getGradeById(gradeId);
+  const existing = await getGradeById(gradeId);
   if (!existing) {
     throw new GradeError('Calificación no encontrada', 404);
   }
 
-  const activity = getActivityById(existing.activityId);
+  const activity = await getActivityById(existing.activityId);
 
   // Validar score si se proporciona
   if (data.score !== undefined) {
@@ -277,13 +277,13 @@ export async function gradeSubmissionBatch(
   }[] = [];
 
   for (const item of items) {
-    const submission = getSubmissionById(item.submissionId);
+    const submission = await getSubmissionById(item.submissionId);
     if (!submission) {
       errors.push({ submissionId: item.submissionId, error: 'Entrega no encontrada' });
       continue;
     }
 
-    const activity = getActivityById(item.activityId);
+    const activity = await getActivityById(item.activityId);
     if (!activity) {
       errors.push({ submissionId: item.submissionId, error: 'Actividad no encontrada' });
       continue;
@@ -391,7 +391,7 @@ export async function gradeSubmissionBatch(
  * RN-CAL-03: Publicación masiva
  */
 export async function publishGrades(activityId: string): Promise<{ published: number }> {
-  const activity = getActivityById(activityId);
+  const activity = await getActivityById(activityId);
   if (!activity) {
     throw new GradeError('Actividad no encontrada', 404);
   }
@@ -434,15 +434,15 @@ export async function publishGrades(activityId: string): Promise<{ published: nu
  * Aprobación: ≥ 3.0
  * Redondeo: 1 decimal
  */
-export function calculateFinalGrade(studentId: string, courseId: string, allGrades?: Grade[]): FinalGradeResult {
+export async function calculateFinalGrade(studentId: string, courseId: string, allGrades?: Grade[]): Promise<FinalGradeResult> {
   // Obtener todas las actividades publicadas del curso
-  const activities = getActivitiesByCourse(courseId)
+  const activities = (await getActivitiesByCourse(courseId))
     .filter((a) => a.status === 'published' || a.status === 'closed');
 
   // Obtener notas del estudiante en este curso
   const studentGrades = allGrades
     ? allGrades.filter((g) => g.studentId === studentId && g.courseId === courseId)
-    : getGradesByStudent(studentId, courseId);
+    : await getGradesByStudent(studentId, courseId);
 
   const details: FinalGradeResult['details'] = [];
   let sumWeightedScores = 0;
@@ -506,26 +506,26 @@ export function calculateFinalGrade(studentId: string, courseId: string, allGrad
  * Filas: estudiantes, Columnas: actividades, Última columna: definitiva
  */
 export async function getCourseGradeSummary(courseId: string): Promise<CourseGradeSummary> {
-  const course = getCourseById(courseId);
+  const course = await getCourseById(courseId);
   if (!course) {
     throw new GradeError('Curso no encontrado', 404);
   }
 
   // Actividades del curso (solo publicadas/cerradas tienen sentido para notas)
-  const activities = getActivitiesByCourse(courseId)
+  const activities = (await getActivitiesByCourse(courseId))
     .filter((a) => a.status === 'published' || a.status === 'closed')
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
   // Estudiantes inscritos activos
-  const enrollments = getEnrollmentsByCourse(courseId)
+  const enrollments = (await getEnrollmentsByCourse(courseId))
     .filter((e) => e.status === 'active');
 
   // Todas las notas del curso — FRESH desde Blob
   const freshGrades = await readGradesFresh();
   const allGrades = freshGrades.filter((g) => g.courseId === courseId);
 
-  const students = enrollments.map((enrollment) => {
-    const student = getUserById(enrollment.studentId);
+  const students = await Promise.all(enrollments.map(async (enrollment) => {
+    const student = await getUserById(enrollment.studentId);
     if (!student) return null;
 
     // Map de notas por actividad
@@ -545,7 +545,7 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
     }
 
     // Calcular definitiva (pasar allGrades para evitar leer de caché)
-    const finalResult = calculateFinalGrade(student.id, courseId, freshGrades);
+    const finalResult = await calculateFinalGrade(student.id, courseId, freshGrades);
 
     return {
       id: student.id,
@@ -558,7 +558,9 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
       isPartial: finalResult.isPartial,
       isApproved: finalResult.totalWeight > 0 ? finalResult.isApproved : null,
     };
-  }).filter((s): s is NonNullable<typeof s> => s !== null);
+  }));
+
+  const filteredStudents = students.filter((s): s is NonNullable<typeof s> => s !== null);
 
   return {
     courseId,
@@ -570,7 +572,7 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
       maxScore: a.maxScore,
       weight: a.weight,
     })),
-    students,
+    students: filteredStudents,
   };
 }
 
@@ -583,13 +585,13 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
  * Solo muestra notas publicadas (RN-CAL-02)
  */
 export async function getStudentGradeSummary(studentId: string, courseId: string): Promise<StudentGradeSummary> {
-  const course = getCourseById(courseId);
+  const course = await getCourseById(courseId);
   if (!course) {
     throw new GradeError('Curso no encontrado', 404);
   }
 
   // Actividades visibles (publicadas/cerradas)
-  const activities = getActivitiesByCourse(courseId)
+  const activities = (await getActivitiesByCourse(courseId))
     .filter((a) => a.status === 'published' || a.status === 'closed')
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 

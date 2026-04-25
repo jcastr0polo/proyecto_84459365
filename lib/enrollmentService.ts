@@ -57,7 +57,7 @@ export async function enrollStudent(
   adminId: string
 ): Promise<EnrollResult> {
   // 1. Validar curso
-  const course = getCourseById(courseId);
+  const course = await getCourseById(courseId);
   if (!course) {
     throw new EnrollmentError('Curso no encontrado', 404);
   }
@@ -66,7 +66,7 @@ export async function enrollStudent(
   }
 
   // 2. Buscar o crear usuario
-  let user = getUserByEmail(data.email);
+  let user = await getUserByEmail(data.email);
   let created = false;
   let enrollmentResult: Enrollment | undefined;
 
@@ -158,7 +158,7 @@ export async function bulkEnroll(
       result.success.push(enrolled);
     } catch (err) {
       if (err instanceof EnrollmentError && err.code === 'ALREADY_ENROLLED') {
-        const user = getUserByEmail(studentData.email);
+        const user = await getUserByEmail(studentData.email);
         result.alreadyEnrolled.push({
           email: studentData.email,
           studentId: user?.id ?? 'unknown',

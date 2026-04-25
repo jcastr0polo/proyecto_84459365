@@ -34,7 +34,7 @@ export async function GET(
       }
 
       // Estudiante: verificar inscripción
-      if (!isStudentEnrolled(user.id, courseId)) {
+      if (!(await isStudentEnrolled(user.id, courseId))) {
         return NextResponse.json(
           { error: 'No estás inscrito en este curso' },
           { status: 403 }

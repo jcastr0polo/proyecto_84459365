@@ -8,7 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readEnrollments, readEnrollmentsFresh, writeEnrollments, getCourseById } from '@/lib/dataService';
+import { readEnrollmentsFresh, writeEnrollments, getCourseById } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { withFileLock } from '@/lib/blobSync';
 
@@ -24,7 +24,7 @@ export async function DELETE(
     const { id, enrollId } = await params;
 
     // Verificar curso
-    const course = getCourseById(id);
+    const course = await getCourseById(id);
     if (!course) {
       return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
     }

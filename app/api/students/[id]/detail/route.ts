@@ -27,12 +27,12 @@ export async function GET(
   return withAuth(request, async () => {
     const { id } = await params;
 
-    const student = getUserById(id);
+    const student = await getUserById(id);
     if (!student || student.role !== 'student') {
       return NextResponse.json({ error: 'Estudiante no encontrado' }, { status: 404 });
     }
 
-    const enrollments = getEnrollmentsByStudent(id).filter((e) => e.status === 'active');
+    const enrollments = (await getEnrollmentsByStudent(id)).filter((e) => e.status === 'active');
     const allCourses = await readCoursesFresh();
     const allActivities = await readActivitiesFresh();
     const allSubmissions = await readSubmissionsFresh();

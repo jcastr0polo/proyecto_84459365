@@ -18,7 +18,6 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createCourseSchema } from '@/lib/schemas';
 import {
-  readCourses,
   readCoursesFresh,
   writeCourses,
   getCoursesBySemester,
@@ -81,7 +80,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const { code, name, description, semesterId, category, schedule } = parsed.data;
 
       // Verificar que el semestre existe
-      const semester = getSemesterById(semesterId);
+      const semester = await getSemesterById(semesterId);
       if (!semester) {
         return NextResponse.json(
           { error: `Semestre "${semesterId}" no encontrado` },
@@ -90,7 +89,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       }
 
       // RN-CUR-01: Código único por semestre
-      const existingCourses = getCoursesBySemester(semesterId);
+      const existingCourses = await getCoursesBySemester(semesterId);
       const duplicate = existingCourses.find(
         (c) => c.code.toLowerCase() === code.toLowerCase()
       );

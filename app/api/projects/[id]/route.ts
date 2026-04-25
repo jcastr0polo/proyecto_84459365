@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readProjects, readProjectsFresh, writeProjects, getProjectById, readUsers, readCourses } from '@/lib/dataService';
+import { readProjectsFresh, writeProjects, getProjectById, readUsersFresh, readCoursesFresh } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { updateProjectSchema } from '@/lib/schemas';
 import { withFileLock } from '@/lib/blobSync';
@@ -13,14 +13,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const project = getProjectById(id);
+  const project = await getProjectById(id);
   if (!project) {
     return NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 });
   }
 
   // Enrich with student name and course name
-  const users = readUsers();
-  const courses = readCourses();
+  const users = await readUsersFresh();
+  const courses = await readCoursesFresh();
   const student = users.find((u) => u.id === project.studentId);
   const course = courses.find((c) => c.id === project.courseId);
 

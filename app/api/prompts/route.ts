@@ -11,7 +11,7 @@ import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { withAuth } from '@/lib/withAuth';
 import { createPromptSchema } from '@/lib/schemas';
-import { readPrompts, readPromptsFresh, writePrompts, getPromptsByCourse, getCourseById } from '@/lib/dataService';
+import { readPromptsFresh, writePrompts, getPromptsByCourse, getCourseById } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { withFileLock } from '@/lib/blobSync';
 import type { AIPrompt } from '@/lib/types';
@@ -27,9 +27,9 @@ export async function GET(request: Request): Promise<NextResponse> {
       let prompts: AIPrompt[];
 
       if (courseId) {
-        prompts = getPromptsByCourse(courseId);
+        prompts = await getPromptsByCourse(courseId);
       } else {
-        prompts = readPrompts();
+        prompts = await readPromptsFresh();
       }
 
       // Filter by tag
@@ -67,7 +67,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       }
 
       // Verify course exists
-      const course = getCourseById(parsed.data.courseId);
+      const course = await getCourseById(parsed.data.courseId);
       if (!course) {
         return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
       }

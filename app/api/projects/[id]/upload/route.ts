@@ -8,7 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readProjects, readProjectsFresh, writeProjects, getCourseById } from '@/lib/dataService';
+import { readProjectsFresh, writeProjects, getCourseById } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { put } from '@vercel/blob';
 import { withFileLock } from '@/lib/blobSync';
@@ -45,7 +45,7 @@ export async function POST(
     const { id } = await params;
 
     // Buscar proyecto
-    const projects = readProjects();
+    const projects = await readProjectsFresh();
     const projectIndex = projects.findIndex((p) => p.id === id);
     if (projectIndex === -1) {
       return NextResponse.json({ error: 'Proyecto no encontrado' }, { status: 404 });
@@ -96,7 +96,7 @@ export async function POST(
     }
 
     // Construir ruta organizada: projects/{semesterId}/{courseId}/{studentId}/{filename}
-    const course = getCourseById(project.courseId);
+    const course = await getCourseById(project.courseId);
     const semesterId = course?.semesterId ?? 'unknown';
     const sanitizedName = sanitizeFileName(path.basename(file.name, ext));
     const timestamp = Date.now();

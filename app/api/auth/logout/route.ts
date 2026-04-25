@@ -23,7 +23,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       destroySession(session.id);
 
       // 3. Auditoría
-      const user = getUserById(session.userId);
+      const user = await getUserById(session.userId);
       await logAudit({
         action: 'logout',
         entity: 'user',

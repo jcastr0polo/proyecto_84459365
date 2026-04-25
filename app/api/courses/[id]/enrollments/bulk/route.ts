@@ -23,7 +23,7 @@ export async function POST(
       const { id } = await params;
 
       // Verificar que el curso existe
-      const course = getCourseById(id);
+      const course = await getCourseById(id);
       if (!course) {
         return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
       }

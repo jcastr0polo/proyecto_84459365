@@ -11,7 +11,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { toSafeUser } from '@/lib/withAuth';
-import { getUserById, getEnrollmentsByStudent, getCourseById, readUsers, readUsersFresh, writeUsers } from '@/lib/dataService';
+import { getUserById, getEnrollmentsByStudent, getCourseById, readUsersFresh, writeUsers } from '@/lib/dataService';
 import { hashPassword } from '@/lib/auth';
 import { dispatchWrite } from '@/lib/auditService';
 import { withFileLock } from '@/lib/blobSync';
@@ -32,17 +32,17 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
-    const student = getUserById(id);
+    const student = await getUserById(id);
     if (!student || student.role !== 'student') {
       return NextResponse.json({ error: 'Estudiante no encontrado' }, { status: 404 });
     }
 
     // Obtener enrollments con datos del curso
-    const enrollments = getEnrollmentsByStudent(id);
-    const enrolledCourses = enrollments
+    const enrollments = await getEnrollmentsByStudent(id);
+    const enrolledCourses = (await Promise.all(enrollments
       .filter((e) => e.status === 'active')
-      .map((e) => {
-        const course = getCourseById(e.courseId);
+      .map(async (e) => {
+        const course = await getCourseById(e.courseId);
         return {
           enrollmentId: e.id,
           enrolledAt: e.enrolledAt,
@@ -50,7 +50,7 @@ export async function GET(
             ? { id: course.id, code: course.code, name: course.name, category: course.category }
             : null,
         };
-      })
+      })))
       .filter((e) => e.course !== null);
 
     return NextResponse.json({

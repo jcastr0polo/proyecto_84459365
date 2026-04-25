@@ -36,7 +36,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const grade = await gradeSubmission(parsed.data, user.id);
 
       // Auditoría
-      const student = getUserById(grade.studentId);
+      const student = await getUserById(grade.studentId);
       await logAudit({
         action: 'create', entity: 'grade', entityId: grade.id,
         userId: user.id, userName: `${user.firstName} ${user.lastName}`,

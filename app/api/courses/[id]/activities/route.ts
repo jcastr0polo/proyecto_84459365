@@ -35,7 +35,7 @@ export async function GET(
   return withAuth(request, async (user) => {
     const { id } = await params;
 
-    const course = getCourseById(id);
+    const course = await getCourseById(id);
     if (!course) {
       return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
     }
@@ -47,7 +47,7 @@ export async function GET(
     // Estudiantes solo ven actividades published con publishDate <= now
     if (user.role === 'student') {
       // Verificar inscripción activa
-      if (!isStudentEnrolled(user.id, id)) {
+      if (!(await isStudentEnrolled(user.id, id))) {
         return NextResponse.json(
           { error: 'No estás inscrito en este curso' },
           { status: 403 }
@@ -60,7 +60,7 @@ export async function GET(
       );
 
       // Filtrar actividades que requieren proyecto si el estudiante no tiene uno
-      const hasProject = !!getProjectByStudentAndCourse(user.id, id);
+      const hasProject = !!(await getProjectByStudentAndCourse(user.id, id));
       if (!hasProject) {
         activities = activities.filter((a) => !a.projectRequired);
       }
@@ -86,7 +86,7 @@ export async function POST(
       const { id } = await params;
 
       // Verificar que el curso existe
-      const course = getCourseById(id);
+      const course = await getCourseById(id);
       if (!course) {
         return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
       }

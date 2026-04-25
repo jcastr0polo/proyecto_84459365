@@ -9,7 +9,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updatePromptSchema } from '@/lib/schemas';
-import { getPromptById, readPrompts, readPromptsFresh, writePrompts } from '@/lib/dataService';
+import { getPromptById, readPromptsFresh, writePrompts } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { withFileLock } from '@/lib/blobSync';
 
@@ -20,7 +20,7 @@ export async function GET(
   return withAuth(request, async () => {
     try {
       const { id } = await params;
-      const prompt = getPromptById(id);
+      const prompt = await getPromptById(id);
 
       if (!prompt) {
         return NextResponse.json({ error: 'Prompt no encontrado' }, { status: 404 });

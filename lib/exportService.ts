@@ -53,7 +53,7 @@ function getStatus(finalScore: number | null): string {
  * @returns { csv: string, filename: string }
  */
 export async function generateGradesCSV(courseId: string): Promise<{ csv: string; filename: string }> {
-  const course = getCourseById(courseId);
+  const course = await getCourseById(courseId);
   if (!course) {
     throw new GradeError('Curso no encontrado', 404);
   }
@@ -127,7 +127,7 @@ export async function generateGradesJSON(courseId: string): Promise<{
     average: number | null;
   };
 }> {
-  const course = getCourseById(courseId);
+  const course = await getCourseById(courseId);
   if (!course) {
     throw new GradeError('Curso no encontrado', 404);
   }

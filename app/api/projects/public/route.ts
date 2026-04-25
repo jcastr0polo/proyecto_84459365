@@ -4,16 +4,16 @@
  */
 
 import { NextResponse } from 'next/server';
-import { readProjects, readUsers, readCourses, readSemesters } from '@/lib/dataService';
+import { readProjectsFresh, readUsersFresh, readCoursesFresh, readSemestersFresh } from '@/lib/dataService';
 import { ensureDataReady } from '@/lib/blobSync';
 
 export async function GET(): Promise<NextResponse> {
   await ensureDataReady();
 
-  const projects = readProjects();
-  const users = readUsers();
-  const courses = readCourses();
-  const semesters = readSemesters();
+  const projects = await readProjectsFresh();
+  const users = await readUsersFresh();
+  const courses = await readCoursesFresh();
+  const semesters = await readSemestersFresh();
 
   const featured = projects.filter((p) => p.isPublic && p.isFeatured && !p.isBlockedFromShowcase);
 

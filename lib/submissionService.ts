@@ -138,7 +138,7 @@ export async function submitWork(
   links: SubmissionLink[]
 ): Promise<Submission> {
   // 1. Verificar actividad
-  const activity = getActivityById(activityId);
+  const activity = await getActivityById(activityId);
   if (!activity) {
     throw new SubmissionError('Actividad no encontrada', 404);
   }
@@ -150,7 +150,7 @@ export async function submitWork(
   }
 
   // 2. Verificar inscripción activa
-  if (!isStudentEnrolled(studentId, courseId)) {
+  if (!(await isStudentEnrolled(studentId, courseId))) {
     throw new SubmissionError('No estás inscrito activamente en este curso', 403);
   }
 
@@ -158,7 +158,7 @@ export async function submitWork(
   const isLate = checkDeadline(activity);
 
   // 4. Verificar entrega previa
-  const existing = getSubmission(activityId, studentId);
+  const existing = await getSubmission(activityId, studentId);
   const now = new Date().toISOString();
 
   if (existing) {
