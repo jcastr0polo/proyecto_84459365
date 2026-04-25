@@ -29,6 +29,8 @@ import { readSubmissions, readSubmissionsFresh, writeSubmissions } from '@/lib/d
 import { withFileLock } from '@/lib/blobSync';
 import type {
   Grade,
+  Submission,
+  Activity,
   CreateGradeRequest,
   UpdateGradeRequest,
   FinalGradeResult,
@@ -232,6 +234,155 @@ export async function updateGrade(gradeId: string, data: UpdateGradeRequest, adm
 }
 
 // ────────────────────────────────────────────────────────────
+// CALIFICAR EN LOTE (batch)
+// ────────────────────────────────────────────────────────────
+
+export interface BatchGradeItem {
+  submissionId: string;
+  activityId: string;
+  studentId: string;
+  courseId: string;
+  score: number;
+  feedback?: string;
+  existingGradeId?: string;
+}
+
+export interface BatchGradeResult {
+  saved: number;
+  errors: { submissionId: string; error: string }[];
+}
+
+/**
+ * gradeSubmissionBatch — Calificar múltiples entregas en un solo ciclo de escritura.
+ *
+ * Evita el problema de "last write wins" al escribir grades.json y
+ * submissions.json una sola vez con todas las notas.
+ */
+export async function gradeSubmissionBatch(
+  items: BatchGradeItem[],
+  adminId: string
+): Promise<BatchGradeResult> {
+  if (items.length === 0) return { saved: 0, errors: [] };
+
+  const now = new Date().toISOString();
+  const errors: { submissionId: string; error: string }[] = [];
+
+  // Pre-validate all items before writing anything
+  const validated: {
+    item: BatchGradeItem;
+    submission: Submission;
+    activity: Activity;
+    finalScore: number;
+    existingGradeId?: string;
+  }[] = [];
+
+  for (const item of items) {
+    const submission = getSubmissionById(item.submissionId);
+    if (!submission) {
+      errors.push({ submissionId: item.submissionId, error: 'Entrega no encontrada' });
+      continue;
+    }
+
+    const activity = getActivityById(item.activityId);
+    if (!activity) {
+      errors.push({ submissionId: item.submissionId, error: 'Actividad no encontrada' });
+      continue;
+    }
+
+    if (submission.activityId !== activity.id) {
+      errors.push({ submissionId: item.submissionId, error: 'La entrega no corresponde a esta actividad' });
+      continue;
+    }
+
+    if (item.score < 0 || item.score > activity.maxScore) {
+      errors.push({ submissionId: item.submissionId, error: `Nota fuera de rango (0–${activity.maxScore})` });
+      continue;
+    }
+
+    // Late penalty
+    let finalScore = item.score;
+    if (submission.isLate && activity.latePenaltyPercent && activity.latePenaltyPercent > 0) {
+      const penalty = finalScore * (activity.latePenaltyPercent / 100);
+      finalScore = roundTo1Decimal(finalScore - penalty);
+      if (finalScore < 0) finalScore = 0;
+    }
+
+    validated.push({
+      item,
+      submission,
+      activity,
+      finalScore,
+      existingGradeId: item.existingGradeId,
+    });
+  }
+
+  if (validated.length === 0) return { saved: 0, errors };
+
+  // Single write to grades.json
+  await withFileLock('grades.json', async () => {
+    const grades = await readGradesFresh();
+
+    for (const v of validated) {
+      // Check if grade already exists (by existingGradeId or by submissionId)
+      const existIdx = v.existingGradeId
+        ? grades.findIndex((g) => g.id === v.existingGradeId)
+        : grades.findIndex((g) => g.submissionId === v.item.submissionId);
+
+      if (existIdx !== -1) {
+        // Update existing grade
+        grades[existIdx] = {
+          ...grades[existIdx],
+          score: v.finalScore,
+          maxScore: v.activity.maxScore,
+          feedback: v.item.feedback,
+          gradedBy: adminId,
+          gradedAt: now,
+          updatedAt: now,
+        };
+      } else {
+        // Create new grade
+        grades.push({
+          id: uuidv4(),
+          submissionId: v.item.submissionId,
+          activityId: v.item.activityId,
+          studentId: v.item.studentId,
+          courseId: v.item.courseId,
+          score: v.finalScore,
+          maxScore: v.activity.maxScore,
+          feedback: v.item.feedback,
+          isPublished: false,
+          gradedBy: adminId,
+          gradedAt: now,
+          updatedAt: now,
+        });
+      }
+    }
+
+    await writeGrades(grades);
+  });
+
+  // Single write to submissions.json — mark all as 'reviewed'
+  await withFileLock('submissions.json', async () => {
+    const submissions = await readSubmissionsFresh();
+
+    for (const v of validated) {
+      const idx = submissions.findIndex((s) => s.id === v.submission.id);
+      if (idx !== -1) {
+        submissions[idx] = {
+          ...submissions[idx],
+          status: 'reviewed',
+          updatedAt: now,
+        };
+      }
+    }
+
+    await writeSubmissions(submissions);
+  });
+
+  return { saved: validated.length, errors };
+}
+
+// ────────────────────────────────────────────────────────────
 // PUBLICAR NOTAS (RN-CAL-02, RN-CAL-03)
 // ────────────────────────────────────────────────────────────
 
@@ -283,13 +434,15 @@ export async function publishGrades(activityId: string): Promise<{ published: nu
  * Aprobación: ≥ 3.0
  * Redondeo: 1 decimal
  */
-export function calculateFinalGrade(studentId: string, courseId: string): FinalGradeResult {
+export function calculateFinalGrade(studentId: string, courseId: string, allGrades?: Grade[]): FinalGradeResult {
   // Obtener todas las actividades publicadas del curso
   const activities = getActivitiesByCourse(courseId)
     .filter((a) => a.status === 'published' || a.status === 'closed');
 
   // Obtener notas del estudiante en este curso
-  const studentGrades = getGradesByStudent(studentId, courseId);
+  const studentGrades = allGrades
+    ? allGrades.filter((g) => g.studentId === studentId && g.courseId === courseId)
+    : getGradesByStudent(studentId, courseId);
 
   const details: FinalGradeResult['details'] = [];
   let sumWeightedScores = 0;
@@ -352,7 +505,7 @@ export function calculateFinalGrade(studentId: string, courseId: string): FinalG
  * getCourseGradeSummary — Tabla pivote de notas por curso (vista admin)
  * Filas: estudiantes, Columnas: actividades, Última columna: definitiva
  */
-export function getCourseGradeSummary(courseId: string): CourseGradeSummary {
+export async function getCourseGradeSummary(courseId: string): Promise<CourseGradeSummary> {
   const course = getCourseById(courseId);
   if (!course) {
     throw new GradeError('Curso no encontrado', 404);
@@ -367,8 +520,9 @@ export function getCourseGradeSummary(courseId: string): CourseGradeSummary {
   const enrollments = getEnrollmentsByCourse(courseId)
     .filter((e) => e.status === 'active');
 
-  // Todas las notas del curso
-  const allGrades = readGrades().filter((g) => g.courseId === courseId);
+  // Todas las notas del curso — FRESH desde Blob
+  const freshGrades = await readGradesFresh();
+  const allGrades = freshGrades.filter((g) => g.courseId === courseId);
 
   const students = enrollments.map((enrollment) => {
     const student = getUserById(enrollment.studentId);
@@ -390,8 +544,8 @@ export function getCourseGradeSummary(courseId: string): CourseGradeSummary {
         : null;
     }
 
-    // Calcular definitiva
-    const finalResult = calculateFinalGrade(student.id, courseId);
+    // Calcular definitiva (pasar allGrades para evitar leer de caché)
+    const finalResult = calculateFinalGrade(student.id, courseId, freshGrades);
 
     return {
       id: student.id,
@@ -428,7 +582,7 @@ export function getCourseGradeSummary(courseId: string): CourseGradeSummary {
  * getStudentGradeSummary — Notas de un estudiante en un curso
  * Solo muestra notas publicadas (RN-CAL-02)
  */
-export function getStudentGradeSummary(studentId: string, courseId: string): StudentGradeSummary {
+export async function getStudentGradeSummary(studentId: string, courseId: string): Promise<StudentGradeSummary> {
   const course = getCourseById(courseId);
   if (!course) {
     throw new GradeError('Curso no encontrado', 404);
@@ -439,9 +593,10 @@ export function getStudentGradeSummary(studentId: string, courseId: string): Stu
     .filter((a) => a.status === 'published' || a.status === 'closed')
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
-  // Notas DEL estudiante en este curso — solo publicadas
-  const studentGrades = getGradesByStudent(studentId, courseId)
-    .filter((g) => g.isPublished);
+  // Notas DEL estudiante en este curso — FRESH desde Blob, solo publicadas
+  const freshGrades = await readGradesFresh();
+  const studentGrades = freshGrades
+    .filter((g) => g.studentId === studentId && g.courseId === courseId && g.isPublished);
 
   const activityDetails: StudentGradeSummary['activities'] = activities.map((activity) => {
     const grade = studentGrades.find((g) => g.activityId === activity.id);

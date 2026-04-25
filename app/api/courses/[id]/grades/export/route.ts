@@ -32,12 +32,12 @@ export async function GET(
 
       if (format === 'json') {
         // Formato JSON para consumo programático
-        const data = generateGradesJSON(courseId);
+        const data = await generateGradesJSON(courseId);
         return NextResponse.json(data);
       }
 
       // Formato CSV (por defecto)
-      const { csv, filename } = generateGradesCSV(courseId);
+      const { csv, filename } = await generateGradesCSV(courseId);
 
       return new NextResponse(csv, {
         status: 200,

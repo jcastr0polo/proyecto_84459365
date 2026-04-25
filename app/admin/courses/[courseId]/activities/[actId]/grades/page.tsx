@@ -141,59 +141,46 @@ export default function AdminGradingPage() {
     load();
   }, [actId, courseId, toast]);
 
-  // Save all modified rows
+  // Save all modified rows — batch endpoint (single write to Blob)
   const handleSaveAll = useCallback(async (modifiedRows: GradeRow[]) => {
     if (!activity || modifiedRows.length === 0) return;
+
+    const itemsToSave = modifiedRows.filter((r) => r.score !== null);
+    if (itemsToSave.length === 0) return;
+
     setSaving(true);
-    let successCount = 0;
-    let errorCount = 0;
+    try {
+      const res = await fetch('/api/grades/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          items: itemsToSave.map((row) => ({
+            submissionId: row.submissionId,
+            activityId: actId,
+            studentId: row.studentId,
+            courseId: courseId,
+            score: row.score,
+            feedback: row.feedback || undefined,
+            existingGradeId: row.existingGradeId || undefined,
+          })),
+        }),
+      });
 
-    for (const row of modifiedRows) {
-      if (row.score === null) continue;
-      try {
-        if (row.existingGradeId) {
-          // Update existing
-          const res = await fetch(`/api/grades/${row.existingGradeId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ score: row.score, feedback: row.feedback || undefined }),
-          });
-          if (res.ok) successCount++;
-          else errorCount++;
+      const data = await res.json();
+      if (res.ok || res.status === 207) {
+        if (data.errors?.length > 0) {
+          toast(`${data.saved} guardadas, ${data.errors.length} error(es)`, 'error');
         } else {
-          // Create new
-          const res = await fetch('/api/grades', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              submissionId: row.submissionId,
-              activityId: actId,
-              studentId: row.studentId,
-              courseId: courseId,
-              score: row.score,
-              feedback: row.feedback || undefined,
-            }),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            row.existingGradeId = data.grade?.id;
-            successCount++;
-          } else {
-            errorCount++;
-          }
+          toast(`${data.saved} calificación(es) guardada(s)`, 'success');
         }
-      } catch {
-        errorCount++;
+      } else {
+        toast(data.error || 'Error al guardar calificaciones', 'error');
       }
-    }
-
-    setSaving(false);
-    if (errorCount === 0) {
-      toast(`${successCount} calificación(es) guardada(s)`, 'success');
-    } else {
-      toast(`${successCount} guardadas, ${errorCount} error(es)`, 'error');
+    } catch {
+      toast('Error de conexión al guardar', 'error');
+    } finally {
+      setSaving(false);
     }
   }, [activity, actId, courseId, toast]);
 

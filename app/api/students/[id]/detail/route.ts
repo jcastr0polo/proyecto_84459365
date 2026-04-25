@@ -35,7 +35,7 @@ export async function GET(
     const enrollments = getEnrollmentsByStudent(id).filter((e) => e.status === 'active');
     const allProjects = readProjects();
 
-    const courses = enrollments.map((enrollment) => {
+    const courses = (await Promise.all(enrollments.map(async (enrollment) => {
       const course = getCourseById(enrollment.courseId);
       if (!course) return null;
 
@@ -81,7 +81,7 @@ export async function GET(
       // Grades summary
       let grades = null;
       try {
-        const summary = getCourseGradeSummary(course.id);
+        const summary = await getCourseGradeSummary(course.id);
         const studentRow = summary.students?.find(
           (s: { id: string }) => s.id === id
         );
@@ -124,7 +124,7 @@ export async function GET(
           : null,
         grades,
       };
-    }).filter(Boolean);
+    }))).filter(Boolean);
 
     return NextResponse.json({
       student: toSafeUser(student),

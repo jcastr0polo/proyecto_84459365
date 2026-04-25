@@ -52,13 +52,13 @@ function getStatus(finalScore: number | null): string {
  *
  * @returns { csv: string, filename: string }
  */
-export function generateGradesCSV(courseId: string): { csv: string; filename: string } {
+export async function generateGradesCSV(courseId: string): Promise<{ csv: string; filename: string }> {
   const course = getCourseById(courseId);
   if (!course) {
     throw new GradeError('Curso no encontrado', 404);
   }
 
-  const summary = getCourseGradeSummary(courseId);
+  const summary = await getCourseGradeSummary(courseId);
 
   // Build header row
   const headers = [
@@ -115,7 +115,7 @@ export function generateGradesCSV(courseId: string): { csv: string; filename: st
  *
  * Para consumo programático (API responses, integrations)
  */
-export function generateGradesJSON(courseId: string): {
+export async function generateGradesJSON(courseId: string): Promise<{
   course: { id: string; code: string; name: string };
   exportDate: string;
   rows: GradeExportRow[];
@@ -126,13 +126,13 @@ export function generateGradesJSON(courseId: string): {
     pending: number;
     average: number | null;
   };
-} {
+}> {
   const course = getCourseById(courseId);
   if (!course) {
     throw new GradeError('Curso no encontrado', 404);
   }
 
-  const data: CourseGradeSummary = getCourseGradeSummary(courseId);
+  const data: CourseGradeSummary = await getCourseGradeSummary(courseId);
 
   const sortedStudents = [...data.students].sort((a, b) => {
     const lastCmp = a.lastName.localeCompare(b.lastName, 'es-CO');

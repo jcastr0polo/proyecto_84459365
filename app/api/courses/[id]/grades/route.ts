@@ -29,7 +29,7 @@ export async function GET(
 
       if (user.role === 'admin') {
         // RF-CAL-05: Tabla completa para admin
-        const summary = getCourseGradeSummary(courseId);
+        const summary = await getCourseGradeSummary(courseId);
         return NextResponse.json(summary);
       }
 
@@ -42,7 +42,7 @@ export async function GET(
       }
 
       // RF-CAL-04: Solo notas publicadas del estudiante
-      const summary = getStudentGradeSummary(user.id, courseId);
+      const summary = await getStudentGradeSummary(user.id, courseId);
       return NextResponse.json(summary);
     } catch (error) {
       if (error instanceof GradeError) {
