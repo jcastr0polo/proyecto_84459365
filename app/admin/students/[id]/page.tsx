@@ -8,6 +8,7 @@ import {
   ArrowLeft, BookOpen, FileText, CheckCircle2, Clock,
   AlertCircle, ExternalLink, FolderGit2, ChevronDown, ChevronRight,
   Paperclip, Link as LinkIcon, Eye, Download, GitBranch, Palette,
+  Plus,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
@@ -89,6 +90,13 @@ interface StudentInfo {
   lastLoginAt?: string | null;
 }
 
+interface AvailableCourse {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+}
+
 /* ─── Main Page ─── */
 export default function AdminStudentDetailPage() {
   const params = useParams<{ id: string }>();
@@ -101,6 +109,13 @@ export default function AdminStudentDetailPage() {
   const [error, setError] = useState('');
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
+
+  // Enrollment
+  const [showEnroll, setShowEnroll] = useState(false);
+  const [availableCourses, setAvailableCourses] = useState<AvailableCourse[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [enrolling, setEnrolling] = useState(false);
+  const [enrollMsg, setEnrollMsg] = useState('');
 
   const fetchDetail = useCallback(async () => {
     try {
@@ -123,6 +138,54 @@ export default function AdminStudentDetailPage() {
   }, [params.id]);
 
   useEffect(() => { fetchDetail(); }, [fetchDetail]);
+
+  // Load available courses for enrollment
+  const openEnrollModal = useCallback(async () => {
+    setShowEnroll(true);
+    setEnrollMsg('');
+    setSelectedCourseId('');
+    try {
+      const res = await fetch('/api/courses');
+      if (res.ok) {
+        const data = await res.json();
+        const enrolledIds = new Set(courses.map((c) => c.id));
+        const available = (data.courses ?? [])
+          .filter((c: AvailableCourse) => !enrolledIds.has(c.id))
+          .map((c: AvailableCourse) => ({ id: c.id, code: c.code, name: c.name, category: c.category }));
+        setAvailableCourses(available);
+      }
+    } catch { /* silent */ }
+  }, [courses]);
+
+  const handleEnroll = useCallback(async () => {
+    if (!selectedCourseId || !student) return;
+    setEnrolling(true);
+    setEnrollMsg('');
+    try {
+      const res = await fetch(`/api/courses/${selectedCourseId}/enrollments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: student.email,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          documentNumber: student.documentNumber,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEnrollMsg('Inscrito exitosamente');
+        setShowEnroll(false);
+        fetchDetail(); // Refresh
+      } else {
+        setEnrollMsg(data.error || 'Error al inscribir');
+      }
+    } catch {
+      setEnrollMsg('Error de conexión');
+    } finally {
+      setEnrolling(false);
+    }
+  }, [selectedCourseId, student, fetchDetail]);
 
   const toggleCourse = (courseId: string) => {
     setExpandedCourses((prev) => {
@@ -225,18 +288,74 @@ export default function AdminStudentDetailPage() {
       </div>
 
       {/* Courses */}
-      {courses.length === 0 ? (
-        <EmptyState
-          icon={<BookOpen className="w-8 h-8 text-subtle" />}
-          title="Sin cursos"
-          description="Este estudiante no está inscrito en ningún curso"
-        />
-      ) : (
-        <div className="space-y-4">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <h2 className="text-xs font-semibold text-subtle uppercase tracking-wider">
             Cursos Inscritos ({courses.length})
           </h2>
-          {courses.map((course) => (
+          <button
+            onClick={openEnrollModal}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/10 transition-colors cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" /> Inscribir en curso
+          </button>
+        </div>
+
+        {/* Enrollment modal */}
+        {showEnroll && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.03]"
+          >
+            <p className="text-sm font-medium text-foreground/80 mb-3">Selecciona un curso</p>
+            {availableCourses.length === 0 ? (
+              <p className="text-xs text-subtle">No hay cursos disponibles para inscribir</p>
+            ) : (
+              <>
+                <select
+                  value={selectedCourseId}
+                  onChange={(e) => setSelectedCourseId(e.target.value)}
+                  className="w-full px-3 py-2 mb-3 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-sm text-foreground outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+                >
+                  <option value="">— Seleccionar curso —</option>
+                  {availableCourses.map((c) => (
+                    <option key={c.id} value={c.id}>{c.code} — {c.name}</option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleEnroll}
+                    disabled={!selectedCourseId || enrolling}
+                    className="px-4 py-1.5 text-xs font-medium rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                  >
+                    {enrolling ? 'Inscribiendo...' : 'Inscribir'}
+                  </button>
+                  <button
+                    onClick={() => setShowEnroll(false)}
+                    className="px-4 py-1.5 text-xs text-subtle hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  {enrollMsg && (
+                    <span className={`text-xs ${enrollMsg.includes('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
+                      {enrollMsg}
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+          </motion.div>
+        )}
+
+        {courses.length === 0 ? (
+          <EmptyState
+            icon={<BookOpen className="w-8 h-8 text-subtle" />}
+            title="Sin cursos"
+            description="Este estudiante no está inscrito en ningún curso"
+          />
+        ) : (
+          courses.map((course) => (
             <CourseSection
               key={course.id}
               course={course}
@@ -245,9 +364,9 @@ export default function AdminStudentDetailPage() {
               expandedActivities={expandedActivities}
               onToggleActivity={toggleActivity}
             />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }

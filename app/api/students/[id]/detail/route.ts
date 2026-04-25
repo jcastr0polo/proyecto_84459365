@@ -2,23 +2,22 @@
  * GET /api/students/[id]/detail — Detalle completo de un estudiante (admin)
  *
  * Agrega: perfil, cursos inscritos, actividades por curso, entregas, proyectos, notas
+ * Optimizado: 6 lecturas paralelas a Blob, 0 por curso (todo en memoria)
  */
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { toSafeUser } from '@/lib/withAuth';
 import {
-  getUserById,
-  getEnrollmentsByStudent,
+  readUsersFresh,
+  readEnrollmentsFresh,
   readCoursesFresh,
   readActivitiesFresh,
   readSubmissionsFresh,
   readProjectsFresh,
+  readGradesFresh,
 } from '@/lib/dataService';
-import {
-  getCourseGradeSummary,
-  GradeError,
-} from '@/lib/gradeService';
+import { calculateFinalGrade } from '@/lib/gradeService';
 
 export async function GET(
   request: Request,
@@ -27,19 +26,26 @@ export async function GET(
   return withAuth(request, async () => {
     const { id } = await params;
 
-    const student = await getUserById(id);
-    if (!student || student.role !== 'student') {
+    // 6 parallel Blob reads — everything we need
+    const [allUsers, allEnrollments, allCourses, allActivities, allSubmissions, allProjects, allGrades] = await Promise.all([
+      readUsersFresh(),
+      readEnrollmentsFresh(),
+      readCoursesFresh(),
+      readActivitiesFresh(),
+      readSubmissionsFresh(),
+      readProjectsFresh(),
+      readGradesFresh(),
+    ]);
+
+    const student = allUsers.find((u) => u.id === id && u.role === 'student');
+    if (!student) {
       return NextResponse.json({ error: 'Estudiante no encontrado' }, { status: 404 });
     }
 
-    const enrollments = (await getEnrollmentsByStudent(id)).filter((e) => e.status === 'active');
-    const allCourses = await readCoursesFresh();
-    const allActivities = await readActivitiesFresh();
-    const allSubmissions = await readSubmissionsFresh();
-    const allProjects = await readProjectsFresh();
+    const enrollments = allEnrollments.filter((e) => e.studentId === id && e.status === 'active');
 
-    const courses = (await Promise.all(enrollments.map(async (enrollment) => {
-      const course = allCourses.find((c) => c.id === enrollment.courseId) ?? null;
+    const courses = enrollments.map((enrollment) => {
+      const course = allCourses.find((c) => c.id === enrollment.courseId);
       if (!course) return null;
 
       // Activities for this course (published only)
@@ -49,8 +55,9 @@ export async function GET(
 
       // For each activity, find this student's submission
       const activitiesWithSubmissions = activities.map((activity) => {
-        const submissions = allSubmissions.filter((s) => s.activityId === activity.id);
-        const studentSubmission = submissions.find((s) => s.studentId === id);
+        const studentSubmission = allSubmissions.find(
+          (s) => s.activityId === activity.id && s.studentId === id
+        );
 
         return {
           id: activity.id,
@@ -81,27 +88,24 @@ export async function GET(
         (p) => p.studentId === id && p.courseId === course.id
       );
 
-      // Grades summary
+      // Grades — inline calculation, no extra Blob reads
       let grades = null;
-      try {
-        const summary = await getCourseGradeSummary(course.id);
-        const studentRow = summary.students?.find(
-          (s: { id: string }) => s.id === id
+      const finalResult = calculateFinalGrade(id, course.id, allActivities, allGrades);
+      if (finalResult.totalWeight > 0) {
+        const studentGrades = allGrades.filter(
+          (g) => g.studentId === id && g.courseId === course.id
         );
-        if (studentRow) {
-          grades = {
-            finalGrade: studentRow.finalScore,
-            activityGrades: Object.entries(studentRow.grades).map(([actId, g]) => ({
-              activityId: actId,
+        grades = {
+          finalGrade: finalResult.finalScore,
+          activityGrades: activities.map((act) => {
+            const g = studentGrades.find((gr) => gr.activityId === act.id);
+            return {
+              activityId: act.id,
               score: g?.score ?? null,
               published: g?.isPublished ?? false,
-            })),
-          };
-        }
-      } catch (err) {
-        if (!(err instanceof GradeError)) {
-          console.error('Error getting grades for course', course.id, err);
-        }
+            };
+          }),
+        };
       }
 
       return {
@@ -127,7 +131,7 @@ export async function GET(
           : null,
         grades,
       };
-    }))).filter(Boolean);
+    }).filter(Boolean);
 
     return NextResponse.json({
       student: toSafeUser(student),
