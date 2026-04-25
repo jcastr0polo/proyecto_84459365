@@ -196,9 +196,9 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
         {errors.schedule && <p className="mb-2 text-xs text-red-400">{errors.schedule}</p>}
         <div className="space-y-3">
           {formData.schedule.map((slot, idx) => (
-            <div key={idx} className="grid grid-cols-[1fr_0.6fr_0.6fr_0.8fr_0.8fr_auto] gap-2 items-end">
-              <div>
-                {idx === 0 && <span className="block text-[10px] text-subtle mb-1">Día</span>}
+            <div key={idx} className="grid grid-cols-2 sm:grid-cols-[1fr_0.6fr_0.6fr_0.8fr_0.8fr_auto] gap-2 items-end rounded-xl border border-foreground/[0.06] p-3 sm:border-0 sm:p-0 sm:rounded-none">
+              <div className="col-span-2 sm:col-span-1">
+                {idx === 0 && <span className="block text-xs text-subtle mb-1">Día</span>}
                 <select
                   value={slot.dayOfWeek}
                   onChange={(e) => updateSlot(idx, 'dayOfWeek', e.target.value)}
@@ -211,7 +211,8 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
                 </select>
               </div>
               <div>
-                {idx === 0 && <span className="block text-[10px] text-subtle mb-1">Inicio</span>}
+                <span className="block text-xs text-subtle mb-1 sm:hidden">Inicio</span>
+                {idx === 0 && <span className="hidden sm:block text-xs text-subtle mb-1">Inicio</span>}
                 <input
                   type="time"
                   value={slot.startTime}
@@ -221,7 +222,8 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
                 />
               </div>
               <div>
-                {idx === 0 && <span className="block text-[10px] text-subtle mb-1">Fin</span>}
+                <span className="block text-xs text-subtle mb-1 sm:hidden">Fin</span>
+                {idx === 0 && <span className="hidden sm:block text-xs text-subtle mb-1">Fin</span>}
                 <input
                   type="time"
                   value={slot.endTime}
@@ -231,7 +233,8 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
                 />
               </div>
               <div>
-                {idx === 0 && <span className="block text-[10px] text-subtle mb-1">Salón</span>}
+                <span className="block text-xs text-subtle mb-1 sm:hidden">Salón</span>
+                {idx === 0 && <span className="hidden sm:block text-xs text-subtle mb-1">Salón</span>}
                 <input
                   type="text"
                   placeholder="Lab 301"
@@ -242,7 +245,8 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
                 />
               </div>
               <div>
-                {idx === 0 && <span className="block text-[10px] text-subtle mb-1">Modalidad</span>}
+                <span className="block text-xs text-subtle mb-1 sm:hidden">Modalidad</span>
+                {idx === 0 && <span className="hidden sm:block text-xs text-subtle mb-1">Modalidad</span>}
                 <select
                   value={slot.modality}
                   onChange={(e) => updateSlot(idx, 'modality', e.target.value)}
@@ -254,15 +258,15 @@ export default function CourseForm({ course, semesters, onSubmit, onCancel, load
                   ))}
                 </select>
               </div>
-              <div>
-                {idx === 0 && <span className="block text-[10px] text-transparent mb-1">X</span>}
+              <div className="flex items-end justify-end">
+                {idx === 0 && <span className="hidden sm:block text-xs text-transparent mb-1">X</span>}
                 <button
                   type="button"
                   onClick={() => removeSlot(idx)}
                   disabled={formData.schedule.length <= 1}
                   aria-label="Eliminar horario"
                   className="p-2 rounded-lg text-subtle hover:text-red-400 hover:bg-red-500/10 
-                             disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                             disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />

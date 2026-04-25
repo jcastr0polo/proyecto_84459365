@@ -404,9 +404,9 @@ export default function StudentDashboardPage() {
                         <p className="text-sm font-medium text-foreground/90 line-clamp-1">
                           {cfg.icon} {item.activity.title}
                         </p>
-                        <p className="text-[11px] text-subtle mt-0.5">{item.course.name}</p>
+                        <p className="text-xs text-subtle mt-0.5">{item.course.name}</p>
                       </div>
-                      <span className={`shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full ${cfg.bgColor} ${cfg.textColor}`}>
+                      <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${cfg.bgColor} ${cfg.textColor}`}>
                         {item.daysLeft < 0
                           ? `${Math.abs(item.daysLeft)}d vencida`
                           : item.daysLeft === 0
@@ -414,14 +414,23 @@ export default function StudentDashboardPage() {
                             : `${item.daysLeft}d`}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 mt-2 text-[10px] text-faint">
+                    <div className="flex items-center gap-3 mt-2 text-xs text-faint">
                       <span>
                         Vence: {new Date(item.activity.dueDate).toLocaleDateString('es-CO', {
                           day: '2-digit', month: 'short',
                         })}
                       </span>
                       <span>{item.activity.weight}%</span>
-                      <span>Nota máx: {item.activity.maxScore}</span>
+                      <span className="flex-1">Nota máx: {item.activity.maxScore}</span>
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/student/courses/${item.course.id}/activities/${item.activity.id}/submit`);
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-cyan-500/10 text-cyan-400 text-xs font-medium hover:bg-cyan-500/20 transition-colors"
+                      >
+                        Entregar →
+                      </span>
                     </div>
                   </motion.button>
                 );
@@ -467,7 +476,7 @@ export default function StudentDashboardPage() {
                     <p className={`text-lg font-bold ${getScoreColor(g.score, g.maxScore)}`}>
                       {g.score.toFixed(1)}
                     </p>
-                    <p className="text-[10px] text-faint">/ {g.maxScore.toFixed(1)}</p>
+                    <p className="text-xs text-faint">/ {g.maxScore.toFixed(1)}</p>
                   </div>
                 </motion.div>
               ))}
@@ -509,7 +518,7 @@ function QuickStat({ label, value, icon, alert }: {
       }
     `}>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-medium text-subtle uppercase tracking-wider">{label}</span>
+        <span className="text-xs font-medium text-subtle uppercase tracking-wider">{label}</span>
         <span className="text-base">{icon}</span>
       </div>
       <p className={`text-2xl font-bold tracking-tight ${alert ? 'text-amber-400' : 'text-foreground'}`}>

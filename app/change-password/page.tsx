@@ -185,7 +185,7 @@ export default function ChangePasswordPage() {
                   <button
                     type="button"
                     onClick={() => setShowCurrentPw(!showCurrentPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-muted transition-colors cursor-pointer"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 text-faint hover:text-muted transition-colors cursor-pointer p-2 rounded-lg"
                     tabIndex={-1}
                     aria-label={showCurrentPw ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
@@ -228,7 +228,7 @@ export default function ChangePasswordPage() {
                   <button
                     type="button"
                     onClick={() => setShowNewPw(!showNewPw)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-muted transition-colors cursor-pointer"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 text-faint hover:text-muted transition-colors cursor-pointer p-2 rounded-lg"
                     tabIndex={-1}
                     aria-label={showNewPw ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >

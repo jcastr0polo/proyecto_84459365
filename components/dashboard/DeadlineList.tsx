@@ -84,15 +84,15 @@ export default function DeadlineList({ deadlines, loading = false, onItemClick }
                 </p>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] font-mono text-faint">{d.courseCode}</span>
-                <span className="text-[10px] text-faint">·</span>
-                <span className="text-[10px] text-faint">{d.courseName}</span>
+                <span className="text-xs font-mono text-faint">{d.courseCode}</span>
+                <span className="text-xs text-faint">·</span>
+                <span className="text-xs text-faint">{d.courseName}</span>
               </div>
             </div>
 
             {/* Completion indicator */}
             <div className="flex-shrink-0 text-right">
-              <span className="text-[10px] text-faint">{d.submissionCount}/{d.studentCount}</span>
+              <span className="text-xs text-faint">{d.submissionCount}/{d.studentCount}</span>
               <div className="w-12 h-1 rounded-full bg-foreground/[0.06] mt-1 overflow-hidden">
                 <div
                   className="h-full rounded-full bg-cyan-500/40 transition-all"
@@ -102,7 +102,7 @@ export default function DeadlineList({ deadlines, loading = false, onItemClick }
             </div>
 
             {/* Days badge */}
-            <div className={`flex-shrink-0 px-2 py-1 rounded-md text-[10px] font-semibold ${urgency.badgeBg} ${urgency.badgeText}`}>
+            <div className={`flex-shrink-0 px-2 py-1 rounded-md text-xs font-semibold ${urgency.badgeBg} ${urgency.badgeText}`}>
               {urgency.label}
             </div>
           </motion.button>

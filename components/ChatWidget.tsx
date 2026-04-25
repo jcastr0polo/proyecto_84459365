@@ -213,7 +213,7 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed bottom-6 right-6 z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[540px] max-h-[calc(100vh-4rem)] rounded-2xl border border-foreground/[0.08] bg-base shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 z-50 w-full sm:w-[380px] sm:max-w-[calc(100vw-2rem)] h-[100dvh] sm:h-[540px] sm:max-h-[calc(100vh-4rem)] sm:rounded-2xl border border-foreground/[0.08] bg-base shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/[0.08] bg-foreground/[0.02]">
@@ -230,10 +230,10 @@ export default function ChatWidget() {
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="p-1.5 rounded-lg text-subtle hover:text-foreground hover:bg-foreground/[0.06] transition-colors cursor-pointer"
+                className="p-2.5 -mr-1 rounded-lg text-subtle hover:text-foreground hover:bg-foreground/[0.06] transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Cerrar chat"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -247,23 +247,24 @@ export default function ChatWidget() {
                   <p className="text-sm font-semibold text-foreground">¿Cómo te llamas?</p>
                   <p className="text-xs text-subtle mt-1">Tu nombre será visible para los demás participantes.</p>
                 </div>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') confirmName(); }}
-                  placeholder="Tu nombre..."
-                  maxLength={30}
-                  className="w-full px-4 py-2.5 rounded-xl border border-foreground/[0.08] bg-foreground/[0.04] text-foreground text-sm placeholder-faint focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/30 transition-all text-center"
-                  autoFocus
-                />
-                <button
-                  onClick={confirmName}
-                  disabled={!username.trim()}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-white text-sm font-semibold hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-30"
-                >
-                  Entrar al chat
-                </button>
+                <form onSubmit={(e) => { e.preventDefault(); confirmName(); }} className="w-full flex flex-col items-center gap-3">
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Tu nombre..."
+                    maxLength={30}
+                    className="w-full px-4 py-3 rounded-xl border border-foreground/[0.08] bg-foreground/[0.04] text-foreground text-sm placeholder-faint focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/30 transition-all text-center"
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    disabled={!username.trim()}
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-white text-sm font-semibold hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-30 min-h-[44px]"
+                  >
+                    Entrar al chat
+                  </button>
+                </form>
               </div>
             ) : (
               <>

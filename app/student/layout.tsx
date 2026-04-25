@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
-import { Home, BookOpen, User, Lock, LogOut, Menu, X, ChevronDown, Cpu } from 'lucide-react';
+import { Home, BookOpen, User, Lock, LogOut, Menu, X, ChevronDown, ChevronRight, Cpu } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 
 interface UserInfo {
@@ -115,11 +115,11 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                 <div className="relative">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-foreground/[0.04] transition-colors cursor-pointer"
+                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-foreground/[0.04] transition-colors cursor-pointer min-h-[44px]"
                     aria-expanded={userMenuOpen}
                     aria-haspopup="true"
                   >
-                    <div className="w-7 h-7 rounded-full bg-cyan-500/10 flex items-center justify-center text-[10px] font-bold text-cyan-400">
+                    <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center text-xs font-bold text-cyan-400">
                       {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                     </div>
                     <span className="text-sm font-medium text-muted hidden sm:block">
@@ -138,18 +138,18 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                         </div>
                         <div className="py-1">
                           <Link href="/student/profile" onClick={closeMenus}
-                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted hover:bg-foreground/[0.04] transition-colors">
-                            <User className="w-3.5 h-3.5" /> Mi Perfil
+                            className="flex items-center gap-2.5 px-4 py-3 text-sm text-muted hover:bg-foreground/[0.04] transition-colors min-h-[44px]">
+                            <User className="w-4 h-4" /> Mi Perfil
                           </Link>
                           <Link href="/change-password" onClick={closeMenus}
-                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-muted hover:bg-foreground/[0.04] transition-colors">
-                            <Lock className="w-3.5 h-3.5" /> Cambiar contraseña
+                            className="flex items-center gap-2.5 px-4 py-3 text-sm text-muted hover:bg-foreground/[0.04] transition-colors min-h-[44px]">
+                            <Lock className="w-4 h-4" /> Cambiar contraseña
                           </Link>
                         </div>
                         <div className="py-1 border-t border-foreground/10">
                           <button onClick={handleLogout} disabled={loggingOut}
-                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer disabled:opacity-50">
-                            <LogOut className="w-3.5 h-3.5" />
+                            className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer disabled:opacity-50 min-h-[44px]">
+                            <LogOut className="w-4 h-4" />
                             {loggingOut ? 'Cerrando...' : 'Cerrar sesión'}
                           </button>
                         </div>
@@ -199,11 +199,76 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           )}
         </header>
 
+        {/* Breadcrumbs for deep navigation */}
+        <Breadcrumbs pathname={pathname} />
+
         {/* Page content */}
         <main className="max-w-7xl mx-auto p-4 sm:p-6">
           {children}
         </main>
       </div>
     </ToastProvider>
+  );
+}
+
+/* ─── Breadcrumbs for deep student navigation ─── */
+
+const SEGMENT_LABELS: Record<string, string> = {
+  student: 'Inicio',
+  courses: 'Mis Cursos',
+  activities: 'Actividades',
+  grades: 'Notas',
+  project: 'Proyecto',
+  submit: 'Enviar Entrega',
+  profile: 'Mi Perfil',
+  viewer: 'Visor',
+};
+
+function Breadcrumbs({ pathname }: { pathname: string }) {
+  const segments = pathname.split('/').filter(Boolean);
+  // Only show breadcrumbs when 3+ segments deep (e.g. /student/courses/[id])
+  if (segments.length < 3) return null;
+
+  const crumbs: { label: string; href: string }[] = [];
+  let href = '';
+
+  for (let i = 0; i < segments.length; i++) {
+    const seg = segments[i];
+    href += `/${seg}`;
+
+    // Skip the first 'student' segment — it's the root
+    if (i === 0) continue;
+
+    const label = SEGMENT_LABELS[seg];
+    if (label) {
+      crumbs.push({ label, href });
+    }
+    // Dynamic segments (IDs) are skipped — they don't get their own crumb
+    // but the NEXT named segment inherits the path
+  }
+
+  if (crumbs.length < 2) return null;
+
+  return (
+    <nav
+      className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center gap-1.5 text-xs overflow-x-auto"
+      aria-label="Navegación"
+    >
+      <Link href="/student" className="text-faint hover:text-subtle transition-colors shrink-0">
+        Inicio
+      </Link>
+      {crumbs.slice(1).map((crumb, i) => (
+        <React.Fragment key={crumb.href}>
+          <ChevronRight className="w-3 h-3 text-faint shrink-0" />
+          {i === crumbs.length - 2 ? (
+            <span className="text-muted font-medium truncate">{crumb.label}</span>
+          ) : (
+            <Link href={crumb.href} className="text-faint hover:text-subtle transition-colors shrink-0">
+              {crumb.label}
+            </Link>
+          )}
+        </React.Fragment>
+      ))}
+    </nav>
   );
 }

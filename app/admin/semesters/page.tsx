@@ -138,49 +138,88 @@ export default function SemestersPage() {
           }
         />
       ) : (
-        <Table>
-          <Thead>
-            <tr>
-              <Th>ID</Th>
-              <Th>Etiqueta</Th>
-              <Th>Inicio</Th>
-              <Th>Fin</Th>
-              <Th>Estado</Th>
-              <Th className="text-right">Acciones</Th>
-            </tr>
-          </Thead>
-          <Tbody>
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block">
+            <Table>
+              <Thead>
+                <tr>
+                  <Th>ID</Th>
+                  <Th>Etiqueta</Th>
+                  <Th>Inicio</Th>
+                  <Th>Fin</Th>
+                  <Th>Estado</Th>
+                  <Th className="text-right">Acciones</Th>
+                </tr>
+              </Thead>
+              <Tbody>
+                {semesters.map((sem) => (
+                  <Tr key={sem.id}>
+                    <Td>
+                      <span className="font-mono text-xs text-muted">{sem.id}</span>
+                    </Td>
+                    <Td>
+                      <span className="font-medium text-foreground/90">{sem.label}</span>
+                    </Td>
+                    <Td>{formatDate(sem.startDate)}</Td>
+                    <Td>{formatDate(sem.endDate)}</Td>
+                    <Td>
+                      {sem.isActive ? (
+                        <Badge variant="success" dot size="sm">Activo</Badge>
+                      ) : (
+                        <Badge variant="neutral" size="sm">Inactivo</Badge>
+                      )}
+                    </Td>
+                    <Td className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => toggleActive(sem)}>
+                          {sem.isActive ? 'Desactivar' : 'Activar'}
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(sem)}>
+                          Editar
+                        </Button>
+                      </div>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-3">
             {semesters.map((sem) => (
-              <Tr key={sem.id}>
-                <Td>
-                  <span className="font-mono text-xs text-muted">{sem.id}</span>
-                </Td>
-                <Td>
-                  <span className="font-medium text-foreground/90">{sem.label}</span>
-                </Td>
-                <Td>{formatDate(sem.startDate)}</Td>
-                <Td>{formatDate(sem.endDate)}</Td>
-                <Td>
+              <div
+                key={sem.id}
+                className="rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] p-4 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground/90">{sem.label}</p>
+                    <p className="text-xs text-subtle font-mono mt-0.5">{sem.id}</p>
+                  </div>
                   {sem.isActive ? (
                     <Badge variant="success" dot size="sm">Activo</Badge>
                   ) : (
                     <Badge variant="neutral" size="sm">Inactivo</Badge>
                   )}
-                </Td>
-                <Td className="text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => toggleActive(sem)}>
-                      {sem.isActive ? 'Desactivar' : 'Activar'}
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(sem)}>
-                      Editar
-                    </Button>
-                  </div>
-                </Td>
-              </Tr>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-muted">
+                  <span>Inicio: {formatDate(sem.startDate)}</span>
+                  <span>Fin: {formatDate(sem.endDate)}</span>
+                </div>
+                <div className="flex items-center gap-2 pt-1 border-t border-foreground/[0.06]">
+                  <Button variant="ghost" size="sm" onClick={() => toggleActive(sem)} className="flex-1">
+                    {sem.isActive ? 'Desactivar' : 'Activar'}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => openEdit(sem)} className="flex-1">
+                    Editar
+                  </Button>
+                </div>
+              </div>
             ))}
-          </Tbody>
-        </Table>
+          </div>
+        </>
       )}
 
       {/* Modal */}

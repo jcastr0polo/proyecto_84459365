@@ -216,7 +216,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
               {/* Breadcrumbs (desktop) */}
               {breadcrumbs.length > 0 && (
-                <nav className="hidden lg:flex items-center gap-1.5 text-xs" aria-label="Migas de pan">
+                <nav className="flex items-center gap-1.5 text-xs overflow-x-auto" aria-label="Migas de pan">
                   <Link href="/admin" className="text-faint hover:text-subtle transition-colors">
                     Panel
                   </Link>

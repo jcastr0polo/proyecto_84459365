@@ -71,7 +71,7 @@ export default function Modal({ open, onClose, title, children, maxWidth = 'md' 
               <button
                 onClick={onClose}
                 aria-label="Cerrar"
-                className="p-1 rounded-lg text-subtle hover:text-foreground hover:bg-foreground/10 transition-colors cursor-pointer"
+                className="p-2.5 -mr-1 rounded-lg text-subtle hover:text-foreground hover:bg-foreground/10 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -81,7 +81,7 @@ export default function Modal({ open, onClose, title, children, maxWidth = 'md' 
             </div>
 
             {/* Body */}
-            <div className="px-6 py-5 max-h-[70vh] overflow-y-auto">
+            <div className="px-6 py-5 max-h-[80vh] sm:max-h-[70vh] overflow-y-auto">
               {children}
             </div>
           </motion.div>

@@ -299,7 +299,7 @@ export default function AdminDashboardPage() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Mis Cursos</h2>
-          <span className="text-[10px] text-faint">{stats.courseCount} curso{stats.courseCount !== 1 ? 's' : ''}</span>
+          <span className="text-xs text-faint">{stats.courseCount} curso{stats.courseCount !== 1 ? 's' : ''}</span>
         </div>
 
         {loading ? (
@@ -343,7 +343,7 @@ export default function AdminDashboardPage() {
               Próximos Vencimientos
             </h2>
             {deadlines.length > 0 && (
-              <span className="text-[10px] text-faint">{deadlines.length} actividad{deadlines.length !== 1 ? 'es' : ''}</span>
+              <span className="text-xs text-faint">{deadlines.length} actividad{deadlines.length !== 1 ? 'es' : ''}</span>
             )}
           </div>
           <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.015] p-4">
@@ -358,7 +358,7 @@ export default function AdminDashboardPage() {
               Actividad Reciente
             </h2>
             {timeline.length > 0 && (
-              <span className="text-[10px] text-faint">Últimos {timeline.length} eventos</span>
+              <span className="text-xs text-faint">Últimos {timeline.length} eventos</span>
             )}
           </div>
           <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.015] p-4">

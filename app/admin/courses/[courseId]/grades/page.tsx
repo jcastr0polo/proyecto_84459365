@@ -116,7 +116,7 @@ export default function AdminGradeSummaryPage() {
         <div>
           <button
             onClick={() => router.back()}
-            className="text-xs text-subtle hover:text-muted transition-colors mb-2 cursor-pointer"
+            className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors mb-2 cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
           >
             ← Volver al curso
           </button>

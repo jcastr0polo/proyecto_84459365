@@ -163,7 +163,7 @@ export default function StudentProfilePage() {
                     <p className="text-[11px] text-faint font-mono">{course.code}</p>
                   </div>
                   <div className="shrink-0 text-right ml-3">
-                    <p className="text-[10px] text-faint">Inscrito</p>
+                    <p className="text-xs text-faint">Inscrito</p>
                     <p className="text-[11px] text-subtle">
                       {new Date(enrollment.enrolledAt).toLocaleDateString('es-CO', {
                         day: '2-digit', month: 'short',
@@ -191,7 +191,7 @@ export default function StudentProfilePage() {
 function InfoField({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div>
-      <p className="text-[10px] font-medium text-faint uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-xs font-medium text-faint uppercase tracking-wider mb-1">{label}</p>
       <p className={`text-sm ${muted ? 'text-faint italic' : 'text-muted'}`}>{value}</p>
     </div>
   );

@@ -172,7 +172,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
                   <button
                     type="button"
                     onClick={() => removeFile(i)}
-                    className="p-1 rounded hover:bg-foreground/10 text-subtle hover:text-red-400 transition-colors cursor-pointer"
+                    className="p-2 rounded-lg hover:bg-foreground/10 text-subtle hover:text-red-400 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
                     aria-label={`Quitar ${file.name}`}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -261,7 +261,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
       )}
 
       {/* ─── Submit Button ─── */}
-      <div className="flex items-center gap-3 pt-4 border-t border-foreground/[0.06]">
+      <div className="hidden sm:flex items-center gap-3 pt-4 border-t border-foreground/[0.06]">
         <Button
           type="button"
           variant="primary"
@@ -277,6 +277,26 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
           <p className="text-xs text-red-400">{validationError}</p>
         )}
       </div>
+
+      {/* ─── Mobile Sticky Submit ─── */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-base/95 backdrop-blur-lg border-t border-foreground/[0.08] px-4 py-3 safe-area-bottom">
+        {validationError && (
+          <p className="text-xs text-red-400 mb-2 text-center">{validationError}</p>
+        )}
+        <Button
+          type="button"
+          variant="primary"
+          size="lg"
+          className="w-full"
+          disabled={!!(validationError) || !!(isLate && !activity.allowLateSubmission) || loading}
+          loading={loading}
+          onClick={() => setShowConfirm(true)}
+        >
+          {existingVersion ? `Re-enviar (v${existingVersion + 1})` : 'Enviar Entrega'}
+        </Button>
+      </div>
+      {/* Spacer so content doesn't hide behind sticky button on mobile */}
+      <div className="sm:hidden h-24" />
 
       {/* ─── Confirmation Modal ─── */}
       {showConfirm && (

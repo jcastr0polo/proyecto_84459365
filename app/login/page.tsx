@@ -46,8 +46,8 @@ export default function LoginPage() {
       </div>
 
       {/* Back to home */}
-      <Link href="/" className="absolute top-6 left-6 flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors z-10">
-        <ArrowLeft className="w-3.5 h-3.5" />
+      <Link href="/" className="absolute top-4 left-4 flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors z-10 p-2 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]">
+        <ArrowLeft className="w-4 h-4" />
         Inicio
       </Link>
 
@@ -112,11 +112,11 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-muted transition-colors cursor-pointer p-0.5"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 text-faint hover:text-muted transition-colors cursor-pointer p-2 rounded-lg"
                   tabIndex={-1}
                   aria-label={showPw ? 'Ocultar' : 'Mostrar'}
                 >
-                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPw ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>

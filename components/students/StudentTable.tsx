@@ -43,7 +43,7 @@ export default function StudentTable({ enrollments, onWithdraw, courseId }: Stud
                 <Tr key={enrollment.id}>
                   <Td>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-cyan-500/15 flex items-center justify-center text-[10px] font-bold text-cyan-400 shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-cyan-500/15 flex items-center justify-center text-xs font-bold text-cyan-400 shrink-0">
                         {student.firstName.charAt(0)}{student.lastName.charAt(0)}
                       </div>
                       <span className="font-medium text-foreground/90">

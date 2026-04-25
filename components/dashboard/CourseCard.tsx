@@ -84,7 +84,7 @@ export default function CourseCard({
     >
       {/* Code + Badge */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-mono text-faint tracking-wider">{code}</span>
+        <span className="text-xs font-mono text-faint tracking-wider">{code}</span>
         <Badge variant={badge.variant} size="sm">{badge.label}</Badge>
       </div>
 
@@ -108,7 +108,7 @@ export default function CourseCard({
           {schedule.map((s, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-1 text-[10px] text-subtle bg-foreground/[0.03] px-2 py-0.5 rounded"
+              className="inline-flex items-center gap-1 text-xs text-subtle bg-foreground/[0.03] px-2 py-0.5 rounded"
             >
               <span className="font-medium text-subtle">{dayShort[s.dayOfWeek] ?? s.dayOfWeek}</span>
               {s.startTime}-{s.endTime}
@@ -126,7 +126,7 @@ function MiniStat({ icon, value, label, highlight }: { icon: React.ReactNode; va
     <div className="flex items-center gap-1">
       <span className="text-subtle">{icon}</span>
       <span className={`text-xs font-semibold ${highlight ? 'text-amber-400' : 'text-muted'}`}>{value}</span>
-      <span className="text-[10px] text-faint">{label}</span>
+      <span className="text-xs text-faint">{label}</span>
     </div>
   );
 }

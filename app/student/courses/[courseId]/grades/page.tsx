@@ -51,8 +51,14 @@ export default function StudentGradesPage() {
 
   if (!data) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+      <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-4">
         <p className="text-subtle">No se pudieron cargar tus notas.</p>
+        <button
+          onClick={() => { setLoading(true); setData(null); window.location.reload(); }}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-500/10 text-cyan-400 text-sm font-medium hover:bg-cyan-500/20 transition-colors cursor-pointer min-h-[44px]"
+        >
+          Reintentar
+        </button>
       </div>
     );
   }
@@ -67,7 +73,7 @@ export default function StudentGradesPage() {
       <div className="mb-8">
         <button
           onClick={() => router.back()}
-          className="text-xs text-subtle hover:text-muted transition-colors mb-2 cursor-pointer"
+          className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors mb-2 cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
         >
           ← Volver al curso
         </button>

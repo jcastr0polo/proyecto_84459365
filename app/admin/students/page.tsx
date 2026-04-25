@@ -238,15 +238,15 @@ export default function AdminStudentsPage() {
                           <button
                             onClick={() => handleUpdateEmail(student.id, editingEmail.value)}
                             disabled={actionLoading === `${student.id}-email`}
-                            className="p-0.5 rounded text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                            className="p-2 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50"
                           >
-                            <Check className="w-3.5 h-3.5" />
+                            <Check className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setEditingEmail(null)}
-                            className="p-0.5 rounded text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                            className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-4 h-4" />
                           </button>
                         </span>
                       ) : (
@@ -257,12 +257,12 @@ export default function AdminStudentsPage() {
                             title="Editar email"
                             className="p-0.5 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors cursor-pointer"
                           >
-                            <Pencil className="w-3 h-3" />
+                            <Pencil className="w-3.5 h-3.5" />
                           </button>
                         </>
                       )}
                     </p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-[11px] text-subtle">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-subtle">
                       <span className="flex items-center gap-1">
                         <AlertCircle className="w-3 h-3" />
                         Doc: {editingDoc?.id === student.id ? (
@@ -284,15 +284,15 @@ export default function AdminStudentsPage() {
                             <button
                               onClick={() => handleUpdateDocument(student.id, editingDoc.value)}
                               disabled={actionLoading === `${student.id}-doc`}
-                              className="p-0.5 rounded text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                              className="p-2 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50"
                             >
-                              <Check className="w-3.5 h-3.5" />
+                              <Check className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setEditingDoc(null)}
-                              className="p-0.5 rounded text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                              className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                             >
-                              <X className="w-3.5 h-3.5" />
+                              <X className="w-4 h-4" />
                             </button>
                           </span>
                         ) : (
@@ -303,7 +303,7 @@ export default function AdminStudentsPage() {
                               title="Editar documento"
                               className="p-0.5 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors cursor-pointer"
                             >
-                              <Pencil className="w-3 h-3" />
+                              <Pencil className="w-3.5 h-3.5" />
                             </button>
                           </>
                         )}
@@ -328,37 +328,37 @@ export default function AdminStudentsPage() {
                 </div>
 
                 {/* Right: actions */}
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
                   <button
                     onClick={() => router.push(`/admin/students/${student.id}`)}
                     title="Ver detalle del estudiante"
-                    className="p-2 rounded-lg text-subtle hover:text-cyan-400 hover:bg-cyan-500/10
-                               transition-colors cursor-pointer"
+                    className="p-2.5 rounded-lg text-subtle hover:text-cyan-400 hover:bg-cyan-500/10
+                               transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => handleAction(student.id, 'resetPassword')}
                     disabled={actionLoading === `${student.id}-resetPassword`}
                     title="Restablecer contraseña (= nro documento)"
-                    className="p-2 rounded-lg text-subtle hover:text-amber-400 hover:bg-amber-500/10
-                               transition-colors cursor-pointer disabled:opacity-50"
+                    className="p-2.5 rounded-lg text-subtle hover:text-amber-400 hover:bg-amber-500/10
+                               transition-colors cursor-pointer disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
-                    <RotateCcw className={`w-4 h-4 ${actionLoading === `${student.id}-resetPassword` ? 'animate-spin' : ''}`} />
+                    <RotateCcw className={`w-5 h-5 ${actionLoading === `${student.id}-resetPassword` ? 'animate-spin' : ''}`} />
                   </button>
                   <button
                     onClick={() => handleAction(student.id, 'toggleActive')}
                     disabled={actionLoading === `${student.id}-toggleActive`}
                     title={student.isActive ? 'Desactivar cuenta' : 'Activar cuenta'}
-                    className={`p-2 rounded-lg transition-colors cursor-pointer disabled:opacity-50
+                    className={`p-2.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center
                       ${student.isActive
                         ? 'text-subtle hover:text-red-400 hover:bg-red-500/10'
                         : 'text-subtle hover:text-emerald-400 hover:bg-emerald-500/10'
                       }`}
                   >
                     {student.isActive
-                      ? <ShieldOff className="w-4 h-4" />
-                      : <ShieldCheck className="w-4 h-4" />
+                      ? <ShieldOff className="w-5 h-5" />
+                      : <ShieldCheck className="w-5 h-5" />
                     }
                   </button>
                 </div>
