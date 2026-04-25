@@ -10,20 +10,26 @@
 
 ## 1. Arquitectura General
 
-```
-┌─────────────┐     fetch        ┌──────────────┐  readFromBlobDirect()  ┌──────────────┐
-│  Frontend    │  (no-store)     │  API Routes   │ ─────────────────────►│  Vercel Blob │
-│  (pages)     │ ───────────────►│  /api/*       │                       │  (BD real)   │
-│              │◄───────────────│              │◄─────────────────────│              │
-│              │  JSON+no-store  │              │                       │              │
-└─────────────┘                  └──────────────┘                       └──────────────┘
-                                        │
-                                        │ writeToBlob()
+```text
+┌─────────────┐     fetch        ┌──────────────┐                      ┌──────────────┐
+│  Frontend    │  (no-store)     │  API Routes   │                      │  Vercel Blob │
+│  (pages)     │ ───────────────►│  /api/*       │                      │  (BD real)   │
+│              │◄───────────────│              │                      │              │
+│              │  JSON+no-store  │              │                      │              │
+└─────────────┘                  └──────┬───────┘                      └──────▲───────┘
+                                        │                                     │
+                                        │ import                              │ get()/put()
+                                        ▼                                     │
+                                 ┌──────────────┐                             │
+                                 │ dataService  │  ÚNICO punto de acceso      │
+                                 │ (ODBC layer) │ ────────────────────────────┘
+                                 └──────┬───────┘
+                                        │ import (SOLO dataService)
                                         ▼
-                                  ┌──────────────┐
-                                  │  Vercel Blob │
-                                  │  put() SDK   │
-                                  └──────────────┘
+                                 ┌──────────────┐
+                                 │  blobSync    │  INTERNO — nadie lo importa
+                                 │  (driver)    │  excepto dataService
+                                 └──────────────┘
 ```
 
 ### Reglas Fundamentales
@@ -31,11 +37,12 @@
 1. **Blob = fuente de verdad.** Si un dato no está en Blob, no existe.
 2. **Escritura: `put()` directo a Blob.** Sin paso intermedio.
 3. **Lectura: SIEMPRE directo de Blob vía `get()` del SDK.** Sin caché en memoria. Sin Map. Sin variable global.
-4. **Frontend NUNCA importa servicios de datos directamente.** Siempre vía `/api/*`.
-5. **`data/` es solo semilla.** Se sube una vez a Blob y nunca más se lee en producción.
-6. **Blobs privados requieren `get()` del SDK**, no `fetch(url)`.
-7. **CERO caché en TODA la cadena:** sin caché en memoria, sin CDN cache, sin browser cache para datos transaccionales.
-8. **Batch reads con `Promise.all()`.** Nunca lecturas secuenciales N+1.
+4. **`dataService.ts` = ÚNICO punto de acceso a datos.** Todas las API routes, services, y helpers importan SOLO de `dataService`. Nadie importa de `blobSync` directamente.
+5. **`blobSync.ts` = driver interno.** Solo `dataService.ts` lo importa. Es el "ODBC" que habla con Blob.
+6. **Frontend NUNCA importa servicios de datos directamente.** Siempre vía `/api/*`.
+7. **`data/` es solo semilla.** Se sube una vez a Blob y nunca más se lee en producción.
+8. **CERO caché en TODA la cadena:** sin caché en memoria, sin CDN cache, sin browser cache para datos transaccionales.
+9. **Batch reads con `Promise.all()`.** Nunca lecturas secuenciales N+1.
 
 ---
 
@@ -177,7 +184,7 @@ export async function seedAllToBlob(): Promise<Record<string, string>> {
 }
 ```
 
-### 3.2 Capa de Datos (`lib/dataService.ts`)
+### 3.2 Capa de Datos (`lib/dataService.ts`) — ÚNICO punto de acceso
 
 ```typescript
 import fs from 'fs';
@@ -223,7 +230,12 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 }
 
 // ... etc para cada entidad
+
+// ─── Re-exports desde blobSync (mantiene dataService como ÚNICO import) ───
+export { withFileLock, DATA_FILES, seedAllToBlob, seedFilesToBlob, readFromBlobDirect } from './blobSync';
 ```
+
+> **Regla clave:** Todo archivo que necesite datos importa SOLO de `@/lib/dataService`. Nunca de `blobSync`. Si necesitas `withFileLock`, `DATA_FILES`, o `seedAllToBlob`, impórtalos de `dataService`.
 
 ### 3.3 Patrón de Batch Reads (evitar N+1)
 
@@ -488,6 +500,7 @@ await withFileLock('enrollments.json', async () => {
 | N+1 reads en loop | 23 reads secuenciales = 3-5 segundos | `Promise.all()` batch reads |
 | `readData()` sync | Bloquea, no puede ir a Blob | Todo async: `await readFresh()` |
 | Escribir sin lock | Race condition corrompe datos | `withFileLock()` |
+| `import { x } from 'blobSync'` | Múltiples puntos de acceso = caos | Todo vía `dataService` |
 
 ---
 

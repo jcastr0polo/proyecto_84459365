@@ -23,7 +23,7 @@ import {
   writeEnrollments,
   isStudentEnrolled,
 } from '@/lib/dataService';
-import { withFileLock } from '@/lib/blobSync';
+import { withFileLock } from '@/lib/dataService';
 import type {
   User,
   SafeUser,

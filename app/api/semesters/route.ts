@@ -12,9 +12,8 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createSemesterSchema } from '@/lib/schemas';
-import { readSemestersFresh, writeSemesters, getSemesterById } from '@/lib/dataService';
+import { readSemestersFresh, writeSemesters, getSemesterById, withFileLock } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 import type { Semester } from '@/lib/types';
 
 /**

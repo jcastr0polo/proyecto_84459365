@@ -15,9 +15,9 @@ import {
   writeActivities,
   getCourseById,
   isStudentEnrolled,
+  withFileLock,
 } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 import type { Activity } from '@/lib/types';
 
 /**

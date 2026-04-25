@@ -12,9 +12,8 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateCourseSchema } from '@/lib/schemas';
-import { readCoursesFresh, writeCourses } from '@/lib/dataService';
+import { readCoursesFresh, writeCourses, withFileLock } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 import type { User } from '@/lib/types';
 
 /**

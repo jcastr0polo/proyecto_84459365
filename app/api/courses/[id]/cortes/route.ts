@@ -8,9 +8,8 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createCorteSchema } from '@/lib/schemas';
-import { readCortesFresh, writeCortes, readCoursesFresh } from '@/lib/dataService';
+import { readCortesFresh, writeCortes, readCoursesFresh, withFileLock } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 import type { Corte } from '@/lib/types';
 
 /**

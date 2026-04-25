@@ -8,10 +8,9 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readProjectsFresh, writeProjects, getCourseById } from '@/lib/dataService';
+import { readProjectsFresh, writeProjects, getCourseById, withFileLock } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { put } from '@vercel/blob';
-import { withFileLock } from '@/lib/blobSync';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';

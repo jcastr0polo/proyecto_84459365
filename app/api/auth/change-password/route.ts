@@ -14,9 +14,8 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { changePasswordRequestSchema } from '@/lib/schemas';
 import { verifyPassword, hashPassword } from '@/lib/auth';
-import { readUsersFresh, writeUsers } from '@/lib/dataService';
+import { readUsersFresh, writeUsers, withFileLock } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 import type { User } from '@/lib/types';
 
 export async function POST(request: Request): Promise<NextResponse> {

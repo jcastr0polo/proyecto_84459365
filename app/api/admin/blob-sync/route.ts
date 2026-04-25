@@ -7,7 +7,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { list } from '@vercel/blob';
-import { seedAllToBlob, seedFilesToBlob, DATA_FILES } from '@/lib/blobSync';
+import { seedAllToBlob, seedFilesToBlob, DATA_FILES } from '@/lib/dataService';
 import { logAudit } from '@/lib/auditService';
 import type { User } from '@/lib/types';
 

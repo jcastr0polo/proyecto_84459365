@@ -8,9 +8,8 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readActivitiesFresh, writeActivities } from '@/lib/dataService';
+import { readActivitiesFresh, writeActivities, withFileLock } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 
 export async function POST(
   request: Request,

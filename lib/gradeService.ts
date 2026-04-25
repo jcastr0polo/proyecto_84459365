@@ -22,7 +22,7 @@ import {
   writeGrades,
   writeSubmissions,
 } from '@/lib/dataService';
-import { withFileLock } from '@/lib/blobSync';
+import { withFileLock } from '@/lib/dataService';
 import type {
   Grade,
   Submission,

@@ -16,7 +16,7 @@ import { loginRequestSchema } from '@/lib/schemas';
 import { getUserByEmail, readUsersFresh, writeUsers } from '@/lib/dataService';
 import { verifyPassword, createSession, setSessionCookie, cleanExpiredSessions, generateSessionToken } from '@/lib/auth';
 import { toSafeUser } from '@/lib/withAuth';
-import { withFileLock } from '@/lib/blobSync';
+import { withFileLock } from '@/lib/dataService';
 import { logAudit } from '@/lib/auditService';
 
 export async function POST(request: Request): Promise<NextResponse> {

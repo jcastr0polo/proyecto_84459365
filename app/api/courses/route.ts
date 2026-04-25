@@ -22,9 +22,9 @@ import {
   writeCourses,
   getCoursesBySemester,
   getSemesterById,
+  withFileLock,
 } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 import type { Course, User } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 

@@ -9,9 +9,8 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updatePromptSchema } from '@/lib/schemas';
-import { getPromptById, readPromptsFresh, writePrompts } from '@/lib/dataService';
+import { getPromptById, readPromptsFresh, writePrompts, withFileLock } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 
 export async function GET(
   request: Request,

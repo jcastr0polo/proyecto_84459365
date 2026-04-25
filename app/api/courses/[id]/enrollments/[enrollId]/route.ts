@@ -8,9 +8,8 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readEnrollmentsFresh, writeEnrollments, getCourseById } from '@/lib/dataService';
+import { readEnrollmentsFresh, writeEnrollments, getCourseById, withFileLock } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 
 /**
  * DELETE /api/courses/[id]/enrollments/[enrollId]

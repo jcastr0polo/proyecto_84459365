@@ -585,3 +585,9 @@ export async function getCorteById(id: string): Promise<Corte | null> {
   const cortes = await readCortesFresh();
   return cortes.find((c) => c.id === id) ?? null;
 }
+
+// ────────────────────────────────────────────────────────────
+// Re-exports desde blobSync — dataService es el ÚNICO punto de
+// acceso a datos. Ningún otro archivo debe importar de blobSync.
+// ────────────────────────────────────────────────────────────
+export { withFileLock, DATA_FILES, seedAllToBlob, seedFilesToBlob, readFromBlobDirect } from './blobSync';

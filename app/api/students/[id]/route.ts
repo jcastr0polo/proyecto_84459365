@@ -11,10 +11,9 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { toSafeUser } from '@/lib/withAuth';
-import { getUserById, getEnrollmentsByStudent, getCourseById, readUsersFresh, writeUsers } from '@/lib/dataService';
+import { getUserById, getEnrollmentsByStudent, getCourseById, readUsersFresh, writeUsers, withFileLock } from '@/lib/dataService';
 import { hashPassword } from '@/lib/auth';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 
 /**
  * GET /api/students/[id]

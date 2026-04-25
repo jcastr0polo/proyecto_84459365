@@ -6,9 +6,8 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateCorteSchema } from '@/lib/schemas';
-import { readCortesFresh, writeCortes, readActivitiesFresh } from '@/lib/dataService';
+import { readCortesFresh, writeCortes, readActivitiesFresh, withFileLock } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 
 /**
  * PUT /api/courses/[id]/cortes/[corteId]

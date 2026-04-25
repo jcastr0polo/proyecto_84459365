@@ -8,7 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { DATA_FILES, readFromBlobDirect } from '@/lib/blobSync';
+import { DATA_FILES, readFromBlobDirect } from '@/lib/dataService';
 
 export async function GET(request: Request): Promise<NextResponse> {
   return withAuth(request, async () => {

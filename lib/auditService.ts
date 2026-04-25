@@ -7,8 +7,7 @@
  * Máximo 1000 registros (FIFO: los más antiguos se eliminan).
  */
 
-import { readJsonFileFresh, writeJsonFile } from './dataService';
-import { readFromBlobDirect } from './blobSync';
+import { readJsonFileFresh, writeJsonFile, readFromBlobDirect } from './dataService';
 
 const MAX_AUDIT_ENTRIES = 1000;
 

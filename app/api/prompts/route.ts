@@ -11,9 +11,8 @@ import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { withAuth } from '@/lib/withAuth';
 import { createPromptSchema } from '@/lib/schemas';
-import { readPromptsFresh, writePrompts, getPromptsByCourse, getCourseById } from '@/lib/dataService';
+import { readPromptsFresh, writePrompts, getPromptsByCourse, getCourseById, withFileLock } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
-import { withFileLock } from '@/lib/blobSync';
 import type { AIPrompt } from '@/lib/types';
 
 export async function GET(request: Request): Promise<NextResponse> {
