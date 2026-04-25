@@ -11,8 +11,6 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateActivitySchema } from '@/lib/schemas';
 import {
-  getActivityById,
-  readActivities,
   readActivitiesFresh,
   writeActivities,
   getCourseById,
@@ -33,7 +31,9 @@ export async function GET(
   return withAuth(request, async (user) => {
     const { id } = await params;
 
-    const activity = getActivityById(id);
+    // Read fresh from Blob — no stale cache
+    const allActivities = await readActivitiesFresh();
+    const activity = allActivities.find((a) => a.id === id) ?? null;
     if (!activity) {
       return NextResponse.json({ error: 'Actividad no encontrada' }, { status: 404 });
     }

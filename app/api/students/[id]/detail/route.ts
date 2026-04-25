@@ -10,10 +10,10 @@ import { toSafeUser } from '@/lib/withAuth';
 import {
   getUserById,
   getEnrollmentsByStudent,
-  getCourseById,
-  getActivitiesByCourse,
-  getSubmissionsByActivity,
-  readProjects,
+  readCoursesFresh,
+  readActivitiesFresh,
+  readSubmissionsFresh,
+  readProjectsFresh,
 } from '@/lib/dataService';
 import {
   getCourseGradeSummary,
@@ -33,20 +33,23 @@ export async function GET(
     }
 
     const enrollments = getEnrollmentsByStudent(id).filter((e) => e.status === 'active');
-    const allProjects = readProjects();
+    const allCourses = await readCoursesFresh();
+    const allActivities = await readActivitiesFresh();
+    const allSubmissions = await readSubmissionsFresh();
+    const allProjects = await readProjectsFresh();
 
     const courses = (await Promise.all(enrollments.map(async (enrollment) => {
-      const course = getCourseById(enrollment.courseId);
+      const course = allCourses.find((c) => c.id === enrollment.courseId) ?? null;
       if (!course) return null;
 
       // Activities for this course (published only)
-      const activities = getActivitiesByCourse(course.id).filter(
-        (a) => a.status === 'published' || a.status === 'closed'
+      const activities = allActivities.filter(
+        (a) => a.courseId === course.id && (a.status === 'published' || a.status === 'closed')
       );
 
       // For each activity, find this student's submission
       const activitiesWithSubmissions = activities.map((activity) => {
-        const submissions = getSubmissionsByActivity(activity.id);
+        const submissions = allSubmissions.filter((s) => s.activityId === activity.id);
         const studentSubmission = submissions.find((s) => s.studentId === id);
 
         return {

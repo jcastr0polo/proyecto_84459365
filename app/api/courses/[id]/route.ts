@@ -12,7 +12,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateCourseSchema } from '@/lib/schemas';
-import { readCourses, readCoursesFresh, writeCourses, getCourseById } from '@/lib/dataService';
+import { readCoursesFresh, writeCourses } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { withFileLock } from '@/lib/blobSync';
 import type { User } from '@/lib/types';
@@ -28,7 +28,9 @@ export async function GET(
 ): Promise<NextResponse> {
   return withAuth(request, async (user: User) => {
     const { id } = await params;
-    const course = getCourseById(id);
+    // Read fresh from Blob — no stale cache
+    const allCourses = await readCoursesFresh();
+    const course = allCourses.find((c) => c.id === id) ?? null;
 
     if (!course) {
       return NextResponse.json(

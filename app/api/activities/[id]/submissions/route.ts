@@ -10,8 +10,8 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createSubmissionSchema } from '@/lib/schemas';
 import {
-  getActivityById,
-  getSubmissionsByActivity,
+  readActivitiesFresh,
+  readSubmissionsFresh,
   getUserById,
 } from '@/lib/dataService';
 import { uploadFile, UploadError } from '@/lib/uploadService';
@@ -31,12 +31,15 @@ export async function GET(
   return withAuth(request, async (user) => {
     const { id } = await params;
 
-    const activity = getActivityById(id);
+    // Read fresh from Blob — no stale cache
+    const allActivities = await readActivitiesFresh();
+    const activity = allActivities.find((a) => a.id === id) ?? null;
     if (!activity) {
       return NextResponse.json({ error: 'Actividad no encontrada' }, { status: 404 });
     }
 
-    const submissions = getSubmissionsByActivity(id);
+    const allSubmissions = await readSubmissionsFresh();
+    const submissions = allSubmissions.filter((s) => s.activityId === id);
 
     // Student: solo su propia entrega
     if (user.role === 'student') {
@@ -106,8 +109,9 @@ export async function POST(
     try {
       const { id: activityId } = await params;
 
-      // Check activity exists
-      const activity = getActivityById(activityId);
+      // Check activity exists — read fresh from Blob
+      const postActivities = await readActivitiesFresh();
+      const activity = postActivities.find((a) => a.id === activityId) ?? null;
       if (!activity) {
         return NextResponse.json({ error: 'Actividad no encontrada' }, { status: 404 });
       }

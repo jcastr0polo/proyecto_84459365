@@ -10,8 +10,8 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import {
-  getSubmissionById,
-  getActivityById,
+  readSubmissionsFresh,
+  readActivitiesFresh,
   getUserById,
 } from '@/lib/dataService';
 import { returnSubmission, SubmissionError } from '@/lib/submissionService';
@@ -30,7 +30,9 @@ export async function GET(
   return withAuth(request, async (user) => {
     const { id } = await params;
 
-    const submission = getSubmissionById(id);
+    // Read fresh from Blob — no stale cache
+    const allSubmissions = await readSubmissionsFresh();
+    const submission = allSubmissions.find((s) => s.id === id) ?? null;
     if (!submission) {
       return NextResponse.json({ error: 'Entrega no encontrada' }, { status: 404 });
     }
@@ -42,7 +44,8 @@ export async function GET(
 
     // Enrich with student and activity data
     const student = getUserById(submission.studentId);
-    const activity = getActivityById(submission.activityId);
+    const allActivities = await readActivitiesFresh();
+    const activity = allActivities.find((a) => a.id === submission.activityId) ?? null;
 
     const detailed: SubmissionWithDetails = {
       ...submission,

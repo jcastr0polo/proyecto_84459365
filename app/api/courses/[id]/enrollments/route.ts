@@ -9,7 +9,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { toSafeUser } from '@/lib/withAuth';
 import { enrollStudentSchema } from '@/lib/schemas';
-import { getEnrollmentsByCourse, getCourseById, getUserById } from '@/lib/dataService';
+import { readEnrollmentsFresh, readCoursesFresh, getUserById } from '@/lib/dataService';
 import { enrollStudent, EnrollmentError } from '@/lib/enrollmentService';
 import { logAudit } from '@/lib/auditService';
 import type { EnrollmentWithStudent } from '@/lib/types';
@@ -26,12 +26,15 @@ export async function GET(
   return withAuth(request, async (user) => {
     const { id } = await params;
 
-    const course = getCourseById(id);
+    // Read fresh from Blob — no stale cache
+    const allCourses = await readCoursesFresh();
+    const course = allCourses.find((c) => c.id === id) ?? null;
     if (!course) {
       return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
     }
 
-    const enrollments = getEnrollmentsByCourse(id);
+    const allEnrollments = await readEnrollmentsFresh();
+    const enrollments = allEnrollments.filter((e) => e.courseId === id);
 
     // Estudiantes solo ven su propia inscripción
     if (user.role === 'student') {

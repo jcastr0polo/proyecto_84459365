@@ -42,10 +42,13 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     let courses: Course[];
 
+    // Read fresh from Blob — no stale cache
+    const allCourses = await readCoursesFresh();
+
     if (semesterId) {
-      courses = getCoursesBySemester(semesterId);
+      courses = allCourses.filter((c) => c.semesterId === semesterId);
     } else {
-      courses = readCourses();
+      courses = allCourses;
     }
 
     // Para estudiantes: filtrar solo cursos activos

@@ -14,8 +14,6 @@ import { withAuth } from '@/lib/withAuth';
 import { createActivitySchema } from '@/lib/schemas';
 import {
   getCourseById,
-  getActivitiesByCourse,
-  readActivities,
   readActivitiesFresh,
   writeActivities,
   isStudentEnrolled,
@@ -42,7 +40,9 @@ export async function GET(
       return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
     }
 
-    let activities = getActivitiesByCourse(id);
+    // Read fresh from Blob — no stale cache
+    const allActivities = await readActivitiesFresh();
+    let activities = allActivities.filter((a) => a.courseId === id);
 
     // Estudiantes solo ven actividades published con publishDate <= now
     if (user.role === 'student') {

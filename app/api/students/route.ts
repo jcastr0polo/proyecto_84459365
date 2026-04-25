@@ -10,7 +10,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { toSafeUser } from '@/lib/withAuth';
-import { readUsers } from '@/lib/dataService';
+import { readUsersFresh } from '@/lib/dataService';
 
 /**
  * GET /api/students?search=
@@ -21,7 +21,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search')?.toLowerCase().trim() ?? '';
 
-    const users = readUsers();
+    const users = await readUsersFresh();
     let students = users.filter((u) => u.role === 'student');
 
     if (search) {

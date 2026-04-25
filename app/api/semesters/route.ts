@@ -23,7 +23,7 @@ import type { Semester } from '@/lib/types';
  */
 export async function GET(request: Request): Promise<NextResponse> {
   return withAuth(request, async () => {
-    const semesters = readSemesters();
+    const semesters = await readSemestersFresh();
     const sorted = [...semesters].sort((a, b) => b.id.localeCompare(a.id));
     return NextResponse.json({ semesters: sorted });
   }, 'admin');
