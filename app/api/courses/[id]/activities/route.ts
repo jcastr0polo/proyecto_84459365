@@ -108,6 +108,7 @@ export async function POST(
       const activity: Activity = {
         id: uuidv4(),
         courseId: id,
+        corteId: data.corteId,
         title: data.title,
         description: data.description,
         type: data.type,

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
-import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight, Shield } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight, Shield, Layers } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import type { Semester } from '@/lib/types';
 
@@ -34,6 +34,7 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   activities: 'Actividades',
   grades: 'Calificaciones',
   projects: 'Proyectos',
+  cortes: 'Cortes',
   submissions: 'Entregas',
   new: 'Nuevo',
   import: 'Importar',

@@ -143,6 +143,7 @@ export default function NewActivityPage() {
       {/* Form */}
       <Card padding="lg">
         <ActivityForm
+          courseId={courseId}
           onSubmit={handleSubmit}
           onCancel={() => router.push(`/admin/courses/${courseId}/activities`)}
           onUploadFile={handleUploadFile}

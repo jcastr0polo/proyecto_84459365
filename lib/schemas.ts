@@ -234,6 +234,7 @@ export const activityAttachmentSchema = z.object({
 export const activitySchema = z.object({
   id: z.string().min(1),
   courseId: z.string().min(1),
+  corteId: z.string().optional(),
   title: z.string().min(1),
   description: z.string(),
   type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'other']),
@@ -263,6 +264,7 @@ export const createActivitySchema = z.object({
   description: z.string().min(1, 'La descripción es requerida'),
   type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'other']),
   category: z.enum(['individual', 'group']),
+  corteId: z.string().optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido'),
   publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido'),
   maxScore: z.number().positive('La nota máxima debe ser mayor que 0'),
@@ -285,6 +287,7 @@ export const updateActivitySchema = z.object({
   description: z.string().optional(),
   type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'other']).optional(),
   category: z.enum(['individual', 'group']).optional(),
+  corteId: z.string().nullable().optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido').optional(),
   publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido').optional(),
   maxScore: z.number().positive('La nota máxima debe ser mayor que 0').optional(),
@@ -561,3 +564,43 @@ export const updateProjectSchema = z.object({
 export type ProjectZod = z.infer<typeof projectSchema>;
 export type CreateProjectZod = z.infer<typeof createProjectSchema>;
 export type UpdateProjectZod = z.infer<typeof updateProjectSchema>;
+
+// ────────────────────────────────────────────────────────────
+// CORTES ACADÉMICOS SCHEMAS
+// ────────────────────────────────────────────────────────────
+
+/**
+ * corteSchema — Validación completa de un Corte en cortes.json
+ */
+export const corteSchema = z.object({
+  id: z.string().min(1),
+  courseId: z.string().min(1),
+  name: z.string().min(1),
+  weight: z.number().min(1, 'El peso mínimo es 1%').max(100, 'El peso máximo es 100%'),
+  order: z.number().int().min(1),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+/**
+ * createCorteSchema — Validación del body de POST /api/courses/[id]/cortes
+ */
+export const createCorteSchema = z.object({
+  name: z.string().min(1, 'El nombre del corte es requerido').max(100).trim(),
+  weight: z.number().min(1, 'El peso mínimo es 1%').max(100, 'El peso máximo es 100%'),
+  order: z.number().int().min(1).optional(),
+});
+
+/**
+ * updateCorteSchema — Validación del body de PUT /api/courses/[id]/cortes/[corteId]
+ */
+export const updateCorteSchema = z.object({
+  name: z.string().min(1).max(100).trim().optional(),
+  weight: z.number().min(1).max(100).optional(),
+  order: z.number().int().min(1).optional(),
+});
+
+// Tipos inferidos — Cortes
+export type CorteZod = z.infer<typeof corteSchema>;
+export type CreateCorteZod = z.infer<typeof createCorteSchema>;
+export type UpdateCorteZod = z.infer<typeof updateCorteSchema>;

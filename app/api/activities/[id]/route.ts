@@ -18,6 +18,7 @@ import {
 } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { withFileLock } from '@/lib/blobSync';
+import type { Activity } from '@/lib/types';
 
 /**
  * GET /api/activities/[id]
@@ -139,9 +140,12 @@ export async function PUT(
         }
 
         // Aplicar cambios
-        const updatedActivity = {
+        const { corteId: rawCorteId, ...restData } = data;
+        const updatedActivity: Activity = {
           ...existing,
-          ...data,
+          ...restData,
+          // Convert null to undefined for corteId
+          ...(rawCorteId !== undefined ? { corteId: rawCorteId ?? undefined } : {}),
           updatedAt: new Date().toISOString(),
         };
 

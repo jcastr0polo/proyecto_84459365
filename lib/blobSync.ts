@@ -34,6 +34,7 @@ export const DATA_FILES = [
   'prompts.json',
   'projects.json',
   'audit.json',
+  'cortes.json',
 ];
 
 // ═══════════════════════════════════════════════════════════

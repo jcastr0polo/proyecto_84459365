@@ -1,18 +1,19 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Pencil, Eye } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import DatePicker from '@/components/ui/DatePicker';
 import FileUploadZone from '@/components/ui/FileUploadZone';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
-import type { Activity, ActivityAttachment } from '@/lib/types';
+import type { Activity, ActivityAttachment, Corte } from '@/lib/types';
 
 export interface ActivityFormData {
   title: string;
   description: string;
   type: Activity['type'];
   category: Activity['category'];
+  corteId?: string;
   dueDate: string;
   publishDate: string;
   maxScore: number;
@@ -25,6 +26,7 @@ export interface ActivityFormData {
 
 interface ActivityFormProps {
   activity?: Activity;
+  courseId?: string;
   onSubmit: (data: ActivityFormData, publish?: boolean) => Promise<void>;
   onCancel?: () => void;
   onUploadFile?: (file: File) => Promise<ActivityAttachment | null>;
@@ -47,6 +49,7 @@ const ACTIVITY_TYPES: { value: Activity['type']; label: string }[] = [
  */
 export default function ActivityForm({
   activity,
+  courseId,
   onSubmit,
   onCancel,
   onUploadFile,
@@ -54,11 +57,23 @@ export default function ActivityForm({
 }: ActivityFormProps) {
   const isEdit = !!activity;
 
+  const [cortes, setCortes] = useState<Corte[]>([]);
+
+  useEffect(() => {
+    const cid = courseId || activity?.courseId;
+    if (!cid) return;
+    fetch(`/api/courses/${cid}/cortes`)
+      .then((r) => r.ok ? r.json() : { cortes: [] })
+      .then((d) => setCortes(d.cortes ?? []))
+      .catch(() => {});
+  }, [courseId, activity?.courseId]);
+
   const [form, setForm] = useState<ActivityFormData>({
     title: activity?.title ?? '',
     description: activity?.description ?? '',
     type: activity?.type ?? 'project',
     category: activity?.category ?? 'individual',
+    corteId: activity?.corteId ?? undefined,
     dueDate: activity?.dueDate ?? '',
     publishDate: activity?.publishDate ?? '',
     maxScore: activity?.maxScore ?? 5.0,
@@ -187,8 +202,8 @@ export default function ActivityForm({
             )}
           </div>
 
-          {/* Type + Category row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Type + Category + Corte row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label htmlFor="act-type" className="block text-xs font-medium text-muted mb-1.5">
                 Tipo <span className="text-red-400/70">*</span>
@@ -219,6 +234,25 @@ export default function ActivityForm({
                 <option value="group">Grupal</option>
               </select>
             </div>
+
+            {cortes.length > 0 && (
+              <div>
+                <label htmlFor="act-corte" className="block text-xs font-medium text-muted mb-1.5">
+                  Corte de Evaluación
+                </label>
+                <select
+                  id="act-corte"
+                  value={form.corteId ?? ''}
+                  onChange={(e) => update('corteId', e.target.value || undefined)}
+                  className={selectClass('corteId')}
+                >
+                  <option value="">Sin corte asignado</option>
+                  {cortes.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.weight}%)</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
       </section>

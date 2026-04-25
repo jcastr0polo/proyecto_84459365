@@ -205,6 +205,7 @@ export default function AdminActivityDetailPage() {
         <Card padding="none">
           <ActivityForm
             activity={activity}
+            courseId={courseId}
             onSubmit={handleEdit}
             onCancel={() => setEditModalOpen(false)}
             onUploadFile={handleUploadFile}

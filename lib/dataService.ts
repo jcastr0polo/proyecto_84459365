@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { HomeDataSchema, AppConfigSchema } from './validators';
-import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject } from './types';
-import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema } from './schemas';
+import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject, Corte } from './types';
+import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema, corteSchema } from './schemas';
 import { z } from 'zod';
 import { writeToBlob, readFromCache, isCacheReady, readFromBlobDirect, withFileLock } from './blobSync';
 
@@ -566,4 +566,32 @@ export function getProjectsByCourse(courseId: string): StudentProject[] {
 export function getProjectByStudentAndCourse(studentId: string, courseId: string): StudentProject | null {
   const projects = readProjects();
   return projects.find((p) => p.studentId === studentId && p.courseId === courseId) ?? null;
+}
+
+// ────────────────────────────────────────────────────────────
+// Cortes Académicos (Períodos de Evaluación)
+// ────────────────────────────────────────────────────────────
+
+export function readCortes(): Corte[] {
+  const raw = readJsonFile<unknown[]>('cortes.json');
+  return z.array(corteSchema).parse(raw) as Corte[];
+}
+
+export async function readCortesFresh(): Promise<Corte[]> {
+  const raw = await readJsonFileFresh<unknown[]>('cortes.json');
+  return z.array(corteSchema).parse(raw) as Corte[];
+}
+
+export async function writeCortes(cortes: Corte[]): Promise<void> {
+  await writeJsonFile('cortes.json', cortes);
+}
+
+export function getCortesByCourse(courseId: string): Corte[] {
+  const cortes = readCortes();
+  return cortes.filter((c) => c.courseId === courseId).sort((a, b) => a.order - b.order);
+}
+
+export function getCorteById(id: string): Corte | null {
+  const cortes = readCortes();
+  return cortes.find((c) => c.id === id) ?? null;
 }

@@ -285,6 +285,7 @@ export interface ActivityAttachment {
 export interface Activity {
   id: string;                          // UUID
   courseId: string;                     // FK a Course.id
+  corteId?: string;                    // FK a Corte.id (período de evaluación)
   title: string;                       // "Proyecto Fullstack - Fase 1"
   description: string;                 // Descripción detallada (Markdown)
   type: 'project' | 'exercise' | 'document' | 'presentation' | 'prompt' | 'exam' | 'other';
@@ -557,6 +558,50 @@ export interface FinalGradeResult {
   totalWeight: number;                 // Suma de pesos considerados
   isPartial: boolean;                  // true si faltan actividades
   isApproved: boolean;                 // finalScore ≥ 3.0
+}
+
+// ────────────────────────────────────────────────────────────
+// Cortes Académicos (Períodos de Evaluación)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * Corte — Período de evaluación dentro de un curso
+ * Se almacena en /data/cortes.json
+ *
+ * Modelo de evaluación colombiano:
+ * - Un curso tiene N cortes (ej: Corte 1: 30%, Corte 2: 30%, Corte 3: 40%)
+ * - La suma de weight de todos los cortes de un curso debe ser 100
+ * - Las actividades se asignan a un corte (Activity.corteId)
+ * - Dentro de un corte, los weight de las actividades suman el 100% de ese corte
+ * - Nota definitiva = Σ(nota_corte × weight_corte / 100)
+ *   donde nota_corte = promedio ponderado de actividades del corte
+ */
+export interface Corte {
+  id: string;                          // UUID
+  courseId: string;                     // FK a Course.id
+  name: string;                        // "Corte 1", "Primer Parcial", etc.
+  weight: number;                      // Porcentaje sobre la definitiva (ej: 30)
+  order: number;                       // Orden de visualización (1, 2, 3...)
+  createdAt: string;                   // ISO 8601
+  updatedAt: string;                   // ISO 8601
+}
+
+/**
+ * CreateCorteRequest — Datos para crear un corte
+ */
+export interface CreateCorteRequest {
+  name: string;
+  weight: number;
+  order?: number;
+}
+
+/**
+ * UpdateCorteRequest — Datos para editar un corte (parcial)
+ */
+export interface UpdateCorteRequest {
+  name?: string;
+  weight?: number;
+  order?: number;
 }
 
 // ────────────────────────────────────────────────────────────
