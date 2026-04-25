@@ -3,7 +3,9 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
-import { Inbox, Search, GitBranch, Palette, Link as LinkIcon, Paperclip } from 'lucide-react';
+import { Inbox, Search as SearchIcon, GitBranch, Palette, Link as LinkIcon, Paperclip } from 'lucide-react';
+import SearchInput from '@/components/ui/SearchInput';
+import Pagination, { usePagination } from '@/components/ui/Pagination';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import EmptyState from '@/components/ui/EmptyState';
@@ -32,6 +34,7 @@ export default function AdminSubmissionsPage() {
   const [activity, setActivity] = useState<Activity | null>(null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [returnLoading, setReturnLoading] = useState(false);
 
@@ -67,12 +70,21 @@ export default function AdminSubmissionsPage() {
     if (statusFilter !== 'all') {
       result = result.filter((s) => s.status === statusFilter);
     }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((s) =>
+        s.student.firstName.toLowerCase().includes(q) ||
+        s.student.lastName.toLowerCase().includes(q) ||
+        s.student.email.toLowerCase().includes(q)
+      );
+    }
     // Sort: latest first
     result.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
     return result;
-  }, [submissions, statusFilter]);
+  }, [submissions, statusFilter, search]);
 
   const selected = selectedId ? submissions.find((s) => s.id === selectedId) : null;
+  const { page, setPage, totalPages, paginated, totalItems, pageSize } = usePagination(filtered, 10);
 
   async function handleReturn(submissionId: string) {
     setReturnLoading(true);
@@ -140,20 +152,28 @@ export default function AdminSubmissionsPage() {
         <StatCard label="Tardías" value={stats.late} color="text-red-400" />
       </div>
 
-      {/* Filter */}
-      <select
-        value={statusFilter}
-        onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-        aria-label="Filtrar por estado"
-        className="px-3 py-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-sm text-foreground
-                   outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
-      >
-        <option value="all">Todos los estados</option>
-        <option value="submitted">Entregadas</option>
-        <option value="reviewed">Calificadas</option>
-        <option value="returned">Devueltas</option>
-        <option value="resubmitted">Re-entregadas</option>
-      </select>
+      {/* Filter + Search */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          aria-label="Filtrar por estado"
+          className="px-3 py-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-sm text-foreground
+                     outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+        >
+          <option value="all">Todos los estados</option>
+          <option value="submitted">Entregadas</option>
+          <option value="reviewed">Calificadas</option>
+          <option value="returned">Devueltas</option>
+          <option value="resubmitted">Re-entregadas</option>
+        </select>
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Buscar estudiante..."
+          className="w-full sm:w-64"
+        />
+      </div>
 
       {/* Table */}
       {submissions.length === 0 ? (
@@ -164,10 +184,10 @@ export default function AdminSubmissionsPage() {
         />
       ) : filtered.length === 0 ? (
         <EmptyState
-          icon={<Search className="w-6 h-6 text-subtle" />}
+          icon={<SearchIcon className="w-6 h-6 text-subtle" />}
           title="Sin resultados"
-          description="No hay entregas con ese estado."
-          action={<Button variant="ghost" size="sm" onClick={() => setStatusFilter('all')}>Limpiar filtro</Button>}
+          description="No hay entregas con ese filtro."
+          action={<Button variant="ghost" size="sm" onClick={() => { setStatusFilter('all'); setSearch(''); }}>Limpiar filtros</Button>}
         />
       ) : (
         <>
@@ -186,7 +206,7 @@ export default function AdminSubmissionsPage() {
                 </Tr>
               </Thead>
               <Tbody>
-                {filtered.map((sub) => {
+                {paginated.map((sub) => {
                   const statusCfg = SUBMISSION_STATUS_CONFIG[sub.status];
                   return (
                     <Tr key={sub.id}>
@@ -245,7 +265,7 @@ export default function AdminSubmissionsPage() {
 
           {/* Mobile cards */}
           <div className="md:hidden space-y-3">
-            {filtered.map((sub) => {
+            {paginated.map((sub) => {
               const statusCfg = SUBMISSION_STATUS_CONFIG[sub.status];
               return (
                 <div
@@ -274,6 +294,15 @@ export default function AdminSubmissionsPage() {
               );
             })}
           </div>
+
+          {/* Pagination */}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+          />
         </>
       )}
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import TagInput from '@/components/prompts/TagInput';
 import type { Course } from '@/lib/types';
@@ -46,6 +46,15 @@ export default function PromptEditor({
   const [courseId, setCourseId] = useState(initialCourseId);
   const [isTemplate, setIsTemplate] = useState(initialIsTemplate);
   const [showPreview, setShowPreview] = useState(true);
+
+  // Sync from parent when props change (defensive)
+  useEffect(() => {
+    setTitle(initialTitle);
+    setContent(initialContent);
+    setTags(initialTags);
+    setCourseId(initialCourseId);
+    setIsTemplate(initialIsTemplate);
+  }, [initialTitle, initialContent, initialTags, initialCourseId, initialIsTemplate]);
 
   const isValid = useMemo(
     () => title.trim().length >= 3 && content.trim().length >= 10 && courseId !== '',

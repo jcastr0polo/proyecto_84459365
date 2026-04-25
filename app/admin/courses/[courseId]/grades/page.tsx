@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import GradeSummaryTable from '@/components/grades/GradeSummaryTable';
 import GradeStats, { calculateStats } from '@/components/grades/GradeStats';
+import SearchInput from '@/components/ui/SearchInput';
 import { useToast } from '@/components/ui/Toast';
 import type { CourseGradeSummary } from '@/lib/types';
 
@@ -22,6 +23,7 @@ export default function AdminGradeSummaryPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<CourseGradeSummary | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [search, setSearch] = useState('');
 
   const courseId = params.courseId;
 
@@ -93,6 +95,20 @@ export default function AdminGradeSummaryPage() {
 
   const stats = calculateStats(data.students);
 
+  // Filter students by search
+  const filteredData = useMemo(() => {
+    if (!search.trim()) return data;
+    const q = search.toLowerCase();
+    return {
+      ...data,
+      students: data.students.filter((s) =>
+        s.firstName.toLowerCase().includes(q) ||
+        s.lastName.toLowerCase().includes(q) ||
+        s.documentNumber.toLowerCase().includes(q)
+      ),
+    };
+  }, [data, search]);
+
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
@@ -138,9 +154,19 @@ export default function AdminGradeSummaryPage() {
       {/* Statistics */}
       <GradeStats stats={stats} className="mb-6" />
 
+      {/* Search */}
+      <div className="mb-4">
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Buscar estudiante..."
+          className="w-full sm:w-72"
+        />
+      </div>
+
       {/* Pivot Table */}
       {data.students.length > 0 ? (
-        <GradeSummaryTable data={data} />
+        <GradeSummaryTable data={filteredData} />
       ) : (
         <div className="text-center py-16 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02]">
           <p className="text-subtle">No hay estudiantes inscritos en este curso.</p>
