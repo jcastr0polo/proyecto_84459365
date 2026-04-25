@@ -31,8 +31,10 @@ interface ActivityData {
 interface GradeData {
   id: string;
   submissionId: string;
+  studentId: string;
   score: number;
-  feedback?: string;
+  feedback: string;
+  isPublished: boolean;
 }
 
 /**
@@ -67,37 +69,28 @@ export default function AdminGradingPage() {
         const actData = await actRes.json();
         setActivity(actData.activity ?? actData);
 
-        // Fetch submissions
-        const subRes = await fetch(`/api/activities/${actId}/submissions`, { credentials: 'include' });
+        // Fetch submissions + existing grades in parallel
+        const [subRes, gradesRes] = await Promise.all([
+          fetch(`/api/activities/${actId}/submissions`, { credentials: 'include' }),
+          fetch(`/api/activities/${actId}/grades`, { credentials: 'include' }),
+        ]);
+
         if (!subRes.ok) throw new Error('No se pudieron cargar las entregas');
         const subData = await subRes.json();
         const submissions: SubmissionData[] = subData.submissions ?? subData;
 
-        // Fetch existing grades
-        const gradesRes = await fetch(`/api/courses/${courseId}/grades`, { credentials: 'include' });
-        const existingGrades: GradeData[] = [];
+        // Build grades lookup by submissionId (fresh from Blob)
+        const gradesMap = new Map<string, GradeData>();
         if (gradesRes.ok) {
-          const gradesData = await gradesRes.json();
-          // Admin gets CourseGradeSummary; extract grades for this activity
-          if (gradesData.students) {
-            for (const student of gradesData.students) {
-              const g = student.grades?.[actId];
-              if (g) {
-                existingGrades.push({
-                  id: g.id ?? '',
-                  submissionId: '',
-                  score: g.score,
-                  feedback: g.feedback,
-                });
-              }
-            }
+          const gData = await gradesRes.json();
+          for (const g of (gData.grades ?? [])) {
+            gradesMap.set(g.submissionId, g);
           }
         }
 
-        // Build rows
+        // Build rows with existing grades pre-populated
         const gradeRows: GradeRow[] = submissions.map((sub: SubmissionData) => {
-          // Match grade from summary by student
-          void existingGrades; // grades loaded per-submission below
+          const existing = gradesMap.get(sub.id);
 
           return {
             submissionId: sub.id,
@@ -109,27 +102,11 @@ export default function AdminGradingPage() {
             isLate: sub.isLate,
             submittedAt: sub.submittedAt,
             version: sub.version,
-            score: null,
-            feedback: '',
+            score: existing ? existing.score : null,
+            feedback: existing ? existing.feedback : '',
+            existingGradeId: existing?.id,
           };
         });
-
-        // Now try to get existing grades per submission
-        for (const row of gradeRows) {
-          try {
-            const gRes = await fetch(`/api/grades?submissionId=${row.submissionId}`, { credentials: 'include' });
-            if (gRes.ok) {
-              const gData = await gRes.json();
-              if (gData.grade) {
-                row.existingGradeId = gData.grade.id;
-                row.score = gData.grade.score;
-                row.feedback = gData.grade.feedback ?? '';
-              }
-            }
-          } catch {
-            // No existing grade — fine
-          }
-        }
 
         setRows(gradeRows);
       } catch (err) {
