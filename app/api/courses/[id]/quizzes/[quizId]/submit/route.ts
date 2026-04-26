@@ -109,27 +109,55 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
         const question = quiz.questions.find((q) => q.id === ans.questionId);
         if (!question) continue;
 
-        const selectedOption = question.options.find((o) => o.id === ans.selectedOptionId);
-        if (!selectedOption) continue;
-
         let pointsEarned = 0;
+
         if (question.type === 'single') {
           // Única respuesta correcta: weight 100 = todo, else 0
+          const selectedOption = question.options.find((o) => o.id === ans.selectedOptionId);
+          if (!selectedOption) continue;
           pointsEarned = selectedOption.weight === 100 ? question.points : 0;
-        } else {
-          // Weighted: proporcional
-          const maxWeight = Math.max(...question.options.map((o) => o.weight));
-          pointsEarned = maxWeight > 0
-            ? Math.round(((selectedOption.weight / maxWeight) * question.points) * 100) / 100
-            : 0;
-        }
 
-        totalScore += pointsEarned;
-        gradedAnswers.push({
-          questionId: ans.questionId,
-          selectedOptionId: ans.selectedOptionId,
-          pointsEarned,
-        });
+          totalScore += pointsEarned;
+          gradedAnswers.push({
+            questionId: ans.questionId,
+            selectedOptionId: ans.selectedOptionId,
+            pointsEarned,
+          });
+        } else {
+          // Weighted/multi-select con penalización por incorrectas (estándar Moodle)
+          // - Cada opción correcta seleccionada suma su peso
+          // - Cada opción incorrecta seleccionada resta: totalPositiveWeight / numIncorrectOptions
+          // - Piso en 0 (no puede dar negativo)
+          const ids = ans.selectedOptionIds?.length ? ans.selectedOptionIds : (ans.selectedOptionId ? [ans.selectedOptionId] : []);
+          const selectedOptions = question.options.filter((o) => ids.includes(o.id));
+          if (selectedOptions.length === 0) continue;
+
+          const totalPositiveWeight = question.options.reduce((s, o) => s + (o.weight > 0 ? o.weight : 0), 0);
+          const incorrectOptions = question.options.filter((o) => o.weight === 0);
+          const penaltyPerWrong = incorrectOptions.length > 0 ? totalPositiveWeight / incorrectOptions.length : 0;
+
+          let earnedWeight = 0;
+          for (const opt of selectedOptions) {
+            if (opt.weight > 0) {
+              earnedWeight += opt.weight;
+            } else {
+              earnedWeight -= penaltyPerWrong;
+            }
+          }
+          earnedWeight = Math.max(0, earnedWeight); // piso en 0
+
+          pointsEarned = totalPositiveWeight > 0
+            ? Math.round(((earnedWeight / totalPositiveWeight) * question.points) * 100) / 100
+            : 0;
+
+          totalScore += pointsEarned;
+          gradedAnswers.push({
+            questionId: ans.questionId,
+            selectedOptionId: ids[0] || '',
+            selectedOptionIds: ids,
+            pointsEarned,
+          });
+        }
       }
 
       const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 10000) / 100 : 0;

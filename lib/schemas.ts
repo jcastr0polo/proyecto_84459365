@@ -704,7 +704,8 @@ export const updateQuizSchema = z.object({
 export const submitQuizSchema = z.object({
   answers: z.array(z.object({
     questionId: z.string().min(1),
-    selectedOptionId: z.string().min(1),
+    selectedOptionId: z.string().optional().default(''),
+    selectedOptionIds: z.array(z.string().min(1)).optional(),
   })).min(1, 'Debes responder al menos una pregunta'),
   blurCount: z.number().int().min(0).optional(),
   autoSubmitted: z.boolean().optional(),
@@ -712,7 +713,8 @@ export const submitQuizSchema = z.object({
 
 const quizAnswerSchema = z.object({
   questionId: z.string().min(1),
-  selectedOptionId: z.string().min(1),
+  selectedOptionId: z.string(),
+  selectedOptionIds: z.array(z.string()).optional(),
   pointsEarned: z.number().min(0),
 });
 

@@ -41,7 +41,7 @@ export default function AdminQuizSimulatePage() {
   const [started, setStarted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [blurWarnings, setBlurWarnings] = useState(0);
   const [confirmIncomplete, setConfirmIncomplete] = useState(false);
@@ -93,10 +93,12 @@ export default function AdminQuizSimulatePage() {
     setSubmitting(true);
     if (timerRef.current) clearInterval(timerRef.current);
 
-    const answerArray = Object.entries(answers).map(([questionId, selectedOptionId]) => ({
-      questionId,
-      selectedOptionId,
-    }));
+    const answerArray = Object.entries(answers).map(([questionId, value]) => {
+      if (Array.isArray(value)) {
+        return { questionId, selectedOptionId: value[0] || '', selectedOptionIds: value };
+      }
+      return { questionId, selectedOptionId: value as string };
+    });
 
     if (quiz) {
       for (const q of quiz.questions) {
@@ -111,7 +113,7 @@ export default function AdminQuizSimulatePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          answers: answerArray.filter((a) => a.selectedOptionId),
+          answers: answerArray.filter((a) => a.selectedOptionId || a.selectedOptionIds?.length),
           blurCount: finalBlurCount,
           autoSubmitted: auto,
           simulate: true,
@@ -177,6 +179,17 @@ export default function AdminQuizSimulatePage() {
 
   function selectAnswer(questionId: string, optionId: string) {
     setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
+  }
+
+  function toggleWeightedAnswer(questionId: string, optionId: string) {
+    setAnswers((prev) => {
+      const current = prev[questionId];
+      const arr = Array.isArray(current) ? [...current] : current ? [current] : [];
+      const idx = arr.indexOf(optionId);
+      if (idx >= 0) arr.splice(idx, 1);
+      else arr.push(optionId);
+      return { ...prev, [questionId]: arr.length > 0 ? arr : [] };
+    });
   }
 
   function resetSimulation() {
@@ -267,7 +280,9 @@ export default function AdminQuizSimulatePage() {
 
                 <div className="ml-5 space-y-1.5">
                   {question.options.map((opt) => {
-                    const isSelected = answer?.selectedOptionId === opt.id;
+                    const isSelected = question.type === 'weighted'
+                      ? (answer?.selectedOptionIds ?? []).includes(opt.id) || answer?.selectedOptionId === opt.id
+                      : answer?.selectedOptionId === opt.id;
                     const isCorrectOpt = question.type === 'single' ? opt.weight === 100 : opt.weight > 0;
                     const isBestOpt = question.type === 'weighted' && opt.weight === Math.max(...question.options.map(o => o.weight));
                     return (
@@ -407,19 +422,19 @@ export default function AdminQuizSimulatePage() {
     ? shuffleArray(quiz.questions, quiz.id.charCodeAt(0))
     : quiz.questions;
 
-  const answeredCount = Object.keys(answers).length;
+  const answeredCount = Object.entries(answers).filter(([, v]) => Array.isArray(v) ? v.length > 0 : !!v).length;
   const totalQuestions = quiz.questions.length;
 
   return (
     <div className="space-y-4 max-w-3xl mx-auto pb-24">
       {/* Simulation banner — compact */}
-      <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
+      <div className="bg-purple-950 border border-purple-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
         <FlaskConical className="w-4 h-4 text-purple-400" />
         <span className="text-xs font-medium text-purple-300">Simulación en curso</span>
       </div>
 
       {/* Sticky header */}
-      <div className="sticky top-0 z-20 bg-[var(--background)] py-3 border-b border-foreground/[0.06]">
+      <div className="sticky top-0 z-20 bg-[#0a0a0f] py-3 border-b border-foreground/[0.06]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-sm font-semibold text-foreground truncate max-w-[200px]">{quiz.title}</h2>
@@ -451,6 +466,11 @@ export default function AdminQuizSimulatePage() {
         const displayOptions = quiz.shuffleOptions
           ? shuffleArray(question.options, question.id.charCodeAt(0))
           : question.options;
+        const isWeighted = question.type === 'weighted';
+        const currentAnswer = answers[question.id];
+        const selectedIds = isWeighted
+          ? (Array.isArray(currentAnswer) ? currentAnswer : currentAnswer ? [currentAnswer] : [])
+          : [];
 
         return (
           <div key={question.id} className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02]">
@@ -458,32 +478,46 @@ export default function AdminQuizSimulatePage() {
               <span className="text-xs font-bold text-faint shrink-0 pt-0.5">{idx + 1}.</span>
               <div>
                 <MarkdownRenderer content={question.text} className="text-sm font-medium text-foreground/90" />
-                <span className="text-[10px] text-subtle">{question.points} pts · {question.type === 'single' ? 'Selección única' : 'Ponderada'}</span>
+                <span className="text-[10px] text-subtle">
+                  {question.points} pts · {isWeighted ? 'Selección múltiple (selecciona las correctas)' : 'Selección única'}
+                </span>
               </div>
             </div>
             <div className="ml-5 space-y-2">
               {displayOptions.map((opt) => {
-                const isSelected = answers[question.id] === opt.id;
+                const isSelected = isWeighted ? selectedIds.includes(opt.id) : currentAnswer === opt.id;
                 return (
                   <button
                     key={opt.id}
                     type="button"
-                    onClick={() => selectAnswer(question.id, opt.id)}
+                    onClick={() => isWeighted ? toggleWeightedAnswer(question.id, opt.id) : selectAnswer(question.id, opt.id)}
                     className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-all cursor-pointer min-h-[44px] ${
                       isSelected
                         ? 'border-purple-500/50 bg-purple-500/10 text-foreground'
                         : 'border-foreground/[0.08] bg-foreground/[0.02] text-muted hover:border-foreground/15 hover:bg-foreground/[0.05]'
                     }`}
                   >
-                    <span className={`inline-block w-5 h-5 rounded-full border-2 mr-2 align-middle ${
-                      isSelected ? 'border-purple-400 bg-purple-400' : 'border-foreground/20'
-                    }`}>
-                      {isSelected && (
-                        <svg className="w-3 h-3 text-white mx-auto mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </span>
+                    {isWeighted ? (
+                      <span className={`inline-block w-5 h-5 rounded mr-2 align-middle border-2 ${
+                        isSelected ? 'border-purple-400 bg-purple-400' : 'border-foreground/20'
+                      }`}>
+                        {isSelected && (
+                          <svg className="w-3 h-3 text-white mx-auto mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </span>
+                    ) : (
+                      <span className={`inline-block w-5 h-5 rounded-full border-2 mr-2 align-middle ${
+                        isSelected ? 'border-purple-400 bg-purple-400' : 'border-foreground/20'
+                      }`}>
+                        {isSelected && (
+                          <svg className="w-3 h-3 text-white mx-auto mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </span>
+                    )}
                     {opt.text}
                   </button>
                 );
@@ -494,7 +528,7 @@ export default function AdminQuizSimulatePage() {
       })}
 
       {/* Sticky submit */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[var(--background)] border-t border-foreground/[0.06] p-4 z-20">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0f] border-t border-foreground/[0.06] p-4 z-20">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <p className="text-xs text-subtle">{answeredCount} de {totalQuestions} respondidas</p>
           <Button

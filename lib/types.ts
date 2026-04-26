@@ -803,7 +803,8 @@ export interface Quiz {
  */
 export interface QuizAnswer {
   questionId: string;
-  selectedOptionId: string;
+  selectedOptionId: string;            // Para single: la opción elegida
+  selectedOptionIds?: string[];        // Para weighted: múltiples opciones elegidas
   pointsEarned: number;               // Se calcula automáticamente
 }
 
