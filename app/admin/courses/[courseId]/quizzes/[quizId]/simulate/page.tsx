@@ -540,13 +540,13 @@ export default function AdminQuizSimulatePage() {
   return (
     <div className="space-y-4 max-w-3xl mx-auto pb-24">
       {/* Simulation banner — compact */}
-      <div className="bg-purple-950 border border-purple-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
+      <div className="bg-purple-100 border border-purple-300 dark:bg-purple-950 dark:border-purple-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
         <FlaskConical className="w-4 h-4 text-purple-400" />
-        <span className="text-xs font-medium text-purple-300">Simulación en curso</span>
+        <span className="text-xs font-medium text-purple-600 dark:text-purple-300">Simulación en curso</span>
       </div>
 
       {/* Sticky header */}
-      <div className="sticky top-0 z-20 bg-[#0a0a0f] py-3 border-b border-foreground/[0.06]">
+      <div className="sticky top-0 z-20 bg-base py-3 border-b border-foreground/[0.06]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-sm font-semibold text-foreground truncate max-w-[200px]">{quiz.title}</h2>
@@ -640,7 +640,7 @@ export default function AdminQuizSimulatePage() {
       })}
 
       {/* Sticky submit */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#0a0a0f] border-t border-foreground/[0.06] p-4 z-20">
+      <div className="fixed bottom-0 left-0 right-0 bg-base border-t border-foreground/[0.06] p-4 z-20">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <p className="text-xs text-subtle">{answeredCount} de {totalQuestions} respondidas</p>
           <Button

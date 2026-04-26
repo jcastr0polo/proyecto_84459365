@@ -29,8 +29,8 @@ export default function Card({
     <Tag
       onClick={onClick}
       className={`
-        rounded-xl border border-foreground/[0.08] bg-foreground/[0.03]
-        ${hover ? 'transition-all duration-200 hover:border-foreground/15 hover:bg-foreground/[0.06] cursor-pointer' : ''}
+        rounded-xl border border-slate-200 bg-white dark:border-foreground/[0.08] dark:bg-foreground/[0.03]
+        ${hover ? 'transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 dark:hover:border-foreground/15 dark:hover:bg-foreground/[0.06] cursor-pointer' : ''}
         ${paddingClasses[padding]}
         ${onClick ? 'text-left w-full' : ''}
         ${className}

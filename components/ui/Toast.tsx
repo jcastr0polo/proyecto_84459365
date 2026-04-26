@@ -20,9 +20,9 @@ const ToastContext = createContext<ToastContextType | null>(null);
 let toastId = 0;
 
 const typeStyles: Record<ToastType, string> = {
-  success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
-  error: 'border-red-500/30 bg-red-500/10 text-red-300',
-  info: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300',
+  success: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300',
+  error: 'border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300',
+  info: 'border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-300',
 };
 
 const typeIcons: Record<ToastType, string> = {

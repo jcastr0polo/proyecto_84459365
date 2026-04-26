@@ -1,10 +1,13 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* ─── Enable class-based dark mode (html.dark) ─── */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ─── Theme tokens ─── */
 :root,
 [data-theme="light"] {
-  --base-bg: #ffffff;
+  --base-bg: #f8fafc;       /* slate-50 — softer than pure white */
   --base-fg: #0f172a;       /* slate-900 */
   --muted-fg: #475569;      /* slate-600 — readable secondary text */
   --subtle-fg: #64748b;     /* slate-500 — labels, hints */
@@ -27,6 +30,43 @@
   --selection-bg: rgba(6,182,212,0.20);
   --selection-fg: #22d3ee;
   color-scheme: dark;
+}
+
+/*
+ * ─── Light-mode color remapping ───
+ * The app was designed dark-first. Tailwind v4 stores colors as CSS variables
+ * (--color-*). We remap -400 shades to their -600/-700 equivalents in light mode
+ * so text is readable on white/light backgrounds. This single block fixes ~770
+ * utility usages across all components without touching their JSX.
+ */
+[data-theme="light"] {
+  /* Cyan — primary accent */
+  --color-cyan-400: oklch(60.9% 0.126 221.723);   /* → cyan-600 */
+  --color-cyan-300: oklch(71.5% 0.143 215.221);   /* → cyan-500 */
+
+  /* Emerald — success */
+  --color-emerald-400: oklch(59.6% 0.145 163.225); /* → emerald-600 */
+  --color-emerald-300: oklch(69.6% 0.17 162.48);   /* → emerald-500 */
+
+  /* Amber — warning */
+  --color-amber-400: oklch(66.6% 0.179 58.318);   /* → amber-600 */
+  --color-amber-300: oklch(76.9% 0.188 70.08);    /* → amber-500 */
+
+  /* Red — danger */
+  --color-red-400: oklch(57.7% 0.245 27.325);     /* → red-600 */
+  --color-red-300: oklch(63.7% 0.237 25.331);     /* → red-500 */
+
+  /* Purple — design/simulation */
+  --color-purple-400: oklch(55.8% 0.288 302.321); /* → purple-600 */
+  --color-purple-300: oklch(62.7% 0.265 303.9);   /* → purple-500 */
+
+  /* Blue — programming */
+  --color-blue-400: oklch(54.6% 0.245 262.881);   /* → blue-600 */
+  --color-blue-300: oklch(62.3% 0.214 259.815);   /* → blue-500 */
+
+  /* Rose — leadership */
+  --color-rose-400: oklch(58.6% 0.253 17.585);    /* → rose-600 */
+  --color-rose-300: oklch(64.5% 0.246 16.439);    /* → rose-500 */
 }
 
 @theme inline {
@@ -71,4 +111,29 @@ html:not(.hydrated) .scroll-reveal { opacity: 1; transform: none; }
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/*
+ * ─── Light-mode structural refinements ───
+ * Improve form inputs, modals, dropdowns, and sidebar for light backgrounds.
+ */
+[data-theme="light"] {
+  /* Input fields: more visible border and bg */
+  input, textarea, select {
+    border-color: #cbd5e1 !important; /* slate-300 */
+    background: white !important;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: #0891b2 !important; /* cyan-600 */
+  }
+
+  /* Modal/dropdown panels: subtle shadow for depth */
+  [role="dialog"], [role="alertdialog"] {
+    box-shadow: 0 20px 60px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+  }
+
+  /* Sidebar border for clarity */
+  aside {
+    border-color: #e2e8f0; /* slate-200 */
+  }
 }

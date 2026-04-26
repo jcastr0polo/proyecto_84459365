@@ -45,7 +45,7 @@ export default function Button({
         inline-flex items-center justify-center font-medium
         transition-all duration-150 ease-out
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-        focus-visible:ring-offset-black
+        focus-visible:ring-offset-white dark:focus-visible:ring-offset-black
         disabled:opacity-50 disabled:cursor-not-allowed
         cursor-pointer
         ${variantClasses[variant]}
