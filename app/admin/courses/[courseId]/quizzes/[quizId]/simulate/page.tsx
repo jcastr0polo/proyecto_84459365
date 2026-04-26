@@ -263,7 +263,8 @@ export default function AdminQuizSimulatePage() {
                 <div className="ml-5 space-y-1.5">
                   {question.options.map((opt) => {
                     const isSelected = answer?.selectedOptionId === opt.id;
-                    const isCorrectOpt = opt.weight === 100;
+                    const isCorrectOpt = question.type === 'single' ? opt.weight === 100 : opt.weight > 0;
+                    const isBestOpt = question.type === 'weighted' && opt.weight === Math.max(...question.options.map(o => o.weight));
                     return (
                       <div
                         key={opt.id}
@@ -279,10 +280,11 @@ export default function AdminQuizSimulatePage() {
                       >
                         {isSelected && isCorrectOpt && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
                         {isSelected && !isCorrectOpt && <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />}
-                        {!isSelected && isCorrectOpt && <Eye className="w-4 h-4 text-emerald-400/50 shrink-0" />}
+                        {!isSelected && isBestOpt && <Eye className="w-4 h-4 text-emerald-400/50 shrink-0" />}
+                        {!isSelected && isCorrectOpt && !isBestOpt && <Eye className="w-4 h-4 text-amber-400/50 shrink-0" />}
                         <span className="flex-1">{opt.text}</span>
                         {question.type === 'weighted' && (
-                          <span className="text-[10px] text-faint shrink-0">peso: {opt.weight}</span>
+                          <span className={`text-[10px] shrink-0 font-mono ${opt.weight >= 80 ? 'text-emerald-400' : opt.weight > 0 ? 'text-amber-400' : 'text-faint'}`}>peso: {opt.weight}</span>
                         )}
                       </div>
                     );

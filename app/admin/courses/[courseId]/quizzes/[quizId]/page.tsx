@@ -260,9 +260,9 @@ export default function AdminQuizDetailPage() {
                     {q.type === 'single' ? (
                       <span className={`w-3 h-3 rounded-full border ${opt.weight === 100 ? 'bg-emerald-400 border-emerald-400' : 'border-foreground/20'}`} />
                     ) : (
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${opt.weight >= 80 ? 'bg-emerald-500/20 text-emerald-400' : opt.weight >= 40 ? 'bg-amber-500/20 text-amber-400' : 'bg-foreground/[0.06] text-faint'}`}>{opt.weight}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${opt.weight >= 80 ? 'bg-emerald-500/20 text-emerald-400' : opt.weight > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-foreground/[0.06] text-faint'}`}>{opt.weight}</span>
                     )}
-                    <span className="text-muted">{opt.text}</span>
+                    <span className={opt.weight > 0 ? 'text-muted' : 'text-faint'}>{opt.text}</span>
                   </div>
                 ))}
               </div>
