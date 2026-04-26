@@ -98,11 +98,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const breadcrumbs = useMemo(() => buildBreadcrumbs(pathname), [pathname]);
 
+  // Full-page (no sidebar/header) for focused views: quiz simulation, document viewer
+  const isFullPage = /\/admin\/courses\/[^/]+\/quizzes\/[^/]+\/simulate/.test(pathname)
+    || pathname === '/admin/viewer';
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-base">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-foreground/10 border-t-cyan-400" />
       </div>
+    );
+  }
+
+  if (isFullPage) {
+    return (
+      <ToastProvider>
+        <div className="min-h-screen bg-base">
+          {children}
+        </div>
+      </ToastProvider>
     );
   }
 

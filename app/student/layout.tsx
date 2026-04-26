@@ -58,11 +58,28 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     return pathname.startsWith(href);
   }
 
+  // Full-page (no nav) for focused views: quiz taking, document viewer
+  // Match /student/courses/*/quizzes/[quizId] but NOT /quizzes alone or /quizzes/[id]/results
+  const isFullPage = (
+    /\/student\/courses\/[^/]+\/quizzes\/[^/]+$/.test(pathname)
+    || pathname === '/student/viewer'
+  );
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-base">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-foreground/10 border-t-cyan-400" />
       </div>
+    );
+  }
+
+  if (isFullPage) {
+    return (
+      <ToastProvider>
+        <div className="min-h-screen bg-base">
+          {children}
+        </div>
+      </ToastProvider>
     );
   }
 

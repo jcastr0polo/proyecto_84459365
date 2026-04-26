@@ -24,7 +24,9 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
         prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
         prose-strong:text-muted prose-em:text-muted
         prose-code:text-cyan-300 prose-code:bg-foreground/[0.06] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
-        prose-pre:bg-foreground/[0.04] prose-pre:border prose-pre:border-foreground/[0.08] prose-pre:rounded-lg
+        prose-pre:bg-foreground/[0.04] prose-pre:border prose-pre:border-foreground/[0.08] prose-pre:rounded-lg prose-pre:overflow-x-auto
+        [&_pre_code]:text-xs [&_pre_code]:leading-relaxed [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:whitespace-pre
+        [&_.code-lang]:block [&_.code-lang]:text-[10px] [&_.code-lang]:text-faint [&_.code-lang]:uppercase [&_.code-lang]:tracking-wider [&_.code-lang]:mb-1
         prose-blockquote:border-l-cyan-500/40 prose-blockquote:text-muted
         prose-li:text-muted prose-li:marker:text-subtle
         prose-hr:border-foreground/[0.08]
@@ -47,19 +49,37 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
  * Handles: headings, bold, italic, code blocks, inline code, links, lists, blockquotes, hr, paragraphs
  */
 function markdownToHtml(md: string): string {
-  let html = md
+  // ── Step 1: Extract code blocks BEFORE escaping so indentation is preserved ──
+  const codeBlocks: string[] = [];
+  let processed = md.replace(/```(\w*)\n([\s\S]*?)```/g, (_match, lang: string, code: string) => {
+    const escaped = code.trimEnd()
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const langAttr = lang ? ` data-lang="${lang}"` : '';
+    const langLabel = lang ? `<span class="code-lang">${lang}</span>` : '';
+    const idx = codeBlocks.length;
+    codeBlocks.push(`${langLabel}<pre${langAttr}><code>${escaped}</code></pre>`);
+    return `\n%%CODEBLOCK_${idx}%%\n`;
+  });
+
+  // ── Step 2: Extract inline code before escaping ──
+  const inlineCodes: string[] = [];
+  processed = processed.replace(/`([^`]+)`/g, (_match, code: string) => {
+    const escaped = code
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const idx = inlineCodes.length;
+    inlineCodes.push(`<code>${escaped}</code>`);
+    return `%%INLINE_${idx}%%`;
+  });
+
+  let html = processed
     // Escape HTML (prevent XSS)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-
-  // Code blocks (```)
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_match, _lang, code) => {
-    return `<pre><code>${code.trim()}</code></pre>`;
-  });
-
-  // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
 
   // Headings
   html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
@@ -124,11 +144,15 @@ function markdownToHtml(md: string): string {
   // Ordered lists
   html = html.replace(/^[\s]*\d+\. (.+)$/gm, '<li>$1</li>');
 
-  // Paragraphs — wrap remaining single-line text
-  html = html.replace(/^(?!<[a-z/])((?!<).+)$/gm, '<p>$1</p>');
+  // Paragraphs — wrap remaining single-line text (skip placeholders)
+  html = html.replace(/^(?!<[a-z/])(?!%%CODEBLOCK_)((?!<).+)$/gm, '<p>$1</p>');
 
   // Clean empty paragraphs
   html = html.replace(/<p>\s*<\/p>/g, '');
+
+  // ── Step 3: Restore code blocks and inline codes ──
+  html = html.replace(/%%CODEBLOCK_(\d+)%%/g, (_m, idx) => codeBlocks[parseInt(idx)]);
+  html = html.replace(/%%INLINE_(\d+)%%/g, (_m, idx) => inlineCodes[parseInt(idx)]);
 
   return html;
 }

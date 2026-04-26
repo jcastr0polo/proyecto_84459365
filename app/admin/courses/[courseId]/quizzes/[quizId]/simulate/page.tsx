@@ -146,6 +146,11 @@ export default function AdminQuizSimulatePage() {
     maxBlurs: 2,
   });
 
+  const doSubmitRef = useRef(doSubmit);
+  doSubmitRef.current = doSubmit;
+  const getBlurCountRef = useRef(getBlurCount);
+  getBlurCountRef.current = getBlurCount;
+
   useEffect(() => {
     if (!started || !quiz?.timeLimit || result) return;
     const totalSeconds = quiz.timeLimit * 60;
@@ -155,14 +160,14 @@ export default function AdminQuizSimulatePage() {
         if (prev === null) return null;
         if (prev <= 1) {
           clearInterval(timerRef.current!);
-          doSubmit(true, getBlurCount());
+          doSubmitRef.current(true, getBlurCountRef.current());
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [started, quiz?.timeLimit, result, doSubmit, getBlurCount]);
+  }, [started, quiz?.timeLimit, result]);
 
   function formatTime(seconds: number): string {
     const m = Math.floor(seconds / 60);

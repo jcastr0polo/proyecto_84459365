@@ -138,6 +138,11 @@ export default function StudentTakeQuizPage() {
   });
 
   // Timer
+  const doSubmitRef = useRef(doSubmit);
+  doSubmitRef.current = doSubmit;
+  const getBlurCountRef = useRef(getBlurCount);
+  getBlurCountRef.current = getBlurCount;
+
   useEffect(() => {
     if (!started || !quiz?.timeLimit || result) return;
 
@@ -150,7 +155,7 @@ export default function StudentTakeQuizPage() {
         if (prev <= 1) {
           // Time's up — auto-submit
           clearInterval(timerRef.current!);
-          doSubmit(true, getBlurCount());
+          doSubmitRef.current(true, getBlurCountRef.current());
           return 0;
         }
         return prev - 1;
@@ -160,7 +165,7 @@ export default function StudentTakeQuizPage() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [started, quiz?.timeLimit, result, doSubmit, getBlurCount]);
+  }, [started, quiz?.timeLimit, result]);
 
   function formatTime(seconds: number): string {
     const m = Math.floor(seconds / 60);
