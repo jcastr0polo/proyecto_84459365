@@ -733,9 +733,26 @@ export const quizAttemptSchema = z.object({
   flagged: z.boolean(),
 });
 
+export const quizSimulationSchema = z.object({
+  id: z.string().min(1),
+  quizId: z.string().min(1),
+  courseId: z.string().min(1),
+  adminId: z.string().min(1),
+  adminName: z.string().min(1),
+  quizTitle: z.string().min(1),
+  answers: z.array(quizAnswerSchema),
+  score: z.number().min(0),
+  maxScore: z.number().min(0),
+  percentage: z.number().min(0).max(100),
+  blurCount: z.number().int().min(0),
+  autoSubmitted: z.boolean(),
+  simulatedAt: z.string(),
+});
+
 // Tipos inferidos — Quizzes
 export type QuizZod = z.infer<typeof quizSchema>;
 export type CreateQuizZod = z.infer<typeof createQuizSchema>;
 export type UpdateQuizZod = z.infer<typeof updateQuizSchema>;
 export type SubmitQuizZod = z.infer<typeof submitQuizSchema>;
 export type QuizAttemptZod = z.infer<typeof quizAttemptSchema>;
+export type QuizSimulationZod = z.infer<typeof quizSimulationSchema>;

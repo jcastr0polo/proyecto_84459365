@@ -9,8 +9,8 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import { useAntiCheat } from '@/components/quizzes/useAntiCheat';
 import ConfirmModal from '@/components/ui/ConfirmModal';
-import type { Quiz, QuizAnswer } from '@/lib/types';
-import { Clock, Shield, AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, Eye } from 'lucide-react';
+import type { Quiz, QuizAnswer, QuizSimulation } from '@/lib/types';
+import { Clock, Shield, AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, Eye, History } from 'lucide-react';
 
 interface SimulationResult {
   attempt: {
@@ -44,6 +44,7 @@ export default function AdminQuizSimulatePage() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [blurWarnings, setBlurWarnings] = useState(0);
   const [confirmIncomplete, setConfirmIncomplete] = useState(false);
+  const [history, setHistory] = useState<QuizSimulation[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   function shuffleArray<T>(arr: T[], seed: number): T[] {
@@ -73,6 +74,18 @@ export default function AdminQuizSimulatePage() {
   }, [courseId, quizId, toast, router]);
 
   useEffect(() => { fetchQuiz(); }, [fetchQuiz]);
+
+  const fetchHistory = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/courses/${courseId}/quizzes/${quizId}/simulations`);
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data.simulations ?? []);
+      }
+    } catch { /* silent */ }
+  }, [courseId, quizId]);
+
+  useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
   const doSubmit = useCallback(async (auto: boolean, finalBlurCount: number) => {
     if (submitting || result) return;
@@ -111,11 +124,12 @@ export default function AdminQuizSimulatePage() {
       }
       setResult(data);
       toast(data.message || 'Simulación completada', auto ? 'info' : 'success');
+      fetchHistory();
     } catch {
       toast('Error de conexión', 'error');
       setSubmitting(false);
     }
-  }, [submitting, result, answers, quiz, courseId, quizId, toast]);
+  }, [submitting, result, answers, quiz, courseId, quizId, toast, fetchHistory]);
 
   const { getBlurCount } = useAntiCheat({
     enabled: started && !result && (quiz?.lockBrowser ?? false),
@@ -344,6 +358,38 @@ export default function AdminQuizSimulatePage() {
             Iniciar Simulación
           </button>
         </Card>
+
+        {/* Historial de simulaciones */}
+        {history.length > 0 && (
+          <Card padding="lg">
+            <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3 flex items-center gap-2">
+              <History className="w-3.5 h-3.5" /> Historial de Simulaciones ({history.length})
+            </h3>
+            <div className="space-y-2">
+              {history.map((sim) => (
+                <div key={sim.id} className="flex items-center justify-between p-3 rounded-lg bg-foreground/[0.02] border border-foreground/[0.06]">
+                  <div className="min-w-0">
+                    <p className="text-xs text-subtle">
+                      {new Date(sim.simulatedAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {sim.autoSubmitted && <Badge variant="warning" size="sm">Auto-enviado</Badge>}
+                      {sim.blurCount > 0 && <span className="text-[10px] text-amber-400">{sim.blurCount} blur</span>}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0 ml-3">
+                    <p className={`text-lg font-bold tabular-nums ${
+                      sim.percentage >= 70 ? 'text-emerald-400' : sim.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
+                    }`}>
+                      {sim.percentage}%
+                    </p>
+                    <p className="text-[10px] text-subtle">{sim.score}/{sim.maxScore} pts</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
       </div>
     );
   }

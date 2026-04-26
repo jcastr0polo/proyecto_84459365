@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { HomeDataSchema, AppConfigSchema } from './validators';
-import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject, Corte, Quiz, QuizAttempt } from './types';
-import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema, corteSchema, quizSchema, quizAttemptSchema } from './schemas';
+import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject, Corte, Quiz, QuizAttempt, QuizSimulation } from './types';
+import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema, corteSchema, quizSchema, quizAttemptSchema, quizSimulationSchema } from './schemas';
 import { z } from 'zod';
 import { writeToBlob, writeToBlobVerified, readFromBlobDirect, withFileLock } from './blobSync';
 
@@ -647,6 +647,19 @@ export async function getAttemptsByQuiz(quizId: string): Promise<QuizAttempt[]> 
 export async function getAttemptsByStudent(studentId: string, quizId: string): Promise<QuizAttempt[]> {
   const attempts = await readQuizAttemptsFresh();
   return attempts.filter((a) => a.studentId === studentId && a.quizId === quizId);
+}
+
+// ────────────────────────────────────────────────────────────
+// Quiz Simulations (Simulaciones de parcial por docente)
+// ────────────────────────────────────────────────────────────
+
+export async function readQuizSimulationsFresh(): Promise<QuizSimulation[]> {
+  const raw = await readJsonFileFresh<unknown[]>('quiz-simulations.json');
+  return z.array(quizSimulationSchema).parse(raw) as QuizSimulation[];
+}
+
+export async function writeQuizSimulations(simulations: QuizSimulation[]): Promise<void> {
+  await writeJsonFile('quiz-simulations.json', simulations);
 }
 
 // ────────────────────────────────────────────────────────────

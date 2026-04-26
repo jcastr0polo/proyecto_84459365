@@ -19,12 +19,14 @@ import {
   getQuizById,
   readQuizAttemptsFresh,
   writeQuizAttempts,
+  readQuizSimulationsFresh,
+  writeQuizSimulations,
   isStudentEnrolled,
   withFileLock,
   parseDateColombia,
   nowColombiaISO,
 } from '@/lib/dataService';
-import type { QuizAttempt, QuizAnswer } from '@/lib/types';
+import type { QuizAttempt, QuizAnswer, QuizSimulation } from '@/lib/types';
 
 type RouteParams = { params: Promise<{ id: string; quizId: string }> };
 
@@ -163,10 +165,33 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
 
       // Simulación: siempre muestra resultados completos
       if (isSimulation) {
+        // Guardar simulación en quiz-simulations.json
+        const simulation: QuizSimulation = {
+          id: `sim-${uuidv4()}`,
+          quizId,
+          courseId: id,
+          adminId: user.id,
+          adminName: `${user.firstName} ${user.lastName}`,
+          quizTitle: quiz.title,
+          answers: gradedAnswers,
+          score: totalScore,
+          maxScore,
+          percentage,
+          blurCount,
+          autoSubmitted,
+          simulatedAt: nowColombiaISO(),
+        };
+
+        await withFileLock('quiz-simulations.json', async () => {
+          const sims = await readQuizSimulationsFresh();
+          sims.push(simulation);
+          await writeQuizSimulations(sims);
+        });
+
         return NextResponse.json({
           attempt,
           simulation: true,
-          message: '🧪 Simulación completada — no se guardó ningún intento',
+          message: '🧪 Simulación completada y guardada',
         }, { status: 200 });
       }
 

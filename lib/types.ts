@@ -829,6 +829,26 @@ export interface QuizAttempt {
 }
 
 /**
+ * QuizSimulation — Simulación de parcial por el docente
+ * Se almacena en /data/quiz-simulations.json
+ */
+export interface QuizSimulation {
+  id: string;                          // UUID
+  quizId: string;                      // FK a Quiz.id
+  courseId: string;                     // FK a Course.id
+  adminId: string;                     // FK a User.id (docente)
+  adminName: string;                   // Nombre del docente
+  quizTitle: string;                   // Título del parcial (snapshot)
+  answers: QuizAnswer[];
+  score: number;
+  maxScore: number;
+  percentage: number;
+  blurCount: number;
+  autoSubmitted: boolean;
+  simulatedAt: string;                 // ISO 8601
+}
+
+/**
  * CreateQuizRequest — Datos para crear un parcial
  */
 export interface CreateQuizRequest {

@@ -7,11 +7,11 @@ const DATA_FILES = [
   'config.json', 'home.json', 'users.json', 'sessions.json',
   'semesters.json', 'courses.json', 'enrollments.json', 'activities.json',
   'submissions.json', 'grades.json', 'prompts.json', 'projects.json', 'audit.json',
-  'cortes.json', 'quizzes.json', 'quiz-attempts.json',
+  'cortes.json', 'quizzes.json', 'quiz-attempts.json', 'quiz-simulations.json',
 ];
 
 // Archivos sensibles: advertir antes de hacer seed
-const SENSITIVE_FILES = ['users.json', 'sessions.json', 'enrollments.json', 'grades.json', 'submissions.json', 'audit.json', 'quiz-attempts.json'];
+const SENSITIVE_FILES = ['users.json', 'sessions.json', 'enrollments.json', 'grades.json', 'submissions.json', 'audit.json', 'quiz-attempts.json', 'quiz-simulations.json'];
 
 interface DiagnosticData {
   environment: {
