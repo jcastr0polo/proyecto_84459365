@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
+import DateTimePicker from '@/components/ui/DateTimePicker';
 import QuestionEditor, { type QuestionData } from './QuestionEditor';
 import QuestionImporter from './QuestionImporter';
 import { Plus, Trash2, Upload } from 'lucide-react';
@@ -222,25 +223,23 @@ export default function QuizForm({ onSubmit, loading, initial }: QuizFormProps) 
           </div>
 
           {/* Dates */}
-          <div>
-            <label className="text-xs font-medium text-muted mb-1.5 block">Disponible desde</label>
-            <input
-              type="datetime-local"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-2 py-2.5 text-sm rounded-lg border border-foreground/10 bg-foreground/[0.04] text-foreground outline-none focus:border-cyan-500/50"
-            />
-          </div>
+          <DateTimePicker
+            id="quiz-start-date"
+            label="Disponible desde"
+            value={startDate}
+            onChange={setStartDate}
+            max={endDate || undefined}
+            hint="Fecha y hora en que se abre el parcial"
+          />
 
-          <div>
-            <label className="text-xs font-medium text-muted mb-1.5 block">Disponible hasta</label>
-            <input
-              type="datetime-local"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-2 py-2.5 text-sm rounded-lg border border-foreground/10 bg-foreground/[0.04] text-foreground outline-none focus:border-cyan-500/50"
-            />
-          </div>
+          <DateTimePicker
+            id="quiz-end-date"
+            label="Disponible hasta"
+            value={endDate}
+            onChange={setEndDate}
+            min={startDate || undefined}
+            hint="Fecha y hora en que se cierra"
+          />
         </div>
       </div>
 
