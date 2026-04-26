@@ -29,6 +29,12 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
         prose-li:text-muted prose-li:marker:text-subtle
         prose-hr:border-foreground/[0.08]
         [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5
+        [&_table]:w-full [&_table]:border-collapse [&_table]:text-sm [&_table]:my-4
+        [&_th]:text-left [&_th]:text-xs [&_th]:font-semibold [&_th]:text-subtle [&_th]:uppercase [&_th]:tracking-wider
+        [&_th]:px-3 [&_th]:py-2 [&_th]:border-b [&_th]:border-foreground/[0.1] [&_th]:bg-foreground/[0.03]
+        [&_td]:px-3 [&_td]:py-2 [&_td]:border-b [&_td]:border-foreground/[0.06] [&_td]:text-muted
+        [&_tr:last-child_td]:border-b-0
+        [&_tr:hover_td]:bg-foreground/[0.02]
         ${className}
       `}
       dangerouslySetInnerHTML={{ __html: html }}
@@ -74,6 +80,42 @@ function markdownToHtml(md: string): string {
 
   // Blockquotes
   html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+  // Tables: detect lines with | separators
+  html = html.replace(
+    /((?:^\|.+\|[ ]*\n)+)/gm,
+    (_match, tableBlock: string) => {
+      const rows = tableBlock.trim().split('\n').filter(Boolean);
+      if (rows.length < 2) return tableBlock;
+
+      // Check if second row is separator (|---|---|)
+      const isSep = /^\|[\s:-]+\|/.test(rows[1]);
+      const headerRow = rows[0];
+      const dataRows = isSep ? rows.slice(2) : rows.slice(1);
+
+      function parseRow(row: string): string[] {
+        return row.split('|').slice(1, -1).map((c) => c.trim());
+      }
+
+      const headerCells = parseRow(headerRow);
+      let tableHtml = '<table><thead><tr>';
+      for (const cell of headerCells) {
+        tableHtml += `<th>${cell}</th>`;
+      }
+      tableHtml += '</tr></thead><tbody>';
+
+      for (const row of dataRows) {
+        const cells = parseRow(row);
+        tableHtml += '<tr>';
+        for (const cell of cells) {
+          tableHtml += `<td>${cell}</td>`;
+        }
+        tableHtml += '</tr>';
+      }
+      tableHtml += '</tbody></table>';
+      return tableHtml;
+    }
+  );
 
   // Unordered lists
   html = html.replace(/^[\s]*[-*] (.+)$/gm, '<li>$1</li>');
