@@ -193,7 +193,7 @@ export default function StudentActivitiesPage() {
 
                   {/* Countdown or delivered date */}
                   {!isPastDue && deliveryStatus === 'pending' && (
-                    <Countdown targetDate={activity.dueDate} compact className="text-xs" />
+                    <Countdown targetDate={activity.dueDate} targetTime={activity.dueTime || '23:59'} compact className="text-xs" />
                   )}
                   {sub && (
                     <span className="text-[11px] text-subtle">

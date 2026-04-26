@@ -92,7 +92,7 @@ export default function ActivityDetail({
         {isPublished && !isPastDue && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-subtle">Tiempo restante:</span>
-            <Countdown targetDate={activity.dueDate} />
+            <Countdown targetDate={activity.dueDate} targetTime={activity.dueTime || '23:59'} />
           </div>
         )}
         {isPastDue && activity.status !== 'draft' && (

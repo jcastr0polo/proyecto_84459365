@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { parseDateTimeColombia } from '@/lib/dateUtils';
 
 interface CountdownProps {
   targetDate: string;
+  targetTime?: string;
   className?: string;
   compact?: boolean;
   showExpired?: boolean;
@@ -17,8 +19,9 @@ interface TimeLeft {
   expired: boolean;
 }
 
-function calculateTimeLeft(target: string): TimeLeft {
-  const diff = new Date(target).getTime() - Date.now();
+function calculateTimeLeft(target: string, time?: string): TimeLeft {
+  const deadline = parseDateTimeColombia(target, time || '23:59');
+  const diff = deadline.getTime() - Date.now();
   if (diff <= 0) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0, expired: true };
   }
@@ -37,20 +40,21 @@ function calculateTimeLeft(target: string): TimeLeft {
  */
 export default function Countdown({
   targetDate,
+  targetTime,
   className = '',
   compact = false,
   showExpired = true,
 }: CountdownProps) {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calculateTimeLeft(targetDate));
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calculateTimeLeft(targetDate, targetTime));
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const tl = calculateTimeLeft(targetDate);
+      const tl = calculateTimeLeft(targetDate, targetTime);
       setTimeLeft(tl);
       if (tl.expired) clearInterval(timer);
     }, 1000);
     return () => clearInterval(timer);
-  }, [targetDate]);
+  }, [targetDate, targetTime]);
 
   if (timeLeft.expired) {
     if (!showExpired) return null;

@@ -122,7 +122,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
         {!isLate && (
           <div className="mt-3 flex items-center gap-2">
             <span className="text-xs text-subtle">Tiempo restante:</span>
-            <Countdown targetDate={activity.dueDate} compact />
+            <Countdown targetDate={activity.dueDate} targetTime={activity.dueTime || '23:59'} compact />
           </div>
         )}
         {isLate && activity.allowLateSubmission && (

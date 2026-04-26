@@ -120,7 +120,7 @@ export default function ActivityCard({ activity, onClick }: ActivityCardProps) {
 
         {/* Countdown or past due */}
         {isPublished && !isPastDue && (
-          <Countdown targetDate={activity.dueDate} compact className="text-xs" />
+          <Countdown targetDate={activity.dueDate} targetTime={activity.dueTime || '23:59'} compact className="text-xs" />
         )}
         {isPastDue && activity.status !== 'draft' && (
           <span className="text-red-400/70 text-[11px]">Vencida</span>
