@@ -17,7 +17,7 @@ import { getUserByEmail, readUsersFresh, writeUsers, nowColombiaISO } from '@/li
 import { verifyPassword, createSession, setSessionCookie, cleanExpiredSessions, generateSessionToken } from '@/lib/auth';
 import { toSafeUser } from '@/lib/withAuth';
 import { withFileLock } from '@/lib/dataService';
-import { logAudit } from '@/lib/auditService';
+import { logAudit, extractRequestMeta } from '@/lib/auditService';
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
@@ -96,6 +96,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       userId: user.id,
       userName: `${user.firstName} ${user.lastName}`,
       details: `Login exitoso (${user.role})`,
+      ...extractRequestMeta(request),
     });
 
     // 8. Preparar respuesta con cookie

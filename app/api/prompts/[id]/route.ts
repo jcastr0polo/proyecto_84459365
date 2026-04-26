@@ -10,7 +10,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updatePromptSchema } from '@/lib/schemas';
 import { getPromptById, readPromptsFresh, writePrompts, withFileLock, nowColombiaISO } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 
 export async function GET(
   request: Request,
@@ -76,7 +76,7 @@ export async function PUT(
 
         await dispatchWrite(
           () => writePrompts(prompts),
-          { action: 'update', entity: 'prompt', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó prompt "${prompts[idx].title}" (v${prompts[idx].version})` }
+          { action: 'update', entity: 'prompt', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó prompt "${prompts[idx].title}" (v${prompts[idx].version})`, before: auditSnapshot(existing), after: auditSnapshot(prompts[idx]), ...extractRequestMeta(request) }
         );
 
         return NextResponse.json({ prompt: prompts[idx] });

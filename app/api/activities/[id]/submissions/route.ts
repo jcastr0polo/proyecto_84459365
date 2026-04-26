@@ -16,7 +16,7 @@ import {
 } from '@/lib/dataService';
 import { uploadFile, UploadError } from '@/lib/uploadService';
 import { submitWork, SubmissionError } from '@/lib/submissionService';
-import { logAudit } from '@/lib/auditService';
+import { logAudit, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { SubmissionAttachment, SubmissionLink, SubmissionWithDetails } from '@/lib/types';
 
 /**
@@ -180,6 +180,8 @@ export async function POST(
         action: 'create', entity: 'submission', entityId: submission.id,
         userId: user.id, userName: `${user.firstName} ${user.lastName}`,
         details: `Entregó actividad "${activity.title}" (v${submission.version})`,
+        after: auditSnapshot(submission),
+        ...extractRequestMeta(request),
       });
 
       return NextResponse.json(

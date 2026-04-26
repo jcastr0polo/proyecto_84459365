@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateCorteSchema } from '@/lib/schemas';
 import { readCortesFresh, writeCortes, readActivitiesFresh, withFileLock, nowColombiaISO } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 
 /**
  * PUT /api/courses/[id]/cortes/[corteId]
@@ -48,6 +48,8 @@ export async function PUT(
           }
         }
 
+        const before = { ...allCortes[idx] };
+
         if (updates.name !== undefined) allCortes[idx].name = updates.name;
         if (updates.weight !== undefined) allCortes[idx].weight = updates.weight;
         if (updates.order !== undefined) allCortes[idx].order = updates.order;
@@ -62,6 +64,9 @@ export async function PUT(
             userId: user.id,
             userName: `${user.firstName} ${user.lastName}`,
             details: `Editó corte "${allCortes[idx].name}"`,
+            before: auditSnapshot(before),
+            after: auditSnapshot(allCortes[idx]),
+            ...extractRequestMeta(request),
           }
         );
 
@@ -125,6 +130,8 @@ export async function DELETE(
             userId: user.id,
             userName: `${user.firstName} ${user.lastName}`,
             details: `Eliminó corte "${removed.name}" (${removed.weight}%)`,
+            before: auditSnapshot(removed),
+            ...extractRequestMeta(request),
           }
         );
       });

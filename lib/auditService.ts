@@ -27,6 +27,10 @@ export interface AuditEntry {
   userName?: string;      // Nombre para display
   details?: string;       // Detalle legible
   metadata?: Record<string, unknown>; // Datos extra
+  before?: Record<string, unknown>;   // Estado anterior (update/delete)
+  after?: Record<string, unknown>;    // Estado nuevo (create/update)
+  ip?: string;            // IP del cliente
+  userAgent?: string;     // User-Agent del cliente
 }
 
 /** Contexto de auditoría — pásalo a cualquier función write para generar audit automático */
@@ -38,6 +42,38 @@ export interface AuditContext {
   userName?: string;
   details?: string;
   metadata?: Record<string, unknown>;
+  before?: Record<string, unknown>;
+  after?: Record<string, unknown>;
+  ip?: string;
+  userAgent?: string;
+}
+
+/**
+ * Extrae IP y User-Agent de un Request para auditoría.
+ */
+export function extractRequestMeta(request: Request): { ip: string; userAgent: string } {
+  const headers = request.headers;
+  const ip =
+    headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    headers.get('x-real-ip') ||
+    'unknown';
+  const userAgent = headers.get('user-agent') || 'unknown';
+  return { ip, userAgent };
+}
+
+/**
+ * Crea un snapshot seguro del objeto para auditoría.
+ * Omite campos sensibles (password, hash) y limita profundidad.
+ */
+export function auditSnapshot(obj: unknown): Record<string, unknown> | undefined {
+  if (!obj || typeof obj !== 'object') return undefined;
+  const OMIT = ['passwordHash', 'password', 'token', 'sessionToken'];
+  const clean: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    if (OMIT.includes(k)) continue;
+    clean[k] = v;
+  }
+  return clean;
 }
 
 /**

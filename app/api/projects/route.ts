@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { readProjectsFresh, writeProjects, getProjectByStudentAndCourse, readCoursesFresh, readUsersFresh, readEnrollmentsFresh, withFileLock, nowColombiaISO } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import { createProjectSchema } from '@/lib/schemas';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
       pjs.push(newProject);
       await dispatchWrite(
         () => writeProjects(pjs),
-        { action: 'create', entity: 'project', entityId: newProject.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Registró proyecto "${newProject.projectName}"` }
+        { action: 'create', entity: 'project', entityId: newProject.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Registró proyecto "${newProject.projectName}"`, after: auditSnapshot(newProject), ...extractRequestMeta(request) }
       );
       return pjs;
     }).catch((err) => {

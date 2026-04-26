@@ -19,7 +19,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { readAppConfig, writeJsonFile, withFileLock } from '@/lib/dataService';
 import { withAuth } from '@/lib/withAuth';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { AppConfig } from '@/lib/types';
 
 /**
@@ -95,6 +95,9 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
             userId: user.id,
             userName: `${user.firstName} ${user.lastName}`,
             details: `Actualizó configuración: ${Object.keys(body).join(', ')}`,
+            before: auditSnapshot(current),
+            after: auditSnapshot(updated),
+            ...extractRequestMeta(request),
           }
         );
       });

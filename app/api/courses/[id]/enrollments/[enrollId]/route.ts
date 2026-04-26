@@ -9,7 +9,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { readEnrollmentsFresh, writeEnrollments, getCourseById, withFileLock, nowColombiaISO } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 
 /**
  * DELETE /api/courses/[id]/enrollments/[enrollId]
@@ -47,11 +47,12 @@ export async function DELETE(
       }
 
       // RN-INS-05: Soft-delete
+      const before = { ...enrollments[index] };
       enrollments[index].status = 'withdrawn';
       enrollments[index].withdrawnAt = nowColombiaISO();
       await dispatchWrite(
         () => writeEnrollments(enrollments),
-        { action: 'delete', entity: 'enrollment', entityId: enrollId, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Retiró estudiante del curso ${course.name}` }
+        { action: 'delete', entity: 'enrollment', entityId: enrollId, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Retiró estudiante del curso ${course.name}`, before: auditSnapshot(before), ...extractRequestMeta(request) }
       );
 
       return NextResponse.json({

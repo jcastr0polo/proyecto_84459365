@@ -12,7 +12,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { gradeSubmissionBatch, GradeError } from '@/lib/gradeService';
 import type { BatchGradeItem } from '@/lib/gradeService';
-import { logAudit } from '@/lib/auditService';
+import { logAudit, extractRequestMeta } from '@/lib/auditService';
 
 export async function POST(request: Request): Promise<NextResponse> {
   return withAuth(request, async (user) => {
@@ -59,6 +59,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         action: 'create', entity: 'grade', entityId: 'batch',
         userId: user.id, userName: `${user.firstName} ${user.lastName}`,
         details: `Calificación en lote: ${result.saved} guardadas, ${result.errors.length} errores`,
+        metadata: { count: result.saved },
+        ...extractRequestMeta(request),
       });
 
       return NextResponse.json(result, { status: result.errors.length > 0 ? 207 : 200 });

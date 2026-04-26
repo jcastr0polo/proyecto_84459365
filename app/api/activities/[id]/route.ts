@@ -20,7 +20,7 @@ import {
   parseDateColombia,
   parseDateTimeColombia,
 } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { Activity } from '@/lib/types';
 
 /**
@@ -157,7 +157,7 @@ export async function PUT(
         activities[index] = updatedActivity;
         await dispatchWrite(
           () => writeActivities(activities),
-          { action: 'update', entity: 'activity', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó actividad "${updatedActivity.title}"` }
+          { action: 'update', entity: 'activity', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó actividad "${updatedActivity.title}"`, before: auditSnapshot(existing), after: auditSnapshot(updatedActivity), ...extractRequestMeta(request) }
         );
 
         return NextResponse.json({

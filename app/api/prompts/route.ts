@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { withAuth } from '@/lib/withAuth';
 import { createPromptSchema } from '@/lib/schemas';
 import { readPromptsFresh, writePrompts, getPromptsByCourse, getCourseById, withFileLock, nowColombiaISO } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { AIPrompt } from '@/lib/types';
 
 export async function GET(request: Request): Promise<NextResponse> {
@@ -90,7 +90,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         prompts.push(prompt);
         await dispatchWrite(
           () => writePrompts(prompts),
-          { action: 'create', entity: 'prompt', entityId: prompt.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó prompt "${prompt.title}"` }
+          { action: 'create', entity: 'prompt', entityId: prompt.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó prompt "${prompt.title}"`, after: auditSnapshot(prompt), ...extractRequestMeta(request) }
         );
       });
 

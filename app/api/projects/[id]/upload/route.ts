@@ -9,7 +9,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { readProjectsFresh, writeProjects, getCourseById, withFileLock, nowColombiaISO } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import { put } from '@vercel/blob';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -141,7 +141,7 @@ export async function POST(
       }
       await dispatchWrite(
         () => writeProjects(freshProjects),
-        { action: 'upload', entity: 'project', entityId: project.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Subió documento al proyecto "${project.projectName}"` }
+        { action: 'upload', entity: 'project', entityId: project.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Subió documento al proyecto "${project.projectName}"`, after: auditSnapshot({ id: project.id, documentUrl }), ...extractRequestMeta(request) }
       );
       return freshProjects[freshIndex !== -1 ? freshIndex : 0];
     });

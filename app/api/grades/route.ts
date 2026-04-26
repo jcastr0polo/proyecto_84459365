@@ -14,7 +14,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createGradeSchema } from '@/lib/schemas';
 import { gradeSubmission, GradeError } from '@/lib/gradeService';
-import { logAudit } from '@/lib/auditService';
+import { logAudit, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import { toSafeUser } from '@/lib/withAuth';
 import { getUserById } from '@/lib/dataService';
 
@@ -41,6 +41,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         action: 'create', entity: 'grade', entityId: grade.id,
         userId: user.id, userName: `${user.firstName} ${user.lastName}`,
         details: `Calificó a ${student ? `${student.firstName} ${student.lastName}` : grade.studentId} con ${grade.score}`,
+        after: auditSnapshot(grade),
+        ...extractRequestMeta(request),
       });
       const grader = toSafeUser(user);
 

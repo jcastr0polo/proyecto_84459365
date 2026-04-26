@@ -7,7 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import { validateSession, destroySession, clearSessionCookie } from '@/lib/auth';
-import { logAudit } from '@/lib/auditService';
+import { logAudit, extractRequestMeta } from '@/lib/auditService';
 import { getUserById } from '@/lib/dataService';
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -28,6 +28,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         userId: session.userId,
         userName: user ? `${user.firstName} ${user.lastName}` : session.userId,
         details: 'Cerró sesión',
+        ...extractRequestMeta(request),
       });
     }
 

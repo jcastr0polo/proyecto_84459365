@@ -11,7 +11,7 @@ import { toSafeUser } from '@/lib/withAuth';
 import { enrollStudentSchema } from '@/lib/schemas';
 import { readEnrollmentsFresh, readCoursesFresh, getUserById } from '@/lib/dataService';
 import { enrollStudent, EnrollmentError } from '@/lib/enrollmentService';
-import { logAudit } from '@/lib/auditService';
+import { logAudit, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { EnrollmentWithStudent } from '@/lib/types';
 
 /**
@@ -96,6 +96,8 @@ export async function POST(
         userId: user.id,
         userName: `${user.firstName} ${user.lastName}`,
         details: `Inscribió a ${parsed.data.firstName} ${parsed.data.lastName} en curso ${id}${result.created ? ' (nuevo usuario)' : ''}`,
+        after: auditSnapshot(result.enrollment),
+        ...extractRequestMeta(request),
       });
 
       return NextResponse.json(

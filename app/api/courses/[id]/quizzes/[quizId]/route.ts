@@ -19,7 +19,7 @@ import {
   withFileLock,
   nowColombiaISO,
 } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { QuizQuestion, QuizOption } from '@/lib/types';
 
 type RouteParams = { params: Promise<{ id: string; quizId: string }> };
@@ -124,6 +124,7 @@ export async function PUT(request: Request, { params }: RouteParams): Promise<Ne
         }
 
         const quiz = quizzes[index];
+        const quizBefore = { ...quiz, questions: quiz.questions.length + ' preguntas' };
 
         // Aplicar actualizaciones simples
         if (updates.title !== undefined) quiz.title = updates.title;
@@ -171,6 +172,9 @@ export async function PUT(request: Request, { params }: RouteParams): Promise<Ne
             userId: user.id,
             userName: `${user.firstName} ${user.lastName}`,
             details: `Editó parcial "${quiz.title}"`,
+            before: auditSnapshot(quizBefore),
+            after: auditSnapshot({ ...quiz, questions: quiz.questions.length + ' preguntas' }),
+            ...extractRequestMeta(request),
           }
         );
 
@@ -207,6 +211,8 @@ export async function DELETE(request: Request, { params }: RouteParams): Promise
           userId: user.id,
           userName: `${user.firstName} ${user.lastName}`,
           details: `Eliminó parcial "${removed.title}"`,
+          before: auditSnapshot({ ...removed, questions: removed.questions.length + ' preguntas' }),
+          ...extractRequestMeta(request),
         }
       );
 

@@ -13,7 +13,7 @@ import { withAuth } from '@/lib/withAuth';
 import { toSafeUser } from '@/lib/withAuth';
 import { getUserById, getEnrollmentsByStudent, getCourseById, readUsersFresh, writeUsers, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { hashPassword } from '@/lib/auth';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 
 /**
  * GET /api/students/[id]
@@ -90,7 +90,7 @@ export async function PATCH(
         users[idx].updatedAt = now;
         await dispatchWrite(
           () => writeUsers(users),
-          { action: 'password', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `Reset password de ${studentName}` }
+          { action: 'password', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `Reset password de ${studentName}`, ...extractRequestMeta(request) }
         );
         return NextResponse.json({
           message: `Contraseña restablecida al documento (${users[idx].documentNumber})`,
@@ -103,7 +103,7 @@ export async function PATCH(
         users[idx].updatedAt = now;
         await dispatchWrite(
           () => writeUsers(users),
-          { action: 'update', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `${users[idx].isActive ? 'Activó' : 'Desactivó'} a ${studentName}` }
+          { action: 'update', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `${users[idx].isActive ? 'Activó' : 'Desactivó'} a ${studentName}`, before: auditSnapshot({ isActive: !users[idx].isActive }), after: auditSnapshot({ isActive: users[idx].isActive }), ...extractRequestMeta(request) }
         );
         return NextResponse.json({
           message: users[idx].isActive ? 'Estudiante activado' : 'Estudiante desactivado',
@@ -124,11 +124,12 @@ export async function PATCH(
         if (duplicate) {
           return NextResponse.json({ error: 'Ese email ya está registrado por otro usuario' }, { status: 409 });
         }
+        const oldEmail = users[idx].email;
         users[idx].email = trimmed;
         users[idx].updatedAt = now;
         await dispatchWrite(
           () => writeUsers(users),
-          { action: 'update', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `Email de ${studentName} → ${trimmed}` }
+          { action: 'update', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `Email de ${studentName} → ${trimmed}`, before: auditSnapshot({ email: oldEmail }), after: auditSnapshot({ email: trimmed }), ...extractRequestMeta(request) }
         );
         return NextResponse.json({
           message: `Email actualizado a ${trimmed}`,
@@ -149,11 +150,12 @@ export async function PATCH(
         if (duplicate) {
           return NextResponse.json({ error: 'Ese documento ya está registrado por otro usuario' }, { status: 409 });
         }
+        const oldDocument = users[idx].documentNumber;
         users[idx].documentNumber = trimmed;
         users[idx].updatedAt = now;
         await dispatchWrite(
           () => writeUsers(users),
-          { action: 'update', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `Documento de ${studentName} → ${trimmed}` }
+          { action: 'update', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `Documento de ${studentName} → ${trimmed}`, before: auditSnapshot({ documentNumber: oldDocument }), after: auditSnapshot({ documentNumber: trimmed }), ...extractRequestMeta(request) }
         );
         return NextResponse.json({
           message: `Documento actualizado a ${trimmed}`,

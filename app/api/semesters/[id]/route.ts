@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateSemesterSchema } from '@/lib/schemas';
 import { readSemestersFresh, writeSemesters, getSemesterById, withFileLock } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 
 /**
  * GET /api/semesters/[id] — Detalle de un semestre
@@ -71,6 +71,8 @@ export async function PUT(
           );
         }
 
+        const before = { ...semesters[index] };
+
         // Validar fechas si se proporcionan
         const newStartDate = updates.startDate ?? semesters[index].startDate;
         const newEndDate = updates.endDate ?? semesters[index].endDate;
@@ -98,7 +100,7 @@ export async function PUT(
 
         await dispatchWrite(
           () => writeSemesters(semesters),
-          { action: 'update', entity: 'semester', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó semestre "${semesters[index].label}"` }
+          { action: 'update', entity: 'semester', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó semestre "${semesters[index].label}"`, before: auditSnapshot(before), after: auditSnapshot(semesters[index]), ...extractRequestMeta(request) }
         );
 
         return NextResponse.json({ semester: semesters[index] });

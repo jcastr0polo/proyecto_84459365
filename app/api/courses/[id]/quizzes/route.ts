@@ -18,7 +18,7 @@ import {
   nowColombiaISO,
   parseDateColombia,
 } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { Quiz, QuizQuestion, QuizOption } from '@/lib/types';
 
 /**
@@ -150,6 +150,8 @@ export async function POST(
             userId: user.id,
             userName: `${user.firstName} ${user.lastName}`,
             details: `Creó parcial "${quiz.title}" (${quiz.type}) en curso ${course.name}`,
+            after: auditSnapshot({ ...quiz, questions: quiz.questions.length + ' preguntas' }),
+            ...extractRequestMeta(request),
           }
         );
       });

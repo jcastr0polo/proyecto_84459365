@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { list } from '@vercel/blob';
 import { seedAllToBlob, seedFilesToBlob, DATA_FILES } from '@/lib/dataService';
-import { logAudit } from '@/lib/auditService';
+import { logAudit, extractRequestMeta } from '@/lib/auditService';
 import type { User } from '@/lib/types';
 
 function getBlobToken() { return process.env.NEXUS_READ_WRITE_TOKEN; }
@@ -97,6 +97,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         userId: user.id,
         userName: `${user.firstName} ${user.lastName}`,
         details: `Seed de ${selectedFiles.length} archivo(s): ${selectedFiles.join(', ')}`,
+        ...extractRequestMeta(request),
       });
 
       return NextResponse.json({ results });

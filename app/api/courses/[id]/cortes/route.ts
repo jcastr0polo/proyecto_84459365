@@ -9,7 +9,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createCorteSchema } from '@/lib/schemas';
 import { readCortesFresh, writeCortes, readCoursesFresh, withFileLock, nowColombiaISO } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { Corte } from '@/lib/types';
 
 /**
@@ -97,6 +97,8 @@ export async function POST(
             userId: user.id,
             userName: `${user.firstName} ${user.lastName}`,
             details: `Creó corte "${name}" (${weight}%) en curso ${course.name}`,
+            after: auditSnapshot(corte),
+            ...extractRequestMeta(request),
           }
         );
 

@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createSemesterSchema } from '@/lib/schemas';
 import { readSemestersFresh, writeSemesters, getSemesterById, withFileLock, nowColombiaISO } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { Semester } from '@/lib/types';
 
 /**
@@ -86,7 +86,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         sems.push(newSemester);
         await dispatchWrite(
           () => writeSemesters(sems),
-          { action: 'create', entity: 'semester', entityId: newSemester.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó semestre "${newSemester.label}"` }
+          { action: 'create', entity: 'semester', entityId: newSemester.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó semestre "${newSemester.label}"`, after: auditSnapshot(newSemester), ...extractRequestMeta(request) }
         );
         return sems;
       });

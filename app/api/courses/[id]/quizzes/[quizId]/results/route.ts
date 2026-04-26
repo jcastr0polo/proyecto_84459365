@@ -16,7 +16,7 @@ import {
   withFileLock,
   nowColombiaISO,
 } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 
 type RouteParams = { params: Promise<{ id: string; quizId: string }> };
 
@@ -115,6 +115,8 @@ export async function PUT(request: Request, { params }: RouteParams): Promise<Ne
           return NextResponse.json({ error: 'Parcial no encontrado' }, { status: 404 });
         }
 
+        const resultsBefore = { id: quizzes[index].id, title: quizzes[index].title, resultsReleased: quizzes[index].resultsReleased };
+
         quizzes[index].resultsReleased = released;
         quizzes[index].updatedAt = nowColombiaISO();
 
@@ -127,6 +129,9 @@ export async function PUT(request: Request, { params }: RouteParams): Promise<Ne
             userId: user.id,
             userName: `${user.firstName} ${user.lastName}`,
             details: `${released ? 'Liberó' : 'Ocultó'} resultados del parcial "${quizzes[index].title}"`,
+            before: auditSnapshot(resultsBefore),
+            after: auditSnapshot({ id: quizzes[index].id, title: quizzes[index].title, resultsReleased: quizzes[index].resultsReleased }),
+            ...extractRequestMeta(request),
           }
         );
 

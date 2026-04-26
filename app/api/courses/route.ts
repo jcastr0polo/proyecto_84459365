@@ -25,7 +25,7 @@ import {
   withFileLock,
   nowColombiaISO,
 } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { Course, User } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -120,7 +120,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         courses.push(newCourse);
         await dispatchWrite(
           () => writeCourses(courses),
-          { action: 'create', entity: 'course', entityId: newCourse.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó curso "${newCourse.name}" (${newCourse.code})` }
+          { action: 'create', entity: 'course', entityId: newCourse.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó curso "${newCourse.name}" (${newCourse.code})`, after: auditSnapshot(newCourse), ...extractRequestMeta(request) }
         );
       });
 

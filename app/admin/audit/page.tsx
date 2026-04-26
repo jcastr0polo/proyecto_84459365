@@ -9,7 +9,7 @@ import SearchInput from '@/components/ui/SearchInput';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import {
   Shield, X, LogIn, LogOut, Plus, Pencil, Trash2, Upload, Database, Key, Eye,
-  Clock, User, FileText, Hash, Info,
+  Clock, User, FileText, Hash, Info, Globe, Monitor,
 } from 'lucide-react';
 
 interface AuditEntry {
@@ -22,6 +22,10 @@ interface AuditEntry {
   userName?: string;
   details?: string;
   metadata?: Record<string, unknown>;
+  before?: Record<string, unknown>;
+  after?: Record<string, unknown>;
+  ip?: string;
+  userAgent?: string;
 }
 
 const ACTION_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
@@ -191,7 +195,7 @@ export default function AuditPage() {
       )}
 
       {/* Detail Modal */}
-      <Modal open={!!selectedEntry} onClose={() => setSelectedEntry(null)} title="Detalle de Auditoría" size="md">
+      <Modal open={!!selectedEntry} onClose={() => setSelectedEntry(null)} title="Detalle de Auditoría" size="lg">
         {selectedEntry && <AuditDetail entry={selectedEntry} />}
       </Modal>
     </div>
@@ -228,7 +232,18 @@ function AuditDetail({ entry }: { entry: AuditEntry }) {
         {entry.details && (
           <DetailRow icon={<FileText className="w-3.5 h-3.5" />} label="Detalle" value={entry.details} />
         )}
+        {entry.ip && (
+          <DetailRow icon={<Globe className="w-3.5 h-3.5" />} label="IP" value={entry.ip} mono />
+        )}
+        {entry.userAgent && (
+          <DetailRow icon={<Monitor className="w-3.5 h-3.5" />} label="User-Agent" value={entry.userAgent.length > 100 ? entry.userAgent.slice(0, 100) + '...' : entry.userAgent} />
+        )}
       </div>
+
+      {/* Before / After diff */}
+      {(entry.before || entry.after) && (
+        <BeforeAfterDiff before={entry.before} after={entry.after} action={entry.action} />
+      )}
 
       {entry.metadata && Object.keys(entry.metadata).length > 0 && (
         <div>
@@ -252,6 +267,74 @@ function DetailRow({ icon, label, value, mono }: { icon: React.ReactNode; label:
       </div>
     </div>
   );
+}
+
+function BeforeAfterDiff({ before, after, action }: { before?: Record<string, unknown>; after?: Record<string, unknown>; action: string }) {
+  // Collect all keys
+  const allKeys = [...new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])];
+  // For create, only show "after". For delete, only show "before". For update, show changed fields.
+  const isCreate = action === 'create';
+  const isDelete = action === 'delete';
+
+  // For updates, find only changed fields
+  const changedKeys = isCreate || isDelete
+    ? allKeys
+    : allKeys.filter((k) => JSON.stringify(before?.[k]) !== JSON.stringify(after?.[k]));
+
+  if (changedKeys.length === 0) return null;
+
+  return (
+    <div>
+      <p className="text-[10px] font-semibold text-subtle uppercase tracking-wider mb-2">
+        {isCreate ? 'Objeto Creado' : isDelete ? 'Objeto Eliminado' : 'Cambios Realizados'}
+      </p>
+      <div className="rounded-lg border border-foreground/[0.06] overflow-hidden">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-foreground/[0.03]">
+              <th className="text-left py-1.5 px-3 font-medium text-subtle w-1/4">Campo</th>
+              {!isCreate && <th className="text-left py-1.5 px-3 font-medium text-red-400/70">Antes</th>}
+              {!isDelete && <th className="text-left py-1.5 px-3 font-medium text-emerald-400/70">Después</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {changedKeys.map((key) => (
+              <tr key={key} className="border-t border-foreground/[0.04]">
+                <td className="py-1.5 px-3 font-mono text-faint align-top">{key}</td>
+                {!isCreate && (
+                  <td className="py-1.5 px-3 text-red-400/60 align-top">
+                    <CellValue value={before?.[key]} />
+                  </td>
+                )}
+                {!isDelete && (
+                  <td className="py-1.5 px-3 text-emerald-400/60 align-top">
+                    <CellValue value={after?.[key]} />
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CellValue({ value }: { value: unknown }) {
+  if (value === undefined || value === null) return <span className="text-faint italic">—</span>;
+  if (typeof value === 'boolean') return <span>{value ? 'true' : 'false'}</span>;
+  if (typeof value === 'number') return <span>{value}</span>;
+  if (typeof value === 'string') {
+    if (value.length > 120) return <span className="break-all">{value.slice(0, 120)}…</span>;
+    return <span className="break-all">{value}</span>;
+  }
+  if (Array.isArray(value)) return <span className="text-faint">[{value.length} items]</span>;
+  if (typeof value === 'object') {
+    const str = JSON.stringify(value);
+    if (str.length > 120) return <span className="font-mono text-[10px] break-all">{str.slice(0, 120)}…</span>;
+    return <span className="font-mono text-[10px] break-all">{str}</span>;
+  }
+  return <span>{String(value)}</span>;
 }
 
 function MiniStat({ label, value }: { label: string; value: number }) {

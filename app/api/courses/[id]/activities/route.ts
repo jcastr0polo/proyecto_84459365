@@ -22,7 +22,7 @@ import {
   nowColombiaISO,
   parseDateColombia,
 } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { Activity } from '@/lib/types';
 
 /**
@@ -137,7 +137,7 @@ export async function POST(
         activities.push(activity);
         await dispatchWrite(
           () => writeActivities(activities),
-          { action: 'create', entity: 'activity', entityId: activity.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó actividad "${activity.title}" en curso ${id}` }
+          { action: 'create', entity: 'activity', entityId: activity.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Creó actividad "${activity.title}" en curso ${id}`, after: auditSnapshot(activity), ...extractRequestMeta(request) }
         );
       });
 

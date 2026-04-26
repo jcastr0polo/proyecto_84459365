@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { readProjectsFresh, writeProjects, getProjectById, readUsersFresh, readCoursesFresh, withFileLock, nowColombiaISO } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import { updateProjectSchema } from '@/lib/schemas';
 
 /**
@@ -101,7 +101,7 @@ export async function PUT(
       projects[index] = updated;
       await dispatchWrite(
         () => writeProjects(projects),
-        { action: 'update', entity: 'project', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Actualizó proyecto "${updated.projectName}"` }
+        { action: 'update', entity: 'project', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Actualizó proyecto "${updated.projectName}"`, before: auditSnapshot(project), after: auditSnapshot(updated), ...extractRequestMeta(request) }
       );
 
       return NextResponse.json({ project: updated });

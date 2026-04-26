@@ -9,7 +9,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { readActivitiesFresh, writeActivities, withFileLock, nowColombiaISO } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 
 export async function POST(
   request: Request,
@@ -68,7 +68,7 @@ export async function POST(
 
       await dispatchWrite(
         () => writeActivities(activities),
-        { action: 'update', entity: 'activity', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Publicó actividad "${activity.title}"` }
+        { action: 'update', entity: 'activity', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Publicó actividad "${activity.title}"`, before: auditSnapshot(activity), after: auditSnapshot(activities[index]), ...extractRequestMeta(request) }
       );
 
       return NextResponse.json({

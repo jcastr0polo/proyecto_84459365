@@ -12,7 +12,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateGradeSchema } from '@/lib/schemas';
 import { updateGrade, GradeError } from '@/lib/gradeService';
-import { logAudit } from '@/lib/auditService';
+import { logAudit, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 
 export async function PUT(
   request: Request,
@@ -46,6 +46,8 @@ export async function PUT(
         action: 'update', entity: 'grade', entityId: id,
         userId: user.id, userName: `${user.firstName} ${user.lastName}`,
         details: `Editó calificación (score: ${grade.score})`,
+        after: auditSnapshot(grade),
+        ...extractRequestMeta(request),
       });
 
       return NextResponse.json({ grade });

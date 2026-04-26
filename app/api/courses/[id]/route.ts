@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateCourseSchema } from '@/lib/schemas';
 import { readCoursesFresh, writeCourses, withFileLock, nowColombiaISO } from '@/lib/dataService';
-import { dispatchWrite } from '@/lib/auditService';
+import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { User } from '@/lib/types';
 
 /**
@@ -85,6 +85,8 @@ export async function PUT(
           );
         }
 
+        const before = { ...courses[index] };
+
         // Aplicar actualizaciones
         if (updates.name !== undefined) courses[index].name = updates.name;
         if (updates.description !== undefined) courses[index].description = updates.description;
@@ -95,7 +97,7 @@ export async function PUT(
         courses[index].updatedAt = nowColombiaISO();
         await dispatchWrite(
           () => writeCourses(courses),
-          { action: 'update', entity: 'course', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó curso "${courses[index].name}"` }
+          { action: 'update', entity: 'course', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó curso "${courses[index].name}"`, before: auditSnapshot(before), after: auditSnapshot(courses[index]), ...extractRequestMeta(request) }
         );
 
         return NextResponse.json({ course: courses[index] });

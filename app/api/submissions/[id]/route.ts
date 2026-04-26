@@ -15,7 +15,7 @@ import {
   getUserById,
 } from '@/lib/dataService';
 import { returnSubmission, SubmissionError } from '@/lib/submissionService';
-import { logAudit } from '@/lib/auditService';
+import { logAudit, extractRequestMeta } from '@/lib/auditService';
 import type { SubmissionWithDetails } from '@/lib/types';
 
 /**
@@ -96,6 +96,7 @@ export async function PUT(
         action: 'update', entity: 'submission', entityId: id,
         userId: user.id, userName: `${user.firstName} ${user.lastName}`,
         details: `Devolvió entrega para re-envío`,
+        ...extractRequestMeta(request),
       });
 
       return NextResponse.json({
