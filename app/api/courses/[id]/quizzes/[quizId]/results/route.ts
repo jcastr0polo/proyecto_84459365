@@ -14,6 +14,7 @@ import {
   readQuizAttemptsFresh,
   isStudentEnrolled,
   withFileLock,
+  nowColombiaISO,
 } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 
@@ -115,7 +116,7 @@ export async function PUT(request: Request, { params }: RouteParams): Promise<Ne
         }
 
         quizzes[index].resultsReleased = released;
-        quizzes[index].updatedAt = new Date().toISOString();
+        quizzes[index].updatedAt = nowColombiaISO();
 
         await dispatchWrite(
           () => writeQuizzes(quizzes),

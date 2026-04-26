@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readProjectsFresh, writeProjects, getProjectByStudentAndCourse, readCoursesFresh, readUsersFresh, readEnrollmentsFresh, withFileLock } from '@/lib/dataService';
+import { readProjectsFresh, writeProjects, getProjectByStudentAndCourse, readCoursesFresh, readUsersFresh, readEnrollmentsFresh, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { createProjectSchema } from '@/lib/schemas';
 import { v4 as uuidv4 } from 'uuid';
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const now = new Date().toISOString();
+    const now = nowColombiaISO();
     const newProject = {
       id: uuidv4(),
       studentId: user.id,

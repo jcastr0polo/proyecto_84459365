@@ -21,6 +21,8 @@ import {
   writeQuizAttempts,
   isStudentEnrolled,
   withFileLock,
+  parseDateColombia,
+  nowColombiaISO,
 } from '@/lib/dataService';
 import type { QuizAttempt, QuizAnswer } from '@/lib/types';
 
@@ -56,10 +58,10 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
 
       // Verificar rango de fechas
       const now = new Date();
-      if (quiz.startDate && new Date(quiz.startDate) > now) {
+      if (quiz.startDate && parseDateColombia(quiz.startDate) > now) {
         return NextResponse.json({ error: 'Este parcial aún no está disponible' }, { status: 400 });
       }
-      if (quiz.endDate && new Date(quiz.endDate) < now) {
+      if (quiz.endDate && parseDateColombia(quiz.endDate) < now) {
         return NextResponse.json({ error: 'Este parcial ya cerró' }, { status: 400 });
       }
 
@@ -135,7 +137,7 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
         percentage,
         attemptNumber: studentAttempts.length + 1,
         startedAt: new Date(now.getTime() - 60000).toISOString(), // Aprox
-        completedAt: now.toISOString(),
+        completedAt: nowColombiaISO(),
         blurCount,
         autoSubmitted,
         flagged,

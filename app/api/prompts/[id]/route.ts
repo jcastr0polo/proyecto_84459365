@@ -9,7 +9,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updatePromptSchema } from '@/lib/schemas';
-import { getPromptById, readPromptsFresh, writePrompts, withFileLock } from '@/lib/dataService';
+import { getPromptById, readPromptsFresh, writePrompts, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 
 export async function GET(
@@ -58,7 +58,7 @@ export async function PUT(
         }
 
         const existing = prompts[idx];
-        const now = new Date().toISOString();
+        const now = nowColombiaISO();
 
         // RN-PRM-02: Increment version on edit
         prompts[idx] = {

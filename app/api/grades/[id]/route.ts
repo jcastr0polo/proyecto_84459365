@@ -42,7 +42,7 @@ export async function PUT(
 
       const grade = await updateGrade(id, parsed.data, user.id);
 
-      await logAudit({
+      logAudit({
         action: 'update', entity: 'grade', entityId: id,
         userId: user.id, userName: `${user.firstName} ${user.lastName}`,
         details: `Editó calificación (score: ${grade.score})`,

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { formatDateTimeColombia as formatDate } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import { Bot, Pencil } from 'lucide-react';
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
@@ -192,18 +193,4 @@ export default function PromptDetailPage() {
       )}
     </div>
   );
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('es-CO', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return iso;
-  }
 }

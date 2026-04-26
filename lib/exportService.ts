@@ -14,6 +14,7 @@
  */
 
 import { getCourseById } from '@/lib/dataService';
+import { nowColombiaISO } from '@/lib/dateUtils';
 import { getCourseGradeSummary, GradeError } from '@/lib/gradeService';
 import type { CourseGradeSummary, GradeExportRow } from '@/lib/types';
 
@@ -103,7 +104,7 @@ export async function generateGradesCSV(courseId: string): Promise<{ csv: string
   const csv = UTF8_BOM + csvLines.join('\r\n') + '\r\n';
 
   // Filename: notas-{courseCode}-{YYYY-MM-DD}.csv
-  const dateStr = new Date().toISOString().slice(0, 10);
+  const dateStr = nowColombiaISO().slice(0, 10);
   const safeCode = course.code.replace(/[^a-zA-Z0-9-]/g, '_');
   const filename = `notas-${safeCode}-${dateStr}.csv`;
 
@@ -166,7 +167,7 @@ export async function generateGradesJSON(courseId: string): Promise<{
 
   return {
     course: { id: course.id, code: course.code, name: course.name },
-    exportDate: new Date().toISOString(),
+    exportDate: nowColombiaISO(),
     rows,
     summary: {
       totalStudents: sortedStudents.length,

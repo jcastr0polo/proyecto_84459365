@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { formatDateColombia as formatDate } from '@/lib/dateUtils';
 import Button from '@/components/ui/Button';
 import Badge, { categoryToBadgeVariant, categoryLabel } from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
@@ -250,14 +251,4 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <dd className="text-sm text-muted font-medium">{value}</dd>
     </div>
   );
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('es-CO', {
-      day: '2-digit', month: 'short', year: 'numeric',
-    });
-  } catch {
-    return iso;
-  }
 }

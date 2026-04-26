@@ -176,7 +176,7 @@ export async function POST(
         links
       );
 
-      await logAudit({
+      logAudit({
         action: 'create', entity: 'submission', entityId: submission.id,
         userId: user.id, userName: `${user.firstName} ${user.lastName}`,
         details: `Entregó actividad "${activity.title}" (v${submission.version})`,

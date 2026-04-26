@@ -12,7 +12,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateCourseSchema } from '@/lib/schemas';
-import { readCoursesFresh, writeCourses, withFileLock } from '@/lib/dataService';
+import { readCoursesFresh, writeCourses, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import type { User } from '@/lib/types';
 
@@ -92,7 +92,7 @@ export async function PUT(
         if (updates.schedule !== undefined) courses[index].schedule = updates.schedule;
         if (updates.isActive !== undefined) courses[index].isActive = updates.isActive;
 
-        courses[index].updatedAt = new Date().toISOString();
+        courses[index].updatedAt = nowColombiaISO();
         await dispatchWrite(
           () => writeCourses(courses),
           { action: 'update', entity: 'course', entityId: id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Editó curso "${courses[index].name}"` }

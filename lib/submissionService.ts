@@ -15,6 +15,7 @@ import {
   readSubmissionsFresh,
   writeSubmissions,
 } from '@/lib/dataService';
+import { nowColombiaISO, parseDateColombia, parseDateTimeColombia } from '@/lib/dateUtils';
 import { withFileLock } from '@/lib/dataService';
 import type {
   Submission,
@@ -59,7 +60,7 @@ function validateActivityForSubmission(activity: Activity): void {
  */
 function checkDeadline(activity: Activity): boolean {
   const now = new Date();
-  const dueDate = new Date(activity.dueDate);
+  const dueDate = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59');
 
   if (now > dueDate) {
     if (!activity.allowLateSubmission) {
@@ -158,7 +159,7 @@ export async function submitWork(
 
   // 4. Verificar entrega previa
   const existing = await getSubmission(activityId, studentId);
-  const now = new Date().toISOString();
+  const now = nowColombiaISO();
 
   if (existing) {
     // RN-ENT-05: Si tiene status "reviewed" → bloqueada
@@ -256,7 +257,7 @@ export async function returnSubmission(submissionId: string): Promise<Submission
     const updatedSubmission: Submission = {
       ...submission,
       status: 'returned',
-      updatedAt: new Date().toISOString(),
+      updatedAt: nowColombiaISO(),
     };
 
     submissions[index] = updatedSubmission;

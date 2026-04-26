@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Users, RotateCcw, ShieldCheck, ShieldOff, Search, AlertCircle, CheckCircle2, Clock, Pencil, X, Check, Eye } from 'lucide-react';
+import { formatDateTimeColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -119,10 +120,7 @@ export default function AdminStudentsPage() {
 
   function formatDate(d?: string | null) {
     if (!d) return 'Nunca';
-    return new Date(d).toLocaleDateString('es-CO', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    });
+    return formatDateTimeColombia(d);
   }
 
   if (loading) return <PageLoader />;

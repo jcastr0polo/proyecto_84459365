@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { formatTimeColombia } from '@/lib/dateUtils';
 
 export interface ChatFile {
   fileName: string;
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       user,
       text,
       file,
-      time: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+      time: formatTimeColombia(),
     };
 
     messages.push(msg);

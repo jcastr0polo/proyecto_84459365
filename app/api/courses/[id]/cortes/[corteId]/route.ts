@@ -6,7 +6,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateCorteSchema } from '@/lib/schemas';
-import { readCortesFresh, writeCortes, readActivitiesFresh, withFileLock } from '@/lib/dataService';
+import { readCortesFresh, writeCortes, readActivitiesFresh, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 
 /**
@@ -51,7 +51,7 @@ export async function PUT(
         if (updates.name !== undefined) allCortes[idx].name = updates.name;
         if (updates.weight !== undefined) allCortes[idx].weight = updates.weight;
         if (updates.order !== undefined) allCortes[idx].order = updates.order;
-        allCortes[idx].updatedAt = new Date().toISOString();
+        allCortes[idx].updatedAt = nowColombiaISO();
 
         await dispatchWrite(
           () => writeCortes(allCortes),

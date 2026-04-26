@@ -12,6 +12,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { put, del, get } from '@vercel/blob';
 import type { ActivityAttachment } from '@/lib/types';
+import { nowColombiaISO } from '@/lib/dateUtils';
 
 // ────────────────────────────────────────────────────────────
 // Vercel Blob + filesystem hybrid
@@ -244,7 +245,7 @@ export async function uploadFile(
       filePath: blob.url, // URL completa de Blob
       fileSize: file.size,
       mimeType: effectiveMimeType,
-      uploadedAt: new Date().toISOString(),
+      uploadedAt: nowColombiaISO(),
     };
   }
 
@@ -260,7 +261,7 @@ export async function uploadFile(
     filePath: relativePath,
     fileSize: file.size,
     mimeType: effectiveMimeType,
-    uploadedAt: new Date().toISOString(),
+    uploadedAt: nowColombiaISO(),
   };
 }
 

@@ -15,6 +15,8 @@ import {
   writeQuizzes,
   isStudentEnrolled,
   withFileLock,
+  nowColombiaISO,
+  parseDateColombia,
 } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import type { Quiz, QuizQuestion, QuizOption } from '@/lib/types';
@@ -47,8 +49,8 @@ export async function GET(
       const now = new Date();
       quizzes = quizzes.filter((q) => {
         if (!q.isActive) return false;
-        if (q.startDate && new Date(q.startDate) > now) return false;
-        if (q.endDate && new Date(q.endDate) < now) return false;
+        if (q.startDate && parseDateColombia(q.startDate) > now) return false;
+        if (q.endDate && parseDateColombia(q.endDate) < now) return false;
         return true;
       });
 
@@ -95,7 +97,7 @@ export async function POST(
       }
 
       const data = parsed.data;
-      const now = new Date().toISOString();
+      const now = nowColombiaISO();
 
       // Construir preguntas con IDs generados
       const questions: QuizQuestion[] = data.questions.map((q, idx) => {

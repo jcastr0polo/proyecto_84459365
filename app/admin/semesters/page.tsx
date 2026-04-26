@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { formatDateColombia as formatDate } from '@/lib/dateUtils';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
@@ -10,9 +12,155 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import SemesterForm from '@/components/forms/SemesterForm';
 import type { SemesterFormData } from '@/components/forms/SemesterForm';
-import type { Semester } from '@/lib/types';
+import type { Semester, AppConfig } from '@/lib/types';
+import { Calendar, Globe, Database } from 'lucide-react';
 
-export default function SemestersPage() {
+type SettingsTab = 'semesters' | 'general' | 'blob';
+
+const TABS: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
+  { id: 'semesters', label: 'Semestres', icon: <Calendar className="w-4 h-4" /> },
+  { id: 'general', label: 'General', icon: <Globe className="w-4 h-4" /> },
+  { id: 'blob', label: 'Blob Sync', icon: <Database className="w-4 h-4" /> },
+];
+
+// ═══════════════════════════════════════════════
+// Tab: General (timezone, config)
+// ═══════════════════════════════════════════════
+function GeneralTab() {
+  const { toast } = useToast();
+  const [config, setConfig] = useState<AppConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [timezone, setTimezone] = useState('');
+
+  useEffect(() => {
+    fetch('/api/config')
+      .then((r) => r.json())
+      .then((data) => {
+        setConfig(data);
+        setTimezone(data.timezone || 'America/Bogota');
+      })
+      .catch(() => toast('Error cargando configuración', 'error'))
+      .finally(() => setLoading(false));
+  }, [toast]);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timezone }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast(data.error || 'Error al guardar', 'error');
+        return;
+      }
+      const data = await res.json();
+      setConfig(data.config);
+      toast('Configuración guardada', 'success');
+    } catch {
+      toast('Error de conexión', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) return <PageLoader />;
+
+  const TIMEZONES = [
+    'America/Bogota',
+    'America/Mexico_City',
+    'America/Lima',
+    'America/Santiago',
+    'America/Buenos_Aires',
+    'America/Sao_Paulo',
+    'America/New_York',
+    'America/Chicago',
+    'America/Denver',
+    'America/Los_Angeles',
+    'Europe/Madrid',
+    'Europe/London',
+  ];
+
+  return (
+    <div className="space-y-6 max-w-xl">
+      <div>
+        <h2 className="text-lg font-bold text-foreground tracking-tight">Configuración General</h2>
+        <p className="text-sm text-subtle mt-1">Ajustes globales de la aplicación</p>
+      </div>
+
+      {/* Timezone */}
+      <div className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] space-y-4">
+        <div>
+          <label htmlFor="cfg-tz" className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
+            Zona Horaria
+          </label>
+          <select
+            id="cfg-tz"
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-foreground text-sm
+                       outline-none transition-colors appearance-none cursor-pointer
+                       focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25"
+          >
+            {TIMEZONES.map((tz) => (
+              <option key={tz} value={tz}>{tz}</option>
+            ))}
+          </select>
+          <p className="mt-1.5 text-[11px] text-faint">
+            Afecta timestamps, comparación de fechas límite, y horario de publicación de actividades.
+          </p>
+        </div>
+
+        {/* Read-only info */}
+        {config && (
+          <div className="grid grid-cols-2 gap-3 text-xs text-muted">
+            <div>
+              <span className="text-subtle">App:</span> {config.appName}
+            </div>
+            <div>
+              <span className="text-subtle">Versión:</span> {config.version}
+            </div>
+            <div>
+              <span className="text-subtle">Locale:</span> {config.locale}
+            </div>
+            <div>
+              <span className="text-subtle">Tema:</span> {config.theme}
+            </div>
+          </div>
+        )}
+
+        <Button variant="primary" size="sm" onClick={handleSave} loading={saving}>
+          Guardar Configuración
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// Tab: Blob Sync (redirect to existing page)
+// ═══════════════════════════════════════════════
+function BlobTab() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push('/admin/blob-sync');
+  }, [router]);
+
+  return (
+    <div className="flex items-center justify-center py-12">
+      <p className="text-sm text-subtle">Redirigiendo a Blob Sync...</p>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// Tab: Semestres
+// ═══════════════════════════════════════════════
+function SemestersTab() {
   const { toast } = useToast();
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,10 +262,9 @@ export default function SemestersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">Semestres</h1>
+          <h2 className="text-lg font-bold text-foreground tracking-tight">Semestres</h2>
           <p className="text-sm text-subtle mt-1">Gestión de períodos académicos</p>
         </div>
         <Button variant="primary" size="sm" onClick={openCreate}>
@@ -125,7 +272,6 @@ export default function SemestersPage() {
         </Button>
       </div>
 
-      {/* Content */}
       {semesters.length === 0 ? (
         <EmptyState
           icon={<span>📅</span>}
@@ -222,7 +368,6 @@ export default function SemestersPage() {
         </>
       )}
 
-      {/* Modal */}
       <Modal
         open={modalOpen}
         onClose={closeModal}
@@ -239,7 +384,42 @@ export default function SemestersPage() {
   );
 }
 
-function formatDate(iso: string): string {
-  const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
+// ═══════════════════════════════════════════════
+// Main Settings Page
+// ═══════════════════════════════════════════════
+export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>('semesters');
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Configuración</h1>
+        <p className="text-sm text-subtle mt-1">Semestres, zona horaria y sincronización de datos</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 rounded-lg bg-foreground/[0.04] border border-foreground/[0.06] w-fit">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer
+              ${activeTab === tab.id
+                ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                : 'text-muted hover:text-foreground hover:bg-foreground/[0.06] border border-transparent'
+              }`}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'semesters' && <SemestersTab />}
+      {activeTab === 'general' && <GeneralTab />}
+      {activeTab === 'blob' && <BlobTab />}
+    </div>
+  );
 }

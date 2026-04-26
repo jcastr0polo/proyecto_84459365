@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { BookOpen, ClipboardList, CheckCircle2, BarChart3, Inbox, Bell, PartyPopper, FileText, AlertTriangle, Hand } from 'lucide-react';
+import { formatDateShort, parseDateColombia, parseDateTimeColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import type { Course, Enrollment, Activity, Submission, Semester, Grade } from '@/lib/types';
 
@@ -188,7 +189,7 @@ export default function StudentDashboardPage() {
         const hasSub = cd.submissions.some((s) => s.activityId === act.id);
         if (hasSub) continue;
 
-        const dueDate = new Date(act.dueDate);
+        const dueDate = parseDateTimeColombia(act.dueDate, act.dueTime || '23:59');
         const diffMs = dueDate.getTime() - now.getTime();
         const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
@@ -416,9 +417,7 @@ export default function StudentDashboardPage() {
                     </div>
                     <div className="flex items-center gap-3 mt-2 text-xs text-faint">
                       <span>
-                        Vence: {new Date(item.activity.dueDate).toLocaleDateString('es-CO', {
-                          day: '2-digit', month: 'short',
-                        })}
+                        Vence: {formatDateShort(item.activity.dueDate)}
                       </span>
                       <span>{item.activity.weight}%</span>
                       <span className="flex-1">Nota máx: {item.activity.maxScore}</span>

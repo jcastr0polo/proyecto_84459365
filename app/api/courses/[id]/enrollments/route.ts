@@ -89,7 +89,7 @@ export async function POST(
 
       const result = await enrollStudent(id, parsed.data, user.id);
 
-      await logAudit({
+      logAudit({
         action: result.created ? 'create' : 'update',
         entity: 'enrollment',
         entityId: result.enrollment.id,

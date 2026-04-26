@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { BookOpen, Users, FileText, Clock, BookMarked } from 'lucide-react';
+import { parseDateColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import StatCard from '@/components/dashboard/StatCard';
 import CourseCard from '@/components/dashboard/CourseCard';
@@ -121,7 +122,7 @@ export default function AdminDashboardPage() {
       cd.activities
         .filter((a) => a.status === 'published')
         .forEach((act) => {
-          const due = new Date(act.dueDate);
+          const due = parseDateColombia(act.dueDate);
           const daysLeft = Math.ceil((due.getTime() - now.getTime()) / 86400000);
 
           // Only show upcoming (within 30 days) or recently overdue (within 7 days)

@@ -12,7 +12,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createSemesterSchema } from '@/lib/schemas';
-import { readSemestersFresh, writeSemesters, getSemesterById, withFileLock } from '@/lib/dataService';
+import { readSemestersFresh, writeSemesters, getSemesterById, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import type { Semester } from '@/lib/types';
 
@@ -70,7 +70,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         startDate,
         endDate,
         isActive: isActive ?? false,
-        createdAt: new Date().toISOString(),
+        createdAt: nowColombiaISO(),
       };
 
       await withFileLock('semesters.json', async () => {

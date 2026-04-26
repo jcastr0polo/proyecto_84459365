@@ -92,7 +92,7 @@ export async function PUT(
 
       const submission = await returnSubmission(id);
 
-      await logAudit({
+      logAudit({
         action: 'update', entity: 'submission', entityId: id,
         userId: user.id, userName: `${user.firstName} ${user.lastName}`,
         details: `Devolvió entrega para re-envío`,

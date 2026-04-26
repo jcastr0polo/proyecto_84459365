@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { formatDateShort } from '@/lib/dateUtils';
 import { motion } from 'framer-motion';
 
 interface PromptCardProps {
@@ -80,7 +81,7 @@ export default function PromptCard({
           )}
         </div>
         <span className="text-[10px] text-faint flex-shrink-0">
-          {new Date(updatedAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+          {formatDateShort(updatedAt)}
         </span>
       </div>
     </motion.div>

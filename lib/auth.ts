@@ -14,6 +14,7 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { SignJWT, jwtVerify } from 'jose';
 import type { Session } from '@/lib/types';
+import { nowColombiaISO } from '@/lib/dateUtils';
 
 const SALT_ROUNDS = 10;
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 horas
@@ -52,7 +53,7 @@ export async function createSession(userId: string): Promise<Session> {
   const session: Session = {
     id: sessionId,
     userId,
-    createdAt: now.toISOString(),
+    createdAt: nowColombiaISO(),
     expiresAt: expiresAt.toISOString(),
   };
 

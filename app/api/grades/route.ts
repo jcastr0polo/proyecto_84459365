@@ -37,7 +37,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
       // Auditoría
       const student = await getUserById(grade.studentId);
-      await logAudit({
+      logAudit({
         action: 'create', entity: 'grade', entityId: grade.id,
         userId: user.id, userName: `${user.firstName} ${user.lastName}`,
         details: `Calificó a ${student ? `${student.firstName} ${student.lastName}` : grade.studentId} con ${grade.score}`,

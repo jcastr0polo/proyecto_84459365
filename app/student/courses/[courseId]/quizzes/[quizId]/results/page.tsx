@@ -6,6 +6,7 @@ import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
+import { formatDateTimeColombia } from '@/lib/dateUtils';
 import type { QuizAttempt } from '@/lib/types';
 import { Clock } from 'lucide-react';
 
@@ -86,9 +87,7 @@ export default function StudentQuizResultsPage() {
                     </p>
                   )}
                   <p className="text-[11px] text-faint mt-1">
-                    {new Date(attempt.completedAt || attempt.startedAt).toLocaleDateString('es-CO', {
-                      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-                    })}
+                    {formatDateTimeColombia(attempt.completedAt || attempt.startedAt)}
                   </p>
                   {attempt.autoSubmitted && (
                     <Badge variant="warning" size="sm" className="mt-1">Auto-enviado</Badge>

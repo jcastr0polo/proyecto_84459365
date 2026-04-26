@@ -13,7 +13,7 @@
 
 import { NextResponse } from 'next/server';
 import { loginRequestSchema } from '@/lib/schemas';
-import { getUserByEmail, readUsersFresh, writeUsers } from '@/lib/dataService';
+import { getUserByEmail, readUsersFresh, writeUsers, nowColombiaISO } from '@/lib/dataService';
 import { verifyPassword, createSession, setSessionCookie, cleanExpiredSessions, generateSessionToken } from '@/lib/auth';
 import { toSafeUser } from '@/lib/withAuth';
 import { withFileLock } from '@/lib/dataService';
@@ -79,8 +79,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         const users = await readUsersFresh();
         const userIndex = users.findIndex((u) => u.id === user.id);
         if (userIndex !== -1) {
-          users[userIndex].lastLoginAt = new Date().toISOString();
-          users[userIndex].updatedAt = new Date().toISOString();
+          users[userIndex].lastLoginAt = nowColombiaISO();
+          users[userIndex].updatedAt = nowColombiaISO();
           await writeUsers(users);
         }
       });
@@ -89,7 +89,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
 
     // 7b. Auditoría
-    await logAudit({
+    logAudit({
       action: 'login',
       entity: 'user',
       entityId: user.id,

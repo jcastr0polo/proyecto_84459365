@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
+import { formatDateTimeColombia, formatDateShort } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -110,9 +111,7 @@ export default function StudentProfilePage() {
           <InfoField
             label="Último acceso"
             value={user.lastLoginAt
-              ? new Date(user.lastLoginAt).toLocaleDateString('es-CO', {
-                  day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-                })
+              ? formatDateTimeColombia(user.lastLoginAt)
               : 'Sin registro'
             }
           />
@@ -165,9 +164,7 @@ export default function StudentProfilePage() {
                   <div className="shrink-0 text-right ml-3">
                     <p className="text-xs text-faint">Inscrito</p>
                     <p className="text-[11px] text-subtle">
-                      {new Date(enrollment.enrolledAt).toLocaleDateString('es-CO', {
-                        day: '2-digit', month: 'short',
-                      })}
+                      {formatDateShort(enrollment.enrolledAt)}
                     </p>
                   </div>
                 </button>

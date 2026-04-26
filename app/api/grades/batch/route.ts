@@ -55,7 +55,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       const result = await gradeSubmissionBatch(items, user.id);
 
       // Auditoría
-      await logAudit({
+      logAudit({
         action: 'create', entity: 'grade', entityId: 'batch',
         userId: user.id, userName: `${user.firstName} ${user.lastName}`,
         details: `Calificación en lote: ${result.saved} guardadas, ${result.errors.length} errores`,

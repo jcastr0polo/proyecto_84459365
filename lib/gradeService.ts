@@ -22,6 +22,7 @@ import {
   writeGrades,
   writeSubmissions,
 } from '@/lib/dataService';
+import { nowColombiaISO } from '@/lib/dateUtils';
 import { withFileLock } from '@/lib/dataService';
 import type {
   Grade,
@@ -127,7 +128,7 @@ export async function gradeSubmission(data: CreateGradeRequest, adminId: string)
     if (finalScore < 0) finalScore = 0;
   }
 
-  const now = new Date().toISOString();
+  const now = nowColombiaISO();
 
   // 5. Verificar si ya existe calificación para esta entrega
   const existingGrade = allGrades.find((g) => g.submissionId === data.submissionId) ?? null;
@@ -223,7 +224,7 @@ export async function updateGrade(gradeId: string, data: UpdateGradeRequest, adm
     }
   }
 
-  const now = new Date().toISOString();
+  const now = nowColombiaISO();
 
   return withFileLock('grades.json', async () => {
     const grades = await readGradesFresh();
@@ -274,7 +275,7 @@ export async function gradeSubmissionBatch(
 ): Promise<BatchGradeResult> {
   if (items.length === 0) return { saved: 0, errors: [] };
 
-  const now = new Date().toISOString();
+  const now = nowColombiaISO();
   const errors: { submissionId: string; error: string }[] = [];
 
   // Batch read: 2 files in parallel (instead of N reads per item)
@@ -415,7 +416,7 @@ export async function publishGrades(activityId: string): Promise<{ published: nu
 
   return withFileLock('grades.json', async () => {
     const grades = await readGradesFresh();
-    const now = new Date().toISOString();
+    const now = nowColombiaISO();
     let published = 0;
 
     for (let i = 0; i < grades.length; i++) {

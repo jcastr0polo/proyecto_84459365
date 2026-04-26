@@ -23,6 +23,7 @@ import {
   getCoursesBySemester,
   getSemesterById,
   withFileLock,
+  nowColombiaISO,
 } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import type { Course, User } from '@/lib/types';
@@ -100,7 +101,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         );
       }
 
-      const now = new Date().toISOString();
+      const now = nowColombiaISO();
       const newCourse: Course = {
         id: `course-${uuidv4()}`,
         code,

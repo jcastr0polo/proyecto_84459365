@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { formatDateShort } from '@/lib/dateUtils';
 import { Paperclip, Link as LinkIcon } from 'lucide-react';
 import ScoreInput from '@/components/grades/ScoreInput';
 import SearchInput from '@/components/ui/SearchInput';
@@ -155,7 +156,7 @@ export default function GradeTable({
                       )}
                     </div>
                     <p className="text-[10px] text-subtle mt-0.5">
-                      {new Date(row.submittedAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}
+                      {formatDateShort(row.submittedAt)}
                     </p>
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -238,7 +239,7 @@ export default function GradeTable({
             {/* Meta row */}
             <div className="flex items-center gap-3 text-[11px] text-subtle">
               <span>v{row.version}</span>
-              <span>{new Date(row.submittedAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}</span>
+              <span>{formatDateShort(row.submittedAt)}</span>
               {row.isLate && (
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/15 text-red-400 border border-red-500/20">
                   Tardía

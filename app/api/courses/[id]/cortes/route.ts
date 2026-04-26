@@ -8,7 +8,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { createCorteSchema } from '@/lib/schemas';
-import { readCortesFresh, writeCortes, readCoursesFresh, withFileLock } from '@/lib/dataService';
+import { readCortesFresh, writeCortes, readCoursesFresh, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import type { Corte } from '@/lib/types';
 
@@ -64,7 +64,7 @@ export async function POST(
         return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
       }
 
-      const now = new Date().toISOString();
+      const now = nowColombiaISO();
 
       const newCorte: Corte = await withFileLock('cortes.json', async () => {
         const allCortes = await readCortesFresh();

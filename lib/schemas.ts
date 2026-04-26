@@ -242,7 +242,9 @@ export const activitySchema = z.object({
   attachments: z.array(activityAttachmentSchema),
   promptId: z.string().optional(),
   dueDate: z.string(),
+  dueTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   publishDate: z.string(),
+  publishTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   maxScore: z.number().positive('La nota máxima debe ser mayor que 0'),
   weight: z.number().min(0, 'El peso no puede ser negativo').max(100, 'El peso no puede superar 100'),
   allowLateSubmission: z.boolean(),
@@ -266,7 +268,9 @@ export const createActivitySchema = z.object({
   category: z.enum(['individual', 'group']),
   corteId: z.string().optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido'),
+  dueTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:mm').optional().default('23:59'),
   publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido'),
+  publishTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:mm').optional().default('00:00'),
   maxScore: z.number().positive('La nota máxima debe ser mayor que 0'),
   weight: z.number().min(0, 'El peso no puede ser negativo').max(100, 'El peso no puede superar 100'),
   allowLateSubmission: z.boolean().optional().default(false),
@@ -274,7 +278,13 @@ export const createActivitySchema = z.object({
   requiresFileUpload: z.boolean().optional().default(false),
   requiresLinkSubmission: z.boolean().optional().default(false),
   projectRequired: z.boolean().optional().default(false),
-}).refine((data) => new Date(data.dueDate) > new Date(data.publishDate), {
+}).refine((data) => {
+  const dueH = (data.dueTime || '23:59').split(':').map(Number);
+  const pubH = (data.publishTime || '00:00').split(':').map(Number);
+  const dueMs = new Date(data.dueDate).getTime() + (dueH[0] * 60 + dueH[1]) * 60000;
+  const pubMs = new Date(data.publishDate).getTime() + (pubH[0] * 60 + pubH[1]) * 60000;
+  return dueMs > pubMs;
+}, {
   message: 'La fecha límite debe ser posterior a la fecha de publicación',
   path: ['dueDate'],
 });
@@ -289,7 +299,9 @@ export const updateActivitySchema = z.object({
   category: z.enum(['individual', 'group']).optional(),
   corteId: z.string().nullable().optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido').optional(),
+  dueTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:mm').optional(),
   publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido').optional(),
+  publishTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:mm').optional(),
   maxScore: z.number().positive('La nota máxima debe ser mayor que 0').optional(),
   weight: z.number().min(0, 'El peso no puede ser negativo').max(100, 'El peso no puede superar 100').optional(),
   allowLateSubmission: z.boolean().optional(),

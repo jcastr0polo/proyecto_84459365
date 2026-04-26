@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Eye } from 'lucide-react';
+import { formatDateColombia as formatDate } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import type { EnrollmentWithStudent } from '@/lib/types';
 
@@ -70,14 +71,4 @@ export default function StudentCard({ enrollment, onWithdraw, courseId }: Studen
       </div>
     </div>
   );
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('es-CO', {
-      day: '2-digit', month: 'short', year: 'numeric',
-    });
-  } catch {
-    return iso;
-  }
 }

@@ -91,7 +91,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         selectedFiles = DATA_FILES;
       }
 
-      await logAudit({
+      logAudit({
         action: 'seed',
         entity: 'blob',
         userId: user.id,

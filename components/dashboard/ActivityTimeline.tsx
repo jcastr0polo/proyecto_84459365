@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { formatDateShort } from '@/lib/dateUtils';
 import { Upload, CheckCircle2, UserPlus, FileText, Rocket, Inbox } from 'lucide-react';
 
 interface TimelineEvent {
@@ -117,7 +118,7 @@ function formatRelativeTime(isoDate: string): string {
     if (mins < 60) return `${mins}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
-    return new Date(isoDate).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+    return formatDateShort(isoDate);
   } catch {
     return '';
   }

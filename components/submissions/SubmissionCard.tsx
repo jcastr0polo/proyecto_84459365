@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { formatDateTimeColombia as formatDate } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import type { Submission } from '@/lib/types';
 
@@ -91,12 +92,4 @@ export default function SubmissionCard({ submission, activityTitle, activityDueD
       )}
     </div>
   );
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('es-CO', {
-      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-    });
-  } catch { return iso; }
 }

@@ -17,6 +17,7 @@ import {
   isStudentEnrolled,
   readQuizAttemptsFresh,
   withFileLock,
+  nowColombiaISO,
 } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import type { QuizQuestion, QuizOption } from '@/lib/types';
@@ -158,7 +159,7 @@ export async function PUT(request: Request, { params }: RouteParams): Promise<Ne
           });
         }
 
-        quiz.updatedAt = new Date().toISOString();
+        quiz.updatedAt = nowColombiaISO();
         quizzes[index] = quiz;
 
         await dispatchWrite(

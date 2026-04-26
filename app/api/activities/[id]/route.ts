@@ -16,6 +16,9 @@ import {
   getCourseById,
   isStudentEnrolled,
   withFileLock,
+  nowColombiaISO,
+  parseDateColombia,
+  parseDateTimeColombia,
 } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import type { Activity } from '@/lib/types';
@@ -51,7 +54,7 @@ export async function GET(
 
       // Solo puede ver actividades published con publishDate pasada
       const now = new Date();
-      if (activity.status !== 'published' || new Date(activity.publishDate) > now) {
+      if (activity.status !== 'published' || parseDateColombia(activity.publishDate) > now) {
         return NextResponse.json(
           { error: 'Actividad no disponible' },
           { status: 404 }
@@ -121,8 +124,10 @@ export async function PUT(
 
         // Si se cambian ambos dueDate y publishDate, validar orden
         const finalDueDate = data.dueDate || existing.dueDate;
+        const finalDueTime = data.dueTime ?? existing.dueTime ?? '23:59';
         const finalPublishDate = data.publishDate || existing.publishDate;
-        if (new Date(finalDueDate) <= new Date(finalPublishDate)) {
+        const finalPublishTime = data.publishTime ?? existing.publishTime ?? '00:00';
+        if (parseDateTimeColombia(finalDueDate, finalDueTime) <= parseDateTimeColombia(finalPublishDate, finalPublishTime)) {
           return NextResponse.json(
             { error: 'La fecha límite debe ser posterior a la fecha de publicación' },
             { status: 400 }
@@ -146,7 +151,7 @@ export async function PUT(
           ...restData,
           // Convert null to undefined for corteId
           ...(rawCorteId !== undefined ? { corteId: rawCorteId ?? undefined } : {}),
-          updatedAt: new Date().toISOString(),
+          updatedAt: nowColombiaISO(),
         };
 
         activities[index] = updatedActivity;

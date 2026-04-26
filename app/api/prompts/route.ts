@@ -11,7 +11,7 @@ import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { withAuth } from '@/lib/withAuth';
 import { createPromptSchema } from '@/lib/schemas';
-import { readPromptsFresh, writePrompts, getPromptsByCourse, getCourseById, withFileLock } from '@/lib/dataService';
+import { readPromptsFresh, writePrompts, getPromptsByCourse, getCourseById, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import type { AIPrompt } from '@/lib/types';
 
@@ -71,7 +71,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
       }
 
-      const now = new Date().toISOString();
+      const now = nowColombiaISO();
       const prompt: AIPrompt = {
         id: uuidv4(),
         courseId: parsed.data.courseId,

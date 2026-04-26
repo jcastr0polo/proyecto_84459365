@@ -6,6 +6,7 @@ import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
+import { formatDateShort } from '@/lib/dateUtils';
 import type { Quiz } from '@/lib/types';
 import { ClipboardList, Clock, Shield } from 'lucide-react';
 
@@ -85,7 +86,7 @@ export default function StudentQuizzesPage() {
                 <span>{quiz.questions.length} preguntas</span>
                 {quiz.maxAttempts > 0 && <span>{quiz.maxAttempts} intento{quiz.maxAttempts !== 1 ? 's' : ''}</span>}
                 {quiz.endDate && (
-                  <span>Hasta {new Date(quiz.endDate).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}</span>
+                  <span>Hasta {formatDateShort(quiz.endDate)}</span>
                 )}
               </div>
             </div>

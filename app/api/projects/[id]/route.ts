@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readProjectsFresh, writeProjects, getProjectById, readUsersFresh, readCoursesFresh, withFileLock } from '@/lib/dataService';
+import { readProjectsFresh, writeProjects, getProjectById, readUsersFresh, readCoursesFresh, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { updateProjectSchema } from '@/lib/schemas';
 
@@ -95,7 +95,7 @@ export async function PUT(
         figmaUrl: updates.figmaUrl === '' ? undefined : (updates.figmaUrl ?? project.figmaUrl),
         showcaseDescription: updates.showcaseDescription === '' ? undefined : (updates.showcaseDescription ?? project.showcaseDescription),
         showcaseImageUrl: updates.showcaseImageUrl === '' ? undefined : (updates.showcaseImageUrl ?? project.showcaseImageUrl),
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowColombiaISO(),
       };
 
       projects[index] = updated;

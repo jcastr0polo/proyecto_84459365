@@ -23,6 +23,7 @@ import {
   writeEnrollments,
   isStudentEnrolled,
 } from '@/lib/dataService';
+import { nowColombiaISO } from '@/lib/dateUtils';
 import { withFileLock } from '@/lib/dataService';
 import type {
   User,
@@ -70,7 +71,7 @@ export async function enrollStudent(
 
   if (!user) {
     // Crear nuevo usuario student
-    const now = new Date().toISOString();
+    const now = nowColombiaISO();
     const passwordHash = await hashPassword(data.documentNumber);
 
     const newUser: User = {
@@ -117,7 +118,7 @@ export async function enrollStudent(
       courseId,
       studentId: user!.id,
       status: 'active',
-      enrolledAt: new Date().toISOString(),
+      enrolledAt: nowColombiaISO(),
       enrolledBy: adminId,
     };
 

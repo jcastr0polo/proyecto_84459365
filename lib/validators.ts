@@ -77,6 +77,9 @@ export const AppConfigSchema = z.object({
     .describe('Código de localización ISO'),
   theme: z.enum(['light', 'dark'])
     .describe('Tema visual de la aplicación'),
+  timezone: z.string()
+    .min(1, 'timezone es requerido')
+    .describe('IANA timezone (ej: America/Bogota)'),
 })
   .describe('Esquema completo de config.json');
 

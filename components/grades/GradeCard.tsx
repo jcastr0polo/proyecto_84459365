@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { formatDateColombia } from '@/lib/dateUtils';
 import { motion } from 'framer-motion';
 
 interface GradeCardActivity {
@@ -106,7 +107,7 @@ export default function GradeCard({ activity, index }: GradeCardProps) {
 
             {/* Graded at footer */}
             <p className="text-[10px] text-faint mt-2">
-              Calificado: {new Date(grade.gradedAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })}
+              Calificado: {formatDateColombia(grade.gradedAt)}
             </p>
           </div>
         ) : (

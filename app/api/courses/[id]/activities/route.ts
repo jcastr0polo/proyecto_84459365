@@ -19,6 +19,8 @@ import {
   isStudentEnrolled,
   getProjectByStudentAndCourse,
   withFileLock,
+  nowColombiaISO,
+  parseDateColombia,
 } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import type { Activity } from '@/lib/types';
@@ -56,7 +58,7 @@ export async function GET(
 
       const now = new Date();
       activities = activities.filter(
-        (a) => a.status === 'published' && new Date(a.publishDate) <= now
+        (a) => a.status === 'published' && parseDateColombia(a.publishDate) <= now
       );
 
       // Filtrar actividades que requieren proyecto si el estudiante no tiene uno
@@ -102,7 +104,7 @@ export async function POST(
       }
 
       const data = parsed.data;
-      const now = new Date().toISOString();
+      const now = nowColombiaISO();
 
       // Crear actividad con estado draft
       const activity: Activity = {
@@ -115,7 +117,9 @@ export async function POST(
         category: data.category,
         attachments: [],
         dueDate: data.dueDate,
+        dueTime: data.dueTime,
         publishDate: data.publishDate,
+        publishTime: data.publishTime,
         maxScore: data.maxScore,
         weight: data.weight,
         allowLateSubmission: data.allowLateSubmission,

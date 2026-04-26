@@ -4,7 +4,7 @@ import { HomeDataSchema, AppConfigSchema } from './validators';
 import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject, Corte, Quiz, QuizAttempt } from './types';
 import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema, corteSchema, quizSchema, quizAttemptSchema } from './schemas';
 import { z } from 'zod';
-import { writeToBlob, readFromBlobDirect, withFileLock } from './blobSync';
+import { writeToBlob, writeToBlobVerified, readFromBlobDirect, withFileLock } from './blobSync';
 
 // ────────────────────────────────────────────────────────────
 // Lectura/escritura de datos
@@ -107,6 +107,23 @@ export async function writeJsonFile<T>(filename: string, data: T): Promise<void>
     await writeToBlob(filename, content);
   } else {
     // Local: filesystem directo
+    const filePath = path.join(SOURCE_DATA_DIR, filename);
+    fs.writeFileSync(filePath, content, 'utf-8');
+  }
+}
+
+/**
+ * Escritura CRÍTICA con verificación read-back.
+ * Usar para datos que no pueden perderse: quiz-attempts, submissions en examen.
+ * En Vercel: escribe + lee de vuelta para verificar integridad.
+ * En local: escribe al filesystem (sin verificación necesaria).
+ */
+export async function writeJsonFileCritical<T>(filename: string, data: T): Promise<void> {
+  const content = JSON.stringify(data, null, 2) + '\n';
+
+  if (IS_VERCEL) {
+    await writeToBlobVerified(filename, content);
+  } else {
     const filePath = path.join(SOURCE_DATA_DIR, filename);
     fs.writeFileSync(filePath, content, 'utf-8');
   }
@@ -619,7 +636,7 @@ export async function readQuizAttemptsFresh(): Promise<QuizAttempt[]> {
 }
 
 export async function writeQuizAttempts(attempts: QuizAttempt[]): Promise<void> {
-  await writeJsonFile('quiz-attempts.json', attempts);
+  await writeJsonFileCritical('quiz-attempts.json', attempts);
 }
 
 export async function getAttemptsByQuiz(quizId: string): Promise<QuizAttempt[]> {
@@ -636,4 +653,22 @@ export async function getAttemptsByStudent(studentId: string, quizId: string): P
 // Re-exports desde blobSync — dataService es el ÚNICO punto de
 // acceso a datos. Ningún otro archivo debe importar de blobSync.
 // ────────────────────────────────────────────────────────────
-export { withFileLock, DATA_FILES, seedAllToBlob, seedFilesToBlob, readFromBlobDirect } from './blobSync';
+export { withFileLock, DATA_FILES, seedAllToBlob, seedFilesToBlob, readFromBlobDirect, writeToBlobVerified } from './blobSync';
+
+// ────────────────────────────────────────────────────────────
+// Re-exports desde dateUtils — Centralización de fechas Colombia
+// Todas las rutas y servicios importan de aquí (no de dateUtils directo)
+// ────────────────────────────────────────────────────────────
+export {
+  nowColombiaISO,
+  parseDateColombia,
+  parseDateTimeColombia,
+  nowColombia,
+  isPast,
+  isFuture,
+  formatDateColombia,
+  formatDateTimeColombia,
+  formatTimeColombia,
+  formatDateShort,
+  COLOMBIA_TZ,
+} from './dateUtils';

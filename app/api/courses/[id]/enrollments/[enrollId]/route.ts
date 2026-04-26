@@ -8,7 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readEnrollmentsFresh, writeEnrollments, getCourseById, withFileLock } from '@/lib/dataService';
+import { readEnrollmentsFresh, writeEnrollments, getCourseById, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 
 /**
@@ -48,7 +48,7 @@ export async function DELETE(
 
       // RN-INS-05: Soft-delete
       enrollments[index].status = 'withdrawn';
-      enrollments[index].withdrawnAt = new Date().toISOString();
+      enrollments[index].withdrawnAt = nowColombiaISO();
       await dispatchWrite(
         () => writeEnrollments(enrollments),
         { action: 'delete', entity: 'enrollment', entityId: enrollId, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: `Retiró estudiante del curso ${course.name}` }

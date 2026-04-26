@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { formatDateColombia as formatDate, formatDateTimeColombia as formatDateTime } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -673,20 +674,6 @@ function ProjectStatusBadge({ status }: { status: string }) {
   };
   const cfg = map[status] ?? { variant: 'neutral' as const, label: status };
   return <Badge variant={cfg.variant} size="sm">{cfg.label}</Badge>;
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
-  } catch { return iso; }
-}
-
-function formatDateTime(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('es-CO', {
-      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-    });
-  } catch { return iso; }
 }
 
 function formatFileSize(bytes: number): string {

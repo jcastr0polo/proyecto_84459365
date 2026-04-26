@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card';
 import Countdown from '@/components/ui/Countdown';
 import FileUploadZone from '@/components/ui/FileUploadZone';
 import LinkInput from '@/components/submissions/LinkInput';
+import { parseDateTimeColombia } from '@/lib/dateUtils';
 import type { Activity, SubmissionLink } from '@/lib/types';
 
 interface SubmitFormProps {
@@ -36,7 +37,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const now = new Date();
-  const dueDate = new Date(activity.dueDate);
+  const dueDate = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59');
   const isLate = now > dueDate;
   const isNearDue = !isLate && (dueDate.getTime() - now.getTime()) < 24 * 60 * 60 * 1000;
 

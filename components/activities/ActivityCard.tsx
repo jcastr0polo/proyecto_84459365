@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { formatDateShort as formatDate, parseDateTimeColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import Countdown from '@/components/ui/Countdown';
 import type { Activity } from '@/lib/types';
@@ -46,7 +47,7 @@ export { TYPE_LABELS, TYPE_VARIANTS, STATUS_CONFIG };
  */
 export default function ActivityCard({ activity, onClick }: ActivityCardProps) {
   const status = STATUS_CONFIG[activity.status];
-  const isPastDue = new Date(activity.dueDate) < new Date();
+  const isPastDue = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59') < new Date();
   const isPublished = activity.status === 'published';
 
   return (
@@ -127,14 +128,4 @@ export default function ActivityCard({ activity, onClick }: ActivityCardProps) {
       </div>
     </div>
   );
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('es-CO', {
-      day: '2-digit', month: 'short',
-    });
-  } catch {
-    return iso;
-  }
 }

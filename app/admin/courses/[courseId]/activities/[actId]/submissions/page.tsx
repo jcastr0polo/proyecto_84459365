@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { formatDateTimeColombia as formatDate } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import { Inbox, Search as SearchIcon, GitBranch, Palette, Link as LinkIcon, Paperclip } from 'lucide-react';
 import SearchInput from '@/components/ui/SearchInput';
@@ -341,11 +342,3 @@ const LINK_ICONS: Record<string, React.ReactNode> = {
   figma: <Palette className="w-3.5 h-3.5" />,
   other: <LinkIcon className="w-3.5 h-3.5" />,
 };
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('es-CO', {
-      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-    });
-  } catch { return iso; }
-}

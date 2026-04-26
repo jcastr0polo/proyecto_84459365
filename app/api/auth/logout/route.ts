@@ -21,7 +21,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
       // 3. Auditoría
       const user = await getUserById(session.userId);
-      await logAudit({
+      logAudit({
         action: 'logout',
         entity: 'user',
         entityId: session.userId,

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { formatDateShort as formatDate, parseDateColombia, parseDateTimeColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import { ClipboardList, AlertTriangle } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
@@ -20,7 +21,7 @@ function getDeliveryStatus(activity: Activity, submission: Submission | undefine
     return 'delivered';
   }
   const now = new Date();
-  const due = new Date(activity.dueDate);
+  const due = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59');
   if (now > due) return 'overdue';
   return 'pending';
 }
@@ -92,7 +93,7 @@ export default function StudentActivitiesPage() {
       };
       const pDiff = priority[statusA] - priority[statusB];
       if (pDiff !== 0) return pDiff;
-      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      return parseDateColombia(a.dueDate).getTime() - parseDateColombia(b.dueDate).getTime();
     });
   }, [activities, submissions]);
 
@@ -146,7 +147,7 @@ export default function StudentActivitiesPage() {
             const sub = submissions[activity.id];
             const deliveryStatus = getDeliveryStatus(activity, sub);
             const badge = DELIVERY_BADGES[deliveryStatus];
-            const isPastDue = new Date(activity.dueDate) < new Date();
+            const isPastDue = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59') < new Date();
 
             return (
               <div
@@ -207,12 +208,4 @@ export default function StudentActivitiesPage() {
       )}
     </div>
   );
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('es-CO', {
-      day: '2-digit', month: 'short',
-    });
-  } catch { return iso; }
 }

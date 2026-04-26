@@ -40,32 +40,48 @@ export const DATA_FILES = [
 ];
 
 // ═══════════════════════════════════════════════════════════
-// Per-file write lock — serializa operaciones read-modify-write
-// para evitar que escrituras concurrentes se sobreescriban.
+// Per-file write QUEUE — serializa operaciones read-modify-write
+// Modelo: cada archivo JSON es una "tabla". Escrituras se encolan
+// por archivo. Lecturas NUNCA se bloquean (van directo a Blob).
+// Auditoría es fire-and-forget en su propio archivo (no bloquea datos).
 // ═══════════════════════════════════════════════════════════
 const _fileLocks = new Map<string, Promise<unknown>>();
+const _queueDepth = new Map<string, number>();
 
 /**
  * Ejecuta `fn` con acceso exclusivo al archivo `filename`.
  * Si otra operación está en curso para el mismo archivo,
- * espera a que termine antes de ejecutar.
- * Esto solo serializa dentro de la MISMA instancia serverless.
- * Entre instancias distintas no hay lock compartido, pero
- * con TTL=0 cada request lee fresh de Blob antes de escribir,
- * minimizando la ventana de race condition.
+ * ENCOLA y espera su turno (FIFO). La cola se drena secuencialmente.
+ *
+ * - Lecturas fuera de lock: permitidas, no se bloquean (van directo a Blob).
+ * - Lecturas DENTRO de lock: intencionales (read-modify-write atómico).
+ * - Escrituras a archivos DISTINTOS: independientes, no se bloquean entre sí.
+ *
+ * Limitación: solo serializa dentro de la MISMA instancia serverless.
  */
 export async function withFileLock<T>(filename: string, fn: () => Promise<T>): Promise<T> {
+  const depth = (_queueDepth.get(filename) ?? 0) + 1;
+  _queueDepth.set(filename, depth);
+  if (depth > 1) {
+    console.log(`[lock] ${filename} enqueued (depth: ${depth})`);
+  }
+
   const prev = _fileLocks.get(filename) ?? Promise.resolve();
   let resolve: () => void;
   const lock = new Promise<void>((r) => { resolve = r; });
   _fileLocks.set(filename, lock);
 
   try {
-    await prev; // esperar operación anterior
+    await prev; // esperar operación anterior en la cola
     return await fn();
   } finally {
     resolve!();
-    // limpiar si somos el último en la cola
+    const newDepth = (_queueDepth.get(filename) ?? 1) - 1;
+    if (newDepth <= 0) {
+      _queueDepth.delete(filename);
+    } else {
+      _queueDepth.set(filename, newDepth);
+    }
     if (_fileLocks.get(filename) === lock) {
       _fileLocks.delete(filename);
     }
@@ -104,6 +120,7 @@ export async function readFromBlobDirect(filename: string): Promise<string | nul
 
 /**
  * Escribe a Blob (BD). Si Blob falla → LANZA error.
+ * Pre-valida que el contenido sea JSON válido antes de escribir.
  */
 export async function writeToBlob(filename: string, content: string): Promise<void> {
   if (!IS_VERCEL) return;
@@ -111,6 +128,16 @@ export async function writeToBlob(filename: string, content: string): Promise<vo
   const token = getBlobToken();
   if (!token) {
     throw new Error('[blobSync] NEXUS_READ_WRITE_TOKEN not configured — cannot write to database');
+  }
+
+  // Pre-write validation: JSON integrity
+  if (!content || content.trim().length === 0) {
+    throw new Error(`[blobSync] Pre-write REJECTED for ${filename}: empty content`);
+  }
+  try {
+    JSON.parse(content);
+  } catch (e) {
+    throw new Error(`[blobSync] Pre-write REJECTED for ${filename}: invalid JSON — ${e}`);
   }
 
   // 1. Escribir a Blob (fuente de verdad)
@@ -121,7 +148,28 @@ export async function writeToBlob(filename: string, content: string): Promise<vo
     token,
   });
 
-  console.log(`[blobSync] Wrote ${filename} to Blob`);
+  console.log(`[blobSync] ✓ ${filename} (${content.length}B)`);
+}
+
+/**
+ * Escritura CRÍTICA con verificación read-back.
+ * Usa para datos que no pueden perderse (quiz-attempts, submissions).
+ * Después de escribir, lee de vuelta y compara tamaño.
+ */
+export async function writeToBlobVerified(filename: string, content: string): Promise<void> {
+  await writeToBlob(filename, content);
+
+  if (!IS_VERCEL) return;
+
+  // Read-back verification
+  const readBack = await readFromBlobDirect(filename);
+  if (readBack === null) {
+    throw new Error(`[blobSync] VERIFY FAILED for ${filename}: null read-back after write`);
+  }
+  if (readBack.length !== content.length) {
+    throw new Error(`[blobSync] VERIFY FAILED for ${filename}: wrote ${content.length}B, read ${readBack.length}B`);
+  }
+  console.log(`[blobSync] ✓✓ ${filename} verified`);
 }
 
 // ═══════════════════════════════════════════════════════════

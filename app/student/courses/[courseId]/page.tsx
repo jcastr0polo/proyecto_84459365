@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FileText, BarChart3, Rocket, MapPin, Clock, Calendar, Building2, Monitor, RefreshCw, ClipboardList } from 'lucide-react';
+import { formatDateShort as formatDate, parseDateColombia, parseDateTimeColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -19,7 +20,7 @@ function getDeliveryStatus(activity: Activity, submission: Submission | undefine
     return 'delivered';
   }
   const now = new Date();
-  const due = new Date(activity.dueDate);
+  const due = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59');
   if (now > due) return 'overdue';
   return 'pending';
 }
@@ -50,12 +51,6 @@ const categoryBadge: Record<string, { variant: 'programming' | 'design' | 'manag
   leadership: { variant: 'leadership', label: 'Liderazgo' },
   other: { variant: 'other', label: 'Otro' },
 };
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
-  } catch { return iso; }
-}
 
 function getScoreColor(score: number): string {
   if (score >= 4.0) return 'text-emerald-400';
@@ -280,9 +275,9 @@ export default function StudentCourseDashboardPage() {
               const sub = submissions[activity.id];
               const deliveryStatus = getDeliveryStatus(activity, sub);
               const cfg = STATUS_CONFIG[deliveryStatus];
-              const isPastDue = new Date(activity.dueDate) < new Date();
+              const isPastDue = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59') < new Date();
               const daysLeft = Math.ceil(
-                (new Date(activity.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                (parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59').getTime() - Date.now()) / (1000 * 60 * 60 * 24)
               );
 
               // Grade info from gradeData

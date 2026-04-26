@@ -8,7 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readProjectsFresh, writeProjects, getCourseById, withFileLock } from '@/lib/dataService';
+import { readProjectsFresh, writeProjects, getCourseById, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import { put } from '@vercel/blob';
 import { v4 as uuidv4 } from 'uuid';
@@ -136,7 +136,7 @@ export async function POST(
         freshProjects[freshIndex] = {
           ...freshProjects[freshIndex],
           documentUrl,
-          updatedAt: new Date().toISOString(),
+          updatedAt: nowColombiaISO(),
         };
       }
       await dispatchWrite(

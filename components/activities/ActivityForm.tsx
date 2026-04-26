@@ -15,7 +15,9 @@ export interface ActivityFormData {
   category: Activity['category'];
   corteId?: string;
   dueDate: string;
+  dueTime: string;
   publishDate: string;
+  publishTime: string;
   maxScore: number;
   weight: number;
   allowLateSubmission: boolean;
@@ -75,7 +77,9 @@ export default function ActivityForm({
     category: activity?.category ?? 'individual',
     corteId: activity?.corteId ?? undefined,
     dueDate: activity?.dueDate ?? '',
+    dueTime: activity?.dueTime ?? '23:59',
     publishDate: activity?.publishDate ?? '',
+    publishTime: activity?.publishTime ?? '00:00',
     maxScore: activity?.maxScore ?? 5.0,
     weight: activity?.weight ?? 0,
     allowLateSubmission: activity?.allowLateSubmission ?? false,
@@ -307,29 +311,59 @@ export default function ActivityForm({
           Configuración
         </h3>
         <div className="space-y-4">
-          {/* Dates row */}
+          {/* Dates + Times row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <DatePicker
-              id="act-publish-date"
-              label="Fecha de Publicación"
-              value={form.publishDate}
-              onChange={(v) => update('publishDate', v)}
-              onBlur={() => handleBlur('publishDate')}
-              required
-              error={touched.publishDate ? errors.publishDate : undefined}
-              hint="Cuándo será visible para estudiantes"
-            />
-            <DatePicker
-              id="act-due-date"
-              label="Fecha Límite"
-              value={form.dueDate}
-              onChange={(v) => update('dueDate', v)}
-              onBlur={() => handleBlur('dueDate')}
-              required
-              min={form.publishDate}
-              error={touched.dueDate ? errors.dueDate : undefined}
-              hint="Fecha máxima de entrega"
-            />
+            <div className="space-y-2">
+              <DatePicker
+                id="act-publish-date"
+                label="Fecha de Publicación"
+                value={form.publishDate}
+                onChange={(v) => update('publishDate', v)}
+                onBlur={() => handleBlur('publishDate')}
+                required
+                error={touched.publishDate ? errors.publishDate : undefined}
+                hint="Cuándo será visible para estudiantes"
+              />
+              <div>
+                <label htmlFor="act-publish-time" className="block text-xs font-medium text-muted mb-1.5">
+                  Hora de Publicación
+                </label>
+                <input
+                  id="act-publish-time"
+                  type="time"
+                  value={form.publishTime}
+                  onChange={(e) => update('publishTime', e.target.value)}
+                  className={inputClass('publishTime')}
+                />
+                <p className="mt-0.5 text-[11px] text-faint">Por defecto: 00:00</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <DatePicker
+                id="act-due-date"
+                label="Fecha Límite"
+                value={form.dueDate}
+                onChange={(v) => update('dueDate', v)}
+                onBlur={() => handleBlur('dueDate')}
+                required
+                min={form.publishDate}
+                error={touched.dueDate ? errors.dueDate : undefined}
+                hint="Fecha máxima de entrega"
+              />
+              <div>
+                <label htmlFor="act-due-time" className="block text-xs font-medium text-muted mb-1.5">
+                  Hora Límite
+                </label>
+                <input
+                  id="act-due-time"
+                  type="time"
+                  value={form.dueTime}
+                  onChange={(e) => update('dueTime', e.target.value)}
+                  className={inputClass('dueTime')}
+                />
+                <p className="mt-0.5 text-[11px] text-faint">Por defecto: 23:59</p>
+              </div>
+            </div>
           </div>
 
           {/* Score + Weight row */}

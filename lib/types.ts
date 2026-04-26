@@ -20,6 +20,7 @@ export interface AppConfig {
   version: string;     // Versión semántica (ej: "1.0.0")
   locale: string;      // Localización ISO (ej: "es-CO", "en-US", "fr-FR")
   theme: 'light' | 'dark';  // Tema visual: "light" o "dark"
+  timezone: string;    // IANA timezone (ej: "America/Bogota")
 }
 
 /**
@@ -293,7 +294,9 @@ export interface Activity {
   attachments: ActivityAttachment[];   // Archivos adjuntos del docente
   promptId?: string;                   // FK a Prompt.id (si aplica)
   dueDate: string;                     // Fecha límite de entrega (ISO date)
+  dueTime?: string;                    // Hora límite HH:mm (default "23:59")
   publishDate: string;                 // Fecha de publicación visible (ISO date)
+  publishTime?: string;                // Hora de publicación HH:mm (default "00:00")
   maxScore: number;                    // Nota máxima (ej: 5.0)
   weight: number;                      // Peso porcentual (ej: 20 = 20%)
   allowLateSubmission: boolean;        // Permitir entregas tardías
@@ -315,7 +318,9 @@ export interface CreateActivityRequest {
   type: Activity['type'];
   category: Activity['category'];
   dueDate: string;
+  dueTime?: string;
   publishDate: string;
+  publishTime?: string;
   maxScore: number;
   weight: number;
   allowLateSubmission?: boolean;
@@ -333,7 +338,9 @@ export interface UpdateActivityRequest {
   type?: Activity['type'];
   category?: Activity['category'];
   dueDate?: string;
+  dueTime?: string;
   publishDate?: string;
+  publishTime?: string;
   maxScore?: number;
   weight?: number;
   allowLateSubmission?: boolean;

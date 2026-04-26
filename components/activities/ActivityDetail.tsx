@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Paperclip, Link as LinkIcon, Clock, Eye, Download } from 'lucide-react';
+import { formatDateColombia as formatDate, parseDateTimeColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -55,7 +56,7 @@ export default function ActivityDetail({
   closeLoading = false,
 }: ActivityDetailProps) {
   const status = STATUS_CONFIG[activity.status];
-  const isPastDue = new Date(activity.dueDate) < new Date();
+  const isPastDue = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59') < new Date();
   const isPublished = activity.status === 'published';
   const isDraft = activity.status === 'draft';
 
@@ -81,8 +82,8 @@ export default function ActivityDetail({
 
         {/* Key info row */}
         <div className="flex flex-wrap items-center gap-4 text-sm text-muted">
-          <InfoItem icon="calendar" label="Publicación" value={formatDate(activity.publishDate)} />
-          <InfoItem icon="clock" label="Fecha límite" value={formatDate(activity.dueDate)} />
+          <InfoItem icon="calendar" label="Publicación" value={`${formatDate(activity.publishDate)} ${activity.publishTime || '00:00'}`} />
+          <InfoItem icon="clock" label="Fecha límite" value={`${formatDate(activity.dueDate)} ${activity.dueTime || '23:59'}`} />
           <InfoItem icon="star" label="Nota máxima" value={String(activity.maxScore)} />
           <InfoItem icon="percent" label="Peso" value={`${activity.weight}%`} />
         </div>
@@ -351,12 +352,4 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('es-CO', {
-      day: '2-digit', month: 'short', year: 'numeric',
-    });
-  } catch {
-    return iso;
-  }
-}
+

@@ -8,7 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { readActivitiesFresh, writeActivities, withFileLock } from '@/lib/dataService';
+import { readActivitiesFresh, writeActivities, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 
 export async function POST(
@@ -63,7 +63,7 @@ export async function POST(
       activities[index] = {
         ...activity,
         status: 'published',
-        updatedAt: new Date().toISOString(),
+        updatedAt: nowColombiaISO(),
       };
 
       await dispatchWrite(

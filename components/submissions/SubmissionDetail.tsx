@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { GitBranch, Palette, Link as LinkIcon, Eye, Download } from 'lucide-react';
+import { formatDateTimeColombia as formatDateTime } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -128,14 +129,6 @@ const LINK_ICONS: Record<string, React.ReactNode> = {
   figma: <Palette className="w-5 h-5" />,
   other: <LinkIcon className="w-5 h-5" />,
 };
-
-function formatDateTime(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('es-CO', {
-      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-    });
-  } catch { return iso; }
-}
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

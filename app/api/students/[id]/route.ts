@@ -11,7 +11,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { toSafeUser } from '@/lib/withAuth';
-import { getUserById, getEnrollmentsByStudent, getCourseById, readUsersFresh, writeUsers, withFileLock } from '@/lib/dataService';
+import { getUserById, getEnrollmentsByStudent, getCourseById, readUsersFresh, writeUsers, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { hashPassword } from '@/lib/auth';
 import { dispatchWrite } from '@/lib/auditService';
 
@@ -81,7 +81,7 @@ export async function PATCH(
         return NextResponse.json({ error: 'Estudiante no encontrado' }, { status: 404 });
       }
 
-      const now = new Date().toISOString();
+      const now = nowColombiaISO();
       const studentName = `${users[idx].firstName} ${users[idx].lastName}`;
 
       if (action === 'resetPassword') {

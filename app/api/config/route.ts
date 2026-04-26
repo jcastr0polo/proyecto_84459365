@@ -17,7 +17,9 @@
  */
 
 import { NextResponse, NextRequest } from 'next/server';
-import { readAppConfig } from '@/lib/dataService';
+import { readAppConfig, writeJsonFile, withFileLock } from '@/lib/dataService';
+import { withAuth } from '@/lib/withAuth';
+import { dispatchWrite } from '@/lib/auditService';
 import type { AppConfig } from '@/lib/types';
 
 /**
@@ -66,4 +68,41 @@ export async function GET(request: NextRequest): Promise<NextResponse<AppConfig 
       }
     );
   }
+}
+
+/**
+ * PUT /api/config — Actualizar configuración (admin only)
+ */
+export async function PUT(request: NextRequest): Promise<NextResponse> {
+  return withAuth(request, async (user) => {
+    try {
+      const body = await request.json();
+      const current = await readAppConfig();
+
+      const updated: AppConfig = {
+        ...current,
+        ...(body.timezone !== undefined ? { timezone: String(body.timezone) } : {}),
+        ...(body.theme !== undefined ? { theme: body.theme } : {}),
+        ...(body.appName !== undefined ? { appName: String(body.appName) } : {}),
+      };
+
+      await withFileLock('config.json', async () => {
+        await dispatchWrite(
+          () => writeJsonFile('config.json', updated),
+          {
+            action: 'update',
+            entity: 'config',
+            userId: user.id,
+            userName: `${user.firstName} ${user.lastName}`,
+            details: `Actualizó configuración: ${Object.keys(body).join(', ')}`,
+          }
+        );
+      });
+
+      return NextResponse.json({ config: updated, message: 'Configuración actualizada' });
+    } catch (error) {
+      console.error('[PUT /api/config] Error:', error);
+      return NextResponse.json({ error: 'Error al actualizar configuración' }, { status: 500 });
+    }
+  }, 'admin');
 }

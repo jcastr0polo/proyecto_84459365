@@ -2,5 +2,6 @@
   "appName": "Mi App TypeScript",
   "version": "1.0.0",
   "locale": "es-CO",
-  "theme": "dark"
+  "theme": "dark",
+  "timezone": "America/Bogota"
 }

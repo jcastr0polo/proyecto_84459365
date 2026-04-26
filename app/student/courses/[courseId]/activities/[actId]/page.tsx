@@ -12,6 +12,7 @@ import ActivityDetail from '@/components/activities/ActivityDetail';
 import SubmissionDetail from '@/components/submissions/SubmissionDetail';
 import PromptViewer from '@/components/prompts/PromptViewer';
 import type { Activity, Submission, AIPrompt } from '@/lib/types';
+import { parseDateTimeColombia } from '@/lib/dateUtils';
 
 /**
  * Student — Activity Detail Page
@@ -76,7 +77,7 @@ export default function StudentActivityDetailPage() {
 
   if (loading || !activity) return <PageLoader />;
 
-  const isPastDue = new Date(activity.dueDate) < new Date();
+  const isPastDue = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59') < new Date();
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">

@@ -14,7 +14,7 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { changePasswordRequestSchema } from '@/lib/schemas';
 import { verifyPassword, hashPassword } from '@/lib/auth';
-import { readUsersFresh, writeUsers, withFileLock } from '@/lib/dataService';
+import { readUsersFresh, writeUsers, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { dispatchWrite } from '@/lib/auditService';
 import type { User } from '@/lib/types';
 
@@ -66,7 +66,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
         users[userIndex].passwordHash = newHash;
         users[userIndex].mustChangePassword = false;
-        users[userIndex].updatedAt = new Date().toISOString();
+        users[userIndex].updatedAt = nowColombiaISO();
         await dispatchWrite(
           () => writeUsers(users),
           { action: 'password', entity: 'user', entityId: user.id, userId: user.id, userName: `${user.firstName} ${user.lastName}`, details: 'Cambió su contraseña' }
