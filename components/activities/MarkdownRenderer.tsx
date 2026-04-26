@@ -51,6 +51,8 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
 function markdownToHtml(md: string): string {
   // ── Step 1: Extract code blocks BEFORE escaping so indentation is preserved ──
   const codeBlocks: string[] = [];
+
+  // Triple-backtick blocks: ```lang\ncode\n```
   let processed = md.replace(/```(\w*)\n([\s\S]*?)```/g, (_match, lang: string, code: string) => {
     const escaped = code.trimEnd()
       .replace(/&/g, '&amp;')
@@ -60,6 +62,17 @@ function markdownToHtml(md: string): string {
     const langLabel = lang ? `<span class="code-lang">${lang}</span>` : '';
     const idx = codeBlocks.length;
     codeBlocks.push(`${langLabel}<pre${langAttr}><code>${escaped}</code></pre>`);
+    return `\n%%CODEBLOCK_${idx}%%\n`;
+  });
+
+  // HTML <pre> blocks: <pre>code</pre>
+  processed = processed.replace(/<pre>([\s\S]*?)<\/pre>/g, (_match, code: string) => {
+    const escaped = code.trim()
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const idx = codeBlocks.length;
+    codeBlocks.push(`<pre><code>${escaped}</code></pre>`);
     return `\n%%CODEBLOCK_${idx}%%\n`;
   });
 
