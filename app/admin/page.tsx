@@ -130,6 +130,7 @@ export default function AdminDashboardPage() {
             const subCount = cd.submissions.filter((s) => s.activityId === act.id).length;
             items.push({
               id: act.id,
+              courseId: cd.course.id,
               title: act.title,
               courseName: cd.course.name,
               courseCode: cd.course.code,
@@ -348,7 +349,11 @@ export default function AdminDashboardPage() {
             )}
           </div>
           <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.015] p-4">
-            <DeadlineList deadlines={deadlines} loading={loading} />
+            <DeadlineList
+              deadlines={deadlines}
+              loading={loading}
+              onItemClick={(actId, courseId) => router.push(`/admin/courses/${courseId}/activities/${actId}`)}
+            />
           </div>
         </section>
 

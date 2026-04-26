@@ -6,6 +6,7 @@ import { CheckCircle2 } from 'lucide-react';
 
 interface DeadlineItem {
   id: string;
+  courseId: string;
   title: string;
   courseName: string;
   courseCode: string;
@@ -68,7 +69,7 @@ export default function DeadlineList({ deadlines, loading = false, onItemClick }
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: i * 0.05 }}
-            onClick={() => onItemClick?.(d.id, '')}
+            onClick={() => onItemClick?.(d.id, d.courseId)}
             className="w-full flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.015] hover:bg-foreground/[0.04]
                        border border-transparent hover:border-foreground/[0.06]
                        transition-all duration-200 cursor-pointer group text-left"
