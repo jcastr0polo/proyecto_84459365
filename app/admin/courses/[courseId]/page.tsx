@@ -179,7 +179,7 @@ export default function CourseDetailPage() {
       </div>
 
       {/* Edit Modal */}
-      <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} title="Editar Curso" maxWidth="lg">
+      <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} title="Editar Curso" size="lg">
         <CourseForm
           course={course}
           semesters={semesters}

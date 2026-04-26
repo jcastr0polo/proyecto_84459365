@@ -191,7 +191,7 @@ export default function AuditPage() {
       )}
 
       {/* Detail Modal */}
-      <Modal open={!!selectedEntry} onClose={() => setSelectedEntry(null)} title="Detalle de Auditoría">
+      <Modal open={!!selectedEntry} onClose={() => setSelectedEntry(null)} title="Detalle de Auditoría" size="md">
         {selectedEntry && <AuditDetail entry={selectedEntry} />}
       </Modal>
     </div>

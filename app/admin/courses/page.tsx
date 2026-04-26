@@ -191,7 +191,7 @@ export default function CoursesPage() {
       )}
 
       {/* Create Modal */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nuevo Curso" maxWidth="lg">
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nuevo Curso" size="lg">
         <CourseForm
           semesters={semesters}
           onSubmit={handleCreate}

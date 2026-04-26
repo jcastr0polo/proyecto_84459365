@@ -271,7 +271,7 @@ export default function AdminQuizDetailPage() {
       </Card>
 
       {/* Edit Modal */}
-      <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} title="Editar Parcial" maxWidth="lg">
+      <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} title="Editar Parcial" size="lg">
         <QuizForm onSubmit={handleEdit} loading={submitting} initial={editInitial} />
       </Modal>
 

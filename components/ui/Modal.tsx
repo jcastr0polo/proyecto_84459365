@@ -8,16 +8,23 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  /** @deprecated Use `size` instead */
   maxWidth?: 'sm' | 'md' | 'lg';
+  /** Controls modal width. Mobile is always full-width. */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }
 
-const widthClasses = {
-  sm: 'max-w-md',
-  md: 'max-w-lg',
-  lg: 'max-w-2xl',
+const sizeClasses: Record<string, string> = {
+  sm:   'sm:max-w-md',
+  md:   'sm:max-w-lg',
+  lg:   'sm:max-w-2xl',
+  xl:   'sm:max-w-4xl',
+  full: 'sm:max-w-6xl',
 };
 
-export default function Modal({ open, onClose, title, children, maxWidth = 'md' }: ModalProps) {
+export default function Modal({ open, onClose, title, children, maxWidth, size }: ModalProps) {
+  const resolved = size ?? maxWidth ?? 'md';
+  const widthClass = sizeClasses[resolved] ?? sizeClasses.md;
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const handleKeyDown = useCallback(
@@ -63,7 +70,7 @@ export default function Modal({ open, onClose, title, children, maxWidth = 'md' 
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            className={`relative w-full ${widthClasses[maxWidth]} rounded-2xl border border-foreground/[0.08] bg-base shadow-2xl`}
+            className={`relative w-full max-w-[calc(100vw-2rem)] ${widthClass} rounded-2xl border border-foreground/[0.08] bg-base shadow-2xl`}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-foreground/[0.06]">
