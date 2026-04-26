@@ -106,10 +106,14 @@ export default function QuestionEditor({ question, index, onChange }: QuestionEd
               <input
                 type="number"
                 value={question.points}
-                onChange={(e) => onChange({ ...question, points: Math.max(0.1, parseFloat(e.target.value) || 0.1) })}
-                min={0.1}
-                step={0.1}
-                className="w-16 px-2 py-1.5 text-xs rounded-lg border border-foreground/10 bg-foreground/[0.04] text-foreground outline-none focus:border-cyan-500/50 text-center"
+                onChange={(e) => {
+                  const raw = e.target.value.replace(',', '.');
+                  const val = parseFloat(raw);
+                  onChange({ ...question, points: Number.isFinite(val) && val >= 0.01 ? Math.round(val * 100) / 100 : 0.01 });
+                }}
+                min={0.01}
+                step="any"
+                className="w-20 px-2 py-1.5 text-xs rounded-lg border border-foreground/10 bg-foreground/[0.04] text-foreground outline-none focus:border-cyan-500/50 text-center"
               />
             </div>
           </div>

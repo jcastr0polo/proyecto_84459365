@@ -665,7 +665,7 @@ const quizOptionInput = z.object({
 const quizQuestionInput = z.object({
   text: z.string().min(1, 'El enunciado es requerido').max(2000),
   type: z.enum(['single', 'weighted']),
-  points: z.number().min(0.1, 'El puntaje mínimo es 0.1'),
+  points: z.number().min(0.01, 'El puntaje mínimo es 0.01'),
   options: z.array(quizOptionInput).min(2, 'Mínimo 2 opciones'),
 });
 
