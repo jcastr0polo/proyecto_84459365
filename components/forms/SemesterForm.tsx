@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
+import DatePicker from '@/components/ui/DatePicker';
 import type { Semester } from '@/lib/types';
 
 interface SemesterFormProps {
@@ -108,32 +109,21 @@ export default function SemesterForm({ semester, onSubmit, onCancel, loading = f
 
       {/* Dates row */}
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="sem-start" className="block text-xs font-medium text-muted mb-1.5">
-            Fecha inicio
-          </label>
-          <input
-            id="sem-start"
-            type="date"
-            value={formData.startDate}
-            onChange={(e) => update('startDate', e.target.value)}
-            className={inputClass('startDate')}
-          />
-          {errors.startDate && <p className="mt-1 text-xs text-red-400">{errors.startDate}</p>}
-        </div>
-        <div>
-          <label htmlFor="sem-end" className="block text-xs font-medium text-muted mb-1.5">
-            Fecha fin
-          </label>
-          <input
-            id="sem-end"
-            type="date"
-            value={formData.endDate}
-            onChange={(e) => update('endDate', e.target.value)}
-            className={inputClass('endDate')}
-          />
-          {errors.endDate && <p className="mt-1 text-xs text-red-400">{errors.endDate}</p>}
-        </div>
+        <DatePicker
+          id="sem-start"
+          label="Fecha inicio"
+          value={formData.startDate}
+          onChange={(v) => update('startDate', v)}
+          error={errors.startDate}
+        />
+        <DatePicker
+          id="sem-end"
+          label="Fecha fin"
+          value={formData.endDate}
+          onChange={(v) => update('endDate', v)}
+          min={formData.startDate}
+          error={errors.endDate}
+        />
       </div>
 
       {/* Active toggle */}

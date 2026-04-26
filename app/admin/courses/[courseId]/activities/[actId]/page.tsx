@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import ActivityDetail from '@/components/activities/ActivityDetail';
 import ActivityForm from '@/components/activities/ActivityForm';
 import type { ActivityFormData } from '@/components/activities/ActivityForm';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Activity, Course, ActivityAttachment, Submission, EnrollmentWithStudent } from '@/lib/types';
 
 /**
@@ -32,6 +33,7 @@ export default function AdminActivityDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [publishLoading, setPublishLoading] = useState(false);
   const [closeLoading, setCloseLoading] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -93,9 +95,7 @@ export default function AdminActivityDetailPage() {
   }
 
   async function handleClose() {
-    const confirmed = window.confirm('¿Cerrar esta actividad? Los estudiantes ya no podrán enviar entregas.');
-    if (!confirmed) return;
-
+    setConfirmClose(false);
     setCloseLoading(true);
     try {
       const res = await fetch(`/api/activities/${actId}`, {
@@ -203,7 +203,7 @@ export default function AdminActivityDetailPage() {
         activity={activity}
         isAdmin
         onPublish={activity.status === 'draft' ? handlePublish : undefined}
-        onClose={activity.status === 'published' ? handleClose : undefined}
+        onClose={activity.status === 'published' ? () => setConfirmClose(true) : undefined}
         onEdit={() => setEditModalOpen(true)}
         onViewSubmissions={() => {
           router.push(`/admin/courses/${courseId}/activities/${actId}/submissions`);
@@ -259,6 +259,17 @@ export default function AdminActivityDetailPage() {
           />
         </Card>
       </Modal>
+
+      <ConfirmModal
+        open={confirmClose}
+        onClose={() => setConfirmClose(false)}
+        onConfirm={handleClose}
+        title="Cerrar actividad"
+        message="¿Cerrar esta actividad? Los estudiantes ya no podrán enviar entregas."
+        confirmLabel="Cerrar actividad"
+        variant="warning"
+        loading={closeLoading}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import StudentTable from '@/components/students/StudentTable';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { EnrollmentWithStudent, Course } from '@/lib/types';
 
 export default function CourseStudentsPage() {
@@ -22,6 +23,7 @@ export default function CourseStudentsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'withdrawn'>('all');
+  const [withdrawTarget, setWithdrawTarget] = useState<{ id: string; name: string } | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -71,15 +73,14 @@ export default function CourseStudentsPage() {
   const activeCount = enrollments.filter((e) => e.status === 'active').length;
   const withdrawnCount = enrollments.filter((e) => e.status === 'withdrawn').length;
 
-  async function handleWithdraw(enrollId: string) {
+  function requestWithdraw(enrollId: string) {
     const enrollment = enrollments.find((e) => e.id === enrollId);
     if (!enrollment) return;
+    setWithdrawTarget({ id: enrollId, name: `${enrollment.student.firstName} ${enrollment.student.lastName}` });
+  }
 
-    const confirm = window.confirm(
-      `¿Retirar a ${enrollment.student.firstName} ${enrollment.student.lastName} del curso?`
-    );
-    if (!confirm) return;
-
+  async function handleWithdraw(enrollId: string) {
+    setWithdrawTarget(null);
     try {
       const res = await fetch(`/api/courses/${courseId}/enrollments/${enrollId}`, {
         method: 'DELETE',
@@ -234,8 +235,18 @@ export default function CourseStudentsPage() {
           }
         />
       ) : (
-        <StudentTable enrollments={filtered} onWithdraw={handleWithdraw} courseId={courseId} />
+        <StudentTable enrollments={filtered} onWithdraw={requestWithdraw} courseId={courseId} />
       )}
+
+      <ConfirmModal
+        open={!!withdrawTarget}
+        onClose={() => setWithdrawTarget(null)}
+        onConfirm={() => withdrawTarget && handleWithdraw(withdrawTarget.id)}
+        title="Retirar estudiante"
+        message={withdrawTarget ? `¿Retirar a ${withdrawTarget.name} del curso?` : ''}
+        confirmLabel="Retirar"
+        variant="danger"
+      />
     </div>
   );
 }

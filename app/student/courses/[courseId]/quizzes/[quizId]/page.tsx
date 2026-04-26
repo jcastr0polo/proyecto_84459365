@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import { useAntiCheat } from '@/components/quizzes/useAntiCheat';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Quiz, QuizQuestion } from '@/lib/types';
 import { Clock, Shield, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
@@ -39,6 +40,7 @@ export default function StudentTakeQuizPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [blurWarnings, setBlurWarnings] = useState(0);
+  const [confirmIncomplete, setConfirmIncomplete] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Shuffle helper
@@ -379,7 +381,8 @@ export default function StudentTakeQuizPage() {
             disabled={submitting || answeredCount === 0}
             onClick={() => {
               if (answeredCount < totalQuestions) {
-                if (!confirm(`Solo respondiste ${answeredCount} de ${totalQuestions} preguntas. ¿Enviar de todas formas?`)) return;
+                setConfirmIncomplete(true);
+                return;
               }
               doSubmit(false, getBlurCount());
             }}
@@ -388,6 +391,16 @@ export default function StudentTakeQuizPage() {
           </Button>
         </div>
       </div>
+
+      <ConfirmModal
+        open={confirmIncomplete}
+        onClose={() => setConfirmIncomplete(false)}
+        onConfirm={() => { setConfirmIncomplete(false); doSubmit(false, getBlurCount()); }}
+        title="Envío incompleto"
+        message={`Solo respondiste ${answeredCount} de ${totalQuestions} preguntas. ¿Enviar de todas formas?`}
+        confirmLabel="Enviar"
+        variant="warning"
+      />
     </div>
   );
 }

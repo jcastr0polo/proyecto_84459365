@@ -9,6 +9,7 @@ import Modal from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import QuizForm from '@/components/quizzes/QuizForm';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Quiz, Course, QuizAttempt } from '@/lib/types';
 import type { QuestionData } from '@/components/quizzes/QuestionEditor';
 import { Pencil, Trash2, Eye, EyeOff, Clock, Shield, Users, AlertTriangle, PlayCircle, PauseCircle, BarChart3 } from 'lucide-react';
@@ -116,8 +117,10 @@ export default function AdminQuizDetailPage() {
     }
   }
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   async function handleDelete() {
-    if (!confirm('¿Eliminar este parcial? Esta acción no se puede deshacer.')) return;
+    setConfirmDelete(false);
     try {
       const res = await fetch(`/api/courses/${courseId}/quizzes/${quizId}`, { method: 'DELETE' });
       if (res.ok) {
@@ -191,7 +194,7 @@ export default function AdminQuizDetailPage() {
           <Button variant="secondary" size="sm" onClick={() => setEditModalOpen(true)}>
             <Pencil className="w-4 h-4 mr-1" /> Editar
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleDelete} className="text-red-400 hover:text-red-300">
+          <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)} className="text-red-400 hover:text-red-300">
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
@@ -268,6 +271,16 @@ export default function AdminQuizDetailPage() {
       <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} title="Editar Parcial" maxWidth="lg">
         <QuizForm onSubmit={handleEdit} loading={submitting} initial={editInitial} />
       </Modal>
+
+      <ConfirmModal
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={handleDelete}
+        title="Eliminar parcial"
+        message="¿Eliminar este parcial? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        variant="danger"
+      />
     </div>
   );
 }

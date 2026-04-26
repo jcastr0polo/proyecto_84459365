@@ -12,6 +12,7 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import SemesterForm from '@/components/forms/SemesterForm';
 import type { SemesterFormData } from '@/components/forms/SemesterForm';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Semester, AppConfig } from '@/lib/types';
 import { Calendar, Globe, Database } from 'lucide-react';
 
@@ -230,13 +231,11 @@ function SemestersTab() {
     }
   }
 
-  async function toggleActive(sem: Semester) {
-    const newState = !sem.isActive;
-    const confirmMsg = newState
-      ? `¿Activar "${sem.label}"? Se desactivarán los demás semestres.`
-      : `¿Desactivar "${sem.label}"?`;
+  const [toggleTarget, setToggleTarget] = useState<{ sem: Semester; newState: boolean } | null>(null);
 
-    if (!window.confirm(confirmMsg)) return;
+  async function toggleActive(sem: Semester) {
+    const newState = toggleTarget?.newState ?? !sem.isActive;
+    setToggleTarget(null);
 
     try {
       const res = await fetch(`/api/semesters/${sem.id}`, {
@@ -318,7 +317,7 @@ function SemestersTab() {
                     </Td>
                     <Td className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => toggleActive(sem)}>
+                        <Button variant="ghost" size="sm" onClick={() => setToggleTarget({ sem, newState: !sem.isActive })}>
                           {sem.isActive ? 'Desactivar' : 'Activar'}
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => openEdit(sem)}>
@@ -355,7 +354,7 @@ function SemestersTab() {
                   <span>Fin: {formatDate(sem.endDate)}</span>
                 </div>
                 <div className="flex items-center gap-2 pt-1 border-t border-foreground/[0.06]">
-                  <Button variant="ghost" size="sm" onClick={() => toggleActive(sem)} className="flex-1">
+                  <Button variant="ghost" size="sm" onClick={() => setToggleTarget({ sem, newState: !sem.isActive })} className="flex-1">
                     {sem.isActive ? 'Desactivar' : 'Activar'}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => openEdit(sem)} className="flex-1">
@@ -380,6 +379,19 @@ function SemestersTab() {
           loading={submitting}
         />
       </Modal>
+
+      <ConfirmModal
+        open={!!toggleTarget}
+        onClose={() => setToggleTarget(null)}
+        onConfirm={() => toggleTarget && toggleActive(toggleTarget.sem)}
+        title={toggleTarget?.newState ? 'Activar semestre' : 'Desactivar semestre'}
+        message={toggleTarget?.newState
+          ? `¿Activar "${toggleTarget?.sem.label}"? Se desactivarán los demás semestres.`
+          : `¿Desactivar "${toggleTarget?.sem.label}"?`
+        }
+        confirmLabel={toggleTarget?.newState ? 'Activar' : 'Desactivar'}
+        variant="warning"
+      />
     </div>
   );
 }
