@@ -33,38 +33,7 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
     try {
       const { id, quizId } = await params;
 
-      // Solo estudiantes pueden enviar respuestas
-      if (user.role !== 'student') {
-        return NextResponse.json({ error: 'Solo estudiantes pueden responder parciales' }, { status: 403 });
-      }
-
-      const course = await getCourseById(id);
-      if (!course) {
-        return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
-      }
-
-      if (!(await isStudentEnrolled(user.id, id))) {
-        return NextResponse.json({ error: 'No estás inscrito en este curso' }, { status: 403 });
-      }
-
-      const quiz = await getQuizById(quizId);
-      if (!quiz || quiz.courseId !== id) {
-        return NextResponse.json({ error: 'Parcial no encontrado' }, { status: 404 });
-      }
-
-      if (!quiz.isActive) {
-        return NextResponse.json({ error: 'Este parcial no está activo' }, { status: 400 });
-      }
-
-      // Verificar rango de fechas
-      const now = new Date();
-      if (quiz.startDate && parseDateColombia(quiz.startDate) > now) {
-        return NextResponse.json({ error: 'Este parcial aún no está disponible' }, { status: 400 });
-      }
-      if (quiz.endDate && parseDateColombia(quiz.endDate) < now) {
-        return NextResponse.json({ error: 'Este parcial ya cerró' }, { status: 400 });
-      }
-
+      // Solo estudiantes (o admin en simulación) pueden enviar respuestas
       const body = await request.json();
       const parsed = submitQuizSchema.safeParse(body);
       if (!parsed.success) {
@@ -76,17 +45,57 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
 
       const { answers: rawAnswers, blurCount = 0, autoSubmitted = false } = parsed.data;
 
-      // Verificar intentos permitidos
-      const allAttempts = await readQuizAttemptsFresh();
-      const studentAttempts = allAttempts.filter(
-        (a) => a.quizId === quizId && a.studentId === user.id
-      );
+      // Modo simulación: admin puede probar sin guardar
+      const isSimulation = body.simulate === true && user.role === 'admin';
 
-      if (quiz.maxAttempts > 0 && studentAttempts.length >= quiz.maxAttempts) {
-        return NextResponse.json(
-          { error: `Has alcanzado el máximo de intentos (${quiz.maxAttempts})` },
-          { status: 400 }
+      if (user.role !== 'student' && user.role !== 'admin') {
+        return NextResponse.json({ error: 'Solo estudiantes pueden responder parciales' }, { status: 403 });
+      }
+      if (user.role === 'student' && body.simulate) {
+        return NextResponse.json({ error: 'Solo administradores pueden simular' }, { status: 403 });
+      }
+
+      const course = await getCourseById(id);
+      if (!course) {
+        return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
+      }
+
+      if (!isSimulation && !(await isStudentEnrolled(user.id, id))) {
+        return NextResponse.json({ error: 'No estás inscrito en este curso' }, { status: 403 });
+      }
+
+      const quiz = await getQuizById(quizId);
+      if (!quiz || quiz.courseId !== id) {
+        return NextResponse.json({ error: 'Parcial no encontrado' }, { status: 404 });
+      }
+
+      if (!isSimulation && !quiz.isActive) {
+        return NextResponse.json({ error: 'Este parcial no está activo' }, { status: 400 });
+      }
+
+      // Verificar rango de fechas
+      const now = new Date();
+      if (!isSimulation && quiz.startDate && parseDateColombia(quiz.startDate) > now) {
+        return NextResponse.json({ error: 'Este parcial aún no está disponible' }, { status: 400 });
+      }
+      if (!isSimulation && quiz.endDate && parseDateColombia(quiz.endDate) < now) {
+        return NextResponse.json({ error: 'Este parcial ya cerró' }, { status: 400 });
+      }
+
+      // Verificar intentos permitidos
+      let studentAttempts: QuizAttempt[] = [];
+      if (!isSimulation) {
+        const allAttempts = await readQuizAttemptsFresh();
+        studentAttempts = allAttempts.filter(
+          (a) => a.quizId === quizId && a.studentId === user.id
         );
+
+        if (quiz.maxAttempts > 0 && studentAttempts.length >= quiz.maxAttempts) {
+          return NextResponse.json(
+            { error: `Has alcanzado el máximo de intentos (${quiz.maxAttempts})` },
+            { status: 400 }
+          );
+        }
       }
 
       // Calcular puntajes
@@ -143,11 +152,23 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
         flagged,
       };
 
-      await withFileLock('quiz-attempts.json', async () => {
-        const attempts = await readQuizAttemptsFresh();
-        attempts.push(attempt);
-        await writeQuizAttempts(attempts);
-      });
+      // Guardar intento (NO en simulación)
+      if (!isSimulation) {
+        await withFileLock('quiz-attempts.json', async () => {
+          const attempts = await readQuizAttemptsFresh();
+          attempts.push(attempt);
+          await writeQuizAttempts(attempts);
+        });
+      }
+
+      // Simulación: siempre muestra resultados completos
+      if (isSimulation) {
+        return NextResponse.json({
+          attempt,
+          simulation: true,
+          message: '🧪 Simulación completada — no se guardó ningún intento',
+        }, { status: 200 });
+      }
 
       // Determinar si se muestran resultados
       const showResults =

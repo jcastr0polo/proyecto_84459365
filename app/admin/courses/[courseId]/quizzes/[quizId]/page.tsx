@@ -12,7 +12,7 @@ import QuizForm from '@/components/quizzes/QuizForm';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Quiz, Course, QuizAttempt } from '@/lib/types';
 import type { QuestionData } from '@/components/quizzes/QuestionEditor';
-import { Pencil, Trash2, Eye, EyeOff, Clock, Shield, Users, AlertTriangle, PlayCircle, PauseCircle, BarChart3 } from 'lucide-react';
+import { Pencil, Trash2, Eye, EyeOff, Clock, Shield, Users, AlertTriangle, PlayCircle, PauseCircle, BarChart3, FlaskConical } from 'lucide-react';
 
 export default function AdminQuizDetailPage() {
   const params = useParams();
@@ -190,6 +190,9 @@ export default function AdminQuizDetailPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" onClick={toggleActive} disabled={toggling}>
             {quiz.isActive ? <><PauseCircle className="w-4 h-4 mr-1" /> Desactivar</> : <><PlayCircle className="w-4 h-4 mr-1" /> Activar</>}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => router.push(`/admin/courses/${courseId}/quizzes/${quizId}/simulate`)} className="!text-purple-400 !border-purple-500/30 hover:!bg-purple-500/10">
+            <FlaskConical className="w-4 h-4 mr-1" /> Simular
           </Button>
           <Button variant="secondary" size="sm" onClick={() => setEditModalOpen(true)}>
             <Pencil className="w-4 h-4 mr-1" /> Editar
