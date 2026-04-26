@@ -46,6 +46,7 @@ export default function AdminQuizSimulatePage() {
   const [blurWarnings, setBlurWarnings] = useState(0);
   const [confirmIncomplete, setConfirmIncomplete] = useState(false);
   const [history, setHistory] = useState<QuizSimulation[]>([]);
+  const [reviewingSim, setReviewingSim] = useState<QuizSimulation | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   function shuffleArray<T>(arr: T[], seed: number): T[] {
@@ -327,6 +328,110 @@ export default function AdminQuizSimulatePage() {
     );
   }
 
+  // ─── REVIEWING PAST SIMULATION ───
+  if (reviewingSim) {
+    const simAnswers = reviewingSim.answers ?? [];
+    return (
+      <div className="space-y-6 max-w-3xl mx-auto">
+        <button
+          onClick={() => setReviewingSim(null)}
+          className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
+          Volver al historial
+        </button>
+
+        <Card padding="lg" className="text-center">
+          <History className="w-10 h-10 text-purple-400 mx-auto mb-3" />
+          <h2 className="text-lg font-bold text-foreground mb-1">Revisión de Simulación</h2>
+          <p className="text-xs text-subtle mb-3">
+            {new Date(reviewingSim.simulatedAt).toLocaleDateString('es-CO', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            {reviewingSim.adminName ? ` · ${reviewingSim.adminName}` : ''}
+          </p>
+          <p className={`text-4xl font-bold ${
+            reviewingSim.percentage >= 70 ? 'text-emerald-400' : reviewingSim.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
+          }`}>
+            {reviewingSim.percentage}%
+          </p>
+          <p className="text-xs text-subtle mt-1">{reviewingSim.score}/{reviewingSim.maxScore} puntos</p>
+          <div className="flex items-center justify-center gap-4 text-xs text-subtle mt-3">
+            <span>Blur: <strong className={reviewingSim.blurCount ? 'text-amber-400' : 'text-emerald-400'}>{reviewingSim.blurCount}</strong></span>
+            <span>Auto-envío: <strong className={reviewingSim.autoSubmitted ? 'text-red-400' : 'text-emerald-400'}>{reviewingSim.autoSubmitted ? 'Sí' : 'No'}</strong></span>
+          </div>
+        </Card>
+
+        <div className="space-y-3">
+          <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider">Detalle por pregunta</h3>
+          {quiz.questions.map((question, idx) => {
+            const answer = simAnswers.find((a) => a.questionId === question.id);
+            const earned = answer?.pointsEarned ?? 0;
+            const isCorrect = earned === question.points;
+            const isPartial = earned > 0 && earned < question.points;
+
+            return (
+              <div key={question.id} className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02]">
+                <div className="flex items-start gap-2 mb-3">
+                  <span className="text-xs font-bold text-faint shrink-0 pt-0.5">{idx + 1}.</span>
+                  <div className="flex-1">
+                    <MarkdownRenderer content={question.text} className="text-sm font-medium text-foreground/90" />
+                    <span className={`text-[10px] font-medium ${
+                      isCorrect ? 'text-emerald-400' : isPartial ? 'text-amber-400' : 'text-red-400'
+                    }`}>
+                      {earned}/{question.points} pts
+                      {!answer ? ' — Sin responder' : isCorrect ? ' ✓' : ''}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="ml-5 space-y-1.5">
+                  {question.options.map((opt) => {
+                    const isSelected = question.type === 'weighted'
+                      ? (answer?.selectedOptionIds ?? []).includes(opt.id) || answer?.selectedOptionId === opt.id
+                      : answer?.selectedOptionId === opt.id;
+                    const isCorrectOpt = question.type === 'single' ? opt.weight === 100 : opt.weight > 0;
+                    const isBestOpt = question.type === 'weighted' && opt.weight === Math.max(...question.options.map(o => o.weight));
+                    return (
+                      <div
+                        key={opt.id}
+                        className={`px-3 py-2 rounded-lg border text-sm flex items-center gap-2 ${
+                          isSelected && isCorrectOpt
+                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                            : isSelected && !isCorrectOpt
+                              ? 'border-red-500/30 bg-red-500/10 text-red-300'
+                              : isCorrectOpt
+                                ? 'border-emerald-500/20 bg-emerald-500/5 text-muted'
+                                : 'border-foreground/[0.06] text-subtle'
+                        }`}
+                      >
+                        {isSelected && isCorrectOpt && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
+                        {isSelected && !isCorrectOpt && <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />}
+                        {!isSelected && isBestOpt && <Eye className="w-4 h-4 text-emerald-400/50 shrink-0" />}
+                        {!isSelected && isCorrectOpt && !isBestOpt && <Eye className="w-4 h-4 text-amber-400/50 shrink-0" />}
+                        <span className="flex-1">{opt.text}</span>
+                        {question.type === 'weighted' && (
+                          <span className={`text-[10px] shrink-0 font-mono ${opt.weight >= 80 ? 'text-emerald-400' : opt.weight > 0 ? 'text-amber-400' : 'text-faint'}`}>peso: {opt.weight}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex justify-center gap-3 pb-8">
+          <Button variant="secondary" size="sm" onClick={() => setReviewingSim(null)}>
+            <RotateCcw className="w-4 h-4 mr-1" /> Volver
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => { setReviewingSim(null); resetSimulation(); }}>
+            <FlaskConical className="w-4 h-4 mr-1" /> Nueva simulación
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // ─── PRE-START ───
   if (!started) {
     return (
@@ -390,7 +495,11 @@ export default function AdminQuizSimulatePage() {
             </h3>
             <div className="space-y-2">
               {history.map((sim) => (
-                <div key={sim.id} className="flex items-center justify-between p-3 rounded-lg bg-foreground/[0.02] border border-foreground/[0.06]">
+                <button
+                  key={sim.id}
+                  onClick={() => setReviewingSim(sim)}
+                  className="w-full flex items-center justify-between p-3 rounded-lg bg-foreground/[0.02] border border-foreground/[0.06] hover:border-purple-500/30 hover:bg-purple-500/[0.04] transition-colors cursor-pointer text-left"
+                >
                   <div className="min-w-0">
                     <p className="text-xs text-subtle">
                       {new Date(sim.simulatedAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -400,15 +509,18 @@ export default function AdminQuizSimulatePage() {
                       {sim.blurCount > 0 && <span className="text-[10px] text-amber-400">{sim.blurCount} blur</span>}
                     </div>
                   </div>
-                  <div className="text-right shrink-0 ml-3">
-                    <p className={`text-lg font-bold tabular-nums ${
-                      sim.percentage >= 70 ? 'text-emerald-400' : sim.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
-                    }`}>
-                      {sim.percentage}%
-                    </p>
-                    <p className="text-[10px] text-subtle">{sim.score}/{sim.maxScore} pts</p>
+                  <div className="flex items-center gap-3 shrink-0 ml-3">
+                    <div className="text-right">
+                      <p className={`text-lg font-bold tabular-nums ${
+                        sim.percentage >= 70 ? 'text-emerald-400' : sim.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
+                      }`}>
+                        {sim.percentage}%
+                      </p>
+                      <p className="text-[10px] text-subtle">{sim.score}/{sim.maxScore} pts</p>
+                    </div>
+                    <Eye className="w-4 h-4 text-purple-400/50" />
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </Card>
