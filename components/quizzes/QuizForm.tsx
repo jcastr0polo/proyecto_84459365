@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import QuestionEditor, { type QuestionData } from './QuestionEditor';
-import { Plus, Trash2 } from 'lucide-react';
+import QuestionImporter from './QuestionImporter';
+import { Plus, Trash2, Upload } from 'lucide-react';
 
 interface QuizFormProps {
   onSubmit: (data: Record<string, unknown>) => void;
@@ -40,6 +41,7 @@ export default function QuizForm({ onSubmit, loading, initial }: QuizFormProps) 
   const [questions, setQuestions] = useState<QuestionData[]>(
     initial?.questions ?? [{ text: '', type: 'single', points: 1, options: [{ text: '', weight: 100 }, { text: '', weight: 0 }] }]
   );
+  const [showImporter, setShowImporter] = useState(false);
 
   function addQuestion() {
     setQuestions([...questions, { text: '', type: 'single', points: 1, options: [{ text: '', weight: 100 }, { text: '', weight: 0 }] }]);
@@ -248,10 +250,31 @@ export default function QuizForm({ onSubmit, loading, initial }: QuizFormProps) 
           <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider">
             Preguntas ({questions.length}) · {totalPoints} pts
           </h3>
-          <Button type="button" variant="ghost" size="sm" onClick={addQuestion}>
-            <Plus className="w-4 h-4 mr-1" /> Agregar
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={() => setShowImporter(!showImporter)}>
+              <Upload className="w-4 h-4 mr-1" /> Importar
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={addQuestion}>
+              <Plus className="w-4 h-4 mr-1" /> Agregar
+            </Button>
+          </div>
         </div>
+
+        {showImporter && (
+          <div className="mb-4 p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.03]">
+            <QuestionImporter
+              onImport={(imported) => {
+                setQuestions((prev) => {
+                  // If only the default empty question exists, replace it
+                  const isEmpty = prev.length === 1 && !prev[0].text.trim();
+                  return isEmpty ? imported : [...prev, ...imported];
+                });
+                setShowImporter(false);
+              }}
+              onClose={() => setShowImporter(false)}
+            />
+          </div>
+        )}
 
         <div className="space-y-4">
           {questions.map((q, idx) => (
