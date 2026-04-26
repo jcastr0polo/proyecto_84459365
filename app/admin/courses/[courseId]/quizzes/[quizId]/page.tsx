@@ -12,6 +12,7 @@ import QuizForm from '@/components/quizzes/QuizForm';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Quiz, Course, QuizAttempt } from '@/lib/types';
 import type { QuestionData } from '@/components/quizzes/QuestionEditor';
+import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { Pencil, Trash2, Eye, EyeOff, Clock, Shield, Users, AlertTriangle, PlayCircle, PauseCircle, BarChart3, FlaskConical } from 'lucide-react';
 
 export default function AdminQuizDetailPage() {
@@ -229,7 +230,7 @@ export default function AdminQuizDetailPage() {
       {quiz.description && (
         <Card padding="lg">
           <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-2">Instrucciones</h3>
-          <p className="text-sm text-muted leading-relaxed whitespace-pre-wrap">{quiz.description}</p>
+          <MarkdownRenderer content={quiz.description} className="text-sm text-muted leading-relaxed" />
         </Card>
       )}
 
@@ -244,7 +245,7 @@ export default function AdminQuizDetailPage() {
               <div className="flex items-start gap-2 mb-2">
                 <span className="text-xs font-bold text-faint shrink-0">{idx + 1}.</span>
                 <div className="flex-1">
-                  <p className="text-sm text-foreground/90 font-medium">{q.text}</p>
+                  <MarkdownRenderer content={q.text} className="text-sm text-foreground/90 font-medium" />
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant={q.type === 'single' ? 'info' : 'warning'} size="sm">
                       {q.type === 'single' ? 'Única' : 'Ponderada'}

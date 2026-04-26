@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { useAntiCheat } from '@/components/quizzes/useAntiCheat';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Quiz, QuizQuestion } from '@/lib/types';
+import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { Clock, Shield, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface QuizDetailResponse {
@@ -231,7 +232,7 @@ export default function StudentTakeQuizPage() {
 
         <Card padding="lg">
           <h1 className="text-2xl font-bold text-foreground mb-2">{quiz.title}</h1>
-          {quiz.description && <p className="text-sm text-muted mb-4 whitespace-pre-wrap">{quiz.description}</p>}
+          {quiz.description && <MarkdownRenderer content={quiz.description} className="text-sm text-muted mb-4" />}
 
           <div className="grid grid-cols-2 gap-3 mb-6">
             <InfoItem label="Tipo" value={quiz.type === 'training' ? 'Entrenamiento' : 'Calificable'} />
@@ -335,7 +336,7 @@ export default function StudentTakeQuizPage() {
             <div className="flex items-start gap-2 mb-3">
               <span className="text-xs font-bold text-faint shrink-0 pt-0.5">{idx + 1}.</span>
               <div>
-                <p className="text-sm font-medium text-foreground/90">{question.text}</p>
+                <MarkdownRenderer content={question.text} className="text-sm font-medium text-foreground/90" />
                 <span className="text-[10px] text-subtle">{question.points} pts · {question.type === 'single' ? 'Selección única' : 'Ponderada'}</span>
               </div>
             </div>
