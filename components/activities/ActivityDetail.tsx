@@ -240,7 +240,7 @@ function AttachmentsSection({ attachments }: { attachments: Activity['attachment
                 </p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                {canPreview && (
+                {canPreview ? (
                   <Link
                     href={getViewerUrl(att)}
                     className="p-2 rounded-lg text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
@@ -248,16 +248,17 @@ function AttachmentsSection({ attachments }: { attachments: Activity['attachment
                   >
                     <Eye className="w-4 h-4" />
                   </Link>
+                ) : (
+                  <a
+                    href={getDownloadUrl(att.filePath)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-lg text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+                    title="Abrir"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </a>
                 )}
-                <a
-                  href={getDownloadUrl(att.filePath)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-lg text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
-                  title="Abrir"
-                >
-                  <Eye className="w-4 h-4" />
-                </a>
                 <a
                   href={getForceDownloadUrl(att.filePath)}
                   download
