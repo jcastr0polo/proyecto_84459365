@@ -35,6 +35,9 @@ export async function GET(
         }
       }
 
+      const { searchParams } = new URL(request.url);
+      const forceDownload = searchParams.get('download') === '1';
+
       const relativePath = `uploads/${pathSegments.join('/')}`;
       const { buffer, mimeType } = await readUploadedFile(relativePath);
 
@@ -49,7 +52,7 @@ export async function GET(
         headers: {
           'Content-Type': mimeType,
           'Content-Length': buffer.length.toString(),
-          'Content-Disposition': `inline; filename="${fileName}"`,
+          'Content-Disposition': `${forceDownload ? 'attachment' : 'inline'}; filename="${fileName}"`,
           'Cache-Control': 'no-store, no-cache, must-revalidate',
         },
       });

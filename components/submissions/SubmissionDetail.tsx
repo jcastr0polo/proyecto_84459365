@@ -147,6 +147,11 @@ function SubmissionAttachments({ attachments }: { attachments: Submission['attac
       ? `/api/upload/download?url=${encodeURIComponent(filePath)}`
       : `/api/upload/${filePath.replace('uploads/', '')}`;
 
+  const getForceDownloadUrl = (filePath: string) =>
+    filePath.startsWith('http')
+      ? `/api/upload/download?url=${encodeURIComponent(filePath)}&download=1`
+      : `/api/upload/${filePath.replace('uploads/', '')}?download=1`;
+
   const getViewerUrl = (att: Submission['attachments'][0]) =>
     `/admin/viewer?url=${encodeURIComponent(att.filePath)}&name=${encodeURIComponent(att.fileName)}`;
 
@@ -187,7 +192,15 @@ function SubmissionAttachments({ attachments }: { attachments: Submission['attac
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 rounded-lg text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
-                  title="Descargar"
+                  title="Abrir"
+                >
+                  <Eye className="w-4 h-4" />
+                </a>
+                <a
+                  href={getForceDownloadUrl(att.filePath)}
+                  download
+                  className="p-2 rounded-lg text-faint hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                  title="Descargar archivo"
                 >
                   <Download className="w-4 h-4" />
                 </a>

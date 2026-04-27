@@ -18,6 +18,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   return withAuth(request, async () => {
     const { searchParams } = new URL(request.url);
     const blobUrl = searchParams.get('url');
+    const forceDownload = searchParams.get('download') === '1';
 
     if (!blobUrl || !blobUrl.startsWith('https://')) {
       return NextResponse.json({ error: 'URL de Blob requerida' }, { status: 400 });
@@ -42,7 +43,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         headers: {
           'Content-Type': contentType,
           'Content-Length': String(arrayBuf.byteLength),
-          'Content-Disposition': `inline; filename="${fileName}"`,
+          'Content-Disposition': `${forceDownload ? 'attachment' : 'inline'}; filename="${fileName}"`,
           'Cache-Control': 'no-store, no-cache, must-revalidate',
         },
       });
