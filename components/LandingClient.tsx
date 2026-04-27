@@ -118,7 +118,7 @@ export default function LandingClient() {
       </nav>
 
       {/* ═══ HERO ═══ */}
-      <section className="relative pt-24 pb-10 sm:pt-32 sm:pb-14 px-6">
+      <section className="relative pt-24 pb-6 sm:pt-28 sm:pb-8 px-6">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-cyan-500/[0.06] rounded-full blur-[150px]" />
           <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-blue-500/[0.04] rounded-full blur-[120px]" />
@@ -130,7 +130,7 @@ export default function LandingClient() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-foreground/[0.08] bg-foreground/[0.03] mb-10"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-foreground/[0.08] bg-foreground/[0.03] mb-6"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -167,7 +167,7 @@ export default function LandingClient() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: titleAnimationDuration + 0.9, duration: 0.6 }}
-            className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-3"
+            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
           >
             <Link href="/login" className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black text-sm font-bold hover:shadow-lg hover:shadow-cyan-500/20 transition-all duration-300">
               Comenzar ahora
@@ -190,9 +190,9 @@ export default function LandingClient() {
       </section>
 
       {/* ═══ COURSES ═══ */}
-      <Section className="py-10 sm:py-14 px-6">
+      <Section className="py-6 sm:py-10 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/[0.08] border border-cyan-500/10 mb-4">
               <GraduationCap className="w-3.5 h-3.5 text-cyan-400/70" />
               <span className="text-[11px] font-medium text-cyan-400/70 tracking-wider uppercase">Semestre 2026-1</span>
@@ -247,9 +247,9 @@ export default function LandingClient() {
       </Section>
 
       {/* ═══ HOW IT WORKS ═══ */}
-      <Section className="py-10 sm:py-14 px-6">
+      <Section className="py-6 sm:py-10 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/[0.08] border border-purple-500/10 mb-4">
               <Sparkles className="w-3.5 h-3.5 text-purple-400/70" />
               <span className="text-[11px] font-medium text-purple-400/70 tracking-wider uppercase">Flujo de trabajo</span>
@@ -295,9 +295,9 @@ export default function LandingClient() {
       </Section>
 
       {/* ═══ TECH STACK ═══ */}
-      <Section className="py-10 sm:py-14 px-6">
+      <Section className="py-6 sm:py-10 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/[0.08] border border-emerald-500/10 mb-4">
               <Code2 className="w-3.5 h-3.5 text-emerald-400/70" />
               <span className="text-[11px] font-medium text-emerald-400/70 tracking-wider uppercase">Tecnologías</span>
@@ -340,7 +340,7 @@ export default function LandingClient() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-10 rounded-2xl border border-foreground/[0.06] bg-foreground/[0.02] p-6 sm:p-8"
+            className="mt-6 rounded-2xl border border-foreground/[0.06] bg-foreground/[0.02] p-6 sm:p-8"
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
               <div>
