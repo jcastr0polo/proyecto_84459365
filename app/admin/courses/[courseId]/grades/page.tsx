@@ -77,27 +77,9 @@ export default function AdminGradeSummaryPage() {
     }
   }, [courseId, toast]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin h-8 w-8 border-2 border-cyan-400 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <p className="text-subtle">No se pudieron cargar los datos del curso.</p>
-      </div>
-    );
-  }
-
-  const stats = calculateStats(data.students);
-
-  // Filter students by search
+  // Hooks MUST be called before any conditional return
   const filteredData = useMemo(() => {
-    if (!search.trim()) return data;
+    if (!data || !search.trim()) return data;
     const q = search.toLowerCase();
     return {
       ...data,
@@ -108,6 +90,24 @@ export default function AdminGradeSummaryPage() {
       ),
     };
   }, [data, search]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin h-8 w-8 border-2 border-cyan-400 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!data || !filteredData) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+        <p className="text-subtle">No se pudieron cargar los datos del curso.</p>
+      </div>
+    );
+  }
+
+  const stats = calculateStats(data.students);
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8">
