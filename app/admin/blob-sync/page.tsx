@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database, RefreshCw, CheckCircle, XCircle, Loader2, Cloud, Server, Download, AlertTriangle } from 'lucide-react';
 
 // Archivos sensibles: advertir antes de hacer seed
@@ -34,6 +34,13 @@ export default function BlobSyncPage() {
   const [downloadedData, setDownloadedData] = useState<{ file: string; data: unknown } | null>(null);
   const [activeTab, setActiveTab] = useState<'sync' | 'download'>('sync');
   const [dataFiles, setDataFiles] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch('/api/admin/blob-sync')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.dataFiles) setDataFiles(d.dataFiles); })
+      .catch(() => {});
+  }, []);
 
   async function runDiagnostics() {
     setLoading('diagnosing');
