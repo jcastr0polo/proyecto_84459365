@@ -44,7 +44,8 @@ export async function readJsonFileFresh<T>(filename: string): Promise<T> {
     }
     // New files that haven't been seeded yet → auto-init as []
     if (AUTO_INIT_FILES.has(filename)) {
-      await writeToBlob(filename, '[]');
+      // Fire-and-forget: seed the file for next time (don't block or fail)
+      writeToBlob(filename, '[]').catch(() => {});
       return [] as unknown as T;
     }
     // Sin fallback a caché — si Blob no responde, es un error real
