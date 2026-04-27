@@ -17,6 +17,7 @@ interface QuizDetailResponse {
   quiz: Quiz;
   attemptCount: number;
   canAttempt: boolean;
+  resultsAvailable?: boolean;
 }
 
 export default function StudentTakeQuizPage() {
@@ -29,6 +30,7 @@ export default function StudentTakeQuizPage() {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [canAttempt, setCanAttempt] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [resultsAvailable, setResultsAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [started, setStarted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -62,6 +64,7 @@ export default function StudentTakeQuizPage() {
       setQuiz(data.quiz);
       setCanAttempt(data.canAttempt);
       setAttemptCount(data.attemptCount);
+      setResultsAvailable(data.resultsAvailable ?? false);
     } catch {
       toast('Error al cargar parcial', 'error');
     } finally {
@@ -234,8 +237,18 @@ export default function StudentTakeQuizPage() {
           </div>
 
           {!canAttempt ? (
-            <div className="p-4 rounded-lg bg-red-500/[0.08] border border-red-500/20 text-center">
-              <p className="text-sm font-medium text-red-300">Has alcanzado el máximo de intentos</p>
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg bg-red-500/[0.08] border border-red-500/20 text-center">
+                <p className="text-sm font-medium text-red-300">Has alcanzado el máximo de intentos</p>
+              </div>
+              <div className="flex justify-center gap-3">
+                <Button variant="secondary" size="sm" onClick={() => router.push(`/student/courses/${courseId}/quizzes`)}>
+                  Volver a parciales
+                </Button>
+                <Button variant="primary" size="sm" onClick={() => router.push(`/student/courses/${courseId}/quizzes/${quizId}/results`)}>
+                  {resultsAvailable ? 'Ver mis resultados' : 'Ver estado'}
+                </Button>
+              </div>
             </div>
           ) : (
             <button

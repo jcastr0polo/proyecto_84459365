@@ -67,10 +67,16 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
         })),
       };
 
+      const canSeeResults =
+        quiz.type === 'training' ||
+        quiz.resultVisibility === 'immediate' ||
+        (quiz.resultVisibility === 'manual' && quiz.resultsReleased);
+
       return NextResponse.json({
         quiz: safeQuiz,
         attemptCount: studentAttempts.length,
         canAttempt: quiz.maxAttempts === 0 || studentAttempts.length < quiz.maxAttempts,
+        resultsAvailable: canSeeResults && studentAttempts.length > 0,
       });
     }
 

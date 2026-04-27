@@ -8,7 +8,13 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import { formatDateShort } from '@/lib/dateUtils';
 import type { Quiz } from '@/lib/types';
-import { ClipboardList, Clock, Shield } from 'lucide-react';
+import { ClipboardList, Clock, Shield, CheckCircle2, BarChart3 } from 'lucide-react';
+
+interface QuizWithAttemptInfo extends Quiz {
+  attemptCount: number;
+  canAttempt: boolean;
+  resultsAvailable: boolean;
+}
 
 export default function StudentQuizzesPage() {
   const params = useParams();
@@ -16,7 +22,7 @@ export default function StudentQuizzesPage() {
   const { toast } = useToast();
   const courseId = params.courseId as string;
 
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [quizzes, setQuizzes] = useState<QuizWithAttemptInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -60,35 +66,80 @@ export default function StudentQuizzesPage() {
           {quizzes.map((quiz) => (
             <div
               key={quiz.id}
-              onClick={() => router.push(`/student/courses/${courseId}/quizzes/${quiz.id}`)}
-              className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] hover:border-foreground/15 hover:bg-foreground/[0.06] transition-all cursor-pointer"
+              className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] hover:border-foreground/15 hover:bg-foreground/[0.06] transition-all"
             >
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <Badge variant={quiz.type === 'training' ? 'warning' : 'success'} size="sm">
-                  {quiz.type === 'training' ? 'Entrenamiento' : 'Calificable'}
-                </Badge>
-                <div className="flex items-center gap-2">
-                  {quiz.timeLimit && (
-                    <span className="text-xs text-subtle flex items-center gap-1"><Clock className="w-3 h-3" /> {quiz.timeLimit} min</span>
-                  )}
-                  {quiz.lockBrowser && (
-                    <span className="text-xs text-amber-400 flex items-center gap-1"><Shield className="w-3 h-3" /></span>
+              <div
+                onClick={() => router.push(`/student/courses/${courseId}/quizzes/${quiz.id}`)}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={quiz.type === 'training' ? 'warning' : 'success'} size="sm">
+                      {quiz.type === 'training' ? 'Entrenamiento' : 'Calificable'}
+                    </Badge>
+                    {quiz.attemptCount > 0 && !quiz.canAttempt && (
+                      <Badge variant="neutral" size="sm">
+                        <CheckCircle2 className="w-3 h-3 mr-0.5" /> Completado
+                      </Badge>
+                    )}
+                    {quiz.attemptCount > 0 && quiz.canAttempt && (
+                      <Badge variant="info" size="sm">
+                        {quiz.attemptCount} intento{quiz.attemptCount !== 1 ? 's' : ''}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {quiz.timeLimit && (
+                      <span className="text-xs text-subtle flex items-center gap-1"><Clock className="w-3 h-3" /> {quiz.timeLimit} min</span>
+                    )}
+                    {quiz.lockBrowser && (
+                      <span className="text-xs text-amber-400 flex items-center gap-1"><Shield className="w-3 h-3" /></span>
+                    )}
+                  </div>
+                </div>
+
+                <h3 className="text-sm font-semibold text-foreground/90 mb-1">{quiz.title}</h3>
+                {quiz.description && (
+                  <p className="text-xs text-subtle line-clamp-2 mb-2">{quiz.description}</p>
+                )}
+
+                <div className="flex items-center gap-3 text-xs text-subtle">
+                  <span>{quiz.questions.length} preguntas</span>
+                  {quiz.maxAttempts > 0 && <span>{quiz.attemptCount}/{quiz.maxAttempts} intento{quiz.maxAttempts !== 1 ? 's' : ''}</span>}
+                  {quiz.endDate && (
+                    <span>Hasta {formatDateShort(quiz.endDate)}</span>
                   )}
                 </div>
               </div>
 
-              <h3 className="text-sm font-semibold text-foreground/90 mb-1">{quiz.title}</h3>
-              {quiz.description && (
-                <p className="text-xs text-subtle line-clamp-2 mb-2">{quiz.description}</p>
+              {/* Action buttons */}
+              {quiz.attemptCount > 0 && (
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-foreground/[0.06]">
+                  {quiz.resultsAvailable ? (
+                    <button
+                      onClick={() => router.push(`/student/courses/${courseId}/quizzes/${quiz.id}/results`)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                    >
+                      <BarChart3 className="w-3.5 h-3.5" /> Ver resultados
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => router.push(`/student/courses/${courseId}/quizzes/${quiz.id}/results`)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-foreground/[0.04] text-subtle hover:bg-foreground/[0.08] transition-colors cursor-pointer"
+                    >
+                      <Clock className="w-3.5 h-3.5" /> Resultados pendientes
+                    </button>
+                  )}
+                  {quiz.canAttempt && (
+                    <button
+                      onClick={() => router.push(`/student/courses/${courseId}/quizzes/${quiz.id}`)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-colors cursor-pointer"
+                    >
+                      Intentar de nuevo →
+                    </button>
+                  )}
+                </div>
               )}
-
-              <div className="flex items-center gap-3 text-xs text-subtle">
-                <span>{quiz.questions.length} preguntas</span>
-                {quiz.maxAttempts > 0 && <span>{quiz.maxAttempts} intento{quiz.maxAttempts !== 1 ? 's' : ''}</span>}
-                {quiz.endDate && (
-                  <span>Hasta {formatDateShort(quiz.endDate)}</span>
-                )}
-              </div>
             </div>
           ))}
         </div>

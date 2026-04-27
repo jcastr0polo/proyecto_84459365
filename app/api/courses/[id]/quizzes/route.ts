@@ -14,6 +14,7 @@ import {
   readQuizzesFresh,
   writeQuizzes,
   isStudentEnrolled,
+  readQuizAttemptsFresh,
   withFileLock,
   nowColombiaISO,
   parseDateColombia,
@@ -65,6 +66,24 @@ export async function GET(
           })),
         })),
       }));
+
+      // Enrich with attempt info per quiz
+      const allAttempts = await readQuizAttemptsFresh();
+      const enriched = quizzes.map((q) => {
+        const myAttempts = allAttempts.filter((a) => a.quizId === q.id && a.studentId === user.id);
+        const canSeeResults =
+          q.type === 'training' ||
+          q.resultVisibility === 'immediate' ||
+          (q.resultVisibility === 'manual' && q.resultsReleased);
+        return {
+          ...q,
+          attemptCount: myAttempts.length,
+          canAttempt: q.maxAttempts === 0 || myAttempts.length < q.maxAttempts,
+          resultsAvailable: canSeeResults && myAttempts.length > 0,
+        };
+      });
+
+      return NextResponse.json({ quizzes: enriched, total: enriched.length });
     }
 
     return NextResponse.json({ quizzes, total: quizzes.length });
