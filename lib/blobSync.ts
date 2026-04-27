@@ -38,6 +38,8 @@ export const DATA_FILES = [
   'quizzes.json',
   'quiz-attempts.json',
   'quiz-simulations.json',
+  'manual-grade-items.json',
+  'manual-grades.json',
 ];
 
 // ═══════════════════════════════════════════════════════════

@@ -653,6 +653,9 @@ export const quizSchema = z.object({
   isActive: z.boolean(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  weight: z.number().min(0).max(100).optional(),
+  corteId: z.string().optional(),
+  maxScore: z.number().min(0).optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -681,6 +684,9 @@ export const createQuizSchema = z.object({
   maxAttempts: z.number().int().min(0).optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  weight: z.number().min(0).max(100).optional(),
+  corteId: z.string().optional(),
+  maxScore: z.number().min(0).optional(),
   questions: z.array(quizQuestionInput).min(1, 'Al menos una pregunta'),
 });
 
@@ -698,6 +704,9 @@ export const updateQuizSchema = z.object({
   isActive: z.boolean().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  weight: z.number().min(0).max(100).optional(),
+  corteId: z.string().nullable().optional(),
+  maxScore: z.number().min(0).optional(),
   questions: z.array(quizQuestionInput).min(1).optional(),
 });
 
@@ -758,3 +767,62 @@ export type UpdateQuizZod = z.infer<typeof updateQuizSchema>;
 export type SubmitQuizZod = z.infer<typeof submitQuizSchema>;
 export type QuizAttemptZod = z.infer<typeof quizAttemptSchema>;
 export type QuizSimulationZod = z.infer<typeof quizSimulationSchema>;
+
+// ────────────────────────────────────────────────────────────
+// Manual Grade Items (actividades externas)
+// ────────────────────────────────────────────────────────────
+
+export const manualGradeItemSchema = z.object({
+  id: z.string().min(1),
+  courseId: z.string().min(1),
+  corteId: z.string().optional(),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  maxScore: z.number().min(0),
+  weight: z.number().min(0).max(100),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const createManualGradeItemSchema = z.object({
+  title: z.string().min(1, 'El título es requerido').max(200).trim(),
+  description: z.string().max(2000).optional(),
+  maxScore: z.number().min(0.1, 'Nota máxima requerida'),
+  weight: z.number().min(0).max(100),
+  corteId: z.string().optional(),
+});
+
+export const updateManualGradeItemSchema = z.object({
+  title: z.string().min(1).max(200).trim().optional(),
+  description: z.string().max(2000).optional(),
+  maxScore: z.number().min(0.1).optional(),
+  weight: z.number().min(0).max(100).optional(),
+  corteId: z.string().nullable().optional(),
+});
+
+export const manualGradeSchema = z.object({
+  id: z.string().min(1),
+  itemId: z.string().min(1),
+  studentId: z.string().min(1),
+  courseId: z.string().min(1),
+  score: z.number().min(0),
+  maxScore: z.number().min(0),
+  feedback: z.string().optional(),
+  gradedBy: z.string().min(1),
+  gradedAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const setManualGradeSchema = z.object({
+  studentId: z.string().min(1),
+  score: z.number().min(0),
+  feedback: z.string().max(2000).optional(),
+});
+
+export const bulkSetManualGradesSchema = z.object({
+  grades: z.array(z.object({
+    studentId: z.string().min(1),
+    score: z.number().min(0),
+    feedback: z.string().max(2000).optional(),
+  })).min(1),
+});

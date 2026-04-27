@@ -10,6 +10,7 @@ import { Plus, Trash2, Upload } from 'lucide-react';
 interface QuizFormProps {
   onSubmit: (data: Record<string, unknown>) => void;
   loading?: boolean;
+  courseId: string;
   initial?: {
     title: string;
     description?: string;
@@ -22,11 +23,14 @@ interface QuizFormProps {
     maxAttempts: number;
     startDate?: string;
     endDate?: string;
+    weight?: number;
+    corteId?: string;
+    maxScore?: number;
     questions: QuestionData[];
   };
 }
 
-export default function QuizForm({ onSubmit, loading, initial }: QuizFormProps) {
+export default function QuizForm({ onSubmit, loading, courseId, initial }: QuizFormProps) {
   const [title, setTitle] = useState(initial?.title ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [type, setType] = useState<'training' | 'graded'>(initial?.type ?? 'graded');
@@ -39,10 +43,22 @@ export default function QuizForm({ onSubmit, loading, initial }: QuizFormProps) 
   const [maxAttempts, setMaxAttempts] = useState(initial?.maxAttempts ?? 1);
   const [startDate, setStartDate] = useState(initial?.startDate ?? '');
   const [endDate, setEndDate] = useState(initial?.endDate ?? '');
+  const [weight, setWeight] = useState(initial?.weight ?? 0);
+  const [corteId, setCorteId] = useState(initial?.corteId ?? '');
+  const [maxScore, setMaxScore] = useState(initial?.maxScore ?? 5.0);
+  const [cortes, setCortes] = useState<{ id: string; name: string }[]>([]);
   const [questions, setQuestions] = useState<QuestionData[]>(
     initial?.questions ?? [{ text: '', type: 'single', points: 1, options: [{ text: '', weight: 100 }, { text: '', weight: 0 }] }]
   );
   const [showImporter, setShowImporter] = useState(false);
+
+  // Fetch cortes for the course
+  React.useEffect(() => {
+    fetch(`/api/courses/${courseId}/cortes`)
+      .then((r) => r.ok ? r.json() : { cortes: [] })
+      .then((d) => setCortes(d.cortes ?? []))
+      .catch(() => {});
+  }, [courseId]);
 
   function addQuestion() {
     setQuestions([...questions, { text: '', type: 'single', points: 1, options: [{ text: '', weight: 100 }, { text: '', weight: 0 }] }]);
@@ -73,6 +89,9 @@ export default function QuizForm({ onSubmit, loading, initial }: QuizFormProps) 
       maxAttempts,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
+      weight: type === 'graded' ? weight : undefined,
+      corteId: corteId || undefined,
+      maxScore: type === 'graded' ? maxScore : undefined,
       questions: questions.map((q) => ({
         text: q.text.trim(),
         type: q.type,
@@ -148,6 +167,51 @@ export default function QuizForm({ onSubmit, loading, initial }: QuizFormProps) 
           </select>
         </div>
       </div>
+
+      {/* Grading — only for graded quizzes */}
+      {type === 'graded' && (
+        <div className="border-t border-foreground/[0.06] pt-5">
+          <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-4">Calificación</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs font-medium text-muted mb-1.5 block">Corte</label>
+              <select
+                value={corteId}
+                onChange={(e) => setCorteId(e.target.value)}
+                className="w-full px-3 py-2.5 text-sm rounded-lg border border-foreground/10 bg-foreground/[0.04] text-foreground outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
+              >
+                <option value="">Sin corte</option>
+                {cortes.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted mb-1.5 block">Peso (%)</label>
+              <input
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)))}
+                min={0}
+                max={100}
+                step={0.1}
+                className="w-full px-3 py-2.5 text-sm rounded-lg border border-foreground/10 bg-foreground/[0.04] text-foreground outline-none focus:border-cyan-500/50"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted mb-1.5 block">Nota máxima</label>
+              <input
+                type="number"
+                value={maxScore}
+                onChange={(e) => setMaxScore(Math.max(0, parseFloat(e.target.value) || 0))}
+                min={0}
+                step={0.1}
+                className="w-full px-3 py-2.5 text-sm rounded-lg border border-foreground/10 bg-foreground/[0.04] text-foreground outline-none focus:border-cyan-500/50"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Settings */}
       <div className="border-t border-foreground/[0.06] pt-5">

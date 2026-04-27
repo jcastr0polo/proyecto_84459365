@@ -149,6 +149,9 @@ export default function AdminQuizDetailPage() {
     maxAttempts: quiz.maxAttempts,
     startDate: quiz.startDate,
     endDate: quiz.endDate,
+    weight: quiz.weight,
+    corteId: quiz.corteId,
+    maxScore: quiz.maxScore,
     questions: quiz.questions.map((q): QuestionData => ({
       text: q.text,
       type: q.type,
@@ -273,7 +276,7 @@ export default function AdminQuizDetailPage() {
 
       {/* Edit Modal */}
       <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} title="Editar Parcial" size="lg">
-        <QuizForm onSubmit={handleEdit} loading={submitting} initial={editInitial} />
+        <QuizForm onSubmit={handleEdit} loading={submitting} courseId={courseId} initial={editInitial} />
       </Modal>
 
       <ConfirmModal

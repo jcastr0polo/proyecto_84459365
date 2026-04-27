@@ -794,6 +794,9 @@ export interface Quiz {
   isActive: boolean;                   // ¿Visible para estudiantes?
   startDate?: string;                  // Fecha desde que está disponible
   endDate?: string;                    // Fecha hasta que se puede responder
+  weight?: number;                     // Peso porcentual sobre la definitiva (ej: 20 = 20%)
+  corteId?: string;                    // FK a Corte.id (período de evaluación)
+  maxScore?: number;                   // Nota máxima (default: 5.0, escala colombiana)
   createdAt: string;
   updatedAt: string;
 }
@@ -911,4 +914,42 @@ export interface SubmitQuizRequest {
     questionId: string;
     selectedOptionId: string;
   }[];
+}
+
+// ────────────────────────────────────────────────────────────
+// Ítems de calificación manual (actividades externas)
+// ────────────────────────────────────────────────────────────
+
+/**
+ * ManualGradeItem — Actividad externa/offline que el docente califica manualmente.
+ * No requiere entrega en plataforma. Ej: exposición, quiz oral, taller en clase.
+ * Se almacena en /data/manual-grade-items.json
+ */
+export interface ManualGradeItem {
+  id: string;                          // UUID
+  courseId: string;                     // FK a Course.id
+  corteId?: string;                    // FK a Corte.id
+  title: string;                       // "Exposición Tema 3"
+  description?: string;                // Descripción opcional
+  maxScore: number;                    // Nota máxima (default: 5.0)
+  weight: number;                      // Peso porcentual (ej: 10 = 10%)
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * ManualGrade — Nota asignada a un estudiante en un ManualGradeItem.
+ * Se almacena dentro de manual-grades.json
+ */
+export interface ManualGrade {
+  id: string;                          // UUID
+  itemId: string;                      // FK a ManualGradeItem.id
+  studentId: string;                   // FK a User.id
+  courseId: string;                     // FK a Course.id
+  score: number;                       // Nota numérica
+  maxScore: number;                    // Nota máxima
+  feedback?: string;                   // Retroalimentación opcional
+  gradedBy: string;                    // FK a User.id (admin)
+  gradedAt: string;                    // ISO 8601
+  updatedAt: string;
 }

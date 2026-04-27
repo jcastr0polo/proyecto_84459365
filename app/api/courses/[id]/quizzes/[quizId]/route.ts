@@ -147,6 +147,9 @@ export async function PUT(request: Request, { params }: RouteParams): Promise<Ne
         if (updates.isActive !== undefined) quiz.isActive = updates.isActive;
         if (updates.startDate !== undefined) quiz.startDate = updates.startDate;
         if (updates.endDate !== undefined) quiz.endDate = updates.endDate;
+        if (updates.weight !== undefined) quiz.weight = updates.weight;
+        if (updates.corteId !== undefined) quiz.corteId = updates.corteId ?? undefined;
+        if (updates.maxScore !== undefined) quiz.maxScore = updates.maxScore;
 
         // Reconstruir preguntas si se proporcionan
         if (updates.questions) {

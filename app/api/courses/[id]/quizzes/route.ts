@@ -154,6 +154,9 @@ export async function POST(
         isActive: false,
         startDate: data.startDate,
         endDate: data.endDate,
+        weight: data.weight,
+        corteId: data.corteId,
+        maxScore: data.maxScore,
         createdAt: now,
         updatedAt: now,
       };

@@ -78,7 +78,7 @@ export default function NewQuizPage() {
       </div>
 
       <Card padding="lg">
-        <QuizForm onSubmit={handleSubmit} loading={submitting} />
+        <QuizForm onSubmit={handleSubmit} loading={submitting} courseId={courseId} />
       </Card>
     </div>
   );

@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { HomeDataSchema, AppConfigSchema } from './validators';
-import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject, Corte, Quiz, QuizAttempt, QuizSimulation } from './types';
-import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema, corteSchema, quizSchema, quizAttemptSchema, quizSimulationSchema } from './schemas';
+import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity, Submission, Grade, AIPrompt, StudentProject, Corte, Quiz, QuizAttempt, QuizSimulation, ManualGradeItem, ManualGrade } from './types';
+import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema, corteSchema, quizSchema, quizAttemptSchema, quizSimulationSchema, manualGradeItemSchema, manualGradeSchema } from './schemas';
 import { z } from 'zod';
 import { writeToBlob, writeToBlobVerified, readFromBlobDirect, withFileLock } from './blobSync';
 
@@ -660,6 +660,28 @@ export async function readQuizSimulationsFresh(): Promise<QuizSimulation[]> {
 
 export async function writeQuizSimulations(simulations: QuizSimulation[]): Promise<void> {
   await writeJsonFile('quiz-simulations.json', simulations);
+}
+
+// ────────────────────────────────────────────────────────────
+// Manual Grade Items (actividades externas)
+// ────────────────────────────────────────────────────────────
+
+export async function readManualGradeItemsFresh(): Promise<ManualGradeItem[]> {
+  const raw = await readJsonFileFresh<unknown[]>('manual-grade-items.json');
+  return z.array(manualGradeItemSchema).parse(raw) as ManualGradeItem[];
+}
+
+export async function writeManualGradeItems(items: ManualGradeItem[]): Promise<void> {
+  await writeJsonFile('manual-grade-items.json', items);
+}
+
+export async function readManualGradesFresh(): Promise<ManualGrade[]> {
+  const raw = await readJsonFileFresh<unknown[]>('manual-grades.json');
+  return z.array(manualGradeSchema).parse(raw) as ManualGrade[];
+}
+
+export async function writeManualGrades(grades: ManualGrade[]): Promise<void> {
+  await writeJsonFile('manual-grades.json', grades);
 }
 
 // ────────────────────────────────────────────────────────────

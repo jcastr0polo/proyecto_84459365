@@ -12,15 +12,16 @@ import { useToast } from '@/components/ui/Toast';
 import CourseForm from '@/components/forms/CourseForm';
 import type { CourseFormData } from '@/components/forms/CourseForm';
 import type { Course, Semester, CourseSchedule } from '@/lib/types';
-import { ArrowLeft, Pencil, FileText, Users, BookOpen, BarChart3, Rocket, Clock, Layers, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Pencil, FileText, Users, BookOpen, BarChart3, Rocket, Clock, Layers, ClipboardList, ListChecks } from 'lucide-react';
 
-type TabKey = 'resumen' | 'estudiantes' | 'actividades' | 'notas' | 'proyectos' | 'cortes' | 'parciales';
+type TabKey = 'resumen' | 'estudiantes' | 'actividades' | 'notas' | 'proyectos' | 'cortes' | 'parciales' | 'manual';
 
 const TABS: { key: TabKey; label: string; icon: typeof FileText; href?: string }[] = [
   { key: 'resumen', label: 'Resumen', icon: FileText },
   { key: 'estudiantes', label: 'Estudiantes', icon: Users, href: 'students' },
   { key: 'actividades', label: 'Actividades', icon: BookOpen, href: 'activities' },
   { key: 'parciales', label: 'Parciales', icon: ClipboardList, href: 'quizzes' },
+  { key: 'manual', label: 'Notas manuales', icon: ListChecks, href: 'manual-items' },
   { key: 'cortes', label: 'Cortes', icon: Layers, href: 'cortes' },
   { key: 'notas', label: 'Notas', icon: BarChart3, href: 'grades' },
   { key: 'proyectos', label: 'Proyectos', icon: Rocket, href: 'projects' },
