@@ -8,6 +8,7 @@ const DATA_FILES = [
   'semesters.json', 'courses.json', 'enrollments.json', 'activities.json',
   'submissions.json', 'grades.json', 'prompts.json', 'projects.json', 'audit.json',
   'cortes.json', 'quizzes.json', 'quiz-attempts.json', 'quiz-simulations.json',
+  'manual-grade-items.json', 'manual-grades.json',
 ];
 
 // Archivos sensibles: advertir antes de hacer seed
