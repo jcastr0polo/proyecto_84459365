@@ -79,7 +79,8 @@ export async function GET(
           ...q,
           attemptCount: myAttempts.length,
           canAttempt: q.maxAttempts === 0 || myAttempts.length < q.maxAttempts,
-          resultsAvailable: canSeeResults && myAttempts.length > 0,
+          resultsAvailable: myAttempts.length > 0,
+          detailAvailable: canSeeResults && myAttempts.length > 0,
         };
       });
 

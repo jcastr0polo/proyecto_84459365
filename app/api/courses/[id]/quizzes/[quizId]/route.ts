@@ -67,7 +67,7 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
         })),
       };
 
-      const canSeeResults =
+      const canSeeDetail =
         quiz.type === 'training' ||
         quiz.resultVisibility === 'immediate' ||
         (quiz.resultVisibility === 'manual' && quiz.resultsReleased);
@@ -76,7 +76,8 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
         quiz: safeQuiz,
         attemptCount: studentAttempts.length,
         canAttempt: quiz.maxAttempts === 0 || studentAttempts.length < quiz.maxAttempts,
-        resultsAvailable: canSeeResults && studentAttempts.length > 0,
+        resultsAvailable: studentAttempts.length > 0,
+        detailAvailable: canSeeDetail && studentAttempts.length > 0,
       });
     }
 

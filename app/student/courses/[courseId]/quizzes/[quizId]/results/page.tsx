@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/Toast';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { formatDateTimeColombia } from '@/lib/dateUtils';
 import type { QuizAttempt, QuizQuestion } from '@/lib/types';
-import { Clock, CheckCircle2, ClockIcon, ChevronDown, ChevronUp, XCircle } from 'lucide-react';
+import { Clock, ChevronDown, ChevronUp, XCircle, CheckCircle2, ClockIcon } from 'lucide-react';
 
 interface QuizInfo {
   id: string;
@@ -27,8 +27,7 @@ export default function StudentQuizResultsPage() {
 
   const [quizInfo, setQuizInfo] = useState<QuizInfo | null>(null);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
-  const [message, setMessage] = useState<string | null>(null);
-  const [attemptCount, setAttemptCount] = useState(0);
+  const [detailAvailable, setDetailAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -39,8 +38,7 @@ export default function StudentQuizResultsPage() {
         const data = await res.json();
         setQuizInfo(data.quiz);
         setAttempts(data.attempts ?? []);
-        setMessage(data.message ?? null);
-        setAttemptCount(data.attemptCount ?? data.attempts?.length ?? 0);
+        setDetailAvailable(data.detailAvailable ?? false);
       } else {
         toast('No se pudieron cargar los resultados', 'error');
       }
@@ -68,20 +66,7 @@ export default function StudentQuizResultsPage() {
       <h1 className="text-2xl font-bold text-foreground tracking-tight">Mis Resultados</h1>
       {quizInfo && <p className="text-sm text-subtle">{quizInfo.title}</p>}
 
-      {message ? (
-        <Card padding="lg" className="text-center py-8">
-          <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
-          <h2 className="text-lg font-bold text-foreground mb-2">Parcial Enviado</h2>
-          <p className="text-sm text-muted mb-4">{message}</p>
-          {attemptCount > 0 && (
-            <p className="text-xs text-subtle">Tienes {attemptCount} intento{attemptCount !== 1 ? 's' : ''} registrado{attemptCount !== 1 ? 's' : ''}</p>
-          )}
-          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-faint">
-            <ClockIcon className="w-3.5 h-3.5" />
-            <span>El profesor publicará los resultados cuando lo considere oportuno</span>
-          </div>
-        </Card>
-      ) : attempts.length === 0 ? (
+      {attempts.length === 0 ? (
         <Card padding="lg" className="text-center">
           <p className="text-sm text-muted">No tienes intentos en este parcial.</p>
         </Card>
@@ -92,10 +77,10 @@ export default function StudentQuizResultsPage() {
             const questions = quizInfo?.questions;
             return (
               <Card key={attempt.id} padding="none" className="overflow-hidden">
-                {/* Summary header — clickable */}
+                {/* Summary header — clickable if detail available */}
                 <button
-                  onClick={() => setExpandedId(isExpanded ? null : attempt.id)}
-                  className="w-full text-left p-5 cursor-pointer hover:bg-foreground/[0.02] transition-colors"
+                  onClick={() => detailAvailable ? setExpandedId(isExpanded ? null : attempt.id) : undefined}
+                  className={`w-full text-left p-5 transition-colors ${detailAvailable ? 'cursor-pointer hover:bg-foreground/[0.02]' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-3 mb-1">
                     <div>
@@ -120,10 +105,16 @@ export default function StudentQuizResultsPage() {
                       {attempt.autoSubmitted && (
                         <Badge variant="warning" size="sm">Auto-enviado</Badge>
                       )}
-                      <span className="flex items-center gap-1 text-xs text-cyan-400/70 mt-1">
-                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                        {isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
-                      </span>
+                      {detailAvailable ? (
+                        <span className="flex items-center gap-1 text-xs text-cyan-400/70 mt-1">
+                          {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                          {isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs text-faint mt-1">
+                          <ClockIcon className="w-3.5 h-3.5" /> Detalle pendiente
+                        </span>
+                      )}
                     </div>
                   </div>
                 </button>

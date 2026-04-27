@@ -72,23 +72,22 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
 
     const myAttempts = quizAttempts.filter((a) => a.studentId === user.id);
 
-    // Verificar si puede ver resultados
-    const canSee =
+    // "Publicar resultados" controla si se muestra el detalle (preguntas + respuestas correctas)
+    // El puntaje/porcentaje siempre es visible para el estudiante
+    const canSeeDetail =
       quiz.type === 'training' ||
       quiz.resultVisibility === 'immediate' ||
       (quiz.resultVisibility === 'manual' && quiz.resultsReleased);
 
-    if (!canSee) {
-      return NextResponse.json({
-        quiz: { id: quiz.id, title: quiz.title, type: quiz.type },
-        message: 'Los resultados aún no han sido publicados',
-        attemptCount: myAttempts.length,
-      });
-    }
-
     return NextResponse.json({
-      quiz: { id: quiz.id, title: quiz.title, type: quiz.type, questions: quiz.questions },
+      quiz: {
+        id: quiz.id,
+        title: quiz.title,
+        type: quiz.type,
+        ...(canSeeDetail ? { questions: quiz.questions } : {}),
+      },
       attempts: myAttempts,
+      detailAvailable: canSeeDetail,
     });
   });
 }
