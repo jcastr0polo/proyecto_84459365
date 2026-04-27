@@ -48,7 +48,18 @@ export function parseDateColombia(dateStr: string): Date {
     return new Date(`${dateStr}T05:00:00.000Z`); // 00:00 COT = 05:00 UTC
   }
 
-  // Ya tiene componente de hora, parsear normalmente
+  // Fecha + hora sin timezone: "2026-04-25T06:40" o "2026-04-25T14:30:00"
+  // (output del DateTimePicker). Interpretar como hora Colombia (UTC-5).
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateStr)) {
+    // "2026-04-25T06:40" → "2026-04-25T06:40:00-05:00"
+    return new Date(`${dateStr}:00-05:00`);
+  }
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(dateStr)) {
+    // "2026-04-25T06:40:00" → "2026-04-25T06:40:00-05:00"
+    return new Date(`${dateStr}-05:00`);
+  }
+
+  // Ya tiene timezone (Z, +00:00, -05:00, etc.), parsear normalmente
   return new Date(dateStr);
 }
 

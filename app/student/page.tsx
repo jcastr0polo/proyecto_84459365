@@ -3,10 +3,10 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { BookOpen, ClipboardList, CheckCircle2, BarChart3, Inbox, Bell, PartyPopper, FileText, AlertTriangle, Hand } from 'lucide-react';
+import { BookOpen, ClipboardList, CheckCircle2, BarChart3, Inbox, Bell, PartyPopper, FileText, AlertTriangle, Hand, Clock, Shield } from 'lucide-react';
 import { formatDateShort, parseDateColombia, parseDateTimeColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
-import type { Course, Enrollment, Activity, Submission, Semester, Grade } from '@/lib/types';
+import type { Course, Enrollment, Activity, Submission, Semester, Grade, Quiz } from '@/lib/types';
 
 /* ─── Types ─── */
 interface CourseWithMeta {
@@ -38,6 +38,12 @@ interface RecentGrade {
   score: number;
   maxScore: number;
   gradedAt: string;
+}
+
+interface ActiveQuiz {
+  quiz: Quiz;
+  courseName: string;
+  courseId: string;
 }
 
 /* ─── Helpers ─── */
@@ -91,6 +97,7 @@ export default function StudentDashboardPage() {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [semester, setSemester] = useState<Semester | null>(null);
   const [coursesData, setCoursesData] = useState<CourseWithMeta[]>([]);
+  const [activeQuizzes, setActiveQuizzes] = useState<ActiveQuiz[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
@@ -168,7 +175,24 @@ export default function StudentDashboardPage() {
       });
 
       const results = await Promise.all(perCoursePromises);
-      setCoursesData(results.filter(Boolean) as CourseWithMeta[]);
+      const enrolled = results.filter(Boolean) as CourseWithMeta[];
+      setCoursesData(enrolled);
+
+      // Fetch active quizzes for each enrolled course
+      const quizPromises = enrolled.map(async (cd) => {
+        try {
+          const res = await fetch(`/api/courses/${cd.course.id}/quizzes`);
+          if (!res.ok) return [];
+          const data = await res.json();
+          return (data.quizzes ?? []).map((q: Quiz) => ({
+            quiz: q,
+            courseName: cd.course.name,
+            courseId: cd.course.id,
+          }));
+        } catch { return []; }
+      });
+      const quizResults = await Promise.all(quizPromises);
+      setActiveQuizzes(quizResults.flat());
     } catch {
       // silent failure
     } finally {
@@ -369,6 +393,48 @@ export default function StudentDashboardPage() {
           </div>
         )}
       </section>
+
+      {/* ─── Parciales Activos ─── */}
+      {activeQuizzes.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+        >
+          <h2 className="text-lg font-semibold text-foreground tracking-tight mb-4">
+            <ClipboardList className="w-5 h-5 inline mr-1" /> Parciales Disponibles ({activeQuizzes.length})
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {activeQuizzes.map((aq) => (
+              <motion.button
+                key={aq.quiz.id}
+                whileHover={{ y: -2, transition: { duration: 0.15 } }}
+                onClick={() => router.push(`/student/courses/${aq.courseId}/quizzes/${aq.quiz.id}`)}
+                className="w-full text-left p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.04] hover:border-cyan-500/30 hover:bg-cyan-500/[0.08] transition-all cursor-pointer"
+              >
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <Badge variant={aq.quiz.type === 'training' ? 'warning' : 'info'} size="sm">
+                    {aq.quiz.type === 'training' ? 'Entrenamiento' : 'Calificable'}
+                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {aq.quiz.timeLimit && (
+                      <span className="text-xs text-subtle flex items-center gap-1"><Clock className="w-3 h-3" /> {aq.quiz.timeLimit} min</span>
+                    )}
+                    {aq.quiz.lockBrowser && <Shield className="w-3 h-3 text-amber-400" />}
+                  </div>
+                </div>
+                <h3 className="text-sm font-semibold text-foreground/90 mb-1 line-clamp-1">{aq.quiz.title}</h3>
+                <p className="text-[11px] text-subtle">{aq.courseName}</p>
+                <div className="flex items-center gap-3 mt-2 text-xs text-faint">
+                  <span>{aq.quiz.questions.length} preguntas</span>
+                  {aq.quiz.maxAttempts > 0 && <span>{aq.quiz.maxAttempts} intento{aq.quiz.maxAttempts !== 1 ? 's' : ''}</span>}
+                  {aq.quiz.endDate && <span>Hasta {formatDateShort(aq.quiz.endDate)}</span>}
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </motion.section>
+      )}
 
       {/* ─── Bottom Grid: Pendientes + Notas ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
