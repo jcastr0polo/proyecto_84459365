@@ -3,14 +3,6 @@
 import React, { useState } from 'react';
 import { Database, RefreshCw, CheckCircle, XCircle, Loader2, Cloud, Server, Download, AlertTriangle } from 'lucide-react';
 
-const DATA_FILES = [
-  'config.json', 'home.json', 'users.json', 'sessions.json',
-  'semesters.json', 'courses.json', 'enrollments.json', 'activities.json',
-  'submissions.json', 'grades.json', 'prompts.json', 'projects.json', 'audit.json',
-  'cortes.json', 'quizzes.json', 'quiz-attempts.json', 'quiz-simulations.json',
-  'manual-grade-items.json', 'manual-grades.json',
-];
-
 // Archivos sensibles: advertir antes de hacer seed
 const SENSITIVE_FILES = ['users.json', 'sessions.json', 'enrollments.json', 'grades.json', 'submissions.json', 'audit.json', 'quiz-attempts.json', 'quiz-simulations.json'];
 
@@ -41,6 +33,7 @@ export default function BlobSyncPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [downloadedData, setDownloadedData] = useState<{ file: string; data: unknown } | null>(null);
   const [activeTab, setActiveTab] = useState<'sync' | 'download'>('sync');
+  const [dataFiles, setDataFiles] = useState<string[]>([]);
 
   async function runDiagnostics() {
     setLoading('diagnosing');
@@ -50,6 +43,7 @@ export default function BlobSyncPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setDiagnostics(data);
+      if (data.dataFiles) setDataFiles(data.dataFiles);
     } catch (err) {
       setError(`Error al diagnosticar: ${err}`);
     } finally {
@@ -106,7 +100,7 @@ export default function BlobSyncPage() {
   }
 
   function selectAll() {
-    setSelectedFiles(new Set(DATA_FILES));
+    setSelectedFiles(new Set(dataFiles));
   }
   function selectNone() {
     setSelectedFiles(new Set());
@@ -202,7 +196,7 @@ export default function BlobSyncPage() {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
-              {DATA_FILES.map((file) => {
+              {dataFiles.map((file) => {
                 const isSensitive = SENSITIVE_FILES.includes(file);
                 return (
                   <label
@@ -364,7 +358,7 @@ export default function BlobSyncPage() {
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
-              {DATA_FILES.map((file) => (
+              {dataFiles.map((file) => (
                 <button
                   key={file}
                   onClick={() => downloadFile(file)}

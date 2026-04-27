@@ -53,7 +53,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       (diagnostics as Record<string, unknown>).blobError = 'NEXUS_READ_WRITE_TOKEN not set';
     }
 
-    return NextResponse.json(diagnostics);
+    return NextResponse.json({ ...diagnostics, dataFiles: DATA_FILES });
   }, 'admin');
 }
 
