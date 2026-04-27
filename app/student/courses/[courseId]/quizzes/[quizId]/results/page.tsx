@@ -8,7 +8,7 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import { formatDateTimeColombia } from '@/lib/dateUtils';
 import type { QuizAttempt } from '@/lib/types';
-import { Clock } from 'lucide-react';
+import { Clock, CheckCircle2, ClockIcon } from 'lucide-react';
 
 export default function StudentQuizResultsPage() {
   const params = useParams();
@@ -20,6 +20,7 @@ export default function StudentQuizResultsPage() {
   const [quizInfo, setQuizInfo] = useState<{ id: string; title: string; type: string } | null>(null);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const [attemptCount, setAttemptCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -30,6 +31,7 @@ export default function StudentQuizResultsPage() {
         setQuizInfo(data.quiz);
         setAttempts(data.attempts ?? []);
         setMessage(data.message ?? null);
+        setAttemptCount(data.attemptCount ?? data.attempts?.length ?? 0);
       } else {
         toast('No se pudieron cargar los resultados', 'error');
       }
@@ -58,8 +60,17 @@ export default function StudentQuizResultsPage() {
       {quizInfo && <p className="text-sm text-subtle">{quizInfo.title}</p>}
 
       {message ? (
-        <Card padding="lg" className="text-center">
-          <p className="text-sm text-muted">{message}</p>
+        <Card padding="lg" className="text-center py-8">
+          <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
+          <h2 className="text-lg font-bold text-foreground mb-2">Parcial Enviado</h2>
+          <p className="text-sm text-muted mb-4">{message}</p>
+          {attemptCount > 0 && (
+            <p className="text-xs text-subtle">Tienes {attemptCount} intento{attemptCount !== 1 ? 's' : ''} registrado{attemptCount !== 1 ? 's' : ''}</p>
+          )}
+          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-faint">
+            <ClockIcon className="w-3.5 h-3.5" />
+            <span>El profesor publicará los resultados cuando lo considere oportuno</span>
+          </div>
         </Card>
       ) : attempts.length === 0 ? (
         <Card padding="lg" className="text-center">

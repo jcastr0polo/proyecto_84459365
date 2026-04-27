@@ -11,17 +11,12 @@ import { useAntiCheat } from '@/components/quizzes/useAntiCheat';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Quiz, QuizQuestion } from '@/lib/types';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
-import { Clock, Shield, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Clock, Shield, AlertTriangle } from 'lucide-react';
 
 interface QuizDetailResponse {
   quiz: Quiz;
   attemptCount: number;
   canAttempt: boolean;
-}
-
-interface SubmitResult {
-  attempt: { id: string; attemptNumber: number; completedAt?: string; score?: number; maxScore?: number; percentage?: number; answers?: unknown[] };
-  message: string;
 }
 
 export default function StudentTakeQuizPage() {
@@ -37,7 +32,7 @@ export default function StudentTakeQuizPage() {
   const [loading, setLoading] = useState(true);
   const [started, setStarted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<SubmitResult | null>(null);
+  const [submitted, setSubmitted] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [blurWarnings, setBlurWarnings] = useState(0);
@@ -78,7 +73,7 @@ export default function StudentTakeQuizPage() {
 
   // Submit handler
   const doSubmit = useCallback(async (auto: boolean, finalBlurCount: number) => {
-    if (submitting || result) return;
+    if (submitting || submitted) return;
     setSubmitting(true);
 
     // Stop timer
@@ -116,17 +111,18 @@ export default function StudentTakeQuizPage() {
         setSubmitting(false);
         return;
       }
-      setResult(data);
+      setSubmitted(true);
       toast(data.message || 'Parcial enviado', auto ? 'info' : 'success');
+      router.push(`/student/courses/${courseId}/quizzes/${quizId}/results`);
     } catch {
       toast('Error de conexión', 'error');
       setSubmitting(false);
     }
-  }, [submitting, result, answers, quiz, courseId, quizId, toast]);
+  }, [submitting, submitted, answers, quiz, courseId, quizId, toast, router]);
 
   // Anti-cheat
   const { getBlurCount } = useAntiCheat({
-    enabled: started && !result && (quiz?.lockBrowser ?? false),
+    enabled: started && !submitted && (quiz?.lockBrowser ?? false),
     onBlur: (count) => {
       setBlurWarnings(count);
       if (count === 1) {
@@ -146,7 +142,7 @@ export default function StudentTakeQuizPage() {
   getBlurCountRef.current = getBlurCount;
 
   useEffect(() => {
-    if (!started || !quiz?.timeLimit || result) return;
+    if (!started || !quiz?.timeLimit || submitted) return;
 
     const totalSeconds = quiz.timeLimit * 60;
     setTimeLeft(totalSeconds);
@@ -167,7 +163,7 @@ export default function StudentTakeQuizPage() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [started, quiz?.timeLimit, result]);
+  }, [started, quiz?.timeLimit, submitted]);
 
   function formatTime(seconds: number): string {
     const m = Math.floor(seconds / 60);
@@ -191,50 +187,6 @@ export default function StudentTakeQuizPage() {
   }
 
   if (loading || !quiz) return <PageLoader />;
-
-  // Result screen
-  if (result) {
-    const attempt = result.attempt;
-    return (
-      <div className="space-y-6 max-w-3xl mx-auto">
-        <button
-          onClick={() => router.push(`/student/courses/${courseId}/quizzes`)}
-          className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-          Volver a parciales
-        </button>
-
-        <Card padding="lg" className="text-center">
-          <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-foreground mb-2">Parcial Enviado</h2>
-          <p className="text-sm text-muted mb-4">{result.message}</p>
-
-          {attempt.percentage !== undefined && (
-            <div className="mb-4">
-              <p className={`text-4xl font-bold ${
-                attempt.percentage >= 70 ? 'text-emerald-400' : attempt.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
-              }`}>
-                {attempt.percentage}%
-              </p>
-              <p className="text-xs text-subtle mt-1">{attempt.score}/{attempt.maxScore} puntos</p>
-            </div>
-          )}
-
-          <p className="text-xs text-subtle">Intento #{attempt.attemptNumber}</p>
-        </Card>
-
-        <div className="flex justify-center gap-3">
-          <Button variant="primary" size="sm" onClick={() => router.push(`/student/courses/${courseId}/quizzes`)}>
-            Ver más parciales
-          </Button>
-          <Button variant="secondary" size="sm" onClick={() => router.push(`/student/courses/${courseId}/quizzes/${quizId}/results`)}>
-            Ver resultados
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   // Pre-start screen
   if (!started) {
