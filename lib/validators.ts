@@ -79,7 +79,8 @@ export const AppConfigSchema = z.object({
     .describe('Tema visual de la aplicación'),
   timezone: z.string()
     .min(1, 'timezone es requerido')
-    .describe('IANA timezone (ej: America/Bogota)'),
+    .describe('IANA timezone (ej: America/Bogota)')
+    .default('America/Bogota'),
 })
   .describe('Esquema completo de config.json');
 
