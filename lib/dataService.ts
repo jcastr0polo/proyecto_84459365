@@ -30,11 +30,22 @@ export function readJsonFile<T>(filename: string): T {
  * En Vercel: lee directo de Blob (SIEMPRE fresco).
  * En local: lee del filesystem.
  */
+// Files that can be auto-initialized as empty arrays when missing from Blob
+const AUTO_INIT_FILES = new Set([
+  'manual-grade-items.json',
+  'manual-grades.json',
+]);
+
 export async function readJsonFileFresh<T>(filename: string): Promise<T> {
   if (IS_VERCEL) {
     const raw = await readFromBlobDirect(filename);
     if (raw !== null) {
       return JSON.parse(raw) as T;
+    }
+    // New files that haven't been seeded yet → auto-init as []
+    if (AUTO_INIT_FILES.has(filename)) {
+      await writeToBlob(filename, '[]');
+      return [] as unknown as T;
     }
     // Sin fallback a caché — si Blob no responde, es un error real
     throw new Error(`[dataService] Cannot read ${filename} from Blob. Blob may be down or token invalid.`);
