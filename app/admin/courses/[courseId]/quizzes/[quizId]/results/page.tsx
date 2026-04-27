@@ -7,11 +7,20 @@ import Card from '@/components/ui/Card';
 import SearchInput from '@/components/ui/SearchInput';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
-import type { QuizAttempt } from '@/lib/types';
-import { AlertTriangle, Shield, Clock } from 'lucide-react';
+import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
+import type { QuizAttempt, QuizQuestion } from '@/lib/types';
+import { AlertTriangle, Shield, Clock, ChevronDown, ChevronUp, Eye, CheckCircle2, XCircle } from 'lucide-react';
 
 interface EnrichedAttempt extends QuizAttempt {
   student: { id: string; firstName: string; lastName: string; email: string; documentNumber: string } | null;
+}
+
+interface QuizInfo {
+  id: string;
+  title: string;
+  type: string;
+  maxScore: number;
+  questions: QuizQuestion[];
 }
 
 export default function AdminQuizResultsPage() {
@@ -22,10 +31,11 @@ export default function AdminQuizResultsPage() {
   const quizId = params.quizId as string;
 
   const [attempts, setAttempts] = useState<EnrichedAttempt[]>([]);
-  const [quizInfo, setQuizInfo] = useState<{ id: string; title: string; type: string; maxScore: number } | null>(null);
+  const [quizInfo, setQuizInfo] = useState<QuizInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [flagFilter, setFlagFilter] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -123,62 +133,160 @@ export default function AdminQuizResultsPage() {
         </div>
       )}
 
-      {/* Attempts table */}
+      {/* Attempts list */}
       {filtered.length === 0 ? (
         <div className="text-center py-12 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02]">
           <p className="text-subtle">{attempts.length === 0 ? 'Nadie ha presentado este parcial aún.' : 'Sin resultados para esos filtros.'}</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {/* Mobile cards */}
-          {filtered.map((attempt) => (
-            <div
-              key={attempt.id}
-              className={`p-4 rounded-xl border ${
-                attempt.flagged ? 'border-red-500/20 bg-red-500/[0.03]' : 'border-foreground/[0.08] bg-foreground/[0.02]'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground/90 truncate">
-                    {attempt.student ? `${attempt.student.lastName}, ${attempt.student.firstName}` : attempt.studentId}
-                  </p>
-                  {attempt.student && <p className="text-[11px] text-subtle truncate">{attempt.student.email}</p>}
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className={`text-lg font-bold tabular-nums ${
-                    attempt.percentage >= 70 ? 'text-emerald-400' : attempt.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
-                  }`}>
-                    {attempt.percentage}%
-                  </span>
-                </div>
-              </div>
+          {filtered.map((attempt) => {
+            const isExpanded = expandedId === attempt.id;
+            return (
+              <div
+                key={attempt.id}
+                className={`rounded-xl border transition-colors ${
+                  attempt.flagged ? 'border-red-500/20 bg-red-500/[0.03]' : 'border-foreground/[0.08] bg-foreground/[0.02]'
+                }`}
+              >
+                {/* Header row — clickable */}
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : attempt.id)}
+                  className="w-full text-left p-4 cursor-pointer hover:bg-foreground/[0.02] transition-colors rounded-xl"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground/90 truncate">
+                        {attempt.student ? `${attempt.student.lastName}, ${attempt.student.firstName}` : attempt.studentId}
+                      </p>
+                      {attempt.student && <p className="text-[11px] text-subtle truncate">{attempt.student.email}</p>}
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className={`text-lg font-bold tabular-nums ${
+                        attempt.percentage >= 70 ? 'text-emerald-400' : attempt.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
+                      }`}>
+                        {attempt.percentage}%
+                      </span>
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-subtle" /> : <ChevronDown className="w-4 h-4 text-subtle" />}
+                    </div>
+                  </div>
 
-              <div className="flex flex-wrap items-center gap-2 text-xs text-subtle">
-                <span>Intento {attempt.attemptNumber}</span>
-                <span>{attempt.score}/{attempt.maxScore} pts</span>
-                {attempt.completedAt && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {formatDuration(attempt.startedAt, attempt.completedAt)}
-                  </span>
-                )}
-                {attempt.flagged && (
-                  <Badge variant="danger" size="sm">
-                    <AlertTriangle className="w-3 h-3 mr-0.5" /> Sospechoso
-                  </Badge>
-                )}
-                {attempt.autoSubmitted && (
-                  <Badge variant="warning" size="sm">
-                    <Shield className="w-3 h-3 mr-0.5" /> Auto-enviado
-                  </Badge>
-                )}
-                {attempt.blurCount > 0 && (
-                  <span className="text-amber-400">{attempt.blurCount} pérdidas de foco</span>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-subtle">
+                    <span>Intento {attempt.attemptNumber}</span>
+                    <span>{attempt.score}/{attempt.maxScore} pts</span>
+                    {attempt.completedAt && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {formatDuration(attempt.startedAt, attempt.completedAt)}
+                      </span>
+                    )}
+                    {attempt.flagged && (
+                      <Badge variant="danger" size="sm">
+                        <AlertTriangle className="w-3 h-3 mr-0.5" /> Sospechoso
+                      </Badge>
+                    )}
+                    {attempt.autoSubmitted && (
+                      <Badge variant="warning" size="sm">
+                        <Shield className="w-3 h-3 mr-0.5" /> Auto-enviado
+                      </Badge>
+                    )}
+                    {attempt.blurCount > 0 && (
+                      <span className="text-amber-400">{attempt.blurCount} pérdidas de foco</span>
+                    )}
+                    <span className="flex items-center gap-1 text-cyan-400/70 ml-auto">
+                      <Eye className="w-3 h-3" /> {isExpanded ? 'Ocultar' : 'Ver respuestas'}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Expanded detail — question by question */}
+                {isExpanded && quizInfo?.questions && (
+                  <div className="border-t border-foreground/[0.06] p-4 space-y-4">
+                    {quizInfo.questions.map((question, qIdx) => {
+                      const answer = attempt.answers.find((a) => a.questionId === question.id);
+                      const selectedIds = answer?.selectedOptionIds?.length
+                        ? answer.selectedOptionIds
+                        : answer?.selectedOptionId
+                          ? [answer.selectedOptionId]
+                          : [];
+                      const gotPoints = answer?.pointsEarned ?? 0;
+                      const isCorrect = gotPoints === question.points;
+                      const isPartial = gotPoints > 0 && gotPoints < question.points;
+
+                      return (
+                        <div key={question.id} className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <span className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                              isCorrect
+                                ? 'bg-emerald-500/20 text-emerald-400'
+                                : isPartial
+                                  ? 'bg-amber-500/20 text-amber-400'
+                                  : 'bg-red-500/20 text-red-400'
+                            }`}>
+                              {qIdx + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <MarkdownRenderer content={question.text} className="text-sm text-foreground/90 font-medium" />
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant={question.type === 'single' ? 'info' : 'warning'} size="sm">
+                                  {question.type === 'single' ? 'Única' : 'Ponderada'}
+                                </Badge>
+                                <span className={`text-xs font-medium ${
+                                  isCorrect ? 'text-emerald-400' : isPartial ? 'text-amber-400' : 'text-red-400'
+                                }`}>
+                                  {gotPoints}/{question.points} pts
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Options */}
+                          <div className="ml-7 space-y-1">
+                            {question.options.map((opt) => {
+                              const isSelected = selectedIds.includes(opt.id);
+                              const isCorrectOption = opt.weight === 100 || (question.type === 'weighted' && opt.weight > 0);
+
+                              let optClass = 'border-foreground/[0.06] bg-foreground/[0.01] text-subtle';
+                              let icon = null;
+
+                              if (isSelected && isCorrectOption) {
+                                // Correct selection
+                                optClass = 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400';
+                                icon = <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />;
+                              } else if (isSelected && !isCorrectOption) {
+                                // Wrong selection
+                                optClass = 'border-red-500/30 bg-red-500/10 text-red-400';
+                                icon = <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />;
+                              } else if (!isSelected && isCorrectOption) {
+                                // Missed correct option
+                                optClass = 'border-emerald-500/20 bg-emerald-500/[0.04] text-emerald-400/60';
+                                icon = <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400/50 shrink-0" />;
+                              }
+
+                              return (
+                                <div key={opt.id} className={`flex items-start gap-2 px-3 py-2 rounded-lg border text-xs ${optClass}`}>
+                                  {icon || <span className="w-3.5 h-3.5 shrink-0" />}
+                                  <span className="flex-1">{opt.text}</span>
+                                  {question.type === 'weighted' && opt.weight > 0 && (
+                                    <span className="text-[10px] text-subtle shrink-0">{opt.weight}%</span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* No answer */}
+                          {selectedIds.length === 0 && (
+                            <p className="ml-7 text-xs text-faint italic">Sin respuesta</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

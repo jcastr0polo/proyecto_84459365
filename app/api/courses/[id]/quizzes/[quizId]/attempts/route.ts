@@ -61,7 +61,13 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
     });
 
     return NextResponse.json({
-      quiz: { id: quiz.id, title: quiz.title, type: quiz.type, maxScore: quiz.questions.reduce((s, q) => s + q.points, 0) },
+      quiz: {
+        id: quiz.id,
+        title: quiz.title,
+        type: quiz.type,
+        maxScore: quiz.questions.reduce((s, q) => s + q.points, 0),
+        questions: quiz.questions,
+      },
       attempts: enriched,
       total: enriched.length,
     });
