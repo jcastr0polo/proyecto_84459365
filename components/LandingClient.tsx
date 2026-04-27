@@ -217,7 +217,7 @@ export default function LandingClient() {
                   viewport={{ once: true, margin: '-40px' }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                   whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                  className={`relative rounded-2xl border border-foreground/[0.08] bg-gradient-to-br ${cfg.gradient} p-6 ${cfg.border} transition-all duration-300 group`}
+                  className={`relative h-full rounded-2xl border border-foreground/[0.08] bg-gradient-to-br ${cfg.gradient} p-6 ${cfg.border} transition-all duration-300 group`}
                 >
                   <div className="flex items-start justify-between mb-5">
                     <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-medium ${cfg.badgeClass}`}>
@@ -272,12 +272,12 @@ export default function LandingClient() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-40px' }}
                   transition={{ duration: 0.5, delay: i * 0.12 }}
-                  className="relative group"
+                  className="relative group h-full"
                 >
                   {i < STEPS.length - 1 && (
                     <div className="hidden lg:block absolute top-10 left-full w-full h-px bg-gradient-to-r from-white/[0.08] to-transparent z-0" />
                   )}
-                  <div className="relative rounded-2xl border border-foreground/[0.06] bg-foreground/[0.02] p-6 hover:bg-foreground/[0.04] hover:border-foreground/[0.12] transition-all duration-300">
+                  <div className="relative h-full rounded-2xl border border-foreground/[0.06] bg-foreground/[0.02] p-6 hover:bg-foreground/[0.04] hover:border-foreground/[0.12] transition-all duration-300">
                     <div className="flex items-center justify-between mb-5">
                       <div className="w-10 h-10 rounded-xl bg-foreground/[0.05] flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
                         <Icon className="w-5 h-5 text-muted group-hover:text-cyan-400 transition-colors" />
