@@ -87,7 +87,7 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
     }
 
     return NextResponse.json({
-      quiz: { id: quiz.id, title: quiz.title, type: quiz.type },
+      quiz: { id: quiz.id, title: quiz.title, type: quiz.type, questions: quiz.questions },
       attempts: myAttempts,
     });
   });

@@ -6,9 +6,17 @@ import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
+import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { formatDateTimeColombia } from '@/lib/dateUtils';
-import type { QuizAttempt } from '@/lib/types';
-import { Clock, CheckCircle2, ClockIcon } from 'lucide-react';
+import type { QuizAttempt, QuizQuestion } from '@/lib/types';
+import { Clock, CheckCircle2, ClockIcon, ChevronDown, ChevronUp, XCircle } from 'lucide-react';
+
+interface QuizInfo {
+  id: string;
+  title: string;
+  type: string;
+  questions?: QuizQuestion[];
+}
 
 export default function StudentQuizResultsPage() {
   const params = useParams();
@@ -17,11 +25,12 @@ export default function StudentQuizResultsPage() {
   const courseId = params.courseId as string;
   const quizId = params.quizId as string;
 
-  const [quizInfo, setQuizInfo] = useState<{ id: string; title: string; type: string } | null>(null);
+  const [quizInfo, setQuizInfo] = useState<QuizInfo | null>(null);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [attemptCount, setAttemptCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -78,35 +87,128 @@ export default function StudentQuizResultsPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {attempts.map((attempt) => (
-            <Card key={attempt.id} padding="lg">
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div>
-                  <p className="text-xs text-subtle">Intento #{attempt.attemptNumber}</p>
-                  <p className={`text-3xl font-bold tabular-nums ${
-                    attempt.percentage >= 70 ? 'text-emerald-400' : attempt.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
-                  }`}>
-                    {attempt.percentage}%
-                  </p>
-                  <p className="text-xs text-subtle">{attempt.score}/{attempt.maxScore} puntos</p>
-                </div>
-                <div className="text-right">
-                  {attempt.completedAt && (
-                    <p className="text-xs text-subtle flex items-center gap-1 justify-end">
-                      <Clock className="w-3 h-3" />
-                      {formatDuration(attempt.startedAt, attempt.completedAt)}
-                    </p>
-                  )}
-                  <p className="text-[11px] text-faint mt-1">
-                    {formatDateTimeColombia(attempt.completedAt || attempt.startedAt)}
-                  </p>
-                  {attempt.autoSubmitted && (
-                    <Badge variant="warning" size="sm" className="mt-1">Auto-enviado</Badge>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
+          {attempts.map((attempt) => {
+            const isExpanded = expandedId === attempt.id;
+            const questions = quizInfo?.questions;
+            return (
+              <Card key={attempt.id} padding="none" className="overflow-hidden">
+                {/* Summary header — clickable */}
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : attempt.id)}
+                  className="w-full text-left p-5 cursor-pointer hover:bg-foreground/[0.02] transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-1">
+                    <div>
+                      <p className="text-xs text-subtle">Intento #{attempt.attemptNumber}</p>
+                      <p className={`text-3xl font-bold tabular-nums ${
+                        attempt.percentage >= 70 ? 'text-emerald-400' : attempt.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
+                      }`}>
+                        {attempt.percentage}%
+                      </p>
+                      <p className="text-xs text-subtle">{attempt.score}/{attempt.maxScore} puntos</p>
+                    </div>
+                    <div className="text-right flex flex-col items-end gap-1">
+                      {attempt.completedAt && (
+                        <p className="text-xs text-subtle flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatDuration(attempt.startedAt, attempt.completedAt)}
+                        </p>
+                      )}
+                      <p className="text-[11px] text-faint">
+                        {formatDateTimeColombia(attempt.completedAt || attempt.startedAt)}
+                      </p>
+                      {attempt.autoSubmitted && (
+                        <Badge variant="warning" size="sm">Auto-enviado</Badge>
+                      )}
+                      <span className="flex items-center gap-1 text-xs text-cyan-400/70 mt-1">
+                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                        {isExpanded ? 'Ocultar detalle' : 'Ver detalle'}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+
+                {/* Expanded question-by-question detail */}
+                {isExpanded && questions && (
+                  <div className="border-t border-foreground/[0.06] p-5 space-y-5">
+                    {questions.map((question, qIdx) => {
+                      const answer = attempt.answers.find((a) => a.questionId === question.id);
+                      const selectedIds = answer?.selectedOptionIds?.length
+                        ? answer.selectedOptionIds
+                        : answer?.selectedOptionId
+                          ? [answer.selectedOptionId]
+                          : [];
+                      const gotPoints = answer?.pointsEarned ?? 0;
+                      const isCorrect = gotPoints === question.points;
+                      const isPartial = gotPoints > 0 && gotPoints < question.points;
+
+                      return (
+                        <div key={question.id} className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <span className={`shrink-0 mt-0.5 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                              isCorrect
+                                ? 'bg-emerald-500/20 text-emerald-400'
+                                : isPartial
+                                  ? 'bg-amber-500/20 text-amber-400'
+                                  : 'bg-red-500/20 text-red-400'
+                            }`}>
+                              {qIdx + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <MarkdownRenderer content={question.text} className="text-sm text-foreground/90 font-medium" />
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant={question.type === 'single' ? 'info' : 'warning'} size="sm">
+                                  {question.type === 'single' ? 'Única' : 'Ponderada'}
+                                </Badge>
+                                <span className={`text-xs font-medium ${
+                                  isCorrect ? 'text-emerald-400' : isPartial ? 'text-amber-400' : 'text-red-400'
+                                }`}>
+                                  {gotPoints}/{question.points} pts
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Options */}
+                          <div className="ml-8 space-y-1.5">
+                            {question.options.map((opt) => {
+                              const isSelected = selectedIds.includes(opt.id);
+                              const isCorrectOption = opt.weight === 100 || (question.type === 'weighted' && opt.weight > 0);
+
+                              let optClass = 'border-foreground/[0.06] bg-foreground/[0.01] text-subtle';
+                              let icon = null;
+
+                              if (isSelected && isCorrectOption) {
+                                optClass = 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400';
+                                icon = <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />;
+                              } else if (isSelected && !isCorrectOption) {
+                                optClass = 'border-red-500/30 bg-red-500/10 text-red-400';
+                                icon = <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />;
+                              } else if (!isSelected && isCorrectOption) {
+                                optClass = 'border-emerald-500/20 bg-emerald-500/[0.04] text-emerald-400/60';
+                                icon = <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400/50 shrink-0" />;
+                              }
+
+                              return (
+                                <div key={opt.id} className={`flex items-start gap-2 px-3 py-2 rounded-lg border text-xs ${optClass}`}>
+                                  {icon || <span className="w-3.5 h-3.5 shrink-0" />}
+                                  <span className="flex-1">{opt.text}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {selectedIds.length === 0 && (
+                            <p className="ml-8 text-xs text-faint italic">Sin respuesta</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
