@@ -32,6 +32,9 @@ import type {
   Grade,
   Submission,
   Activity,
+  Course,
+  User,
+  Enrollment,
   Corte,
   Quiz,
   QuizAttempt,
@@ -609,7 +612,9 @@ export function calculateFinalGrade(
  */
 export async function getCourseGradeSummary(courseId: string): Promise<CourseGradeSummary> {
   // ── Batch read: 10 files in parallel ──
-  const [allCourses, allActivities, allEnrollments, allGrades, allUsers, allCortes, allQuizzes, allAttempts, allManualItems, allManualGrades] = await Promise.all([
+  console.log('[gradeService] getCourseGradeSummary: starting parallel reads for', courseId);
+
+  const results = await Promise.allSettled([
     readCoursesFresh(),
     readActivitiesFresh(),
     readEnrollmentsFresh(),
@@ -621,6 +626,26 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
     readManualGradeItemsFresh(),
     readManualGradesFresh(),
   ]);
+
+  const labels = ['courses', 'activities', 'enrollments', 'grades', 'users', 'cortes', 'quizzes', 'quiz-attempts', 'manual-items', 'manual-grades'];
+  for (let i = 0; i < results.length; i++) {
+    if (results[i].status === 'rejected') {
+      console.error(`[gradeService] FAILED to read ${labels[i]}:`, (results[i] as PromiseRejectedResult).reason);
+    } else {
+      const val = (results[i] as PromiseFulfilledResult<unknown>).value;
+      console.log(`[gradeService] OK ${labels[i]}: ${Array.isArray(val) ? val.length + ' items' : 'loaded'}`);
+    }
+  }
+
+  // If any critical file failed, throw with details
+  const failed = labels.filter((_, i) => results[i].status === 'rejected');
+  if (failed.length > 0) {
+    throw new GradeError(`Error leyendo datos: ${failed.join(', ')}`, 500);
+  }
+
+  const [allCourses, allActivities, allEnrollments, allGrades, allUsers, allCortes, allQuizzes, allAttempts, allManualItems, allManualGrades] = results.map(
+    (r) => (r as PromiseFulfilledResult<unknown>).value
+  ) as [Course[], Activity[], Enrollment[], Grade[], User[], Corte[], Quiz[], QuizAttempt[], ManualGradeItem[], ManualGrade[]];
 
   const course = allCourses.find((c) => c.id === courseId);
   if (!course) {
@@ -780,8 +805,9 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
  * Performance: 3 parallel Blob reads, then pure in-memory.
  */
 export async function getStudentGradeSummary(studentId: string, courseId: string): Promise<StudentGradeSummary> {
-  // ── Batch read: 7 files in parallel ──
-  const [allCourses, allActivities, allGrades, allCortes, allQuizzes, allAttempts, allManualItems, allManualGrades] = await Promise.all([
+  console.log('[gradeService] getStudentGradeSummary: starting parallel reads for', studentId, courseId);
+
+  const results = await Promise.allSettled([
     readCoursesFresh(),
     readActivitiesFresh(),
     readGradesFresh(),
@@ -791,6 +817,25 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
     readManualGradeItemsFresh(),
     readManualGradesFresh(),
   ]);
+
+  const labels = ['courses', 'activities', 'grades', 'cortes', 'quizzes', 'quiz-attempts', 'manual-items', 'manual-grades'];
+  for (let i = 0; i < results.length; i++) {
+    if (results[i].status === 'rejected') {
+      console.error(`[gradeService] FAILED to read ${labels[i]}:`, (results[i] as PromiseRejectedResult).reason);
+    } else {
+      const val = (results[i] as PromiseFulfilledResult<unknown>).value;
+      console.log(`[gradeService] OK ${labels[i]}: ${Array.isArray(val) ? val.length + ' items' : 'loaded'}`);
+    }
+  }
+
+  const failed = labels.filter((_, i) => results[i].status === 'rejected');
+  if (failed.length > 0) {
+    throw new GradeError(`Error leyendo datos: ${failed.join(', ')}`, 500);
+  }
+
+  const [allCourses, allActivities, allGrades, allCortes, allQuizzes, allAttempts, allManualItems, allManualGrades] = results.map(
+    (r) => (r as PromiseFulfilledResult<unknown>).value
+  ) as [Course[], Activity[], Grade[], Corte[], Quiz[], QuizAttempt[], ManualGradeItem[], ManualGrade[]];
 
   const course = allCourses.find((c) => c.id === courseId);
   if (!course) {
