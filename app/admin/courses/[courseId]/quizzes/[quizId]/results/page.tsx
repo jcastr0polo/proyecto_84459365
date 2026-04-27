@@ -9,7 +9,9 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import type { QuizAttempt, QuizQuestion } from '@/lib/types';
-import { AlertTriangle, Shield, Clock, ChevronDown, ChevronUp, Eye, CheckCircle2, XCircle } from 'lucide-react';
+import { AlertTriangle, Shield, Clock, ChevronDown, ChevronUp, Eye, CheckCircle2, XCircle, ArrowUpDown } from 'lucide-react';
+
+type SortKey = 'recent' | 'top' | 'bottom' | 'name';
 
 interface EnrichedAttempt extends QuizAttempt {
   student: { id: string; firstName: string; lastName: string; email: string; documentNumber: string } | null;
@@ -35,6 +37,7 @@ export default function AdminQuizResultsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [flagFilter, setFlagFilter] = useState(false);
+  const [sortBy, setSortBy] = useState<SortKey>('top');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -69,8 +72,21 @@ export default function AdminQuizResultsPage() {
         a.student?.documentNumber.includes(q)
       );
     }
+    // Sort
+    result = [...result].sort((a, b) => {
+      switch (sortBy) {
+        case 'top': return b.percentage - a.percentage;
+        case 'bottom': return a.percentage - b.percentage;
+        case 'name': {
+          const nameA = a.student ? `${a.student.lastName} ${a.student.firstName}` : a.studentId;
+          const nameB = b.student ? `${b.student.lastName} ${b.student.firstName}` : b.studentId;
+          return nameA.localeCompare(nameB);
+        }
+        default: return new Date(b.completedAt || b.startedAt).getTime() - new Date(a.completedAt || a.startedAt).getTime();
+      }
+    });
     return result;
-  }, [attempts, flagFilter, search]);
+  }, [attempts, flagFilter, search, sortBy]);
 
   // Stats
   const avgPercentage = attempts.length > 0
@@ -117,10 +133,26 @@ export default function AdminQuizResultsPage() {
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Filters & Sort */}
       {attempts.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
           <SearchInput value={search} onChange={setSearch} placeholder="Buscar estudiante..." className="w-full sm:w-72" />
+          <div className="flex items-center gap-1.5">
+            <ArrowUpDown className="w-3.5 h-3.5 text-subtle shrink-0" />
+            {([['top', 'Mejor → Peor'], ['bottom', 'Peor → Mejor'], ['name', 'Nombre'], ['recent', 'Reciente']] as [SortKey, string][]).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setSortBy(key)}
+                className={`px-2.5 py-1 text-xs rounded-lg border transition-colors cursor-pointer ${
+                  sortBy === key
+                    ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400 font-medium'
+                    : 'border-foreground/[0.08] text-subtle hover:text-muted hover:border-foreground/15'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <label className="flex items-center gap-2 cursor-pointer text-sm text-muted">
             <input
               type="checkbox"
@@ -140,8 +172,9 @@ export default function AdminQuizResultsPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((attempt) => {
+          {filtered.map((attempt, idx) => {
             const isExpanded = expandedId === attempt.id;
+            const showRank = sortBy === 'top' || sortBy === 'bottom';
             return (
               <div
                 key={attempt.id}
@@ -155,11 +188,20 @@ export default function AdminQuizResultsPage() {
                   className="w-full text-left p-4 cursor-pointer hover:bg-foreground/[0.02] transition-colors rounded-xl"
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground/90 truncate">
-                        {attempt.student ? `${attempt.student.lastName}, ${attempt.student.firstName}` : attempt.studentId}
-                      </p>
-                      {attempt.student && <p className="text-[11px] text-subtle truncate">{attempt.student.email}</p>}
+                    <div className="min-w-0 flex-1 flex items-start gap-2.5">
+                      {showRank && (
+                        <span className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                          idx === 0 ? 'bg-amber-500/20 text-amber-400' : idx === 1 ? 'bg-slate-400/20 text-slate-400' : idx === 2 ? 'bg-orange-500/20 text-orange-400' : 'bg-foreground/[0.06] text-subtle'
+                        }`}>
+                          {idx + 1}
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground/90 truncate">
+                          {attempt.student ? `${attempt.student.lastName}, ${attempt.student.firstName}` : attempt.studentId}
+                        </p>
+                        {attempt.student && <p className="text-[11px] text-subtle truncate">{attempt.student.email}</p>}
+                      </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className={`text-lg font-bold tabular-nums ${
