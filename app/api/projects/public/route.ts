@@ -12,7 +12,7 @@ export async function GET(): Promise<NextResponse> {
   const courses = await readCoursesFresh();
   const semesters = await readSemestersFresh();
 
-  const featured = projects.filter((p) => p.isPublic && p.isFeatured && !p.isBlockedFromShowcase);
+  const featured = projects.filter((p) => p.isPublic && !p.isBlockedFromShowcase);
 
   const userMap = new Map(users.map((u) => [u.id, `${u.firstName} ${u.lastName}`]));
   const courseMap = new Map(courses.map((c) => [c.id, c.name]));

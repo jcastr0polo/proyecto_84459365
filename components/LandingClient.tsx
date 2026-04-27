@@ -118,7 +118,7 @@ export default function LandingClient() {
       </nav>
 
       {/* ═══ HERO ═══ */}
-      <section className="relative pt-28 pb-16 sm:pt-36 sm:pb-20 px-6">
+      <section className="relative pt-24 pb-10 sm:pt-32 sm:pb-14 px-6">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-cyan-500/[0.06] rounded-full blur-[150px]" />
           <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-blue-500/[0.04] rounded-full blur-[120px]" />
@@ -147,7 +147,7 @@ export default function LandingClient() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: titleAnimationDuration + 0.3, duration: 0.8 }}
-            className="mt-8 text-base sm:text-lg text-slate-500 tracking-[0.15em] uppercase font-light"
+            className="mt-8 text-base sm:text-lg text-subtle tracking-[0.15em] uppercase font-light"
           >
             {heroSubtitle}
           </motion.p>
@@ -156,7 +156,7 @@ export default function LandingClient() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: titleAnimationDuration + 0.6, duration: 0.8 }}
-            className="mt-4 text-sm sm:text-base text-slate-500 max-w-xl mx-auto font-light leading-relaxed"
+            className="mt-4 text-sm sm:text-base text-muted max-w-xl mx-auto font-light leading-relaxed"
           >
             {heroDescription}
           </motion.p>
@@ -188,7 +188,7 @@ export default function LandingClient() {
       </section>
 
       {/* ═══ COURSES ═══ */}
-      <Section className="py-14 sm:py-20 px-6">
+      <Section className="py-10 sm:py-14 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/[0.08] border border-cyan-500/10 mb-4">
@@ -245,7 +245,7 @@ export default function LandingClient() {
       </Section>
 
       {/* ═══ HOW IT WORKS ═══ */}
-      <Section className="py-14 sm:py-20 px-6">
+      <Section className="py-10 sm:py-14 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/[0.08] border border-purple-500/10 mb-4">
@@ -293,7 +293,7 @@ export default function LandingClient() {
       </Section>
 
       {/* ═══ TECH STACK ═══ */}
-      <Section className="py-14 sm:py-20 px-6">
+      <Section className="py-10 sm:py-14 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/[0.08] border border-emerald-500/10 mb-4">
@@ -359,7 +359,7 @@ export default function LandingClient() {
       </Section>
 
       {/* ═══ FOOTER ═══ */}
-      <footer className="border-t border-foreground/[0.06] py-12 px-6">
+      <footer className="border-t border-foreground/[0.06] py-8 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">

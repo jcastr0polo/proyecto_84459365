@@ -194,7 +194,7 @@ function ProjectCard({ project }: { project: ShowcaseProject }) {
         </p>
 
         {/* Project name */}
-        <h3 className="text-lg font-semibold text-foreground group-hover:text-cyan-50 transition-colors leading-tight">
+        <h3 className="text-lg font-semibold text-foreground group-hover:text-cyan-600 dark:group-hover:text-cyan-50 transition-colors leading-tight">
           {project.projectName}
         </h3>
 
