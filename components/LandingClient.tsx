@@ -147,7 +147,7 @@ export default function LandingClient() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: titleAnimationDuration + 0.3, duration: 0.8 }}
-            className="mt-8 text-base sm:text-lg text-subtle tracking-[0.15em] uppercase font-light"
+            className="mt-8 text-base sm:text-lg text-slate-600 dark:text-slate-400 tracking-[0.15em] uppercase font-light"
           >
             {heroSubtitle}
           </motion.p>
@@ -156,7 +156,7 @@ export default function LandingClient() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: titleAnimationDuration + 0.6, duration: 0.8 }}
-            className="mt-4 text-sm sm:text-base text-muted max-w-xl mx-auto font-light leading-relaxed"
+            className="mt-4 text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto font-light leading-relaxed"
           >
             {heroDescription}
           </motion.p>
