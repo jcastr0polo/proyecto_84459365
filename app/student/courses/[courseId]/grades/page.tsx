@@ -67,6 +67,19 @@ export default function StudentGradesPage() {
   const progressPercent = data.activities.length > 0
     ? Math.round((gradedCount / data.activities.length) * 100) : 0;
 
+  const hasCortes = data.cortes.length > 0;
+  const corteGroups = hasCortes
+    ? data.cortes
+        .slice()
+        .sort((a, b) => a.order - b.order)
+        .map((corte) => ({
+          ...corte,
+          activities: data.activities.filter((a) => a.corteId === corte.id),
+          score: data.corteScores[corte.id] ?? null,
+        }))
+    : [];
+  const unassignedActivities = data.activities.filter((a) => !a.corteId);
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
@@ -105,8 +118,81 @@ export default function StudentGradesPage() {
         </div>
       </motion.div>
 
-      {/* Activity Grade Cards */}
-      {data.activities.length > 0 ? (
+      {/* Grade Cards grouped by Corte */}
+      {hasCortes ? (
+        <div className="space-y-8 mb-8">
+          {corteGroups.map((group, gi) => (
+            <motion.section
+              key={group.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: gi * 0.1, duration: 0.3 }}
+            >
+              {/* Corte header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-foreground">{group.name}</h2>
+                  <span className="text-[11px] text-subtle bg-foreground/[0.05] px-2 py-0.5 rounded-full">
+                    Peso: {group.weight}%
+                  </span>
+                </div>
+                {group.score !== null && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-subtle">Nota del corte:</span>
+                    <span className={`text-lg font-bold tabular-nums ${definitiveColor(group.score)}`}>
+                      {group.score.toFixed(1)}
+                    </span>
+                    <span className="text-[10px] text-subtle">/ 5.0</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Activities in this corte */}
+              {group.activities.length > 0 ? (
+                <div className="grid gap-3">
+                  {group.activities.map((activity, index) => (
+                    <GradeCard key={activity.id} activity={activity} index={gi * 10 + index} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 rounded-xl border border-foreground/[0.06] bg-foreground/[0.01]">
+                  <p className="text-xs text-subtle italic">Sin actividades en este corte</p>
+                </div>
+              )}
+
+              {/* Corte score summary bar */}
+              {group.score !== null && (
+                <div className="mt-3 p-3 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02] flex items-center gap-3">
+                  <span className="text-xs text-subtle flex-shrink-0">Definitiva {group.name}:</span>
+                  <div className="flex-1 relative h-2 rounded-full bg-foreground/[0.06] overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(group.score / 5) * 100}%` }}
+                      transition={{ delay: gi * 0.1 + 0.3, duration: 0.5, ease: 'easeOut' }}
+                      className={`absolute inset-y-0 left-0 rounded-full ${barColorFn(group.score)}`}
+                    />
+                  </div>
+                  <span className={`text-sm font-bold tabular-nums flex-shrink-0 ${definitiveColor(group.score)}`}>
+                    {group.score.toFixed(1)}
+                  </span>
+                </div>
+              )}
+            </motion.section>
+          ))}
+
+          {/* Unassigned activities */}
+          {unassignedActivities.length > 0 && (
+            <section>
+              <h2 className="text-sm font-bold text-foreground mb-3">Otras actividades</h2>
+              <div className="grid gap-3">
+                {unassignedActivities.map((activity, index) => (
+                  <GradeCard key={activity.id} activity={activity} index={corteGroups.length * 10 + index} />
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      ) : data.activities.length > 0 ? (
         <div className="grid gap-3 mb-8">
           {data.activities.map((activity, index) => (
             <GradeCard key={activity.id} activity={activity} index={index} />
@@ -137,11 +223,11 @@ export default function StudentGradesPage() {
             )}
             <div className="mt-4">
               {data.isApproved ? (
-                <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   ✓ Aprobado
                 </span>
               ) : (
-                <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-red-500/15 text-red-400 border border-red-500/20">
+                <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20">
                   ✗ Reprobado
                 </span>
               )}
@@ -156,7 +242,13 @@ export default function StudentGradesPage() {
 }
 
 function definitiveColor(score: number): string {
-  if (score >= 4.0) return 'text-emerald-400';
-  if (score >= 3.0) return 'text-amber-400';
-  return 'text-red-400';
+  if (score >= 4.0) return 'text-emerald-600 dark:text-emerald-400';
+  if (score >= 3.0) return 'text-amber-600 dark:text-amber-400';
+  return 'text-red-600 dark:text-red-400';
+}
+
+function barColorFn(score: number): string {
+  if (score >= 4.0) return 'bg-emerald-500';
+  if (score >= 3.0) return 'bg-amber-500';
+  return 'bg-red-500';
 }

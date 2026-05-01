@@ -127,9 +127,9 @@ function barColor(score: number): string {
 }
 
 function textColor(score: number): string {
-  if (score >= 4.0) return 'text-emerald-400';
-  if (score >= 3.0) return 'text-amber-400';
-  return 'text-red-400';
+  if (score >= 4.0) return 'text-emerald-600 dark:text-emerald-400';
+  if (score >= 3.0) return 'text-amber-600 dark:text-amber-400';
+  return 'text-red-600 dark:text-red-400';
 }
 
 function scoreBgClass(score: number): string {
@@ -139,6 +139,6 @@ function scoreBgClass(score: number): string {
 }
 
 function statusBadgeClass(score: number): string {
-  if (score >= 3.0) return 'bg-emerald-500/15 text-emerald-400';
-  return 'bg-red-500/15 text-red-400';
+  if (score >= 3.0) return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400';
+  return 'bg-red-500/15 text-red-600 dark:text-red-400';
 }

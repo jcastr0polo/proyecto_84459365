@@ -227,9 +227,9 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
                     )}
                     <p className="text-[10px] mt-0.5">
                       {student.isApproved ? (
-                        <span className="text-emerald-400">Aprobado</span>
+                        <span className="text-emerald-600 dark:text-emerald-400">Aprobado</span>
                       ) : (
-                        <span className="text-red-400">Reprobado</span>
+                        <span className="text-red-600 dark:text-red-400">Reprobado</span>
                       )}
                     </p>
                   </div>
@@ -328,7 +328,7 @@ function AvgCell({ value }: { value: number | null }) {
 }
 
 function scoreColorClass(score: number): string {
-  if (score >= 4.0) return 'text-emerald-400';
-  if (score >= 3.0) return 'text-amber-400';
-  return 'text-red-400';
+  if (score >= 4.0) return 'text-emerald-600 dark:text-emerald-400';
+  if (score >= 3.0) return 'text-amber-600 dark:text-amber-400';
+  return 'text-red-600 dark:text-red-400';
 }
