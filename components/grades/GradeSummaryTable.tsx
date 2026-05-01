@@ -13,7 +13,10 @@ interface GradeSummaryTableProps {
  * Columns grouped by corte: [Corte 1: Act1 Act2 | Nota Corte] [Corte 2: ...] [Sin Corte: ...] | Definitiva
  */
 export default function GradeSummaryTable({ data, className = '' }: GradeSummaryTableProps) {
-  const { activities, students, cortes } = data;
+  const { activities, cortes } = data;
+  const students = [...data.students].sort((a, b) =>
+    a.lastName.localeCompare(b.lastName, 'es') || a.firstName.localeCompare(b.firstName, 'es')
+  );
   const totalWeight = activities.reduce((a, b) => a + b.weight, 0);
   const hasCortes = cortes.length > 0;
 
