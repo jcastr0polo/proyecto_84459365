@@ -490,7 +490,7 @@ export interface CourseGradeSummary {
   activities: {
     id: string;
     title: string;
-    type: Activity['type'];
+    type: Activity['type'] | 'quiz' | 'manual';
     maxScore: number;
     weight: number;
     corteId?: string;
@@ -532,7 +532,7 @@ export interface StudentGradeSummary {
   activities: {
     id: string;
     title: string;
-    type: Activity['type'];
+    type: Activity['type'] | 'quiz' | 'manual';
     maxScore: number;
     weight: number;
     corteId?: string;

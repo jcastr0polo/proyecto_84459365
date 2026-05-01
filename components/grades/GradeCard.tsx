@@ -31,6 +31,8 @@ const TYPE_LABELS: Record<string, string> = {
   presentation: 'Presentación',
   prompt: 'Prompt',
   exam: 'Examen',
+  quiz: 'Parcial',
+  manual: 'Nota Manual',
   other: 'Otro',
 };
 

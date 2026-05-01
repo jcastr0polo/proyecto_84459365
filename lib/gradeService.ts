@@ -680,6 +680,12 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
     order: corte.order,
   }));
 
+  // Quizzes & manual items for the course
+  const courseQuizzes = allQuizzes.filter(
+    (q) => q.courseId === courseId && q.type === 'graded' && q.weight && q.weight > 0
+  );
+  const courseManualItems = allManualItems.filter((i) => i.courseId === courseId);
+
   const students = enrollments.map((enrollment) => {
     const student = userMap.get(enrollment.studentId);
     if (!student) return null;
@@ -700,16 +706,45 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
         : null;
     }
 
+    // Quiz grades
+    for (const quiz of courseQuizzes) {
+      const attempts = allAttempts.filter(
+        (a) => a.quizId === quiz.id && a.studentId === student.id
+      );
+      if (attempts.length > 0) {
+        const best = attempts.reduce((b, a) => a.percentage > b.percentage ? a : b);
+        const maxScore = quiz.maxScore ?? 100;
+        gradesMap[quiz.id] = {
+          score: roundTo1Decimal((best.percentage / 100) * maxScore),
+          maxScore,
+          isPublished: true,
+        };
+      } else {
+        gradesMap[quiz.id] = null;
+      }
+    }
+
+    // Manual grade items
+    for (const item of courseManualItems) {
+      const mg = allManualGrades.find(
+        (g) => g.itemId === item.id && g.studentId === student.id
+      );
+      gradesMap[item.id] = mg
+        ? {
+            score: mg.score,
+            maxScore: mg.maxScore,
+            isPublished: true,
+            feedback: mg.feedback,
+          }
+        : null;
+    }
+
     // ── Per-corte score calculation ──
     const corteScores: Record<string, number | null> = {};
     for (const corte of courseCortes) {
       const corteActivities = activities.filter((a) => a.corteId === corte.id);
-      const corteQuizzes = allQuizzes.filter(
-        (q) => q.courseId === courseId && q.type === 'graded' && q.corteId === corte.id && q.weight && q.weight > 0
-      );
-      const corteManualItems = allManualItems.filter(
-        (i) => i.courseId === courseId && i.corteId === corte.id
-      );
+      const corteQuizzes = courseQuizzes.filter((q) => q.corteId === corte.id);
+      const corteManualItems = courseManualItems.filter((i) => i.corteId === corte.id);
 
       let sumWeighted = 0;
       let sumWeights = 0;
@@ -777,11 +812,9 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
     };
   }).filter((s): s is NonNullable<typeof s> => s !== null);
 
-  return {
-    courseId,
-    courseName: course.name,
-    cortes: cortesInfo,
-    activities: activities.map((a) => ({
+  // Build unified activities list (activities + quizzes + manual items)
+  const allActivityEntries: CourseGradeSummary['activities'] = [
+    ...activities.map((a) => ({
       id: a.id,
       title: a.title,
       type: a.type,
@@ -789,6 +822,29 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
       weight: a.weight,
       corteId: a.corteId,
     })),
+    ...courseQuizzes.map((q) => ({
+      id: q.id,
+      title: q.title,
+      type: 'quiz' as const,
+      maxScore: q.maxScore ?? 100,
+      weight: q.weight!,
+      ...(q.corteId ? { corteId: q.corteId } : {}),
+    })),
+    ...courseManualItems.map((i) => ({
+      id: i.id,
+      title: i.title,
+      type: 'manual' as const,
+      maxScore: i.maxScore,
+      weight: i.weight,
+      ...(i.corteId ? { corteId: i.corteId } : {}),
+    })),
+  ];
+
+  return {
+    courseId,
+    courseName: course.name,
+    cortes: cortesInfo,
+    activities: allActivityEntries,
     students,
   };
 }
@@ -883,6 +939,58 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
   );
   const courseManualItems = allManualItems.filter((i) => i.courseId === courseId);
 
+  // Add quizzes as visible items in the activities list
+  const quizDetails: StudentGradeSummary['activities'] = courseQuizzes.map((quiz) => {
+    const attempts = allAttempts.filter(
+      (a) => a.quizId === quiz.id && a.studentId === studentId
+    );
+    const best = attempts.length > 0
+      ? attempts.reduce((b, a) => a.percentage > b.percentage ? a : b)
+      : null;
+    const maxScore = quiz.maxScore ?? 100;
+    return {
+      id: quiz.id,
+      title: quiz.title,
+      type: 'quiz' as const,
+      maxScore,
+      weight: quiz.weight!,
+      ...(quiz.corteId ? { corteId: quiz.corteId } : {}),
+      grade: best
+        ? {
+            score: roundTo1Decimal((best.percentage / 100) * maxScore),
+            maxScore,
+            gradedAt: best.completedAt ?? new Date().toISOString(),
+          }
+        : null,
+    };
+  });
+
+  // Add manual grade items as visible items
+  const manualDetails: StudentGradeSummary['activities'] = courseManualItems.map((item) => {
+    const mg = allManualGrades.find(
+      (g) => g.itemId === item.id && g.studentId === studentId
+    );
+    return {
+      id: item.id,
+      title: item.title,
+      type: 'manual' as const,
+      maxScore: item.maxScore,
+      weight: item.weight,
+      ...(item.corteId ? { corteId: item.corteId } : {}),
+      grade: mg
+        ? {
+            score: mg.score,
+            maxScore: mg.maxScore,
+            feedback: mg.feedback,
+            gradedAt: mg.gradedAt,
+          }
+        : null,
+    };
+  });
+
+  // Merge all graded items
+  const allDetails = [...activityDetails, ...quizDetails, ...manualDetails];
+
   const corteScores: Record<string, number | null> = {};
   for (const corte of courseCortes) {
     const corteActs = activityDetails.filter((a) => a.corteId === corte.id);
@@ -942,7 +1050,7 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
     courseName: course.name,
     cortes: courseCortes.map((c) => ({ id: c.id, name: c.name, weight: c.weight, order: c.order })),
     corteScores,
-    activities: activityDetails,
+    activities: allDetails,
     finalScore,
     isPartial: finalResult.isPartial,
     isApproved: finalScore !== null ? finalScore >= APPROVAL_THRESHOLD : null,
