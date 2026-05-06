@@ -148,6 +148,32 @@ export default function AdminCourseProjectsPage() {
     }
   }, [viewingDocId, toast]);
 
+  const handleDownloadDoc = useCallback(async (project: EnrichedProject) => {
+    setViewingDocId(project.id);
+    setLoadingDoc(true);
+    try {
+      const res = await fetch(`/api/projects/${project.id}/document`);
+      if (res.ok) {
+        const data = await res.json();
+        const blob = new Blob([data.content], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${project.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.md`;
+        link.click();
+        URL.revokeObjectURL(url);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(err.error ?? 'No se pudo descargar el documento', 'error');
+      }
+    } catch {
+      toast('Error de conexión', 'error');
+    } finally {
+      setLoadingDoc(false);
+      setViewingDocId(null);
+    }
+  }, [toast]);
+
   // Showcase editing
   const [editingShowcase, setEditingShowcase] = useState<string | null>(null);
   const [showcaseDesc, setShowcaseDesc] = useState('');
@@ -299,67 +325,27 @@ export default function AdminCourseProjectsPage() {
 
                 {/* View document */}
                 {p.documentUrl && (
-                  <button
-                    onClick={() => handleViewDoc(p.id)}
-                    disabled={loadingDoc && viewingDocId === p.id}
-                    className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded transition-colors cursor-pointer ${
-                      viewingDocId === p.id
-                        ? 'bg-violet-500/10 text-violet-400'
-                        : 'text-faint hover:text-violet-400 hover:bg-violet-500/10'
-                    } ${loadingDoc && viewingDocId === p.id ? 'opacity-50' : ''}`}
+                  <a
+                    href={`/admin/viewer?url=${encodeURIComponent(p.documentUrl)}&name=${encodeURIComponent(p.title + '.md')}`}
+                    className="flex items-center gap-1 text-[10px] px-2 py-1 rounded text-faint hover:text-violet-400 hover:bg-violet-500/10 transition-colors"
                     title="Ver documento del proyecto"
                   >
                     <FileText className="w-3 h-3" />
-                    {viewingDocId === p.id ? 'Ocultar Doc' : 'Ver Doc'}
+                    Ver Doc
+                  </a>
+                )}
+                {p.documentUrl && (
+                  <button
+                    onClick={() => handleDownloadDoc(p)}
+                    disabled={loadingDoc && viewingDocId === p.id}
+                    className="flex items-center gap-1 text-[10px] px-2 py-1 rounded text-faint hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                    title="Descargar .md"
+                  >
+                    <Download className="w-3 h-3" />
+                    Descargar
                   </button>
                 )}
               </div>
-
-              {/* Document viewer inline */}
-              {viewingDocId === p.id && (
-                <div className="mt-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.08] overflow-hidden">
-                  {loadingDoc ? (
-                    <p className="text-xs text-subtle animate-pulse p-4">Cargando documento...</p>
-                  ) : docContent ? (
-                    <>
-                      <div className="flex items-center justify-between px-4 py-2 border-b border-foreground/[0.06] bg-foreground/[0.02]">
-                        <span className="text-[10px] text-subtle">Documento del proyecto</span>
-                        <div className="flex items-center gap-1">
-                          <a
-                            href={`/admin/viewer?url=${encodeURIComponent(p.documentUrl!)}&name=${encodeURIComponent(p.title + '.md')}`}
-                            className="flex items-center gap-1 text-[10px] px-2 py-1 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors"
-                            title="Abrir en visor"
-                          >
-                            <Eye className="w-3 h-3" />
-                            Visor
-                          </a>
-                          <button
-                            onClick={() => {
-                              const blob = new Blob([docContent], { type: 'text/markdown' });
-                              const url = URL.createObjectURL(blob);
-                              const link = document.createElement('a');
-                              link.href = url;
-                              link.download = `${p.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.md`;
-                              link.click();
-                              URL.revokeObjectURL(url);
-                            }}
-                            className="flex items-center gap-1 text-[10px] px-2 py-1 rounded text-faint hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
-                            title="Descargar .md"
-                          >
-                            <Download className="w-3 h-3" />
-                            Descargar
-                          </button>
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <MarkdownViewer content={docContent} className="max-h-96 overflow-y-auto" />
-                      </div>
-                    </>
-                  ) : (
-                    <p className="text-xs text-faint p-4">No se pudo cargar el contenido</p>
-                  )}
-                </div>
-              )}
 
               {/* Showcase edit inline */}
               {editingShowcase === p.id && (
