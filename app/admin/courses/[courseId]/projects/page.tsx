@@ -159,7 +159,7 @@ export default function AdminCourseProjectsPage() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `${project.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.md`;
+        link.download = `${project.projectName.replace(/[^a-zA-Z0-9_-]/g, '_')}.md`;
         link.click();
         URL.revokeObjectURL(url);
       } else {
@@ -326,7 +326,7 @@ export default function AdminCourseProjectsPage() {
                 {/* View document */}
                 {p.documentUrl && (
                   <a
-                    href={`/admin/viewer?url=${encodeURIComponent(p.documentUrl)}&name=${encodeURIComponent(p.title + '.md')}`}
+                    href={`/admin/viewer?url=${encodeURIComponent(p.documentUrl)}&name=${encodeURIComponent(p.projectName + '.md')}`}
                     className="flex items-center gap-1 text-[10px] px-2 py-1 rounded text-faint hover:text-violet-400 hover:bg-violet-500/10 transition-colors"
                     title="Ver documento del proyecto"
                   >
