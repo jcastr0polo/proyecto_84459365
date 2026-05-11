@@ -34,9 +34,22 @@ CREATE TABLE IF NOT EXISTS users (
   last_login_at TIMESTAMPTZ
 );
 
+-- Enable RLS (Supabase security requirement)
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- Policy: service_role has full access (used by our server-side code)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'service_role_all') THEN
+    CREATE POLICY service_role_all ON users FOR ALL TO service_role USING (true) WITH CHECK (true);
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 CREATE INDEX IF NOT EXISTS idx_users_document ON users(document_number);
+
+-- Notify PostgREST to reload schema cache so the JS client can see the new table
+NOTIFY pgrst, 'reload schema';
 `;
 
 // ── GET: Estado de conexión ──

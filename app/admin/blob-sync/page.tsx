@@ -598,9 +598,16 @@ export default function BlobSyncPage() {
   last_login_at TIMESTAMPTZ
 );
 
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY service_role_all ON users FOR ALL
+  TO service_role USING (true) WITH CHECK (true);
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
-CREATE INDEX IF NOT EXISTS idx_users_document ON users(document_number);`}
+CREATE INDEX IF NOT EXISTS idx_users_document ON users(document_number);
+
+NOTIFY pgrst, 'reload schema';`}
             </pre>
           </details>
         </div>
