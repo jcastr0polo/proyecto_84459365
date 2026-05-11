@@ -12,7 +12,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
-import { requireSupabaseClient } from '@/lib/supabase';
+import { requireSupabaseClient, executeSql } from '@/lib/supabase';
 import { readUsersFresh } from '@/lib/dataService';
 
 // ── SQL para crear tablas ──
@@ -108,28 +108,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     try {
       // Step 1: Create table if needed
       if (effectiveAction === 'create' || effectiveAction === 'both') {
-        const { error: sqlError } = await supabase.rpc('exec_sql', {
-          query: CREATE_USERS_TABLE,
-        }).maybeSingle();
-
-        // If rpc doesn't exist, try raw SQL via REST
-        if (sqlError && sqlError.message.includes('function') && sqlError.message.includes('does not exist')) {
-          // Use the postgres connection directly isn't possible via JS client
-          // We'll use a workaround: try to create via the SQL editor endpoint
-          // For now, just try inserting — if table doesn't exist, the error will tell us
-          results.push({
-            step: 'create_table',
-            status: 'skipped',
-            detail: 'No se pudo ejecutar SQL via RPC. Crea la tabla manualmente en el SQL Editor de Supabase con el SQL proporcionado.',
-          });
-        } else if (sqlError) {
+        try {
+          await executeSql(CREATE_USERS_TABLE);
+          results.push({ step: 'create_table', status: 'ok', detail: 'Tabla users creada (o ya existía)' });
+        } catch (sqlErr) {
           results.push({
             step: 'create_table',
             status: 'error',
-            detail: sqlError.message,
+            detail: sqlErr instanceof Error ? sqlErr.message : 'Error creando tabla',
           });
-        } else {
-          results.push({ step: 'create_table', status: 'ok' });
         }
       }
 

@@ -12,6 +12,7 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import postgres from 'postgres';
 import type { User } from '@/lib/types';
 
 let _client: SupabaseClient | null = null;
@@ -54,6 +55,37 @@ export function requireSupabaseClient(): SupabaseClient {
     );
   }
   return client;
+}
+
+/**
+ * Execute raw SQL against the Supabase PostgreSQL database.
+ * Uses the direct postgres connection (SUPABASE_NEXUS_POSTGRES_URL).
+ * Needed for DDL operations (CREATE TABLE, etc.) since PostgREST can't do DDL.
+ */
+export async function executeSql(query: string): Promise<{ rowCount: number }> {
+  const connString =
+    process.env.SUPABASE_NEXUS_POSTGRES_URL ??
+    process.env.POSTGRES_URL;
+
+  if (!connString) {
+    throw new Error(
+      'PostgreSQL URL not configured. Set SUPABASE_NEXUS_POSTGRES_URL or POSTGRES_URL.'
+    );
+  }
+
+  const sql = postgres(connString, {
+    ssl: 'require',
+    connect_timeout: 10,
+    idle_timeout: 5,
+    max: 1,
+  });
+
+  try {
+    const result = await sql.unsafe(query);
+    return { rowCount: result.count ?? 0 };
+  } finally {
+    await sql.end();
+  }
 }
 
 // ── Helpers: snake_case ↔ camelCase ─────────────────────────
