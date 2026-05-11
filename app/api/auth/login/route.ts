@@ -18,6 +18,7 @@ import { verifyPassword, createSession, setSessionCookie, cleanExpiredSessions, 
 import { toSafeUser } from '@/lib/withAuth';
 import { withFileLock } from '@/lib/dataService';
 import { logAudit, extractRequestMeta } from '@/lib/auditService';
+import { supabaseUpdateUser } from '@/lib/supabase';
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {

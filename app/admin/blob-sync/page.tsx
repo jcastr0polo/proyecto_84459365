@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Database, RefreshCw, CheckCircle, XCircle, Loader2, Cloud, Server, Download, AlertTriangle } from 'lucide-react';
+import { Database, RefreshCw, CheckCircle, XCircle, Loader2, Cloud, Server, Download, AlertTriangle, ArrowRightLeft, Table2 } from 'lucide-react';
 
 // Archivos sensibles: advertir antes de hacer seed
 const SENSITIVE_FILES = ['users.json', 'sessions.json', 'enrollments.json', 'grades.json', 'submissions.json', 'audit.json', 'quiz-attempts.json', 'quiz-simulations.json'];
@@ -32,7 +32,10 @@ export default function BlobSyncPage() {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [showConfirm, setShowConfirm] = useState(false);
   const [downloadedData, setDownloadedData] = useState<{ file: string; data: unknown } | null>(null);
-  const [activeTab, setActiveTab] = useState<'sync' | 'download'>('sync');
+  const [activeTab, setActiveTab] = useState<'sync' | 'download' | 'supabase'>('sync');
+  const [supabaseStatus, setSupabaseStatus] = useState<{ connected: boolean; tables?: Record<string, { exists: boolean; rowCount: number }>; error?: string } | null>(null);
+  const [migrateResult, setMigrateResult] = useState<{ table: string; action: string; results: { step: string; status: string; detail?: string }[] } | null>(null);
+  const [migrateLoading, setMigrateLoading] = useState(false);
   const [dataFiles, setDataFiles] = useState<string[]>([]);
 
   useEffect(() => {
@@ -136,6 +139,42 @@ export default function BlobSyncPage() {
   const StatusIcon = ({ ok }: { ok: boolean }) =>
     ok ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-red-500" />;
 
+  async function checkSupabaseStatus() {
+    setMigrateLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/supabase-migrate');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setSupabaseStatus(data);
+    } catch (err) {
+      setError(`Error Supabase: ${err}`);
+    } finally {
+      setMigrateLoading(false);
+    }
+  }
+
+  async function migrateTable(table: string, action: 'create' | 'migrate' | 'both') {
+    setMigrateLoading(true);
+    setError(null);
+    setMigrateResult(null);
+    try {
+      const res = await fetch('/api/admin/supabase-migrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table, action }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setMigrateResult(data);
+      await checkSupabaseStatus();
+    } catch (err) {
+      setError(`Error migrando: ${err}`);
+    } finally {
+      setMigrateLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -148,6 +187,7 @@ export default function BlobSyncPage() {
         {[
           { key: 'sync', label: 'Sync & Diagnóstico' },
           { key: 'download', label: 'Descargar Datos' },
+          { key: 'supabase', label: 'Supabase' },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -419,6 +459,150 @@ export default function BlobSyncPage() {
               </pre>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ===== TAB: SUPABASE ===== */}
+      {activeTab === 'supabase' && (
+        <div className="space-y-6">
+          {/* Connection check */}
+          <div className="p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
+            <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+              <Database className="w-4 h-4" /> Conexión Supabase
+            </h3>
+            <p className="text-xs text-muted mb-4">
+              Verifica la conexión y el estado de las tablas en Supabase.
+            </p>
+
+            <button
+              onClick={checkSupabaseStatus}
+              disabled={migrateLoading}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              {migrateLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              Verificar Conexión
+            </button>
+
+            {supabaseStatus && (
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <StatusIcon ok={supabaseStatus.connected} />
+                  <span>{supabaseStatus.connected ? 'Conectado' : 'Sin conexión'}</span>
+                </div>
+
+                {supabaseStatus.error && (
+                  <div className="p-3 rounded bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+                    {supabaseStatus.error}
+                  </div>
+                )}
+
+                {supabaseStatus.tables && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-muted">Tablas:</h4>
+                    {Object.entries(supabaseStatus.tables).map(([name, info]) => (
+                      <div key={name} className="flex items-center gap-3 p-2 rounded bg-foreground/[0.03] text-xs font-mono">
+                        <Table2 className="w-3.5 h-3.5 text-muted" />
+                        <span className="font-bold">{name}</span>
+                        {info.exists ? (
+                          <>
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                            <span className="text-muted">{info.rowCount} filas</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="w-3.5 h-3.5 text-amber-500" />
+                            <span className="text-muted">No existe</span>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Migration actions */}
+          <div className="p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
+            <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+              <ArrowRightLeft className="w-4 h-4" /> Migrar Datos: Blob → Supabase
+            </h3>
+            <p className="text-xs text-muted mb-4">
+              Crea la tabla en Supabase si no existe y migra los datos desde el almacenamiento actual (JSON/Blob).
+            </p>
+
+            <div className="space-y-3">
+              {/* Users table */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]">
+                <Table2 className="w-4 h-4 text-cyan-400" />
+                <div className="flex-1">
+                  <span className="text-sm font-bold">users</span>
+                  <p className="text-xs text-muted">Usuarios del sistema (admin y estudiantes)</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => migrateTable('users', 'both')}
+                    disabled={migrateLoading}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-xs font-medium transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    {migrateLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowRightLeft className="w-3 h-3" />}
+                    Crear + Migrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Migration result */}
+          {migrateResult && (
+            <div className="p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
+              <h3 className="text-sm font-bold mb-3">Resultado: {migrateResult.table}</h3>
+              <div className="space-y-2">
+                {migrateResult.results.map((r, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2 rounded bg-foreground/[0.03] text-xs">
+                    {r.status === 'ok' ? (
+                      <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                    ) : r.status === 'skipped' ? (
+                      <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    )}
+                    <span className="font-mono font-bold">{r.step}</span>
+                    <span className="text-muted">{r.detail ?? r.status}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SQL manual fallback */}
+          <details className="p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
+            <summary className="text-sm font-bold cursor-pointer">SQL Manual (si RPC no está disponible)</summary>
+            <p className="text-xs text-muted mt-2 mb-3">
+              Si la creación automática falla, copia este SQL y ejecútalo en el <strong>SQL Editor</strong> de Supabase:
+            </p>
+            <pre className="p-3 rounded bg-foreground/[0.04] text-xs font-mono overflow-auto whitespace-pre-wrap">
+{`CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('admin', 'student')),
+  must_change_password BOOLEAN NOT NULL DEFAULT true,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  document_number TEXT NOT NULL,
+  phone TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_login_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_document ON users(document_number);`}
+            </pre>
+          </details>
         </div>
       )}
     </div>

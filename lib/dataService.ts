@@ -5,6 +5,7 @@ import type { HomeData, AppConfig, User, Session, Semester, Course, Enrollment, 
 import { userSchema, sessionSchema, semesterSchema, courseSchema, enrollmentSchema, activitySchema, submissionSchema, gradeSchema, promptSchema, projectSchema, corteSchema, quizSchema, quizAttemptSchema, quizSimulationSchema, manualGradeItemSchema, manualGradeSchema } from './schemas';
 import { z } from 'zod';
 import { writeToBlob, writeToBlobVerified, readFromBlobDirect, withFileLock } from './blobSync';
+import { supabaseGetUserByEmail, supabaseGetUserById, supabaseUpsertUsers } from './supabase';
 
 // ────────────────────────────────────────────────────────────
 // Lectura/escritura de datos
@@ -151,24 +152,36 @@ export async function readUsersFresh(): Promise<User[]> {
 }
 
 /**
- * Escribe el array completo de usuarios en /data/users.json
+ * Escribe el array completo de usuarios en /data/users.json y sincroniza a Supabase.
  */
 export async function writeUsers(users: User[]): Promise<void> {
   await writeJsonFile('users.json', users);
+  // Best-effort sync to Supabase (no-op if not configured)
+  await supabaseUpsertUsers(users);
 }
 
 /**
- * Busca un usuario por email (case-insensitive) — lee fresco de Blob
+ * Busca un usuario por email (case-insensitive).
+ * Intenta Supabase primero; si no está disponible, fallback a JSON/Blob.
  */
 export async function getUserByEmail(email: string): Promise<User | null> {
+  const fromSB = await supabaseGetUserByEmail(email);
+  if (fromSB) return fromSB;
+  // Fallback to JSON/Blob
+  console.warn(`[users] FALLBACK a JSON/Blob para getUserByEmail(${email}) — Supabase no disponible o usuario no encontrado`);
   const users = await readUsersFresh();
   return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null;
 }
 
 /**
- * Busca un usuario por ID — lee fresco de Blob
+ * Busca un usuario por ID.
+ * Intenta Supabase primero; si no está disponible, fallback a JSON/Blob.
  */
 export async function getUserById(id: string): Promise<User | null> {
+  const fromSB = await supabaseGetUserById(id);
+  if (fromSB) return fromSB;
+  // Fallback to JSON/Blob
+  console.warn(`[users] FALLBACK a JSON/Blob para getUserById(${id}) — Supabase no disponible o usuario no encontrado`);
   const users = await readUsersFresh();
   return users.find((u) => u.id === id) ?? null;
 }
