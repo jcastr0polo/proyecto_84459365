@@ -2,20 +2,13 @@
  * lib/auditService.ts
  * Dispatcher de auditoría — TODA escritura pasa por aquí.
  *
- * Arquitectura DB-like:
- * - Auditoría escribe en audit.json (archivo SEPARADO de los datos)
- * - Tiene su propio withFileLock('audit.json') → cola propia
- * - NUNCA bloquea escrituras de datos (archivos distintos = colas distintas)
- * - logAudit es FIRE-AND-FORGET: se ejecuta en background, no bloquea respuesta
- * - Si falla la auditoría, los datos ya se guardaron (prioridad: datos > audit)
- *
- * Máximo 1000 registros (FIFO: los más antiguos se eliminan).
+ * Arquitectura post-cutover (Supabase):
+ * - Cada entrada es una fila INSERT en `audit_log` (sin lock manual, Postgres serializa).
+ * - logAudit sigue siendo FIRE-AND-FORGET: no bloquea la respuesta al usuario.
+ * - Si falla la auditoría, los datos ya se guardaron (prioridad: datos > audit).
  */
 
-import { readJsonFileFresh, writeJsonFile, withFileLock } from './dataService';
 import { nowColombiaISO } from './dateUtils';
-
-const MAX_AUDIT_ENTRIES = 1000;
 
 export interface AuditEntry {
   id: string;
@@ -77,52 +70,38 @@ export function auditSnapshot(obj: unknown): Record<string, unknown> | undefined
 }
 
 /**
- * Lee el log de auditoría
+ * Lee el log de auditoría (Supabase). Devuelve los más recientes primero.
  */
-export async function readAudit(): Promise<AuditEntry[]> {
+export async function readAudit(limit = 1000): Promise<AuditEntry[]> {
   try {
-    return await readJsonFileFresh<AuditEntry[]>('audit.json');
-  } catch {
+    const { supabaseReadAuditLog } = await import('./supabase');
+    return await supabaseReadAuditLog(limit);
+  } catch (err) {
+    console.error('[audit] readAudit failed:', err);
     return [];
   }
 }
 
 /**
- * Implementación interna: escribe la entrada de auditoría con lock propio.
- * Serializa escrituras concurrentes a audit.json via cola (withFileLock).
+ * Implementación interna: inserta una fila en `audit_log` en Supabase.
+ * Postgres serializa por sí mismo — no requiere lock manual.
  * NO debe llamarse directamente — usar logAudit().
  */
 async function _writeAudit(ctx: AuditContext): Promise<void> {
-  await withFileLock('audit.json', async () => {
-    let audit: AuditEntry[];
-    try {
-      audit = await readJsonFileFresh<AuditEntry[]>('audit.json');
-    } catch {
-      audit = [];
-    }
-
-    const newEntry: AuditEntry = {
-      id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      timestamp: nowColombiaISO(),
-      ...ctx,
-    };
-
-    audit.unshift(newEntry); // Más reciente primero
-
-    // Limitar tamaño
-    if (audit.length > MAX_AUDIT_ENTRIES) {
-      audit.length = MAX_AUDIT_ENTRIES;
-    }
-
-    await writeJsonFile('audit.json', audit);
-  });
+  const { supabaseInsertAuditEntry } = await import('./supabase');
+  const entry: AuditEntry = {
+    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    timestamp: nowColombiaISO(),
+    ...ctx,
+  };
+  await supabaseInsertAuditEntry(entry);
 }
 
 /**
  * Registra una entrada de auditoría — FIRE-AND-FORGET.
  *
  * - Se ejecuta en background, no bloquea la respuesta al usuario.
- * - Tiene su propia cola (withFileLock('audit.json')), no interfiere con datos.
+ * - Cada INSERT es independiente — Postgres serializa por su cuenta.
  * - Si falla, loguea a console.error pero NUNCA lanza error al caller.
  * - Los callers pueden hacer `await logAudit(...)` o simplemente `logAudit(...)`,
  *   ambos son equivalentes: retorna void inmediatamente.

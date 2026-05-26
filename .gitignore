@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# database seed exports — contienen password hashes y datos productivos
+/doc/blob-export-*.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
