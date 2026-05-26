@@ -12,6 +12,7 @@ export interface ShowcaseProject {
   githubUrl: string;
   vercelUrl?: string;
   figmaUrl?: string;
+  showcaseImageUrl?: string;
   studentName: string;
   courseName: string;
   courseId: string;
@@ -187,7 +188,23 @@ function ProjectCard({ project }: { project: ShowcaseProject }) {
       {/* Card background with gradient border effect */}
       <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-500/10 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-      <div className="relative rounded-2xl border border-foreground/[0.06] group-hover:border-foreground/[0.12] bg-foreground/[0.02] group-hover:bg-foreground/[0.04] backdrop-blur-sm p-6 transition-all duration-300">
+      <div className="relative rounded-2xl border border-foreground/[0.06] group-hover:border-foreground/[0.12] bg-foreground/[0.02] group-hover:bg-foreground/[0.04] backdrop-blur-sm p-6 transition-all duration-300 overflow-hidden">
+        {project.showcaseImageUrl && (
+          <div className="-mx-6 -mt-6 mb-5 aspect-[16/9] overflow-hidden bg-foreground/[0.04]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={project.showcaseImageUrl}
+              alt={project.projectName}
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              onError={(e) => {
+                const wrapper = (e.currentTarget as HTMLImageElement).parentElement;
+                if (wrapper) wrapper.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+
         {/* Course tag */}
         <p className="text-[10px] font-medium text-cyan-400/50 uppercase tracking-[0.15em] mb-3">
           {project.courseName}
