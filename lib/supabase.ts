@@ -45,6 +45,9 @@ export function getSupabaseClient(): SupabaseClient | null {
   }
 
   _client = createClient(url, serviceKey, { auth: { persistSession: false } });
+  // Sapito: one-time log per cold start so Vercel logs show the active backend.
+  const host = url.replace(/^https?:\/\//, '').split('.')[0];
+  console.log(`[supabase] 🐸 connected: host=${host}`);
   return _client;
 }
 
@@ -112,6 +115,7 @@ async function readAllRows<TRow>(table: string): Promise<TRow[]> {
   const sb = requireSupabaseClient();
   const { data, error } = await sb.from(table).select('*');
   if (error) throw new Error(`[supabase] readAll ${table}: ${error.message}`);
+  console.log(`[supabase] ✓ readAll ${table} → ${data?.length ?? 0} row(s)`);
   return (data ?? []) as TRow[];
 }
 
@@ -122,6 +126,7 @@ async function getOneRow<TRow>(table: string, idColumn: string, id: string): Pro
     if (error.code === 'PGRST116') return null;
     throw new Error(`[supabase] getOne ${table}: ${error.message}`);
   }
+  console.log(`[supabase] ✓ getOne ${table}.${idColumn}=${id} → ${data ? 'hit' : 'miss'}`);
   return (data as TRow) ?? null;
 }
 
@@ -142,12 +147,14 @@ async function replaceAllRows<T extends object>(
       await tx`INSERT INTO ${tx(table)} ${tx(values, ...cols)}`;
     }
   });
+  console.log(`[supabase] ✓ replaceAll ${table} → ${rows.length} row(s)`);
 }
 
 async function insertOneRow<T extends Record<string, unknown>>(table: string, row: T): Promise<void> {
   const sb = requireSupabaseClient();
   const { error } = await sb.from(table).insert(row);
   if (error) throw new Error(`[supabase] insert ${table}: ${error.message}`);
+  console.log(`[supabase] ✓ insert ${table}`);
 }
 
 // ════════════════════════════════════════════════════════════════
