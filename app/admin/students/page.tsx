@@ -12,7 +12,7 @@ import { useToast } from '@/components/ui/Toast';
 import IconButton from '@/components/ui/IconButton';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import EmptyState from '@/components/ui/EmptyState';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import type { SafeUser } from '@/lib/types';
 
 export default function AdminStudentsPage() {
@@ -162,7 +162,17 @@ export default function AdminStudentsPage() {
     return formatDateTimeColombia(d);
   }
 
-  if (loading) return <PageLoader />;
+    if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <div className="flex gap-1.5">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-8 w-28" />)}
+        </div>
+        <SkeletonList rows={6} />
+      </div>
+    );
+  }
 
   const confirmCopy = confirm?.action === 'resetPassword'
     ? {

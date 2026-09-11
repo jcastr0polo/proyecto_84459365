@@ -13,7 +13,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import Chip from '@/components/ui/Chip';
 import Table from '@/components/ui/Table';
 import { Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import SubmissionDetail from '@/components/submissions/SubmissionDetail';
 import { SUBMISSION_STATUS_CONFIG } from '@/components/submissions/SubmissionCard';
@@ -127,7 +127,17 @@ export default function AdminSubmissionsPage() {
     pending: submissions.filter((s) => s.status === 'submitted' || s.status === 'resubmitted').length,
   }), [submissions]);
 
-  if (loading) return <PageLoader />;
+    if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-64" />
+        <div className="flex gap-1.5">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-8 w-32" />)}
+        </div>
+        <SkeletonList rows={6} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -7,15 +7,16 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, BookOpen, CheckCircle2,
-  AlertCircle, ExternalLink, FolderGit2, ChevronDown, ChevronRight,
+  ExternalLink, FolderGit2, ChevronDown, ChevronRight,
   Paperclip, Link as LinkIcon, Eye, Download, GitBranch, Palette,
   Plus,
 } from 'lucide-react';
 import { gradeText, gradeChip, formatScore, PASS } from '@/lib/gradeScale';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
+import Button from '@/components/ui/Button';
 
 /* ─── Types ─── */
 interface SubmissionAttachment {
@@ -213,19 +214,41 @@ export default function AdminStudentDetailPage() {
     });
   };
 
-  if (loading) return <PageLoader />;
-  if (error) {
+    if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto space-y-6">
+        <Skeleton className="h-20" />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" />
+        </div>
+        <SkeletonList rows={3} />
+      </div>
+    );
+  }
+  /* Un "Error" a secas no dice qué pasó ni qué hacer, y sin acción de
+     reintentar la única salida es recargar a mano. */
+  if (error || !student) {
     return (
       <div className="max-w-4xl mx-auto py-8">
         <EmptyState
-          icon={<AlertCircle className="w-8 h-8 text-red-400" />}
-          title="Error"
-          description={error}
+          kind="error"
+          title="No se pudo cargar el estudiante"
+          description={error || 'No encontramos los datos de este estudiante. Puede que el enlace esté desactualizado.'}
+          action={
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="sm" onClick={() => { setError(''); setLoading(true); fetchDetail(); }}>
+                Reintentar
+              </Button>
+              <Link href="/admin/students"
+                className="text-xs text-subtle hover:text-foreground transition-colors px-3 py-2">
+                Volver a estudiantes
+              </Link>
+            </div>
+          }
         />
       </div>
     );
   }
-  if (!student) return null;
 
   const totalActivities = courses.reduce((a, c) => a + c.totalActivities, 0);
   const totalSubmitted = courses.reduce((a, c) => a + c.submitted, 0);
