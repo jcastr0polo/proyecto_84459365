@@ -3,11 +3,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
-import { Rocket, Star, Eye, EyeOff, Ban, Image, FileText, Download } from 'lucide-react';
+import ConfirmModal from '@/components/ui/ConfirmModal';
+import { Rocket, Star, Eye, EyeOff, Ban, Image as ImageIcon, FileText, Download } from 'lucide-react';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import EmptyState from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
-import MarkdownViewer from '@/components/ui/MarkdownViewer';
 import type { StudentProject, Course } from '@/lib/types';
 
 type EnrichedProject = StudentProject & { studentName: string; courseName: string };
@@ -109,9 +109,28 @@ export default function AdminCourseProjectsPage() {
     await updateProject(project.id, { status });
   }, [updateProject]);
 
+  /**
+   * Publicar pide confirmación; despublicar no.
+   *
+   * Encender esto pone el trabajo de un estudiante, con su nombre, a la vista
+   * de cualquiera en internet. Era un clic en un botón de 10px sin ninguna
+   * red de seguridad. Apagarlo no necesita confirmación: deshacer no hace daño.
+   */
+  const [confirmPublish, setConfirmPublish] = useState<EnrichedProject | null>(null);
+
   const togglePublic = useCallback(async (project: EnrichedProject) => {
-    await updateProject(project.id, { isPublic: !project.isPublic });
+    if (!project.isPublic) {
+      setConfirmPublish(project);
+      return;
+    }
+    await updateProject(project.id, { isPublic: false });
   }, [updateProject]);
+
+  const doPublish = useCallback(async () => {
+    if (!confirmPublish) return;
+    await updateProject(confirmPublish.id, { isPublic: true });
+    setConfirmPublish(null);
+  }, [confirmPublish, updateProject]);
 
   const toggleBlockShowcase = useCallback(async (project: EnrichedProject) => {
     await updateProject(project.id, { isBlockedFromShowcase: !project.isBlockedFromShowcase });
@@ -119,34 +138,7 @@ export default function AdminCourseProjectsPage() {
 
   // Document viewing
   const [viewingDocId, setViewingDocId] = useState<string | null>(null);
-  const [docContent, setDocContent] = useState<string | null>(null);
   const [loadingDoc, setLoadingDoc] = useState(false);
-
-  const handleViewDoc = useCallback(async (projectId: string) => {
-    if (viewingDocId === projectId) {
-      setViewingDocId(null);
-      return;
-    }
-    setViewingDocId(projectId);
-    setDocContent(null);
-    setLoadingDoc(true);
-    try {
-      const res = await fetch(`/api/projects/${projectId}/document`);
-      if (res.ok) {
-        const data = await res.json();
-        setDocContent(data.content);
-      } else {
-        const err = await res.json().catch(() => ({}));
-        toast(err.error ?? 'No se pudo cargar el documento', 'error');
-        setViewingDocId(null);
-      }
-    } catch {
-      toast('Error de conexión', 'error');
-      setViewingDocId(null);
-    } finally {
-      setLoadingDoc(false);
-    }
-  }, [viewingDocId, toast]);
 
   const handleDownloadDoc = useCallback(async (project: EnrichedProject) => {
     setViewingDocId(project.id);
@@ -198,10 +190,23 @@ export default function AdminCourseProjectsPage() {
 
   return (
     <div className="space-y-6">
+      <ConfirmModal
+        open={confirmPublish !== null}
+        onClose={() => setConfirmPublish(null)}
+        onConfirm={doPublish}
+        variant="warning"
+        title="¿Publicar en la vitrina pública?"
+        message={confirmPublish
+          ? `"${confirmPublish.projectName}", de ${confirmPublish.studentName}, quedará visible para cualquier persona en internet, con el nombre del estudiante. Puedes quitarlo después.`
+          : ''}
+        confirmLabel="Publicar"
+        loading={togglingId === confirmPublish?.id}
+      />
+
       {/* Back link */}
       <button
         onClick={() => router.push(`/admin/courses/${courseId}`)}
-        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors duration-[var(--dur-fast)] cursor-pointer"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <polyline points="15 18 9 12 15 6" />
@@ -236,7 +241,7 @@ export default function AdminCourseProjectsPage() {
           {projects.map((p) => (
             <div
               key={p.id}
-              className={`relative rounded-xl border p-5 transition-all ${
+              className={`relative rounded-xl border p-5 transition-colors duration-[var(--dur-fast)] ${
                 p.isFeatured
                   ? 'border-amber-500/30 bg-gradient-to-br from-amber-500/[0.04] to-transparent'
                   : 'border-foreground/[0.08] bg-foreground/[0.02] hover:bg-foreground/[0.04]'
@@ -251,7 +256,7 @@ export default function AdminCourseProjectsPage() {
                 <button
                   onClick={() => toggleFeatured(p)}
                   disabled={togglingId === p.id}
-                  className={`flex-shrink-0 p-2 rounded-lg border transition-all cursor-pointer ${
+                  className={`flex-shrink-0 p-2 rounded-lg border transition-colors duration-[var(--dur-fast)] cursor-pointer active:scale-[0.97] motion-reduce:active:scale-100 ${
                     p.isFeatured
                       ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
                       : 'border-foreground/[0.08] text-faint hover:text-amber-400 hover:border-amber-500/20'
@@ -288,38 +293,38 @@ export default function AdminCourseProjectsPage() {
                 {/* Public toggle */}
                 <button
                   onClick={() => togglePublic(p)}
-                  className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded transition-colors cursor-pointer ${
+                  className={`flex items-center gap-1 text-meta px-2.5 py-1.5 rounded-lg transition-colors duration-[var(--dur-fast)] cursor-pointer ${
                     p.isPublic
                       ? 'bg-emerald-500/10 text-emerald-400'
                       : 'text-faint hover:text-muted hover:bg-foreground/[0.05]'
                   }`}
                   title={p.isPublic ? 'Quitar de vitrina' : 'Publicar en vitrina'}
                 >
-                  {p.isPublic ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                  {p.isPublic ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                   {p.isPublic ? 'Público' : 'Privado'}
                 </button>
 
                 {/* Block from showcase */}
                 <button
                   onClick={() => toggleBlockShowcase(p)}
-                  className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded transition-colors cursor-pointer ${
+                  className={`flex items-center gap-1 text-meta px-2.5 py-1.5 rounded-lg transition-colors duration-[var(--dur-fast)] cursor-pointer ${
                     p.isBlockedFromShowcase
                       ? 'bg-red-500/10 text-red-400'
                       : 'text-faint hover:text-muted hover:bg-foreground/[0.05]'
                   }`}
                   title={p.isBlockedFromShowcase ? 'Desbloquear vitrina' : 'Bloquear de vitrina'}
                 >
-                  <Ban className="w-3 h-3" />
+                  <Ban className="w-3.5 h-3.5" />
                   {p.isBlockedFromShowcase ? 'Desbloq' : 'Bloq'}
                 </button>
 
                 {/* Edit showcase appearance */}
                 <button
                   onClick={() => openShowcaseEdit(p)}
-                  className="flex items-center gap-1 text-[10px] px-2 py-1 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors cursor-pointer"
+                  className="flex items-center gap-1 text-meta px-2.5 py-1.5 rounded-lg text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors duration-[var(--dur-fast)] cursor-pointer"
                   title="Editar apariencia en vitrina"
                 >
-                  <Image className="w-3 h-3" />
+                  <ImageIcon className="w-3.5 h-3.5" />
                   Vitrina
                 </button>
 
@@ -327,10 +332,10 @@ export default function AdminCourseProjectsPage() {
                 {p.documentUrl && (
                   <a
                     href={`/admin/viewer?url=${encodeURIComponent(p.documentUrl)}&name=${encodeURIComponent(p.projectName + '.md')}`}
-                    className="flex items-center gap-1 text-[10px] px-2 py-1 rounded text-faint hover:text-violet-400 hover:bg-violet-500/10 transition-colors"
+                    className="flex items-center gap-1 text-meta px-2.5 py-1.5 rounded-lg text-faint hover:text-violet-400 hover:bg-violet-500/10 transition-colors"
                     title="Ver documento del proyecto"
                   >
-                    <FileText className="w-3 h-3" />
+                    <FileText className="w-3.5 h-3.5" />
                     Ver Doc
                   </a>
                 )}
@@ -338,10 +343,10 @@ export default function AdminCourseProjectsPage() {
                   <button
                     onClick={() => handleDownloadDoc(p)}
                     disabled={loadingDoc && viewingDocId === p.id}
-                    className="flex items-center gap-1 text-[10px] px-2 py-1 rounded text-faint hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 text-meta px-2.5 py-1.5 rounded-lg text-faint hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors duration-[var(--dur-fast)] cursor-pointer"
                     title="Descargar .md"
                   >
-                    <Download className="w-3 h-3" />
+                    <Download className="w-3.5 h-3.5" />
                     Descargar
                   </button>
                 )}
@@ -350,7 +355,7 @@ export default function AdminCourseProjectsPage() {
               {/* Showcase edit inline */}
               {editingShowcase === p.id && (
                 <div className="mt-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.08] space-y-2">
-                  <label className="text-[10px] text-subtle block">Descripción para vitrina</label>
+                  <label className="text-micro text-subtle block">Descripción para vitrina</label>
                   <textarea
                     value={showcaseDesc}
                     onChange={(e) => setShowcaseDesc(e.target.value)}
@@ -359,7 +364,7 @@ export default function AdminCourseProjectsPage() {
                     placeholder="Descripción personalizada para la vitrina..."
                     className="w-full px-2 py-1.5 text-xs bg-foreground/[0.04] border border-foreground/[0.08] rounded text-foreground placeholder:text-faint focus:outline-none focus:border-cyan-500/30"
                   />
-                  <label className="text-[10px] text-subtle block">URL imagen vitrina</label>
+                  <label className="text-micro text-subtle block">URL imagen vitrina</label>
                   <input
                     type="url"
                     value={showcaseImg}
@@ -370,13 +375,13 @@ export default function AdminCourseProjectsPage() {
                   <div className="flex gap-2 pt-1">
                     <button
                       onClick={saveShowcase}
-                      className="text-[10px] px-3 py-1 rounded bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25 transition-colors cursor-pointer"
+                      className="text-micro px-3 py-1 rounded bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25 transition-colors duration-[var(--dur-fast)] cursor-pointer"
                     >
                       Guardar
                     </button>
                     <button
                       onClick={() => setEditingShowcase(null)}
-                      className="text-[10px] px-3 py-1 rounded text-faint hover:text-muted transition-colors cursor-pointer"
+                      className="text-micro px-3 py-1 rounded text-faint hover:text-muted transition-colors duration-[var(--dur-fast)] cursor-pointer"
                     >
                       Cancelar
                     </button>
@@ -386,12 +391,12 @@ export default function AdminCourseProjectsPage() {
 
               {/* Status control */}
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-foreground/[0.06]">
-                <span className="text-[10px] text-faint">Estado:</span>
+                <span className="text-micro text-faint">Estado:</span>
                 {(['in-progress', 'submitted', 'reviewed', 'featured'] as const).map((s) => (
                   <button
                     key={s}
                     onClick={() => updateStatus(p, s)}
-                    className={`text-[10px] px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                    className={`text-micro px-2 py-0.5 rounded transition-colors cursor-pointer ${
                       p.status === s
                         ? 'bg-cyan-500/15 text-cyan-400'
                         : 'text-faint hover:text-muted'
@@ -433,7 +438,7 @@ function ExternalLink({ href, label }: { href: string; label: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium
+      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-meta font-medium
                  bg-foreground/[0.04] border border-foreground/[0.08] text-muted
                  hover:bg-foreground/[0.08] hover:text-foreground/80 hover:border-foreground/[0.15]
                  transition-all"
