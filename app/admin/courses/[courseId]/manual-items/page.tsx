@@ -46,6 +46,7 @@ export default function ManualItemsPage() {
   const [gradingItem, setGradingItem] = useState<ManualGradeItem | null>(null);
   const [gradeModalOpen, setGradeModalOpen] = useState(false);
   const [students, setStudents] = useState<StudentInfo[]>([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
   const [existingGrades, setExistingGrades] = useState<ManualGrade[]>([]);
   const [gradeInputs, setGradeInputs] = useState<Record<string, { score: string; feedback: string }>>({});
   const [savingGrades, setSavingGrades] = useState(false);
@@ -126,9 +127,16 @@ export default function ManualItemsPage() {
         throw new Error(err.error || 'Error');
       }
 
-      toast(editingItem ? 'Item actualizado' : 'Item creado', 'success');
+      const data = await res.json().catch(() => ({}));
+      toast(editingItem ? 'Ítem actualizado' : 'Ítem creado', 'success');
       setModalOpen(false);
       fetchData();
+
+      // Se crea un ítem manual para calificarlo: se abre la ventana en vez de
+      // dejar al docente buscándolo en la lista.
+      if (!editingItem && data.item) {
+        openGrading(data.item);
+      }
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Error al guardar', 'error');
     } finally {
@@ -151,16 +159,30 @@ export default function ManualItemsPage() {
   async function openGrading(item: ManualGradeItem) {
     setGradingItem(item);
     setGradeModalOpen(true);
+    // La ventana se abre antes de que lleguen los datos: sin este estado
+    // mostraba "no hay estudiantes inscritos" mientras todavía buscaba.
+    setStudentsLoading(true);
+    setStudents([]);
     try {
-      const [studentsRes, gradesRes] = await Promise.all([
-        fetch(`/api/courses/${courseId}/students`),
+      // /api/courses/[id]/students no existe: esa ruta nunca se creó, así
+      // que la petición devolvía 404, la lista quedaba vacía y la ventana
+      // decía "no hay estudiantes inscritos" aunque el curso tuviera 16.
+      // Los inscritos salen de /enrollments, filtrando los activos.
+      const [enrollRes, gradesRes] = await Promise.all([
+        fetch(`/api/courses/${courseId}/enrollments`),
         fetch(`/api/courses/${courseId}/manual-items/${item.id}/grades`),
       ]);
 
       let enrolled: { id: string; firstName: string; lastName: string; email: string }[] = [];
-      if (studentsRes.ok) {
-        const d = await studentsRes.json();
-        enrolled = d.students ?? [];
+      if (enrollRes.ok) {
+        const d = await enrollRes.json();
+        enrolled = (d.enrollments ?? [])
+          .filter((e: { status: string }) => e.status === 'active')
+          .map((e: { student: { id: string; firstName: string; lastName: string; email: string } }) => e.student)
+          .filter(Boolean)
+          .sort((a: { lastName: string }, b: { lastName: string }) => a.lastName.localeCompare(b.lastName, 'es'));
+      } else {
+        toast('No se pudieron cargar los estudiantes del curso', 'error');
       }
 
       let grades: ManualGrade[] = [];
@@ -183,6 +205,8 @@ export default function ManualItemsPage() {
       setGradeInputs(inputs);
     } catch {
       toast('Error al cargar estudiantes', 'error');
+    } finally {
+      setStudentsLoading(false);
     }
   }
 
@@ -397,8 +421,16 @@ export default function ManualItemsPage() {
             </p>
           )}
 
-          {students.length === 0 ? (
-            <p className="text-sm text-muted py-4 text-center">No hay estudiantes inscritos</p>
+          {studentsLoading ? (
+            <p className="text-sm text-subtle py-6 text-center">Cargando estudiantes…</p>
+          ) : students.length === 0 ? (
+            <div className="py-6 text-center space-y-2">
+              <p className="text-sm text-muted">Este curso no tiene estudiantes con inscripción activa.</p>
+              <a href={`/admin/courses/${courseId}/students`}
+                className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline">
+                Ver inscritos del curso →
+              </a>
+            </div>
           ) : (
             <div className="max-h-[60vh] overflow-y-auto">
               <Table>
