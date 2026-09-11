@@ -16,6 +16,7 @@ export default function AdminStudentsPage() {
   const [search, setSearch] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
+  const [editingName, setEditingName] = useState<{ id: string; first: string; last: string } | null>(null);
   const [editingEmail, setEditingEmail] = useState<{ id: string; value: string } | null>(null);
   const [editingDoc, setEditingDoc] = useState<{ id: string; value: string } | null>(null);
   const router = useRouter();
@@ -62,6 +63,29 @@ export default function AdminStudentsPage() {
       if (res.ok) {
         setToast({ msg: data.message, type: 'ok' });
         setStudents((prev) => prev.map((s) => s.id === id ? { ...s, ...data.student } : s));
+      } else {
+        setToast({ msg: data.error || 'Error', type: 'err' });
+      }
+    } catch {
+      setToast({ msg: 'Error de conexión', type: 'err' });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function handleUpdateName(id: string, first: string, last: string) {
+    setActionLoading(`${id}-name`);
+    try {
+      const res = await fetch(`/api/students/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateName', firstName: first, lastName: last }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setToast({ msg: data.message, type: 'ok' });
+        setStudents((prev) => prev.map((s) => s.id === id ? { ...s, ...data.student } : s));
+        setEditingName(null);
       } else {
         setToast({ msg: data.error || 'Error', type: 'err' });
       }
@@ -211,9 +235,63 @@ export default function AdminStudentsPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-foreground truncate">
-                        {student.firstName} {student.lastName}
-                      </p>
+                      {editingName?.id === student.id ? (
+                        <span className="flex items-center gap-1 flex-wrap">
+                          <input
+                            type="text"
+                            value={editingName.first}
+                            onChange={(e) => setEditingName({ ...editingName, first: e.target.value })}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleUpdateName(student.id, editingName.first, editingName.last);
+                              if (e.key === 'Escape') setEditingName(null);
+                            }}
+                            autoFocus
+                            placeholder="Nombres"
+                            className="px-1.5 py-0.5 rounded border border-cyan-500/30 bg-foreground/5
+                                       text-foreground text-sm w-36
+                                       focus:outline-none focus:border-cyan-500/50"
+                          />
+                          <input
+                            type="text"
+                            value={editingName.last}
+                            onChange={(e) => setEditingName({ ...editingName, last: e.target.value })}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleUpdateName(student.id, editingName.first, editingName.last);
+                              if (e.key === 'Escape') setEditingName(null);
+                            }}
+                            placeholder="Apellidos"
+                            className="px-1.5 py-0.5 rounded border border-cyan-500/30 bg-foreground/5
+                                       text-foreground text-sm w-36
+                                       focus:outline-none focus:border-cyan-500/50"
+                          />
+                          <button
+                            onClick={() => handleUpdateName(student.id, editingName.first, editingName.last)}
+                            disabled={actionLoading === `${student.id}-name`}
+                            className="p-2 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setEditingName(null)}
+                            className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </span>
+                      ) : (
+                        <>
+                          <p className="text-sm font-semibold text-foreground truncate">
+                            {student.firstName} {student.lastName}
+                          </p>
+                          <button
+                            onClick={() => setEditingName({ id: student.id, first: student.firstName, last: student.lastName })}
+                            title="Editar nombre"
+                            className="p-0.5 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors cursor-pointer"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
                       {!student.isActive && <Badge variant="danger" size="sm">Inactivo</Badge>}
                       {student.mustChangePassword && <Badge variant="warning" size="sm">Debe cambiar pass</Badge>}
                     </div>

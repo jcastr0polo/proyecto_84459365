@@ -64,6 +64,8 @@ export async function GET(
  * PATCH /api/students/[id]
  * Admin: reset password or toggle active status
  * Body: { action: 'resetPassword' } | { action: 'toggleActive' }
+ *     | { action: 'updateEmail', email } | { action: 'updateDocument', documentNumber }
+ *     | { action: 'updateName', firstName, lastName }
  */
 export async function PATCH(
   request: Request,
@@ -159,6 +161,31 @@ export async function PATCH(
         );
         return NextResponse.json({
           message: `Documento actualizado a ${trimmed}`,
+          student: toSafeUser(users[idx]),
+        });
+      }
+
+      if (action === 'updateName') {
+        const { firstName, lastName } = body as { firstName?: string; lastName?: string };
+        if (!firstName || typeof firstName !== 'string' || !lastName || typeof lastName !== 'string') {
+          return NextResponse.json({ error: 'Nombres y apellidos requeridos' }, { status: 400 });
+        }
+        const trimmedFirst = firstName.trim().replace(/\s+/g, ' ');
+        const trimmedLast = lastName.trim().replace(/\s+/g, ' ');
+        if (trimmedFirst.length < 2 || trimmedLast.length < 2) {
+          return NextResponse.json({ error: 'Nombres y apellidos deben tener mínimo 2 caracteres' }, { status: 400 });
+        }
+        const oldFirst = users[idx].firstName;
+        const oldLast = users[idx].lastName;
+        users[idx].firstName = trimmedFirst;
+        users[idx].lastName = trimmedLast;
+        users[idx].updatedAt = now;
+        await dispatchWrite(
+          () => writeUsers(users),
+          { action: 'update', entity: 'user', entityId: id, userId: adminUser.id, userName: `${adminUser.firstName} ${adminUser.lastName}`, details: `Nombre de ${studentName} → ${trimmedFirst} ${trimmedLast}`, before: auditSnapshot({ firstName: oldFirst, lastName: oldLast }), after: auditSnapshot({ firstName: trimmedFirst, lastName: trimmedLast }), ...extractRequestMeta(request) }
+        );
+        return NextResponse.json({
+          message: `Nombre actualizado a ${trimmedFirst} ${trimmedLast}`,
           student: toSafeUser(users[idx]),
         });
       }
