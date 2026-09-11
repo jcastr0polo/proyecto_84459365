@@ -69,6 +69,32 @@ export default function AdminDashboardViewV2({
   const students = useMemo(() => new Set(courseData.flatMap((cd) =>
     cd.enrollments.filter((e) => e.status === 'active').map((e) => e.studentId))).size, [courseData]);
 
+  /**
+   * Cómo va el semestre.
+   *
+   * El panel decía cuánto hay por calificar pero no si el semestre va
+   * adelantado o atrasado, que es lo primero que se pregunta un docente al
+   * abrirlo. Se mide con dos cosas que ya están: cuánto del calendario ha
+   * transcurrido y cuánto del trabajo se ha calificado.
+   */
+  const progress = useMemo(() => {
+    const acts = courseData.flatMap((cd) => cd.activities.filter((a) => a.status !== 'draft'));
+    const subs = courseData.flatMap((cd) => cd.submissions);
+    const graded = subs.filter((s) => s.status === 'reviewed').length;
+
+    const closed = acts.filter((a) => parseDateColombia(a.dueDate) < today).length;
+    const workPct = acts.length > 0 ? Math.round((closed / acts.length) * 100) : 0;
+    const gradedPct = subs.length > 0 ? Math.round((graded / subs.length) * 100) : 0;
+
+    let timePct: number | null = null;
+    if (semester?.startDate && semester?.endDate) {
+      const a = parseDateColombia(semester.startDate).getTime();
+      const b = parseDateColombia(semester.endDate).getTime();
+      if (b > a) timePct = Math.min(100, Math.max(0, Math.round(((today.getTime() - a) / (b - a)) * 100)));
+    }
+    return { workPct, gradedPct, timePct, totalActs: acts.length, closed };
+  }, [courseData, semester, today]);
+
   const fade = (d = 0) => reduce ? {} : {
     initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 },
     transition: { delay: d, duration: 0.25, ease: [0.16, 1, 0.3, 1] as const },
@@ -86,6 +112,40 @@ export default function AdminDashboardViewV2({
           {' · '}{students} {students === 1 ? 'estudiante' : 'estudiantes'}
         </p>
       </motion.div>
+
+      {/* ── Cómo va el semestre ── */}
+      <motion.section {...fade(0.02)} className="rounded-2xl border border-surface-border bg-surface p-5">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <h2 className="text-base font-semibold text-foreground">Cómo va el semestre</h2>
+          {progress.timePct !== null && (
+            <span className="text-meta text-subtle">
+              {progress.timePct < 100
+                ? `${progress.timePct}% del calendario transcurrido`
+                : 'El semestre ya terminó'}
+            </span>
+          )}
+        </div>
+
+        <div className="space-y-3 mt-4">
+          <ProgressRow label="Calendario" pct={progress.timePct ?? 0} tone="bg-foreground/30"
+            hint={semester ? `${semester.startDate} → ${semester.endDate}` : ''} />
+          <ProgressRow label="Actividades cerradas" pct={progress.workPct} tone="bg-cyan-500"
+            hint={`${progress.closed} de ${progress.totalActs}`} />
+          <ProgressRow label="Entregas calificadas" pct={progress.gradedPct}
+            tone={progress.gradedPct >= (progress.timePct ?? 0) ? 'bg-emerald-500' : 'bg-amber-500'}
+            hint={totalPending > 0 ? `${totalPending} sin calificar` : 'todo al día'} />
+        </div>
+
+        {/* La lectura, dicha en palabras: comparar dos barras a ojo no es
+            una conclusión, y la conclusión es lo que se viene a buscar. */}
+        {progress.timePct !== null && (
+          <p className="text-xs text-subtle mt-3">
+            {progress.gradedPct >= progress.timePct
+              ? 'Vas al ritmo del semestre: has calificado al menos tanto como tiempo ha pasado.'
+              : `Vas por detrás del calendario: ha transcurrido el ${progress.timePct}% del semestre y llevas calificado el ${progress.gradedPct}%.`}
+          </p>
+        )}
+      </motion.section>
 
       <motion.section {...fade(0.04)}>
         {/* Jerarquía: esta es la sección que manda en la pantalla, así que
@@ -225,6 +285,29 @@ export default function AdminDashboardViewV2({
           })}
         </div>
       </motion.section>
+    </div>
+  );
+}
+
+function ProgressRow({ label, pct, tone, hint }: {
+  label: string; pct: number; tone: string; hint?: string;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <span className="text-muted">{label}</span>
+        <span className="text-subtle tabular-nums">
+          {pct}%{hint && <span className="text-faint"> · {hint}</span>}
+        </span>
+      </div>
+      <div className="relative h-1.5 rounded-full bg-foreground/[0.08] overflow-hidden mt-1">
+        <div
+          className={`absolute inset-y-0 left-0 rounded-full ${tone}
+                      transition-[width] duration-[var(--dur-base)] ease-[var(--ease-out)]
+                      motion-reduce:transition-none`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
     </div>
   );
 }

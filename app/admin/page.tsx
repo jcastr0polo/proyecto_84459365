@@ -39,8 +39,15 @@ export default function AdminDashboardPage() {
       const active = semData.semesters?.find((s: Semester) => s.isActive) ?? null;
       setSemester(active);
 
+      // Solo los cursos del semestre activo. Antes se pedían TODOS, así que
+      // el panel mezclaba asignaturas de semestres cerrados con las del
+      // actual y los conteos no significaban nada.
+      const currentCourses = active
+        ? courseList.filter((c) => c.semesterId === active.id)
+        : courseList;
+
       // Step 2: Per-course data (enrollments + activities) in parallel
-      const perCoursePromises = courseList.map(async (course) => {
+      const perCoursePromises = currentCourses.map(async (course) => {
         const [enrRes, actRes] = await Promise.all([
           fetch(`/api/courses/${course.id}/enrollments`),
           fetch(`/api/courses/${course.id}/activities`),
