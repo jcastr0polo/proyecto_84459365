@@ -72,7 +72,7 @@ export default function StudentCourseViewV2({
 
   const fade = (d = 0) => reduce ? {} : {
     initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 },
-    transition: { delay: d, duration: 0.25, ease: [0.16, 1, 0.3, 1] as const },
+    transition: { delay: d, duration: 0.25, ease: [0.23, 1, 0.32, 1] as const },
   };
 
   const actions = [

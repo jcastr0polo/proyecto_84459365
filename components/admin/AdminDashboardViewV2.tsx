@@ -97,7 +97,7 @@ export default function AdminDashboardViewV2({
 
   const fade = (d = 0) => reduce ? {} : {
     initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 },
-    transition: { delay: d, duration: 0.25, ease: [0.16, 1, 0.3, 1] as const },
+    transition: { delay: d, duration: 0.25, ease: [0.23, 1, 0.32, 1] as const },
   };
 
   return (
@@ -244,7 +244,7 @@ export default function AdminDashboardViewV2({
                       <motion.div
                         initial={reduce ? false : { scaleX: 0 }}
                         animate={{ scaleX: pct }}
-                        transition={{ duration: reduce ? 0 : 0.28, ease: [0.16, 1, 0.3, 1] }}
+                        transition={{ duration: reduce ? 0 : 0.28, ease: [0.23, 1, 0.32, 1] }}
                         style={{ transformOrigin: 'left' }}
                         className="absolute inset-0 rounded-full bg-cyan-500"
                       />

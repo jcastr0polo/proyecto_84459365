@@ -73,7 +73,7 @@ export default function CourseCard({
           <motion.div
             initial={reduce ? false : { scaleX: 0 }}
             animate={{ scaleX: totalActivities > 0 ? gradedCount / totalActivities : 0 }}
-            transition={{ duration: reduce ? 0 : 0.28, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: reduce ? 0 : 0.28, ease: [0.23, 1, 0.32, 1] }}
             style={{ transformOrigin: 'left' }}
             className="absolute inset-0 rounded-full bg-cyan-500"
           />

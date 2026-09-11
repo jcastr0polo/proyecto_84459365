@@ -114,8 +114,11 @@
  * que el usuario está mirando).
  */
 :root {
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Curvas tomadas de la tabla de la guía de animación, no aproximadas.
+     Las que había estaban inventadas de memoria. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);        /* entradas y salidas */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);    /* movimiento en pantalla */
+  --ease-standard: cubic-bezier(0.23, 1, 0.32, 1);   /* alias del anterior */
   --dur-press: 100ms;   /* respuesta al presionar */
   --dur-fast: 150ms;    /* hover, color */
   --dur-base: 200ms;    /* entradas y salidas normales */

@@ -38,10 +38,23 @@ export default function StatTile({
       <p className={`text-3xl font-bold tabular-nums leading-none mt-2 ${tone}`}>{value}</p>
       <div className="flex items-center justify-between gap-2 mt-1.5">
         <span className="text-micro text-faint truncate">{hint}</span>
+        {/*
+          Propósito: RETROALIMENTACIÓN. La flecha entra desplazándose desde la
+          izquierda, no apareciendo de la nada: nada en el mundo real aparece
+          de un fotograma a otro, y el desplazamiento sugiere hacia dónde
+          lleva. Es un hover, así que va corto y no se nota; el gate de
+          puntero fino lo trae `hover:` de Tailwind v4.
+        */}
         {interactive && (
-          <ArrowRight className="w-3.5 h-3.5 text-faint shrink-0 opacity-0
-                                 group-hover:opacity-100 group-focus-visible:opacity-100
-                                 transition-opacity" />
+          <ArrowRight
+            className="w-3.5 h-3.5 text-faint shrink-0
+                       opacity-0 -translate-x-1
+                       group-hover:opacity-100 group-hover:translate-x-0
+                       group-focus-visible:opacity-100 group-focus-visible:translate-x-0
+                       transition-[opacity,transform] duration-[var(--dur-fast)]
+                       ease-[var(--ease-out)] motion-reduce:transition-none
+                       motion-reduce:translate-x-0"
+          />
         )}
       </div>
     </>
@@ -50,8 +63,10 @@ export default function StatTile({
   const cls = `group block text-left rounded-xl border p-4 w-full
     ${highlight ?? 'border-surface-border bg-surface'}
     ${interactive
-      ? `cursor-pointer transition-colors duration-[var(--dur-fast)]
+      ? `cursor-pointer transition-colors duration-[var(--dur-fast)] ease-[var(--ease-out)]
          hover:border-surface-border-hover hover:bg-surface-hover
+         active:scale-[0.99] active:duration-[var(--dur-press)]
+         motion-reduce:active:scale-100
          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40`
       : ''}`;
 

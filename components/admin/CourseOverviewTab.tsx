@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
 import { Users, GraduationCap, AlertTriangle, ClipboardCheck, Clock } from 'lucide-react';
 import { gradeText, formatScore, PASS, COMFORTABLE } from '@/lib/gradeScale';
@@ -37,6 +38,7 @@ export default function CourseOverviewTab({
   course: Course;
   semester?: Semester;
 }) {
+  const reduce = useReducedMotion();
   const [summary, setSummary] = useState<CourseGradeSummary | null>(null);
   /** Qué banda se está mirando abajo; sale de tocar la barra o la métrica. */
   const [focus, setFocus] = useState<'fail' | 'warn' | 'good' | 'none' | null>(null);
@@ -128,18 +130,30 @@ export default function CourseOverviewTab({
           </h3>
           {/* Barra segmentada con 2px de separación entre tramos. */}
           <div className="flex h-3 rounded-full overflow-hidden bg-foreground/[0.06] gap-0.5">
-            {BANDS.map((b) => {
+            {BANDS.map((b, i) => {
               const n = m.counts[b.key];
               if (n === 0) return null;
               return (
-                <button
+                /*
+                  Propósito: EXPLICACIÓN. Los tramos entran de izquierda a
+                  derecha, escalonados, para que se lea el reparto del grupo
+                  en vez de aparecer como un bloque ya hecho. Se ve una vez al
+                  abrir el curso, así que entra en el tramo "ocasional".
+                  scaleX y no width: no obliga a recalcular la maqueta.
+                */
+                <motion.button
                   key={b.key}
                   onClick={() => setFocus((v) => v === b.key ? null : b.key)}
                   aria-pressed={focus === b.key}
                   title={`${b.label}: ${n} de ${m.total} · tocar para ver quiénes`}
-                  className={`h-full cursor-pointer transition-opacity duration-[var(--dur-fast)]
+                  initial={reduce ? false : { scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: reduce ? 0 : 0.28, delay: reduce ? 0 : i * 0.06,
+                                ease: [0.23, 1, 0.32, 1] }}
+                  style={{ width: `${(n / m.total) * 100}%`, transformOrigin: 'left' }}
+                  className={`h-full cursor-pointer origin-left
+                              transition-opacity duration-[var(--dur-fast)] ease-[var(--ease-out)]
                               ${b.bar} ${focus && focus !== b.key ? 'opacity-30' : ''}`}
-                  style={{ width: `${(n / m.total) * 100}%` }}
                 />
               );
             })}
@@ -201,7 +215,22 @@ export default function CourseOverviewTab({
                 </button>
               )}
             </div>
-            <div className="rounded-xl border border-surface-border divide-y divide-surface-border overflow-hidden">
+            {/*
+              Propósito: EVITAR UN CAMBIO BRUSCO. Al filtrar, la lista cambia
+              de contenido en el sitio; sin transición el bloque se
+              teletransporta y cuesta ver que respondió al toque. Un fundido
+              corto lo enlaza. No se anima cada fila: el usuario está leyendo
+              datos y no deben moverse por estética.
+            */}
+            <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={band}
+              initial={reduce ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={reduce ? undefined : { opacity: 0 }}
+              transition={{ duration: reduce ? 0 : 0.15, ease: [0.23, 1, 0.32, 1] }}
+              className="rounded-xl border border-surface-border divide-y divide-surface-border overflow-hidden"
+            >
               {list.slice(0, 12).map((s) => (
                 <Link
                   key={s.id}
@@ -221,7 +250,8 @@ export default function CourseOverviewTab({
                   </span>
                 </Link>
               ))}
-            </div>
+            </motion.div>
+            </AnimatePresence>
             {list.length > 12 && (
               <p className="text-micro text-faint mt-2">
                 y {list.length - 12} más · <Link href={`/admin/courses/${course.id}/grades`}

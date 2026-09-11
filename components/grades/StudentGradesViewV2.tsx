@@ -61,7 +61,7 @@ export default function StudentGradesViewV2({ data }: Props) {
 
   const fade = (delay = 0) => reduce
     ? {}
-    : { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { delay, duration: 0.25, ease: [0.16, 1, 0.3, 1] as const } };
+    : { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { delay, duration: 0.25, ease: [0.23, 1, 0.32, 1] as const } };
 
   return (
     <div className="space-y-6">
@@ -136,7 +136,7 @@ export default function StudentGradesViewV2({ data }: Props) {
                   <motion.div
                     initial={reduce ? false : { scaleX: 0 }}
                     animate={{ scaleX: (c.score ?? 0) / SCALE }}
-                    transition={{ duration: reduce ? 0 : 0.28, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: reduce ? 0 : 0.28, ease: [0.23, 1, 0.32, 1] }}
                     style={{ transformOrigin: 'left' }}
                     className={`absolute inset-0 rounded-full ${toneBar(c.score)}`}
                   />
