@@ -3,6 +3,7 @@
 import React from 'react';
 import type { CourseGradeSummary } from '@/lib/types';
 import { gradeText } from '@/lib/gradeScale';
+import { tableChrome } from '@/components/ui/Table';
 
 interface GradeSummaryTableProps {
   data: CourseGradeSummary;
@@ -60,9 +61,9 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
   );
 
   return (
-    <div className={`overflow-x-auto rounded-xl border border-foreground/[0.08] ${className}`}>
+    <div className={`${tableChrome.wrapper} ${className}`}>
       <table className="w-full text-sm text-left">
-        <thead className="bg-foreground/[0.03] border-b border-foreground/[0.06]">
+        <thead className={tableChrome.thead}>
           {/* Corte group headers (only if cortes exist) */}
           {hasCortes && (
             <tr className="border-b border-foreground/[0.06]">
@@ -184,7 +185,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/[0.04]">
+        <tbody className={tableChrome.tbody}>
           {students.map((student) => (
             <tr key={student.id} className="hover:bg-foreground/[0.02] transition-colors">
               <td className="px-4 py-2.5 border-r border-foreground/[0.06] sticky left-0 bg-base z-10">
@@ -250,7 +251,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
           ))}
 
           {/* Averages row */}
-          <tr className="bg-foreground/[0.03] border-t-2 border-foreground/[0.08]">
+          <tr className="bg-surface-sunken border-t-2 border-surface-border">
             <td className="px-4 py-2.5 text-xs font-semibold text-muted uppercase sticky left-0 bg-foreground/[0.03] z-10">
               Promedio
             </td>

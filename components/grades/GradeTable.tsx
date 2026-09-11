@@ -7,6 +7,7 @@ import ScoreInput from '@/components/grades/ScoreInput';
 import SearchInput from '@/components/ui/SearchInput';
 import Pagination, { usePagination } from '@/components/ui/Pagination';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
+import { tableChrome } from '@/components/ui/Table';
 
 // ────────────────────────────────────────────────────────────
 // Types
@@ -134,9 +135,9 @@ export default function GradeTable({
       </div>
 
       {/* ─── Desktop Table (hidden on mobile) ─── */}
-      <div className="hidden md:block overflow-x-auto rounded-xl border border-foreground/[0.08]">
+      <div className={`hidden md:block ${tableChrome.wrapper}`}>
         <table className="w-full text-sm text-left">
-          <thead className="bg-foreground/[0.03] border-b border-foreground/[0.06]">
+          <thead className={tableChrome.thead}>
             <tr>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">#</th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Estudiante</th>
@@ -153,7 +154,7 @@ export default function GradeTable({
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted text-center">Estado</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.04]">
+          <tbody className={tableChrome.tbody}>
             {paginated.map((row, idx) => {
               const globalIdx = (page - 1) * pageSize + idx;
               return (
