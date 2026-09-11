@@ -6,6 +6,7 @@ import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
 import SearchInput from '@/components/ui/SearchInput';
+import Chip from '@/components/ui/Chip';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import {
   Shield, X, LogIn, LogOut, Plus, Pencil, Trash2, Upload, Database, Key, Eye,
@@ -49,6 +50,7 @@ export default function AuditPage() {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [todayOnly, setTodayOnly] = useState(false);
   const [filterAction, setFilterAction] = useState('');
   const [filterEntity, setFilterEntity] = useState('');
   const [selectedEntry, setSelectedEntry] = useState<AuditEntry | null>(null);
@@ -71,7 +73,15 @@ export default function AuditPage() {
 
   const filtered = useMemo(() => {
     let result = entries;
-    if (filterAction) result = result.filter((e) => e.action === filterAction);
+    if (todayOnly) {
+      const d = new Date().toISOString().slice(0, 10);
+      result = result.filter((e) => e.timestamp.slice(0, 10) === d);
+    }
+    if (filterAction === '__writes') {
+      result = result.filter((e) => ['create', 'update', 'delete'].includes(e.action));
+    } else if (filterAction) {
+      result = result.filter((e) => e.action === filterAction);
+    }
     if (filterEntity) result = result.filter((e) => e.entity === filterEntity);
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -83,7 +93,7 @@ export default function AuditPage() {
       );
     }
     return result;
-  }, [entries, filterAction, filterEntity, search]);
+  }, [entries, filterAction, filterEntity, search, todayOnly]);
 
   const stats = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
@@ -101,16 +111,29 @@ export default function AuditPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">Auditoría</h1>
+        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>Auditoría</h1>
         <p className="text-sm text-subtle mt-1">Registro de todas las acciones en la plataforma.</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <MiniStat label="Total registros" value={stats.total} />
-        <MiniStat label="Hoy" value={stats.today} />
-        <MiniStat label="Logins" value={stats.logins} />
-        <MiniStat label="Escrituras" value={stats.writes} />
+      {/*
+        Los contadores pasan a filtros. "Hoy: 12" invitaba a hacer clic para
+        ver esos 12 y no pasaba nada; había que ir a buscarlos a mano.
+      */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Chip active={!todayOnly && !filterAction} onClick={() => { setTodayOnly(false); setFilterAction(''); }}>
+          Todo ({stats.total})
+        </Chip>
+        <Chip active={todayOnly} onClick={() => setTodayOnly((v) => !v)} dot="bg-cyan-500">
+          Hoy ({stats.today})
+        </Chip>
+        <Chip active={filterAction === 'login'} tone="neutral"
+          onClick={() => setFilterAction((v) => v === 'login' ? '' : 'login')}>
+          Inicios de sesión ({stats.logins})
+        </Chip>
+        <Chip active={filterAction === '__writes'} tone="warning"
+          onClick={() => setFilterAction((v) => v === '__writes' ? '' : '__writes')}>
+          Escrituras ({stats.writes})
+        </Chip>
       </div>
 
       {/* Filters */}
@@ -119,7 +142,7 @@ export default function AuditPage() {
         <select
           value={filterAction}
           onChange={(e) => setFilterAction(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-foreground/[0.04] border border-foreground/[0.08] text-sm text-foreground"
+          className="px-3 py-2 rounded-lg bg-surface border border-surface-border text-sm text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
         >
           <option value="">Todas las acciones</option>
           {uniqueActions.map((a) => (
@@ -129,16 +152,16 @@ export default function AuditPage() {
         <select
           value={filterEntity}
           onChange={(e) => setFilterEntity(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-foreground/[0.04] border border-foreground/[0.08] text-sm text-foreground"
+          className="px-3 py-2 rounded-lg bg-surface border border-surface-border text-sm text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
         >
           <option value="">Todas las entidades</option>
           {uniqueEntities.map((e) => (
             <option key={e} value={e}>{ENTITY_LABELS[e] ?? e}</option>
           ))}
         </select>
-        {(search || filterAction || filterEntity) && (
+        {(search || filterAction || filterEntity || todayOnly) && (
           <button
-            onClick={() => { setSearch(''); setFilterAction(''); setFilterEntity(''); }}
+            onClick={() => { setSearch(''); setFilterAction(''); setFilterEntity(''); setTodayOnly(false); }}
             className="text-xs text-subtle hover:text-muted transition-colors cursor-pointer flex items-center gap-1"
           >
             <X className="w-3 h-3" /> Limpiar
@@ -337,14 +360,6 @@ function CellValue({ value }: { value: unknown }) {
   return <span>{String(value)}</span>;
 }
 
-function MiniStat({ label, value }: { label: string; value: number }) {
-  return (
-    <Card padding="md" className="text-center">
-      <p className="text-xl font-bold text-foreground tabular-nums">{value}</p>
-      <p className="text-[10px] text-subtle uppercase tracking-wider">{label}</p>
-    </Card>
-  );
-}
 
 function formatAuditTime(iso: string): string {
   try {

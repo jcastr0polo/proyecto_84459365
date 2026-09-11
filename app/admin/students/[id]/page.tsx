@@ -79,6 +79,12 @@ interface CourseDetail {
   grades: {
     finalGrade: number | null;
     isPartial: boolean;
+    /** Parciales y notas manuales: pesan en el corte, así que deben verse. */
+    otherItems: {
+      id: string; title: string; kind: 'quiz' | 'manual';
+      weight: number; maxScore: number; corteId: string | null;
+      score: number | null; published: boolean;
+    }[];
     cortes: { id: string; name: string; weight: number; order: number; score: number | null }[];
     activityGrades: { activityId: string; corteId: string | null; score: number | null; published: boolean }[];
   } | null;
@@ -656,6 +662,45 @@ function CourseSection({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/*
+            Parciales y notas manuales. Pesan en el corte igual que las
+            actividades, pero no se listaban: la ficha mostraba una nota de
+            corte que la lista de abajo no justificaba.
+          */}
+          {(course.grades?.otherItems?.length ?? 0) > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-subtle uppercase tracking-wider">
+                Parciales y notas manuales
+              </h4>
+              <div className="rounded-xl border border-surface-border divide-y divide-surface-border overflow-hidden">
+                {course.grades!.otherItems.map((item) => {
+                  const normalized = item.score === null ? null : (item.score / item.maxScore) * 5;
+                  return (
+                    <div key={item.id} className="flex items-center gap-3 p-3 bg-surface">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-foreground/90 leading-snug">{item.title}</p>
+                        <p className="text-micro text-subtle mt-0.5">
+                          {item.kind === 'quiz' ? 'Parcial' : 'Nota manual'} · {item.weight}%
+                          {item.score !== null && !item.published && (
+                            <span className="text-amber-600 dark:text-amber-400"> · sin publicar</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className={`text-sm font-semibold tabular-nums ${gradeText(normalized)}`}>
+                          {formatScore(normalized)}
+                        </p>
+                        {item.score !== null && (
+                          <p className="text-micro text-faint">{item.score}/{item.maxScore}</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

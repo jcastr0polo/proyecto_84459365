@@ -128,8 +128,46 @@ export async function GET(
           id, courseCortes, activities, studentGrades,
           courseQuizzes, allAttempts, courseManualItems, allManualGrades,
         );
+        /*
+         * Las notas manuales y los parciales pesan en el corte y en la
+         * definitiva, pero no se devolvían: la ficha mostraba un corte de 4.2
+         * y una lista de actividades que no lo justificaba.
+         */
+        const manualRows = courseManualItems.map((item) => {
+          const mg = allManualGrades.find((g) => g.itemId === item.id && g.studentId === id);
+          return {
+            id: item.id,
+            title: item.title,
+            kind: 'manual' as const,
+            weight: item.weight,
+            maxScore: item.maxScore,
+            corteId: item.corteId ?? null,
+            score: mg ? mg.score : null,
+            published: mg ? mg.isPublished !== false : false,
+          };
+        });
+
+        const quizRows = courseQuizzes.map((quiz) => {
+          const attempts = allAttempts.filter((a) => a.quizId === quiz.id && a.studentId === id);
+          const best = attempts.length > 0
+            ? attempts.reduce((b, a) => (a.percentage > b.percentage ? a : b))
+            : null;
+          const maxScore = quiz.maxScore ?? 5;
+          return {
+            id: quiz.id,
+            title: quiz.title,
+            kind: 'quiz' as const,
+            weight: quiz.weight ?? 0,
+            maxScore,
+            corteId: quiz.corteId ?? null,
+            score: best ? (best.percentage / 100) * maxScore : null,
+            published: quiz.resultsReleased,
+          };
+        });
+
         grades = {
           finalGrade: finalResult.finalScore,
+          otherItems: [...quizRows, ...manualRows],
           isPartial: finalResult.isPartial,
           cortes: courseCortes.map((c) => ({
             id: c.id,

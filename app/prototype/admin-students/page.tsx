@@ -38,6 +38,40 @@ export default function PrototypeAdminStudents() {
           placeholder="Buscar por nombre, email o documento..." className="w-full sm:w-72 sm:ml-auto" />
       </div>
       <p className="text-meta text-faint">filtro activo: {filter}</p>
+
+      <div className="pt-6 space-y-2">
+        <p className="text-meta uppercase tracking-wider text-faint">Auditoría · contadores que filtran</p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Chip active={false} onClick={() => {}}>Todo (1.284)</Chip>
+          <Chip active dot="bg-cyan-500" onClick={() => {}}>Hoy (37)</Chip>
+          <Chip active={false} tone="neutral" onClick={() => {}}>Inicios de sesión (412)</Chip>
+          <Chip active={false} tone="warning" onClick={() => {}}>Escrituras (598)</Chip>
+        </div>
+      </div>
+
+      <div className="pt-6 space-y-2">
+        <p className="text-meta uppercase tracking-wider text-faint">Ficha · parciales y notas manuales</p>
+        <div className="rounded-xl border border-surface-border divide-y divide-surface-border overflow-hidden">
+          {[
+            ['Parcial 2: estructuras de control', 'Parcial', 20, '3.9', '78/100', true],
+            ['Exposición: caso de estudio', 'Nota manual', 10, '4.5', '4.5/5', false],
+          ].map(([t, k, w, n, raw, pub]) => (
+            <div key={t as string} className="flex items-center gap-3 p-3 bg-surface">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-foreground/90 leading-snug">{t as string}</p>
+                <p className="text-micro text-subtle mt-0.5">
+                  {k as string} · {w as number}%
+                  {!(pub as boolean) && <span className="text-amber-600 dark:text-amber-400"> · sin publicar</span>}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{n as string}</p>
+                <p className="text-micro text-faint">{raw as string}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
