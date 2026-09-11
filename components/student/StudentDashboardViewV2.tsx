@@ -253,8 +253,11 @@ export default function StudentDashboardViewV2({
           <h2 className="type-section text-subtle flex items-center gap-2">
             <BookOpen className="w-3.5 h-3.5" /> Mis cursos
           </h2>
+          {/* Tenía 16px de alto: por debajo de cualquier mínimo táctil. */}
           <Link href="/student/courses"
-            className="text-meta text-cyan-600 dark:text-cyan-400 hover:underline">
+            className="text-meta text-cyan-600 dark:text-cyan-400 hover:underline
+                       inline-flex items-center min-h-11 px-2 -mr-2 rounded-lg
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40">
             Ver todos →
           </Link>
         </div>

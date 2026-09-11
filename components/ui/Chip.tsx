@@ -49,8 +49,12 @@ export default function Chip({
       aria-pressed={active}
       disabled={disabled}
       title={title}
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-meta font-medium border
+      className={`relative inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-meta font-medium border
                   transition-colors duration-[var(--dur-fast)] cursor-pointer
+                  /* Área de pulsación de 44px sin engordar el chip: se expande
+                     solo en vertical, para no solapar con los chips vecinos. */
+                  after:absolute after:inset-x-0 after:top-1/2 after:-translate-y-1/2
+                  after:h-11 after:content-['']
                   active:scale-[0.97] motion-reduce:active:scale-100
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40
