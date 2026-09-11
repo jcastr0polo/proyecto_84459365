@@ -6,12 +6,12 @@ import { formatDateColombia as formatDate, formatDateTimeColombia as formatDateT
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, BookOpen, FileText, CheckCircle2, Clock,
+  ArrowLeft, BookOpen, CheckCircle2,
   AlertCircle, ExternalLink, FolderGit2, ChevronDown, ChevronRight,
   Paperclip, Link as LinkIcon, Eye, Download, GitBranch, Palette,
-  Plus, GraduationCap,
+  Plus,
 } from 'lucide-react';
-import { gradeText, gradeChip, formatScore } from '@/lib/gradeScale';
+import { gradeText, gradeChip, formatScore, PASS } from '@/lib/gradeScale';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -228,6 +228,21 @@ export default function AdminStudentDetailPage() {
   // Promedio del semestre: media simple de los cursos que ya tienen definitiva.
   // Los cursos sin ninguna nota no cuentan, para no arrastrar el promedio hacia abajo.
   const gradedCourses = courses.filter((c) => c.grades?.finalGrade !== null && c.grades?.finalGrade !== undefined);
+  // Lo que de verdad se busca al abrir la ficha de alguien: dónde va mal.
+  const failing = gradedCourses.filter((c) => (c.grades!.finalGrade as number) < PASS);
+
+  /**
+   * Los cursos en riesgo van primero.
+   * Si alguien va perdiendo dos de cinco, esos dos no deberían estar
+   * enterrados al final de la lista por orden de inscripción.
+   */
+  const sortedCourses = [...courses].sort((a, b) => {
+    const sa = a.grades?.finalGrade ?? null;
+    const sb = b.grades?.finalGrade ?? null;
+    const risk = (v: number | null) => v === null ? 1 : v < PASS ? 0 : 2;
+    const d = risk(sa) - risk(sb);
+    return d !== 0 ? d : a.name.localeCompare(b.name, 'es');
+  });
   const semesterAvg = gradedCourses.length > 0
     ? gradedCourses.reduce((a, c) => a + (c.grades!.finalGrade as number), 0) / gradedCourses.length
     : null;
@@ -280,31 +295,55 @@ export default function AdminStudentDetailPage() {
         </div>
       </motion.div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {[
-          {
-            label: 'Promedio',
-            value: semesterAvg === null ? '—' : semesterAvg.toFixed(1),
-            color: gradeText(semesterAvg),
-            icon: GraduationCap,
-            title: semesterAvg === null
-              ? 'Aún no hay cursos con nota'
-              : `Promedio de ${gradedCourses.length} curso(s) con nota`,
-          },
-          { label: 'Cursos', value: courses.length, color: 'text-cyan-400', icon: BookOpen },
-          { label: 'Actividades', value: totalActivities, color: 'text-purple-400', icon: FileText },
-          { label: 'Entregadas', value: totalSubmitted, color: 'text-emerald-400', icon: CheckCircle2 },
-          { label: 'Pendientes', value: totalPending, color: 'text-amber-400', icon: Clock },
-          { label: 'Proyectos', value: courses.filter((c) => c.project).length, color: 'text-blue-400', icon: FolderGit2 },
-        ].map((stat) => (
-          <div key={stat.label} title={'title' in stat ? stat.title as string : undefined}
-            className="p-3 rounded-xl border border-foreground/10 bg-foreground/5 text-center">
-            <stat.icon className={`w-4 h-4 mx-auto mb-1 ${stat.color}`} />
-            <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-micro text-faint uppercase tracking-wider">{stat.label}</p>
+      {/*
+        Antes había seis contadores: promedio, cursos, actividades,
+        entregadas, pendientes y proyectos. Cuatro no llevan a ninguna
+        decisión. Y faltaba la señal que se busca al abrir la ficha de un
+        estudiante: en qué cursos va perdiendo.
+      */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-surface-border bg-surface p-4">
+          <p className="text-micro uppercase tracking-wider text-subtle">Promedio</p>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className={`text-3xl font-bold tabular-nums leading-none ${gradeText(semesterAvg)}`}>
+              {formatScore(semesterAvg)}
+            </span>
+            <span className="text-xs text-subtle">/ 5.0</span>
           </div>
-        ))}
+          <p className="text-micro text-faint mt-1.5">
+            {semesterAvg === null
+              ? 'Aún no hay cursos con nota'
+              : `Sobre ${gradedCourses.length} ${gradedCourses.length === 1 ? 'curso' : 'cursos'} con nota`}
+          </p>
+        </div>
+
+        <div className={`rounded-xl border p-4 ${failing.length > 0
+          ? 'border-red-500/25 bg-red-500/[0.06]'
+          : 'border-surface-border bg-surface'}`}>
+          <p className="text-micro uppercase tracking-wider text-subtle">Va perdiendo</p>
+          <p className={`text-3xl font-bold tabular-nums leading-none mt-1 ${
+            failing.length > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+            {failing.length}
+          </p>
+          <p className="text-micro text-faint mt-1.5 truncate">
+            {failing.length === 0
+              ? 'Ningún curso por debajo de 3.0'
+              : failing.map((c) => c.code).join(', ')}
+          </p>
+        </div>
+
+        <div className={`rounded-xl border p-4 ${totalPending > 0
+          ? 'border-amber-500/25 bg-amber-500/[0.06]'
+          : 'border-surface-border bg-surface'}`}>
+          <p className="text-micro uppercase tracking-wider text-subtle">Sin entregar</p>
+          <p className={`text-3xl font-bold tabular-nums leading-none mt-1 ${
+            totalPending > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+            {totalPending}
+          </p>
+          <p className="text-micro text-faint mt-1.5">
+            de {totalActivities} actividades · {totalSubmitted} entregadas
+          </p>
+        </div>
       </div>
 
       {/* Courses */}
@@ -375,7 +414,7 @@ export default function AdminStudentDetailPage() {
             description="Este estudiante no está inscrito en ningún curso"
           />
         ) : (
-          courses.map((course) => (
+          sortedCourses.map((course) => (
             <CourseSection
               key={course.id}
               course={course}
