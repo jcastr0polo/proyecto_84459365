@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
 import Table, { Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
+import Link from 'next/link';
 import { ArrowLeft, Plus, Pencil, Trash2, Layers } from 'lucide-react';
 import type { Corte } from '@/lib/types';
 
@@ -18,9 +18,13 @@ interface CorteFormData {
   order: number;
 }
 
+/** Colores de los tramos; se repiten si hay más de cinco cortes. */
+const SEGMENT_COLORS = [
+  'bg-cyan-500', 'bg-purple-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500',
+];
+
 export default function CortesPage() {
   const params = useParams();
-  const router = useRouter();
   const { toast } = useToast();
   const courseId = params.courseId as string;
 
@@ -154,12 +158,13 @@ export default function CortesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.push(`/admin/courses/${courseId}`)}
-          className="p-2 rounded-lg hover:bg-foreground/5 transition-colors"
+        <Link
+          href={`/admin/courses/${courseId}`}
+          aria-label="Volver al curso"
+          className="p-2 rounded-lg hover:bg-surface-hover transition-colors duration-[var(--dur-fast)]"
         >
           <ArrowLeft className="h-5 w-5" />
-        </button>
+        </Link>
         <div className="flex-1">
           <h1 className="text-2xl font-bold">Cortes de Evaluación</h1>
           {courseName && (
@@ -172,40 +177,64 @@ export default function CortesPage() {
         </Button>
       </div>
 
-      {/* Weight summary card */}
-      <Card>
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-foreground/70">Distribución de Pesos</span>
-            <span className={`text-sm font-bold ${totalWeight === 100 ? 'text-emerald-600' : totalWeight > 100 ? 'text-red-500' : 'text-amber-500'}`}>
-              {totalWeight}% / 100%
-            </span>
-          </div>
-          {/* Progress bar */}
-          <div className="h-3 bg-foreground/10 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                totalWeight === 100
-                  ? 'bg-emerald-500'
-                  : totalWeight > 100
-                    ? 'bg-red-500'
-                    : 'bg-cyan-500'
-              }`}
-              style={{ width: `${Math.min(totalWeight, 100)}%` }}
-            />
-          </div>
-          {totalWeight < 100 && (
-            <p className="text-xs text-amber-600 mt-2">
-              Falta asignar {remainingWeight}% para completar el 100%
-            </p>
-          )}
-          {totalWeight === 100 && (
-            <p className="text-xs text-emerald-600 mt-2">
-              ✓ La distribución de pesos está completa
-            </p>
-          )}
+      {/*
+        Barra segmentada, no un bloque sólido: lo que importa de esta pantalla
+        es CÓMO se reparte el 100% entre los cortes, y eso una barra llena de
+        un solo color no lo dice. Cada tramo lleva su nombre y su peso.
+      */}
+      <div className="rounded-xl border border-surface-border bg-surface p-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-medium text-muted">Distribución de pesos</span>
+          <span className={`text-sm font-bold tabular-nums ${
+            totalWeight === 100
+              ? 'text-emerald-600 dark:text-emerald-400'
+              : totalWeight > 100
+                ? 'text-red-600 dark:text-red-400'
+                : 'text-amber-600 dark:text-amber-400'}`}>
+            {totalWeight}% de 100%
+          </span>
         </div>
-      </Card>
+
+        <div className="flex h-3 rounded-full overflow-hidden bg-foreground/[0.08] gap-0.5">
+          {[...cortes].sort((a, b) => a.order - b.order).map((corte, i) => (
+            <div
+              key={corte.id}
+              title={`${corte.name}: ${corte.weight}%`}
+              style={{ width: `${Math.min(corte.weight, 100)}%` }}
+              className={`h-full transition-[width] duration-[var(--dur-base)] ease-[var(--ease-out)]
+                          motion-reduce:transition-none ${SEGMENT_COLORS[i % SEGMENT_COLORS.length]}`}
+            />
+          ))}
+        </div>
+
+        {cortes.length > 0 && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3">
+            {[...cortes].sort((a, b) => a.order - b.order).map((corte, i) => (
+              <span key={corte.id} className="flex items-center gap-1.5 text-meta text-subtle">
+                <span className={`w-2 h-2 rounded-sm ${SEGMENT_COLORS[i % SEGMENT_COLORS.length]}`} />
+                {corte.name} · {corte.weight}%
+              </span>
+            ))}
+          </div>
+        )}
+
+        {totalWeight < 100 && (
+          <p className="text-xs text-amber-600 dark:text-amber-400 mt-3">
+            Falta repartir {remainingWeight}%. Mientras no sume 100, la nota
+            definitiva del curso se calcula sobre una base incompleta.
+          </p>
+        )}
+        {totalWeight > 100 && (
+          <p className="text-xs text-red-600 dark:text-red-400 mt-3">
+            Los pesos suman más de 100%. Revisa los cortes antes de calificar.
+          </p>
+        )}
+        {totalWeight === 100 && (
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3">
+            La distribución está completa.
+          </p>
+        )}
+      </div>
 
       {/* Cortes table */}
       {cortes.length === 0 ? (

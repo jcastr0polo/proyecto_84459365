@@ -289,30 +289,30 @@ function SemestersTab() {
             <Table>
               <Thead>
                 <tr>
-                  <Th>ID</Th>
-                  <Th>Etiqueta</Th>
-                  <Th>Inicio</Th>
-                  <Th>Fin</Th>
+                  <Th>Semestre</Th>
+                  <Th>Periodo</Th>
                   <Th>Estado</Th>
                   <Th className="text-right">Acciones</Th>
                 </tr>
               </Thead>
               <Tbody>
+                {/* El semestre activo se marca en la fila entera: es lo que
+                    decide qué ven los estudiantes, y un badge pequeño en la
+                    cuarta columna no basta para verlo de un vistazo. */}
                 {semesters.map((sem) => (
-                  <Tr key={sem.id}>
-                    <Td>
-                      <span className="font-mono text-xs text-muted">{sem.id}</span>
-                    </Td>
+                  <Tr key={sem.id} className={sem.isActive ? 'bg-emerald-500/[0.05]' : ''}>
                     <Td>
                       <span className="font-medium text-foreground/90">{sem.label}</span>
+                      <span className="block text-micro text-faint font-mono">{sem.id}</span>
                     </Td>
-                    <Td>{formatDate(sem.startDate)}</Td>
-                    <Td>{formatDate(sem.endDate)}</Td>
+                    <Td className="whitespace-nowrap">
+                      {formatDate(sem.startDate)} — {formatDate(sem.endDate)}
+                    </Td>
                     <Td>
                       {sem.isActive ? (
                         <Badge variant="success" dot size="sm">Activo</Badge>
                       ) : (
-                        <Badge variant="neutral" size="sm">Inactivo</Badge>
+                        <span className="text-meta text-faint">Inactivo</span>
                       )}
                     </Td>
                     <Td className="text-right">
@@ -406,20 +406,28 @@ export default function SettingsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">Configuración</h1>
+        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>Configuración</h1>
         <p className="text-sm text-subtle mt-1">Semestres, zona horaria y sincronización de datos</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-lg bg-foreground/[0.04] border border-foreground/[0.06] w-fit">
+      {/* role="tablist" y aria-selected: sin esto un lector de pantalla los
+          anuncia como botones sueltos y no dice cuál está seleccionado. */}
+      <div role="tablist" aria-label="Secciones de configuración"
+        className="flex gap-1 p-1 rounded-lg bg-surface-sunken border border-surface-border w-fit">
         {TABS.map((tab) => (
           <button
             key={tab.id}
+            role="tab"
+            aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium border
+              transition-colors duration-[var(--dur-fast)] cursor-pointer
+              active:scale-[0.97] motion-reduce:active:scale-100
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40
               ${activeTab === tab.id
-                ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                : 'text-muted hover:text-foreground hover:bg-foreground/[0.06] border border-transparent'
+                ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                : 'text-muted hover:text-foreground hover:bg-surface-hover border-transparent'
               }`}
           >
             {tab.icon}
