@@ -4,8 +4,10 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FileText, BarChart3, Rocket, ClipboardList, Clock, Building2, Monitor, RefreshCw, ArrowLeft } from 'lucide-react';
-import { parseDateColombia, parseDateTimeColombia, nowColombia, formatDateShort } from '@/lib/dateUtils';
+import { nowColombia } from '@/lib/dateUtils';
 import { gradeText, formatScore } from '@/lib/gradeScale';
+import { needsAction, startOfTodayColombia } from '@/lib/activityStatus';
+import ActivityList, { useActivityRows } from './ActivityList';
 import type { Course, Activity, Submission, StudentGradeSummary } from '@/lib/types';
 
 /**
@@ -26,27 +28,6 @@ import type { Course, Activity, Submission, StudentGradeSummary } from '@/lib/ty
  *   así que usar la palabra para "nota incompleta" se presta a confusión.
  */
 
-type DeliveryStatus = 'returned' | 'overdue' | 'pending' | 'delivered' | 'graded';
-
-/** Urgencia real: lo vencido y lo devuelto pesa más que lo que falta por vencer. */
-const PRIORITY: Record<DeliveryStatus, number> = {
-  returned: 0, overdue: 1, pending: 2, delivered: 3, graded: 4,
-};
-
-const STATUS: Record<DeliveryStatus, { label: string; dot: string; text: string }> = {
-  returned: { label: 'Devuelta', dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
-  overdue: { label: 'Vencida', dot: 'bg-red-500', text: 'text-red-600 dark:text-red-400' },
-  pending: { label: 'Pendiente', dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
-  delivered: { label: 'Entregada', dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
-  graded: { label: 'Calificada', dot: 'bg-cyan-500', text: 'text-cyan-600 dark:text-cyan-400' },
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  project: 'Proyecto', exercise: 'Ejercicio', document: 'Documento',
-  presentation: 'Presentación', prompt: 'Prompt', exam: 'Examen',
-  quiz: 'Parcial', manual: 'Nota manual', other: 'Otro',
-};
-
 const DAY_LONG: Record<string, string> = {
   lunes: 'Lunes', martes: 'Martes', miércoles: 'Miércoles',
   jueves: 'Jueves', viernes: 'Viernes', sábado: 'Sábado',
@@ -57,26 +38,6 @@ const MODALITY: Record<string, { label: string; Icon: typeof Building2 }> = {
   virtual: { label: 'Virtual', Icon: Monitor },
   híbrido: { label: 'Híbrido', Icon: RefreshCw },
 };
-
-function statusOf(activity: Activity, sub: Submission | undefined, now: Date): DeliveryStatus {
-  if (sub) {
-    if (sub.status === 'reviewed') return 'graded';
-    if (sub.status === 'returned') return 'returned';
-    return 'delivered';
-  }
-  const due = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59');
-  return now > due ? 'overdue' : 'pending';
-}
-
-function dueLabel(dueDate: string, today: Date): string {
-  const days = Math.round((parseDateColombia(dueDate).getTime() - today.getTime()) / 86400000);
-  if (days < -1) return `Venció hace ${Math.abs(days)} días`;
-  if (days === -1) return 'Venció ayer';
-  if (days === 0) return 'Vence hoy';
-  if (days === 1) return 'Vence mañana';
-  if (days <= 7) return `En ${days} días`;
-  return `En ${Math.ceil(days / 7)} semanas`;
-}
 
 export default function StudentCourseViewV2({
   course, activities, submissions, gradeData,
@@ -90,19 +51,11 @@ export default function StudentCourseViewV2({
 
   // Una marca de tiempo estable por render; días calendario en hora Colombia.
   const now = useMemo(() => nowColombia(), []);
-  const today = useMemo(() => { const d = nowColombia(); d.setHours(0, 0, 0, 0); return d; }, []);
+  const today = useMemo(() => startOfTodayColombia(nowColombia()), []);
 
-  const rows = useMemo(() => activities
-    .filter((a) => a.status !== 'draft')
-    .map((a) => ({ activity: a, sub: submissions[a.id], status: statusOf(a, submissions[a.id], now) }))
-    .sort((x, y) => {
-      const p = PRIORITY[x.status] - PRIORITY[y.status];
-      if (p !== 0) return p;
-      return +parseDateColombia(x.activity.dueDate) - +parseDateColombia(y.activity.dueDate);
-    }), [activities, submissions, now]);
+  const rows = useActivityRows(activities, submissions, now);
 
-  const pendingCount = rows.filter((r) => ['pending', 'overdue', 'returned'].includes(r.status)).length;
-  const gradeFor = (id: string) => gradeData?.activities.find((a) => a.id === id)?.grade ?? null;
+  const pendingCount = rows.filter((r) => needsAction(r.status)).length;
 
   const fade = (d = 0) => reduce ? {} : {
     initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 },
@@ -192,52 +145,7 @@ export default function StudentCourseViewV2({
           )}
         </div>
 
-        {rows.length > 0 ? (
-          <div className="rounded-xl border border-surface-border divide-y divide-foreground/[0.06] overflow-hidden">
-            {rows.map(({ activity, sub, status }) => {
-              const g = gradeFor(activity.id);
-              const st = STATUS[status];
-              const needsAction = status === 'pending' || status === 'overdue' || status === 'returned';
-              return (
-                <Link key={activity.id}
-                  href={`/student/courses/${course.id}/activities/${activity.id}`}
-                  className="flex items-center gap-3 p-3.5 bg-surface
-                             transition-colors duration-[var(--dur-fast)] hover:bg-surface-hover">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${st.dot}`} />
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-foreground/90 leading-snug">{activity.title}</p>
-                    <p className="text-meta text-subtle mt-0.5">
-                      {TYPE_LABELS[activity.type] ?? activity.type}
-                      {' · '}{activity.weight}%
-                      {' · '}<span className={st.text}>{st.label}</span>
-                      {/* El plazo se muestra también en las vencidas: antes
-                          solo aparecía en las que aún no vencían. */}
-                      {needsAction && <> · {dueLabel(activity.dueDate, today)}</>}
-                      {/* La fecha de entrega real, no la fecha límite. */}
-                      {!needsAction && sub?.submittedAt && <> · entregada {formatDateShort(sub.submittedAt)}</>}
-                    </p>
-                  </div>
-
-                  <div className="shrink-0 text-right min-w-[3rem]">
-                    {g ? (
-                      <>
-                        <p className={`text-lg font-semibold tabular-nums leading-none ${gradeText((g.score / g.maxScore) * 5)}`}>
-                          {((g.score / g.maxScore) * 5).toFixed(1)}
-                        </p>
-                        <p className="text-micro text-faint mt-0.5">{g.score}/{g.maxScore}</p>
-                      </>
-                    ) : (
-                      <span className="text-meta text-faint">Máx {activity.maxScore}</span>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-subtle px-1 py-6">Este curso todavía no tiene actividades publicadas.</p>
-        )}
+        <ActivityList rows={rows} courseId={course.id} today={today} gradeData={gradeData} />
       </motion.section>
     </div>
   );
