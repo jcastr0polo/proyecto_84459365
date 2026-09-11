@@ -10,6 +10,7 @@ import Pagination, { usePagination } from '@/components/ui/Pagination';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import EmptyState from '@/components/ui/EmptyState';
+import FilterChip from '@/components/ui/FilterChip';
 import Table from '@/components/ui/Table';
 import { Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -18,7 +19,7 @@ import SubmissionDetail from '@/components/submissions/SubmissionDetail';
 import { SUBMISSION_STATUS_CONFIG } from '@/components/submissions/SubmissionCard';
 import type { SubmissionWithDetails, Activity } from '@/lib/types';
 
-type StatusFilter = 'all' | 'submitted' | 'reviewed' | 'returned' | 'resubmitted';
+type StatusFilter = 'all' | 'pending' | 'submitted' | 'reviewed' | 'returned' | 'resubmitted' | 'late';
 
 /**
  * Admin — Submissions List Page
@@ -68,7 +69,12 @@ export default function AdminSubmissionsPage() {
 
   const filtered = useMemo(() => {
     let result = submissions;
-    if (statusFilter !== 'all') {
+    if (statusFilter === 'pending') {
+      // Lo que el docente tiene realmente en cola: entregadas y re-entregadas.
+      result = result.filter((s) => s.status === 'submitted' || s.status === 'resubmitted');
+    } else if (statusFilter === 'late') {
+      result = result.filter((s) => s.isLate);
+    } else if (statusFilter !== 'all') {
       result = result.filter((s) => s.status === statusFilter);
     }
     if (search.trim()) {
@@ -79,9 +85,9 @@ export default function AdminSubmissionsPage() {
         s.student.email.toLowerCase().includes(q)
       );
     }
-    // Sort: latest first
-    result.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
-    return result;
+    // Copia antes de ordenar: sin filtros, `result` ES el array de estado y
+    // sort() lo mutaba en el sitio.
+    return [...result].sort((a, b) => +new Date(b.submittedAt) - +new Date(a.submittedAt));
   }, [submissions, statusFilter, search]);
 
   const selected = selectedId ? submissions.find((s) => s.id === selectedId) : null;
@@ -118,6 +124,7 @@ export default function AdminSubmissionsPage() {
     returned: submissions.filter((s) => s.status === 'returned').length,
     resubmitted: submissions.filter((s) => s.status === 'resubmitted').length,
     late: submissions.filter((s) => s.isLate).length,
+    pending: submissions.filter((s) => s.status === 'submitted' || s.status === 'resubmitted').length,
   }), [submissions]);
 
   if (loading) return <PageLoader />;
@@ -143,36 +150,42 @@ export default function AdminSubmissionsPage() {
         )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-        <StatCard label="Total" value={stats.total} color="text-muted" />
-        <StatCard label="Entregadas" value={stats.submitted} color="text-emerald-400" />
-        <StatCard label="Calificadas" value={stats.reviewed} color="text-cyan-400" />
-        <StatCard label="Devueltas" value={stats.returned} color="text-amber-400" />
-        <StatCard label="Re-entregadas" value={stats.resubmitted} color="text-purple-400" />
-        <StatCard label="Tardías" value={stats.late} color="text-red-400" />
-      </div>
+      {/*
+        Los contadores ahora filtran. Antes eran seis tarjetas informativas y
+        el filtro de verdad estaba escondido en un desplegable aparte: se veía
+        "Devueltas 3", se hacía clic y no pasaba nada.
 
-      {/* Filter + Search */}
+        "Por calificar" va primero y en cian porque es la cola de trabajo real
+        del docente; antes ni siquiera existía como concepto, había que sumar
+        entregadas más re-entregadas a ojo.
+      */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-          aria-label="Filtrar por estado"
-          className="px-3 py-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-sm text-foreground
-                     outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
-        >
-          <option value="all">Todos los estados</option>
-          <option value="submitted">Entregadas</option>
-          <option value="reviewed">Calificadas</option>
-          <option value="returned">Devueltas</option>
-          <option value="resubmitted">Re-entregadas</option>
-        </select>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <FilterChip active={statusFilter === 'pending'} onClick={() => setStatusFilter('pending')} dot="bg-cyan-500">
+            Por calificar ({stats.pending})
+          </FilterChip>
+          <FilterChip active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>
+            Todas ({stats.total})
+          </FilterChip>
+          <FilterChip active={statusFilter === 'reviewed'} onClick={() => setStatusFilter('reviewed')} dot="bg-emerald-500">
+            Calificadas ({stats.reviewed})
+          </FilterChip>
+          {stats.returned > 0 && (
+            <FilterChip active={statusFilter === 'returned'} onClick={() => setStatusFilter('returned')} dot="bg-amber-500">
+              Devueltas ({stats.returned})
+            </FilterChip>
+          )}
+          {stats.late > 0 && (
+            <FilterChip active={statusFilter === 'late'} onClick={() => setStatusFilter('late')} dot="bg-red-500">
+              Tardías ({stats.late})
+            </FilterChip>
+          )}
+        </div>
         <SearchInput
           value={search}
           onChange={setSearch}
           placeholder="Buscar estudiante..."
-          className="w-full sm:w-64"
+          className="w-full sm:w-64 sm:ml-auto"
         />
       </div>
 
@@ -213,12 +226,12 @@ export default function AdminSubmissionsPage() {
                     <Tr key={sub.id}>
                       <Td>
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-[10px] font-bold text-muted shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-micro font-bold text-muted shrink-0">
                             {sub.student.firstName[0]}{sub.student.lastName[0]}
                           </div>
                           <div>
                             <p className="text-sm text-foreground/80">{sub.student.firstName} {sub.student.lastName}</p>
-                            <p className="text-[11px] text-subtle">{sub.student.email}</p>
+                            <p className="text-meta text-subtle">{sub.student.email}</p>
                           </div>
                         </div>
                       </Td>
@@ -273,11 +286,11 @@ export default function AdminSubmissionsPage() {
                   key={sub.id}
                   onClick={() => setSelectedId(sub.id)}
                   className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] cursor-pointer
-                           hover:border-foreground/15 hover:bg-foreground/[0.06] transition-all"
+                           hover:border-foreground/15 hover:bg-foreground/[0.06] transition-colors duration-[var(--dur-fast)]"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-[10px] font-bold text-muted">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-micro font-bold text-muted">
                         {sub.student.firstName[0]}{sub.student.lastName[0]}
                       </div>
                       <p className="text-sm text-foreground/80">{sub.student.firstName} {sub.student.lastName}</p>
@@ -327,14 +340,6 @@ export default function AdminSubmissionsPage() {
   );
 }
 
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <div className="p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-center">
-      <p className={`text-lg font-bold ${color}`}>{value}</p>
-      <p className="text-[11px] text-subtle">{label}</p>
-    </div>
-  );
-}
 
 const LINK_ICONS: Record<string, React.ReactNode> = {
   github: <GitBranch className="w-3.5 h-3.5" />,

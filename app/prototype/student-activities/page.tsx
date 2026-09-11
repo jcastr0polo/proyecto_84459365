@@ -37,6 +37,18 @@ export default function PrototypeActivitiesPage() {
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
           Mis actividades
         </h1>
+
+        {/* Cómo quedan los filtros del docente en la pantalla de entregas */}
+        <div>
+          <p className="text-meta uppercase tracking-wider text-faint mb-2">Filtros de entregas (admin)</p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <FilterChip active onClick={() => {}} dot="bg-cyan-500">Por calificar (7)</FilterChip>
+            <FilterChip active={false} onClick={() => {}}>Todas (24)</FilterChip>
+            <FilterChip active={false} onClick={() => {}} dot="bg-emerald-500">Calificadas (15)</FilterChip>
+            <FilterChip active={false} onClick={() => {}} dot="bg-amber-500">Devueltas (2)</FilterChip>
+            <FilterChip active={false} onClick={() => {}} dot="bg-red-500">Tardías (4)</FilterChip>
+          </div>
+        </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <FilterChip active={filter === 'all'} onClick={() => setFilter('all')}>
             Todas ({rows.length})
