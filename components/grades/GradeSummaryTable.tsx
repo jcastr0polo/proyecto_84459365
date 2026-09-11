@@ -227,7 +227,12 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
                       {student.finalScore.toFixed(1)}
                     </span>
                     {student.isPartial && (
-                      <span className="text-micro text-amber-400 ml-0.5" title="Nota parcial">*</span>
+                      <span
+                        className="block text-micro text-amber-600 dark:text-amber-400 mt-0.5 whitespace-nowrap"
+                        title="La definitiva se calcula solo sobre lo que ya tiene nota"
+                      >
+                        solo {gradedPercent(student, data.activities)}% calificado
+                      </span>
                     )}
                     <p className="text-micro mt-0.5">
                       {student.isApproved ? (
@@ -297,16 +302,37 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
 
       <div className="px-4 py-2 border-t border-foreground/[0.04] text-micro text-faint flex gap-4">
         <span>● = No publicada</span>
-        <span>* = Nota parcial (faltan actividades)</span>
+        <span>
+          Las definitivas marcadas como parciales solo promedian lo que ya tiene nota:
+          lo no calificado no cuenta como cero.
+        </span>
       </div>
     </div>
   );
 }
 
+/**
+ * Porcentaje del curso que ya tiene nota para un estudiante.
+ *
+ * La definitiva se calcula solo sobre lo calificado, así que un estudiante al
+ * que le falta la mitad del curso puede aparecer con un 4.5 que no significa
+ * lo que parece. El único aviso era un asterisco de un carácter.
+ */
+function gradedPercent(
+  student: { grades: Record<string, { score: number } | null> },
+  activities: { id: string; weight: number }[],
+): number {
+  const total = activities.reduce((a, x) => a + x.weight, 0);
+  if (total === 0) return 100;
+  const done = activities.reduce((a, x) => a + (student.grades[x.id] ? x.weight : 0), 0);
+  return Math.round((done / total) * 100);
+}
+
 function GradeCell({ grade, maxScore }: { grade: { score: number; maxScore: number; isPublished: boolean; feedback?: string } | null; maxScore: number }) {
   if (!grade) {
     return (
-      <td className="px-3 py-2.5 text-center text-xs text-faint border-r border-foreground/[0.06]">—</td>
+      <td className="px-3 py-2.5 text-center text-xs text-faint border-r border-foreground/[0.06]"
+          title="Sin nota registrada: no suma ni resta en la definitiva">—</td>
     );
   }
   const normalized = (grade.score / grade.maxScore) * 5;
