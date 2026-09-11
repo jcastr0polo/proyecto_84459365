@@ -1030,9 +1030,33 @@ interface SupabaseManualGradeRow {
   score: number;
   max_score: number;
   feedback: string | null;
+  is_published: boolean | null;
   graded_by: string;
   graded_at: string;
   updated_at: string;
+}
+
+/**
+ * Añade manual_grades.is_published si aún no existe.
+ *
+ * Las notas manuales eran el único tipo que el estudiante veía en cuanto se
+ * guardaba: no tenían concepto de publicación, a diferencia de las notas de
+ * actividad (isPublished) y de los parciales (resultVisibility).
+ *
+ * La migración se aplica desde el propio código, una vez por proceso, porque
+ * es aditiva e idempotente: ADD COLUMN IF NOT EXISTS con DEFAULT true, así
+ * que las notas que ya existían siguen visibles y nadie pierde nada. Es el
+ * mismo patrón de CREATE TABLE IF NOT EXISTS que ya usa la ruta de migración.
+ */
+let manualGradesColumnEnsured = false;
+
+async function ensureManualGradesPublishedColumn(): Promise<void> {
+  if (manualGradesColumnEnsured) return;
+  const sql = getPgPool();
+  await sql.unsafe(
+    `ALTER TABLE manual_grades ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT true`
+  );
+  manualGradesColumnEnsured = true;
 }
 
 function rowToManualGrade(r: SupabaseManualGradeRow): ManualGrade {
@@ -1040,6 +1064,9 @@ function rowToManualGrade(r: SupabaseManualGradeRow): ManualGrade {
     id: r.id, itemId: r.item_id, studentId: r.student_id, courseId: r.course_id,
     score: Number(r.score), maxScore: Number(r.max_score),
     feedback: r.feedback ?? undefined,
+    // Si la columna todavía no existe, lo guardado antes se considera
+    // publicado: así el despliegue no le esconde notas a nadie.
+    isPublished: r.is_published ?? true,
     gradedBy: r.graded_by, gradedAt: r.graded_at, updatedAt: r.updated_at,
   };
 }
@@ -1049,6 +1076,7 @@ function manualGradeToRow(g: ManualGrade): SupabaseManualGradeRow {
     id: g.id, item_id: g.itemId, student_id: g.studentId, course_id: g.courseId,
     score: g.score, max_score: g.maxScore,
     feedback: g.feedback ?? null,
+    is_published: g.isPublished ?? true,
     graded_by: g.gradedBy, graded_at: g.gradedAt, updated_at: g.updatedAt,
   };
 }
@@ -1059,6 +1087,7 @@ export async function supabaseReadManualGrades(): Promise<ManualGrade[]> {
 }
 
 export async function supabaseReplaceManualGrades(items: ManualGrade[]): Promise<void> {
+  await ensureManualGradesPublishedColumn();
   await replaceAllRows('manual_grades', items.map(manualGradeToRow));
 }
 

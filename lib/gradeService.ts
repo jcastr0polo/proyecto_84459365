@@ -545,6 +545,8 @@ export function calculateCorteScores(
     }
 
     for (const item of manualItems.filter((i) => i.corteId === corte.id)) {
+      // `manualGrades` llega ya filtrado por quien llama, igual que `grades`:
+      // el estudiante solo pasa las publicadas, el admin las pasa todas.
       const mg = manualGrades.find((g) => g.itemId === item.id && g.studentId === studentId);
       if (mg) {
         sumWeighted += (mg.score / mg.maxScore) * item.weight;
@@ -1020,8 +1022,10 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
 
   // Add manual grade items as visible items
   const manualDetails: StudentGradeSummary['activities'] = courseManualItems.map((item) => {
+    // Solo las publicadas, igual que las notas de actividad. Las guardadas
+    // antes de que existiera la columna se leen como publicadas.
     const mg = allManualGrades.find(
-      (g) => g.itemId === item.id && g.studentId === studentId
+      (g) => g.itemId === item.id && g.studentId === studentId && g.isPublished !== false
     );
     return {
       id: item.id,
@@ -1044,16 +1048,21 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
   // Merge all graded items
   const allDetails = [...activityDetails, ...quizDetails, ...manualDetails];
 
-  // Estudiante: studentGrades ya viene filtrado a isPublished
+  // Todo lo que ve el estudiante se calcula solo con lo publicado.
+  // `studentGrades` ya viene filtrado; las manuales se filtran aquí.
+  const publishedManualGrades = allManualGrades.filter((g) => g.isPublished !== false);
+
   const corteScores = calculateCorteScores(
     studentId, courseCortes, activities, studentGrades,
-    courseQuizzes, allAttempts, courseManualItems, allManualGrades,
+    courseQuizzes, allAttempts, courseManualItems, publishedManualGrades,
   );
 
-  // Definitiva (all sources)
+  // La definitiva recibía allGrades sin filtrar, así que se movía con notas
+  // que el docente aún no había publicado: el estudiante no veía la nota de
+  // la actividad, pero sí su efecto en la definitiva.
   const finalResult = calculateFinalGrade(
-    studentId, courseId, allActivities, allGrades,
-    allQuizzes, allAttempts, allManualItems, allManualGrades
+    studentId, courseId, allActivities, studentGrades,
+    allQuizzes, allAttempts, allManualItems, publishedManualGrades
   );
 
   const finalScore = finalResult.totalWeight > 0 ? finalResult.finalScore : null;

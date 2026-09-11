@@ -949,6 +949,12 @@ export interface ManualGrade {
   score: number;                       // Nota numérica
   maxScore: number;                    // Nota máxima
   feedback?: string;                   // Retroalimentación opcional
+  /**
+   * Si el estudiante ya la ve. Antes no existía y toda nota manual era
+   * visible al guardarla, a diferencia de las de actividad y los parciales.
+   * Opcional por compatibilidad: lo guardado antes se lee como publicado.
+   */
+  isPublished?: boolean;
   gradedBy: string;                    // FK a User.id (admin)
   gradedAt: string;                    // ISO 8601
   updatedAt: string;

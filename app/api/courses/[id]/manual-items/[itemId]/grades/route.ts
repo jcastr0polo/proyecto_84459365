@@ -106,6 +106,9 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
               score: entry.score,
               maxScore: item.maxScore,
               feedback: entry.feedback,
+              // Se guarda sin publicar, igual que las notas de actividad
+              // (RN-CAL-02): el docente decide cuándo la ve el estudiante.
+              isPublished: false,
               gradedBy: user.id,
               gradedAt: now,
               updatedAt: now,
@@ -135,5 +138,53 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
     } catch {
       return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
     }
+  }, 'admin');
+}
+
+/**
+ * PATCH /api/courses/[id]/manual-items/[itemId]/grades — Publicar las notas
+ *
+ * Las notas manuales se guardan sin publicar; esto las hace visibles para el
+ * estudiante, igual que "Publicar notas" en las actividades.
+ */
+export async function PATCH(request: Request, { params }: RouteParams): Promise<NextResponse> {
+  return withAuth(request, async (user) => {
+    const { id: courseId, itemId } = await params;
+
+    return withFileLock('manual-grades.json', async () => {
+      const allGrades = await readManualGradesFresh();
+      let published = 0;
+      const now = nowColombiaISO();
+
+      for (const g of allGrades) {
+        if (g.itemId === itemId && g.courseId === courseId && g.isPublished === false) {
+          g.isPublished = true;
+          g.updatedAt = now;
+          published++;
+        }
+      }
+
+      if (published === 0) {
+        return NextResponse.json({ published: 0, message: 'No había notas sin publicar' });
+      }
+
+      await dispatchWrite(
+        () => writeManualGrades(allGrades),
+        {
+          action: 'publish',
+          entity: 'manualGrade',
+          entityId: itemId,
+          userId: user.id,
+          userName: `${user.firstName} ${user.lastName}`,
+          details: `Publicó ${published} nota(s) manual(es)`,
+          ...extractRequestMeta(request),
+        }
+      );
+
+      return NextResponse.json({
+        published,
+        message: `${published} ${published === 1 ? 'nota publicada' : 'notas publicadas'}`,
+      });
+    });
   }, 'admin');
 }

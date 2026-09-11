@@ -10,6 +10,7 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import { gradeText, normalize, formatScore } from '@/lib/gradeScale';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { ManualGradeItem, ManualGrade } from '@/lib/types';
 
 /**
@@ -34,6 +35,9 @@ export default function ManualItemGradingPage() {
   const [initial, setInitial] = useState<Record<string, Row>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [unpublished, setUnpublished] = useState(0);
+  const [publishing, setPublishing] = useState(false);
+  const [confirmPublish, setConfirmPublish] = useState(false);
   const [search, setSearch] = useState('');
   const scoreRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -66,6 +70,7 @@ export default function ManualItemGradingPage() {
         : [];
 
       const grades: ManualGrade[] = gradesRes.ok ? (await gradesRes.json()).grades ?? [] : [];
+      setUnpublished(grades.filter((g) => g.isPublished === false).length);
 
       const built: Row[] = students.map((student) => {
         const g = grades.find((x) => x.studentId === student.id);
@@ -133,10 +138,32 @@ export default function ManualItemGradingPage() {
       }
       toast(`${payload.length} ${payload.length === 1 ? 'nota guardada' : 'notas guardadas'}`, 'success');
       setInitial(Object.fromEntries(rows.map((r) => [r.student.id, { ...r }])));
+      // Guardar no publica: se recarga el conteo de lo pendiente.
+      const g = await fetch(`/api/courses/${courseId}/manual-items/${itemId}/grades`);
+      if (g.ok) {
+        const d = await g.json();
+        setUnpublished((d.grades ?? []).filter((x: ManualGrade) => x.isPublished === false).length);
+      }
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Error al guardar', 'error');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function publish() {
+    setPublishing(true);
+    try {
+      const res = await fetch(`/api/courses/${courseId}/manual-items/${itemId}/grades`, { method: 'PATCH' });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'Error al publicar');
+      toast(d.message, 'success');
+      setUnpublished(0);
+      setConfirmPublish(false);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Error al publicar', 'error');
+    } finally {
+      setPublishing(false);
     }
   }
 
@@ -162,6 +189,43 @@ export default function ManualItemGradingPage() {
         <SearchInput value={search} onChange={setSearch}
           placeholder="Buscar estudiante..." className="w-full sm:w-64" />
       </div>
+
+      {/* Antes las notas manuales se veían en cuanto se guardaban, sin que
+          nada lo avisara. Ahora se guardan sin publicar y se dice claramente. */}
+      {unpublished > 0 && (
+        <div className="flex items-center justify-between gap-4 flex-wrap rounded-xl border
+                        border-amber-500/25 bg-amber-500/[0.07] p-4">
+          <div>
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
+              {unpublished} {unpublished === 1 ? 'nota sin publicar' : 'notas sin publicar'}
+            </p>
+            <p className="text-xs text-subtle mt-0.5">
+              Los estudiantes todavía no las ven. Puedes seguir ajustándolas antes de publicar.
+            </p>
+          </div>
+          <button
+            onClick={() => setConfirmPublish(true)}
+            disabled={publishing}
+            className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium
+                       hover:bg-amber-400 transition-colors duration-[var(--dur-fast)]
+                       active:scale-[0.98] motion-reduce:active:scale-100
+                       disabled:opacity-50 cursor-pointer shrink-0"
+          >
+            {publishing ? 'Publicando…' : 'Publicar notas'}
+          </button>
+        </div>
+      )}
+
+      <ConfirmModal
+        open={confirmPublish}
+        onClose={() => setConfirmPublish(false)}
+        onConfirm={publish}
+        variant="warning"
+        title="¿Publicar estas notas?"
+        message={`${unpublished} ${unpublished === 1 ? 'nota quedará visible' : 'notas quedarán visibles'} para los estudiantes de inmediato, y entrarán en su nota definitiva.`}
+        confirmLabel="Publicar"
+        loading={publishing}
+      />
 
       <p className="text-sm text-muted">
         <span className="text-cyan-500 font-semibold">{graded}</span> / {rows.length} calificados
