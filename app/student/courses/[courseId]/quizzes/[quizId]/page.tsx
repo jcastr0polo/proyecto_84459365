@@ -7,9 +7,10 @@ import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
+import { useQuizSession } from '@/lib/useQuizSession';
 import { useAntiCheat } from '@/components/quizzes/useAntiCheat';
 import ConfirmModal from '@/components/ui/ConfirmModal';
-import type { Quiz, QuizQuestion } from '@/lib/types';
+import type { Quiz } from '@/lib/types';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { Clock, Shield, AlertTriangle } from 'lucide-react';
 
@@ -30,16 +31,19 @@ export default function StudentTakeQuizPage() {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [canAttempt, setCanAttempt] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
+
+  // La sesión guarda la fecha límite y las respuestas, así que recargar o
+  // cambiar de pestaña ya no regala tiempo ni pierde el trabajo.
+  const { started, answers, timeLeft, expired, start, setAnswer, clearSession } =
+    useQuizSession(quizId, quiz?.timeLimit);
   const [resultsAvailable, setResultsAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [started, setStarted] = useState(false);
+
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
   const [blurWarnings, setBlurWarnings] = useState(0);
   const [confirmIncomplete, setConfirmIncomplete] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Shuffle helper
   function shuffleArray<T>(arr: T[], seed: number): T[] {
@@ -79,8 +83,7 @@ export default function StudentTakeQuizPage() {
     if (submitting || submitted) return;
     setSubmitting(true);
 
-    // Stop timer
-    if (timerRef.current) clearInterval(timerRef.current);
+    // El intervalo lo limpia la propia sesión al desmontarse.
 
     const answerArray = Object.entries(answers).map(([questionId, value]) => {
       if (Array.isArray(value)) {
@@ -115,13 +118,16 @@ export default function StudentTakeQuizPage() {
         return;
       }
       setSubmitted(true);
+      // Enviado: se borra la sesión para que al volver no se retome un
+      // parcial que ya se entregó.
+      clearSession();
       toast(data.message || 'Parcial enviado', auto ? 'info' : 'success');
       router.push(`/student/courses/${courseId}/quizzes/${quizId}/results`);
     } catch {
       toast('Error de conexión', 'error');
       setSubmitting(false);
     }
-  }, [submitting, submitted, answers, quiz, courseId, quizId, toast, router]);
+  }, [submitting, submitted, answers, quiz, courseId, quizId, toast, router, clearSession]);
 
   // Anti-cheat
   const { getBlurCount } = useAntiCheat({
@@ -138,35 +144,18 @@ export default function StudentTakeQuizPage() {
     maxBlurs: 2, // Auto-submit on 2nd blur
   });
 
-  // Timer
+  // El envío automático al agotarse el tiempo lo dispara la sesión.
   const doSubmitRef = useRef(doSubmit);
   doSubmitRef.current = doSubmit;
   const getBlurCountRef = useRef(getBlurCount);
   getBlurCountRef.current = getBlurCount;
 
+  const autoSentRef = useRef(false);
   useEffect(() => {
-    if (!started || !quiz?.timeLimit || submitted) return;
-
-    const totalSeconds = quiz.timeLimit * 60;
-    setTimeLeft(totalSeconds);
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev === null) return null;
-        if (prev <= 1) {
-          // Time's up — auto-submit
-          clearInterval(timerRef.current!);
-          doSubmitRef.current(true, getBlurCountRef.current());
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [started, quiz?.timeLimit, submitted]);
+    if (!expired || submitted || autoSentRef.current) return;
+    autoSentRef.current = true;
+    doSubmitRef.current(true, getBlurCountRef.current());
+  }, [expired, submitted]);
 
   function formatTime(seconds: number): string {
     const m = Math.floor(seconds / 60);
@@ -175,18 +164,16 @@ export default function StudentTakeQuizPage() {
   }
 
   function selectAnswer(questionId: string, optionId: string) {
-    setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
+    setAnswer(questionId, optionId);
   }
 
   function toggleWeightedAnswer(questionId: string, optionId: string) {
-    setAnswers((prev) => {
-      const current = prev[questionId];
-      const arr = Array.isArray(current) ? [...current] : current ? [current] : [];
-      const idx = arr.indexOf(optionId);
-      if (idx >= 0) arr.splice(idx, 1);
-      else arr.push(optionId);
-      return { ...prev, [questionId]: arr.length > 0 ? arr : [] };
-    });
+    const current = answers[questionId];
+    const arr = Array.isArray(current) ? [...current] : current ? [current] : [];
+    const idx = arr.indexOf(optionId);
+    if (idx >= 0) arr.splice(idx, 1);
+    else arr.push(optionId);
+    setAnswer(questionId, arr);
   }
 
   if (loading || !quiz) return <PageLoader />;
@@ -252,7 +239,7 @@ export default function StudentTakeQuizPage() {
             </div>
           ) : (
             <button
-              onClick={() => setStarted(true)}
+              onClick={start}
               className="w-full py-3.5 px-6 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white font-semibold text-sm transition-colors cursor-pointer shadow-lg shadow-cyan-500/20"
             >
               Comenzar Parcial
