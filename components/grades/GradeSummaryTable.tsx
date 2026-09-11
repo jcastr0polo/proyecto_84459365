@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { CourseGradeSummary } from '@/lib/types';
+import { ChevronDown } from 'lucide-react';
 import { gradeText, formatScore } from '@/lib/gradeScale';
 import { tableChrome } from '@/components/ui/Table';
 
@@ -70,62 +71,14 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
       */}
       <div className="md:hidden space-y-3">
         {students.map((student) => (
-          <div key={student.id} className="rounded-xl border border-surface-border bg-surface p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground leading-snug">
-                  {student.lastName}, {student.firstName}
-                </p>
-                <p className="text-micro text-subtle mt-0.5">{student.email}</p>
-              </div>
-              <div className="text-right shrink-0">
-                {/* `?? 0` pintaba de rojo a quien no tiene ninguna nota:
-                    "sin datos" no es lo mismo que "va perdiendo". */}
-                <p className={`text-2xl font-bold tabular-nums leading-none ${gradeText(student.finalScore)}`}>
-                  {formatScore(student.finalScore)}
-                </p>
-                <p className="text-micro text-faint mt-0.5">
-                  {student.finalScore === null
-                    ? 'sin nota'
-                    : student.isPartial
-                      ? `${gradedPercent(student, data.activities)}% calificado`
-                      : 'definitiva'}
-                </p>
-              </div>
-            </div>
-
-            {/* Notas por corte: el desglose que en la tabla son columnas. */}
-            {hasCortes && (
-              <div className="grid gap-2 mt-3" style={{ gridTemplateColumns: `repeat(${corteGroups.length}, minmax(0,1fr))` }}>
-                {corteGroups.map((group) => {
-                  const v = student.corteScores[group.id];
-                  return (
-                    <div key={group.id} className="rounded-lg border border-surface-border bg-surface-sunken p-2">
-                      <p className="text-micro text-subtle truncate">{group.name}</p>
-                      <p className={`text-sm font-semibold tabular-nums ${v != null ? scoreColorClass(v) : 'text-faint'}`}>
-                        {v != null ? v.toFixed(1) : '—'}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Actividades sin nota: lo que le falta a este estudiante. */}
-            {(() => {
-              const missing = orderedActivities.filter((act) => !student.grades[act.id]);
-              if (missing.length === 0) {
-                return <p className="text-micro text-emerald-600 dark:text-emerald-400 mt-3">Todo calificado</p>;
-              }
-              return (
-                <p className="text-micro text-subtle mt-3">
-                  Sin nota: <span className="text-amber-600 dark:text-amber-400">{missing.length}</span>
-                  {' · '}{missing.slice(0, 3).map((a) => a.title).join(', ')}
-                  {missing.length > 3 && ` y ${missing.length - 3} más`}
-                </p>
-              );
-            })()}
-          </div>
+          <MobileStudentCard
+            key={student.id}
+            student={student}
+            corteGroups={corteGroups}
+            unassignedActivities={unassignedActivities}
+            hasCortes={hasCortes}
+            gradedPct={gradedPercent(student, data.activities)}
+          />
         ))}
       </div>
 
@@ -377,6 +330,151 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
         </span>
       </div>
       </div>
+    </div>
+  );
+}
+
+type StudentRow = CourseGradeSummary['students'][number];
+type CorteGroup = CourseGradeSummary['cortes'][number] & {
+  activities: CourseGradeSummary['activities'];
+};
+
+/**
+ * Tarjeta de estudiante para móvil.
+ *
+ * Muestra lo MISMO que la tabla de escritorio, no un resumen: la definitiva,
+ * la nota de cada corte y —al desplegar— la nota de cada actividad con su
+ * peso. Una primera versión enseñaba solo los cortes, y eso quitaba el
+ * desglose en vez de adaptarlo: en móvil no había forma de saber de dónde
+ * salía la nota.
+ */
+function MobileStudentCard({
+  student, corteGroups, unassignedActivities, hasCortes, gradedPct,
+}: {
+  student: StudentRow;
+  corteGroups: CorteGroup[];
+  unassignedActivities: CourseGradeSummary['activities'];
+  hasCortes: boolean;
+  gradedPct: number;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const blocks = hasCortes
+    ? corteGroups.map((g) => ({
+        id: g.id, name: g.name, weight: g.weight,
+        score: student.corteScores[g.id] ?? null,
+        activities: g.activities,
+      }))
+    : [];
+  const loose = hasCortes ? unassignedActivities : unassignedActivities.concat();
+
+  return (
+    <div className="rounded-xl border border-surface-border bg-surface overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full text-left p-4 flex items-start justify-between gap-3
+                   hover:bg-surface-hover transition-colors duration-[var(--dur-fast)] cursor-pointer"
+      >
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground leading-snug">
+            {student.lastName}, {student.firstName}
+          </p>
+          <p className="text-micro text-subtle mt-0.5">{student.email}</p>
+        </div>
+        <div className="text-right shrink-0 flex items-center gap-2">
+          <div>
+            {/* `?? 0` pintaba de rojo a quien no tiene ninguna nota:
+                "sin datos" no es lo mismo que "va perdiendo". */}
+            <p className={`text-2xl font-bold tabular-nums leading-none ${gradeText(student.finalScore)}`}>
+              {formatScore(student.finalScore)}
+            </p>
+            <p className="text-micro text-faint mt-0.5">
+              {student.finalScore === null ? 'sin nota'
+                : student.isPartial ? `${gradedPct}% calificado` : 'definitiva'}
+            </p>
+          </div>
+          <ChevronDown className={`w-4 h-4 text-faint shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        </div>
+      </button>
+
+      {/* Resumen por corte, siempre visible. */}
+      {hasCortes && (
+        <div className="grid gap-2 px-4 pb-4" style={{ gridTemplateColumns: `repeat(${blocks.length}, minmax(0,1fr))` }}>
+          {blocks.map((b) => (
+            <div key={b.id} className="rounded-lg border border-surface-border bg-surface-sunken p-2">
+              <p className="text-micro text-subtle truncate">{b.name} · {b.weight}%</p>
+              <p className={`text-sm font-semibold tabular-nums ${b.score != null ? scoreColorClass(b.score) : 'text-faint'}`}>
+                {b.score != null ? b.score.toFixed(1) : '—'}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Desglose completo: la nota de cada actividad, igual que la tabla. */}
+      {open && (
+        <div className="border-t border-surface-border">
+          {(hasCortes ? blocks : [{ id: 'all', name: 'Actividades', weight: 100, score: null, activities: loose }])
+            .map((b) => (
+              <div key={b.id}>
+                <p className="px-4 py-2 text-micro font-semibold uppercase tracking-wider text-subtle bg-surface-sunken">
+                  {b.name}
+                </p>
+                {b.activities.length === 0 ? (
+                  <p className="px-4 py-3 text-micro text-faint italic">Sin actividades</p>
+                ) : b.activities.map((act) => {
+                  const g = student.grades[act.id];
+                  const n = g ? (g.score / g.maxScore) * 5 : null;
+                  return (
+                    <div key={act.id} className="flex items-center gap-3 px-4 py-2.5 border-t border-surface-border">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-foreground/90 leading-snug">{act.title}</p>
+                        <p className="text-micro text-subtle mt-0.5">
+                          {act.weight}% del corte
+                          {g && !g.isPublished && (
+                            <span className="text-amber-600 dark:text-amber-400"> · sin publicar</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        {g ? (
+                          <>
+                            <p className={`text-sm font-semibold tabular-nums ${scoreColorClass(n as number)}`}>
+                              {(n as number).toFixed(1)}
+                            </p>
+                            <p className="text-micro text-faint">{g.score}/{g.maxScore}</p>
+                          </>
+                        ) : (
+                          <span className="text-micro text-faint">Sin nota</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          {hasCortes && loose.length > 0 && (
+            <div>
+              <p className="px-4 py-2 text-micro font-semibold uppercase tracking-wider text-subtle bg-surface-sunken">
+                Otras actividades
+              </p>
+              {loose.map((act) => {
+                const g = student.grades[act.id];
+                const n = g ? (g.score / g.maxScore) * 5 : null;
+                return (
+                  <div key={act.id} className="flex items-center gap-3 px-4 py-2.5 border-t border-surface-border">
+                    <p className="text-xs text-foreground/90 flex-1 min-w-0">{act.title}</p>
+                    <span className={`text-sm font-semibold tabular-nums shrink-0 ${n != null ? scoreColorClass(n) : 'text-faint'}`}>
+                      {n != null ? n.toFixed(1) : '—'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
