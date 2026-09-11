@@ -2,6 +2,18 @@
 
 import React from 'react';
 
+/**
+ * Button — el botón del sitio.
+ *
+ * Cambios de comportamiento frente a la versión anterior:
+ * - Ya no usa `transition-all`: solo transiciona las propiedades que cambian.
+ * - Responde al presionar (`active:scale-[0.97]`) y esa respuesta es más rápida
+ *   que el hover; un botón que no acusa el clic se siente muerto.
+ * - `hover:` en Tailwind v4 ya va con gate de puntero fino, así que en móvil
+ *   no se queda pegado.
+ * - Respeta prefers-reduced-motion.
+ */
+
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
@@ -43,10 +55,13 @@ export default function Button({
       disabled={disabled || loading}
       className={`
         inline-flex items-center justify-center font-medium
-        transition-all duration-150 ease-out
+        transition-[color,background-color,border-color,transform,opacity]
+        duration-[var(--dur-fast)] ease-[var(--ease-standard)]
+        active:scale-[0.97] active:duration-[var(--dur-press)]
+        motion-reduce:transition-none motion-reduce:active:scale-100
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
         focus-visible:ring-offset-white dark:focus-visible:ring-offset-black
-        disabled:opacity-50 disabled:cursor-not-allowed
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
         cursor-pointer
         ${variantClasses[variant]}
         ${sizeClasses[size]}

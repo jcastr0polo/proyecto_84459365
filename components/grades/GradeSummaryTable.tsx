@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { CourseGradeSummary } from '@/lib/types';
+import { gradeText } from '@/lib/gradeScale';
 
 interface GradeSummaryTableProps {
   data: CourseGradeSummary;
@@ -73,7 +74,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
                   className="px-3 py-2 text-xs font-bold text-center text-cyan-400 border-r-2 border-cyan-500/20 bg-cyan-500/[0.03]"
                 >
                   {group.name}
-                  <span className="ml-1 text-[10px] font-normal text-subtle">({group.weight}%)</span>
+                  <span className="ml-1 text-micro font-normal text-subtle">({group.weight}%)</span>
                 </th>
               ))}
               {hasUnassigned && (
@@ -140,7 +141,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
               className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-cyan-400 text-center min-w-[100px] bg-cyan-500/[0.04]"
             >
               Definitiva
-              <span className="block text-[10px] font-normal text-subtle">{totalWeight}%</span>
+              <span className="block text-micro font-normal text-subtle">{totalWeight}%</span>
             </th>
           </tr>
           {/* Weights row */}
@@ -152,12 +153,12 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
                     {group.activities.map((act) => (
                       <th
                         key={`w-${act.id}`}
-                        className="px-3 py-1.5 text-[10px] text-center text-subtle border-r border-foreground/[0.06]"
+                        className="px-3 py-1.5 text-micro text-center text-subtle border-r border-foreground/[0.06]"
                       >
                         {act.weight}%
                       </th>
                     ))}
-                    <th className="px-3 py-1.5 text-[10px] text-center text-cyan-300/50 border-r-2 border-cyan-500/20 bg-cyan-500/[0.03]">
+                    <th className="px-3 py-1.5 text-micro text-center text-cyan-300/50 border-r-2 border-cyan-500/20 bg-cyan-500/[0.03]">
                       /5.0
                     </th>
                   </React.Fragment>
@@ -165,7 +166,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
                 {unassignedActivities.map((act) => (
                   <th
                     key={`w-${act.id}`}
-                    className="px-3 py-1.5 text-[10px] text-center text-subtle border-r border-foreground/[0.06]"
+                    className="px-3 py-1.5 text-micro text-center text-subtle border-r border-foreground/[0.06]"
                   >
                     {act.weight}%
                   </th>
@@ -175,7 +176,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
               activities.map((act) => (
                 <th
                   key={`w-${act.id}`}
-                  className="px-3 py-1.5 text-[10px] text-center text-subtle border-r border-foreground/[0.06]"
+                  className="px-3 py-1.5 text-micro text-center text-subtle border-r border-foreground/[0.06]"
                 >
                   {act.weight}%
                 </th>
@@ -188,7 +189,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
             <tr key={student.id} className="hover:bg-foreground/[0.02] transition-colors">
               <td className="px-4 py-2.5 border-r border-foreground/[0.06] sticky left-0 bg-base z-10">
                 <p className="text-sm text-foreground/90 font-medium">{student.lastName}, {student.firstName}</p>
-                <p className="text-[10px] text-subtle">{student.documentNumber}</p>
+                <p className="text-micro text-subtle">{student.documentNumber}</p>
               </td>
 
               {hasCortes ? (
@@ -226,9 +227,9 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
                       {student.finalScore.toFixed(1)}
                     </span>
                     {student.isPartial && (
-                      <span className="text-[10px] text-amber-400 ml-0.5" title="Nota parcial">*</span>
+                      <span className="text-micro text-amber-400 ml-0.5" title="Nota parcial">*</span>
                     )}
-                    <p className="text-[10px] mt-0.5">
+                    <p className="text-micro mt-0.5">
                       {student.isApproved ? (
                         <span className="text-emerald-600 dark:text-emerald-400">Aprobado</span>
                       ) : (
@@ -294,7 +295,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
         </tbody>
       </table>
 
-      <div className="px-4 py-2 border-t border-foreground/[0.04] text-[10px] text-faint flex gap-4">
+      <div className="px-4 py-2 border-t border-foreground/[0.04] text-micro text-faint flex gap-4">
         <span>● = No publicada</span>
         <span>* = Nota parcial (faltan actividades)</span>
       </div>
@@ -312,8 +313,8 @@ function GradeCell({ grade, maxScore }: { grade: { score: number; maxScore: numb
   return (
     <td className={`px-3 py-2.5 text-center border-r border-foreground/[0.06] ${scoreColorClass(normalized)}`} title={grade.feedback ?? undefined}>
       <span className="text-sm font-medium tabular-nums">{grade.score.toFixed(1)}</span>
-      <span className="text-[10px] text-faint ml-0.5">/{maxScore}</span>
-      {!grade.isPublished && <span className="ml-1 text-[10px] text-amber-400" title="No publicada">●</span>}
+      <span className="text-micro text-faint ml-0.5">/{maxScore}</span>
+      {!grade.isPublished && <span className="ml-1 text-micro text-amber-400" title="No publicada">●</span>}
     </td>
   );
 }
@@ -331,7 +332,5 @@ function AvgCell({ value }: { value: number | null }) {
 }
 
 function scoreColorClass(score: number): string {
-  if (score >= 4.0) return 'text-emerald-600 dark:text-emerald-400';
-  if (score >= 3.0) return 'text-amber-600 dark:text-amber-400';
-  return 'text-red-600 dark:text-red-400';
+  return gradeText(score);
 }

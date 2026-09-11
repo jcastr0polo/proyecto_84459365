@@ -11,6 +11,7 @@ import {
   Paperclip, Link as LinkIcon, Eye, Download, GitBranch, Palette,
   Plus, GraduationCap,
 } from 'lucide-react';
+import { gradeText, gradeChip, formatScore } from '@/lib/gradeScale';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -286,7 +287,7 @@ export default function AdminStudentDetailPage() {
           {
             label: 'Promedio',
             value: semesterAvg === null ? '—' : semesterAvg.toFixed(1),
-            color: semesterAvg === null ? 'text-faint' : semesterAvg >= 3 ? 'text-emerald-400' : 'text-red-400',
+            color: gradeText(semesterAvg),
             icon: GraduationCap,
             title: semesterAvg === null
               ? 'Aún no hay cursos con nota'
@@ -302,7 +303,7 @@ export default function AdminStudentDetailPage() {
             className="p-3 rounded-xl border border-foreground/10 bg-foreground/5 text-center">
             <stat.icon className={`w-4 h-4 mx-auto mb-1 ${stat.color}`} />
             <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-[10px] text-faint uppercase tracking-wider">{stat.label}</p>
+            <p className="text-micro text-faint uppercase tracking-wider">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -423,7 +424,7 @@ function CourseSection({
             <span className="text-emerald-400">{course.submitted} entregadas</span>
             {course.pending > 0 && <span className="text-amber-400">{course.pending} pendientes</span>}
             {course.grades?.finalGrade !== null && course.grades?.finalGrade !== undefined && (
-              <span className={`font-medium ${course.grades.finalGrade >= 3 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <span className={`font-medium ${gradeText(course.grades.finalGrade)}`}>
                 Nota: {course.grades.finalGrade.toFixed(1)}
                 {course.grades.isPartial && (
                   <span className="text-faint font-normal"> (parcial)</span>
@@ -438,17 +439,11 @@ function CourseSection({
                 <span
                   key={corte.id}
                   title={`${corte.name} — ${corte.weight}% de la definitiva${corte.score === null ? ' · sin calificar' : ''}`}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium border
-                    ${corte.score === null
-                      ? 'border-foreground/10 bg-foreground/5 text-faint'
-                      : corte.score >= 3
-                        ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-                        : 'border-red-500/20 bg-red-500/10 text-red-400'
-                    }`}
+                  className={`px-1.5 py-0.5 rounded text-micro font-medium border ${gradeChip(corte.score)}`}
                 >
                   {corte.name} <span className="opacity-60">{corte.weight}%</span>
                   {' · '}
-                  {corte.score === null ? '—' : corte.score.toFixed(1)}
+                  {formatScore(corte.score)}
                 </span>
               ))}
             </div>
@@ -462,7 +457,7 @@ function CourseSection({
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="text-[10px] text-faint text-center mt-0.5">{progress}%</p>
+          <p className="text-micro text-faint text-center mt-0.5">{progress}%</p>
         </div>
       </button>
 
@@ -472,11 +467,11 @@ function CourseSection({
           {/* Nav to admin course pages */}
           <div className="flex flex-wrap gap-3">
             <Link href={`/admin/courses/${course.id}/activities`}
-              className="text-[11px] text-cyan-400 hover:underline flex items-center gap-1">
+              className="text-meta text-cyan-400 hover:underline flex items-center gap-1">
               <ExternalLink className="w-3 h-3" /> Ver actividades del curso
             </Link>
             <Link href={`/admin/courses/${course.id}/grades`}
-              className="text-[11px] text-cyan-400 hover:underline flex items-center gap-1">
+              className="text-meta text-cyan-400 hover:underline flex items-center gap-1">
               <ExternalLink className="w-3 h-3" /> Ver notas del curso
             </Link>
           </div>
@@ -510,7 +505,7 @@ function CourseSection({
                           <span className="text-sm text-foreground/80 truncate">{act.title}</span>
                           <Badge variant="neutral" size="sm">{TYPE_LABEL[act.type] ?? act.type}</Badge>
                         </div>
-                        <div className="flex items-center gap-3 mt-1 text-[11px] text-faint">
+                        <div className="flex items-center gap-3 mt-1 text-meta text-faint">
                           <span>Límite: {formatDate(act.dueDate)}</span>
                           <span>Peso: {act.weight}%</span>
                           {sub && sub.attachments.length > 0 && (
@@ -524,7 +519,7 @@ function CourseSection({
                       <div className="flex items-center gap-3 shrink-0">
                         <SubmissionBadge submission={sub} />
                         {grade?.published && grade.score !== null ? (
-                          <span className={`text-xs font-semibold ${grade.score >= 3 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          <span className={`text-xs font-semibold ${gradeText(grade.score)}`}>
                             {grade.score.toFixed(1)}
                           </span>
                         ) : (
@@ -556,14 +551,14 @@ function CourseSection({
 
                         {sub.content && (
                           <div className="p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]">
-                            <p className="text-[11px] text-faint uppercase tracking-wider mb-1.5">Comentario</p>
+                            <p className="text-meta text-faint uppercase tracking-wider mb-1.5">Comentario</p>
                             <p className="text-sm text-muted whitespace-pre-wrap">{sub.content}</p>
                           </div>
                         )}
 
                         {sub.attachments.length > 0 && (
                           <div>
-                            <p className="text-[11px] text-faint uppercase tracking-wider mb-2">Archivos ({sub.attachments.length})</p>
+                            <p className="text-meta text-faint uppercase tracking-wider mb-2">Archivos ({sub.attachments.length})</p>
                             <div className="space-y-1.5">
                               {sub.attachments.map((att) => {
                                 const canPreview = /\.(md|txt)$/i.test(att.fileName);
@@ -577,7 +572,7 @@ function CourseSection({
                                     <Paperclip className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                                     <div className="flex-1 min-w-0">
                                       <p className="text-xs text-foreground/80 truncate">{att.fileName}</p>
-                                      <p className="text-[10px] text-faint">{formatFileSize(att.fileSize)}</p>
+                                      <p className="text-micro text-faint">{formatFileSize(att.fileSize)}</p>
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
                                       {canPreview && (
@@ -599,7 +594,7 @@ function CourseSection({
 
                         {sub.links.length > 0 && (
                           <div>
-                            <p className="text-[11px] text-faint uppercase tracking-wider mb-2">Enlaces ({sub.links.length})</p>
+                            <p className="text-meta text-faint uppercase tracking-wider mb-2">Enlaces ({sub.links.length})</p>
                             <div className="flex flex-wrap gap-2">
                               {sub.links.map((link, i) => (
                                 <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"

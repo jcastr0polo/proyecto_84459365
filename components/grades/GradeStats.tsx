@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { gradeText } from '@/lib/gradeScale';
 
 interface StatsData {
   average: number;
@@ -31,10 +32,10 @@ export default function GradeStats({ stats, className = '' }: GradeStatsProps) {
 
   return (
     <div className={`grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 ${className}`}>
-      <StatBox label="Promedio" value={stats.average.toFixed(1)} color={scoreColor(stats.average)} />
-      <StatBox label="Mediana" value={stats.median.toFixed(1)} color={scoreColor(stats.median)} />
+      <StatBox label="Promedio" value={stats.average.toFixed(1)} color={gradeText(stats.average)} />
+      <StatBox label="Mediana" value={stats.median.toFixed(1)} color={gradeText(stats.median)} />
       <StatBox label="Más alta" value={stats.highest.toFixed(1)} color="text-emerald-600 dark:text-emerald-400" />
-      <StatBox label="Más baja" value={stats.lowest.toFixed(1)} color={scoreColor(stats.lowest)} />
+      <StatBox label="Más baja" value={stats.lowest.toFixed(1)} color={gradeText(stats.lowest)} />
       <StatBox label="Aprobados" value={`${approvedPercent}%`} sub={`${stats.approvedCount}/${stats.totalStudents}`} color="text-emerald-600 dark:text-emerald-400" />
       <StatBox label="Reprobados" value={`${failedPercent}%`} sub={`${stats.failedCount}/${stats.totalStudents}`} color="text-red-600 dark:text-red-400" />
       <StatBox label="Sin nota" value={String(stats.pendingCount)} color="text-muted" />
@@ -45,18 +46,13 @@ export default function GradeStats({ stats, className = '' }: GradeStatsProps) {
 function StatBox({ label, value, sub, color }: { label: string; value: string; sub?: string; color: string }) {
   return (
     <div className="rounded-xl border border-foreground/[0.08] bg-foreground/[0.03] p-3 text-center">
-      <p className="text-[10px] uppercase tracking-wider text-subtle mb-1">{label}</p>
+      <p className="text-micro uppercase tracking-wider text-subtle mb-1">{label}</p>
       <p className={`text-lg font-bold ${color}`}>{value}</p>
-      {sub && <p className="text-[10px] text-subtle mt-0.5">{sub}</p>}
+      {sub && <p className="text-micro text-subtle mt-0.5">{sub}</p>}
     </div>
   );
 }
 
-function scoreColor(score: number): string {
-  if (score >= 4.0) return 'text-emerald-600 dark:text-emerald-400';
-  if (score >= 3.0) return 'text-amber-600 dark:text-amber-400';
-  return 'text-red-600 dark:text-red-400';
-}
 
 /** Calculate stats from an array of final scores */
 export function calculateStats(

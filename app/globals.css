@@ -12,6 +12,13 @@
   --muted-fg: #475569;      /* slate-600 — readable secondary text */
   --subtle-fg: #64748b;     /* slate-500 — labels, hints */
   --faint-fg: #94a3b8;      /* slate-400 — decorative */
+  /* Superficies — una sola definición de "tarjeta" para todo el sitio */
+  --surface-bg: #ffffff;
+  --surface-border: #e2e8f0;          /* slate-200 */
+  --surface-bg-hover: #f8fafc;
+  --surface-border-hover: #cbd5e1;    /* slate-300 */
+  --surface-sunken: #f1f5f9;          /* slate-100 — fondos hundidos */
+
   --scrollbar-thumb: rgba(0,0,0,0.12);
   --scrollbar-hover: rgba(0,0,0,0.22);
   --selection-bg: rgba(6,182,212,0.15);
@@ -25,6 +32,12 @@
   --muted-fg: #94a3b8;      /* slate-400 — readable secondary text */
   --subtle-fg: #64748b;     /* slate-500 — labels, hints */
   --faint-fg: #475569;      /* slate-600 — decorative */
+  --surface-bg: rgba(255,255,255,0.03);
+  --surface-border: rgba(255,255,255,0.08);
+  --surface-bg-hover: rgba(255,255,255,0.055);
+  --surface-border-hover: rgba(255,255,255,0.14);
+  --surface-sunken: rgba(255,255,255,0.02);
+
   --scrollbar-thumb: rgba(255,255,255,0.10);
   --scrollbar-hover: rgba(255,255,255,0.20);
   --selection-bg: rgba(6,182,212,0.20);
@@ -75,8 +88,50 @@
   --color-muted: var(--muted-fg);
   --color-subtle: var(--subtle-fg);
   --color-faint: var(--faint-fg);
+  --color-surface: var(--surface-bg);
+  --color-surface-border: var(--surface-border);
+  --color-surface-hover: var(--surface-bg-hover);
+  --color-surface-border-hover: var(--surface-border-hover);
+  --color-surface-sunken: var(--surface-sunken);
   --font-playfair: var(--font-playfair);
   --font-poppins: var(--font-poppins);
+}
+
+/*
+ * ─── Movimiento ───
+ * Curvas y duraciones únicas. Regla: nada de UI por encima de 300ms,
+ * y las entradas/salidas usan ease-out (ease-in retrasa justo el momento
+ * que el usuario está mirando).
+ */
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-press: 100ms;   /* respuesta al presionar */
+  --dur-fast: 150ms;    /* hover, color */
+  --dur-base: 200ms;    /* entradas y salidas normales */
+  --dur-slow: 280ms;    /* tope para UI */
+}
+
+/*
+ * ─── Escala tipográfica ───
+ * Reemplaza los 237 usos sueltos de text-[10px] / text-[11px].
+ */
+@utility text-micro { font-size: 0.625rem; line-height: 1rem; }   /* 10px */
+@utility text-meta  { font-size: 0.6875rem; line-height: 1rem; }  /* 11px */
+
+/*
+ * ─── Respeto por prefers-reduced-motion ───
+ * Se reduce, no se elimina: se conserva opacidad y color, se quita el
+ * desplazamiento. Cubre también las animaciones que no pasan por React.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .scroll-reveal { opacity: 1; transform: none; }
 }
 
 /* Base */

@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import type { Course, Activity, Submission, StudentGradeSummary } from '@/lib/types';
+import { gradeText } from '@/lib/gradeScale';
 
 type DeliveryStatus = 'delivered' | 'pending' | 'overdue' | 'graded' | 'returned';
 
@@ -53,9 +54,7 @@ const categoryBadge: Record<string, { variant: 'programming' | 'design' | 'manag
 };
 
 function getScoreColor(score: number): string {
-  if (score >= 4.0) return 'text-emerald-400';
-  if (score >= 3.0) return 'text-amber-400';
-  return 'text-red-400';
+  return gradeText(score);
 }
 
 /**
@@ -173,7 +172,7 @@ export default function StudentCourseDashboardPage() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Badge variant={badge.variant} size="sm">{badge.label}</Badge>
-            <span className="text-[11px] text-faint font-mono">{course.code}</span>
+            <span className="text-meta text-faint font-mono">{course.code}</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
             {course.name}
@@ -309,7 +308,7 @@ export default function StudentCourseDashboardPage() {
                       </h3>
 
                       {/* Meta row */}
-                      <div className="flex items-center gap-3 mt-1.5 text-[11px] text-subtle">
+                      <div className="flex items-center gap-3 mt-1.5 text-meta text-subtle">
                         <span><Calendar className="w-3 h-3 inline" /> {formatDate(activity.dueDate)}</span>
                         <span>{activity.weight}%</span>
                         <span>Máx: {activity.maxScore}</span>

@@ -7,6 +7,7 @@ import { BookOpen, ClipboardList, CheckCircle2, BarChart3, Inbox, Bell, PartyPop
 import { formatDateShort, parseDateColombia, parseDateTimeColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import type { Course, Enrollment, Activity, Submission, Semester, Grade, Quiz } from '@/lib/types';
+import { gradeText, gradeSurface, normalize } from '@/lib/gradeScale';
 
 /* ─── Types ─── */
 interface CourseWithMeta {
@@ -69,17 +70,11 @@ const categoryBadge: Record<string, { variant: 'programming' | 'design' | 'manag
 };
 
 function getScoreColor(score: number, maxScore: number): string {
-  const normalized = maxScore > 0 ? (score / maxScore) * 5 : 0;
-  if (normalized >= 4.0) return 'text-emerald-400';
-  if (normalized >= 3.0) return 'text-amber-400';
-  return 'text-red-400';
+  return gradeText(normalize(score, maxScore));
 }
 
 function getScoreBg(score: number, maxScore: number): string {
-  const normalized = maxScore > 0 ? (score / maxScore) * 5 : 0;
-  if (normalized >= 4.0) return 'bg-emerald-500/10 border-emerald-500/20';
-  if (normalized >= 3.0) return 'bg-amber-500/10 border-amber-500/20';
-  return 'bg-red-500/10 border-red-500/20';
+  return gradeSurface(normalize(score, maxScore));
 }
 
 
@@ -371,17 +366,17 @@ export default function StudentDashboardPage() {
                   <div className="flex items-start justify-between mb-3">
                     <Badge variant={badge.variant} size="sm">{badge.label}</Badge>
                     {pending > 0 && (
-                      <span className="flex items-center gap-1 text-[11px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                      <span className="flex items-center gap-1 text-meta text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
                         {pending} pendiente{pending > 1 ? 's' : ''}
                       </span>
                     )}
                   </div>
                   <h3 className="text-sm font-semibold text-foreground/90 mb-1 line-clamp-1">{cd.course.name}</h3>
-                  <p className="text-[11px] text-subtle mb-3 font-mono">{cd.course.code}</p>
+                  <p className="text-meta text-subtle mb-3 font-mono">{cd.course.code}</p>
                   {/* Schedule */}
                   <div className="flex flex-wrap gap-2">
                     {cd.course.schedule.map((s, si) => (
-                      <span key={si} className="text-[11px] text-subtle bg-foreground/[0.04] px-2 py-0.5 rounded">
+                      <span key={si} className="text-meta text-subtle bg-foreground/[0.04] px-2 py-0.5 rounded">
                         {DAY_SHORT[s.dayOfWeek] ?? s.dayOfWeek} {s.startTime}–{s.endTime}
                         {s.room && ` · ${s.room}`}
                       </span>
@@ -424,7 +419,7 @@ export default function StudentDashboardPage() {
                   </div>
                 </div>
                 <h3 className="text-sm font-semibold text-foreground/90 mb-1 line-clamp-1">{aq.quiz.title}</h3>
-                <p className="text-[11px] text-subtle">{aq.courseName}</p>
+                <p className="text-meta text-subtle">{aq.courseName}</p>
                 <div className="flex items-center gap-3 mt-2 text-xs text-faint">
                   <span>{aq.quiz.questions.length} preguntas</span>
                   {aq.quiz.maxAttempts > 0 && <span>{aq.quiz.maxAttempts} intento{aq.quiz.maxAttempts !== 1 ? 's' : ''}</span>}
@@ -535,7 +530,7 @@ export default function StudentDashboardPage() {
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-foreground/90 line-clamp-1">{g.activityTitle}</p>
-                    <p className="text-[11px] text-subtle mt-0.5">{g.courseName}</p>
+                    <p className="text-meta text-subtle mt-0.5">{g.courseName}</p>
                   </div>
                   <div className="text-right shrink-0 ml-3">
                     <p className={`text-lg font-bold ${getScoreColor(g.score, g.maxScore)}`}>

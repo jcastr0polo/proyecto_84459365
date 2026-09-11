@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import GradeCard from '@/components/grades/GradeCard';
 import type { StudentGradeSummary } from '@/lib/types';
+import { gradeText, gradeBar } from '@/lib/gradeScale';
 
 /**
  * StudentGradesView — Vista de notas del estudiante (presentacional, sin fetch)
@@ -67,17 +68,17 @@ export default function StudentGradesView({ data }: { data: StudentGradeSummary 
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-bold text-foreground">{group.name}</h2>
-                  <span className="text-[11px] text-subtle bg-foreground/[0.05] px-2 py-0.5 rounded-full">
+                  <span className="text-meta text-subtle bg-foreground/[0.05] px-2 py-0.5 rounded-full">
                     Peso: {group.weight}%
                   </span>
                 </div>
                 {group.score !== null && (
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-subtle">Nota del corte:</span>
-                    <span className={`text-lg font-bold tabular-nums ${definitiveColor(group.score)}`}>
+                    <span className="text-meta text-subtle">Nota del corte:</span>
+                    <span className={`text-lg font-bold tabular-nums ${gradeText(group.score)}`}>
                       {group.score.toFixed(1)}
                     </span>
-                    <span className="text-[10px] text-subtle">/ 5.0</span>
+                    <span className="text-micro text-subtle">/ 5.0</span>
                   </div>
                 )}
               </div>
@@ -104,10 +105,10 @@ export default function StudentGradesView({ data }: { data: StudentGradeSummary 
                       initial={{ width: 0 }}
                       animate={{ width: `${(group.score / 5) * 100}%` }}
                       transition={{ delay: gi * 0.1 + 0.3, duration: 0.5, ease: 'easeOut' }}
-                      className={`absolute inset-y-0 left-0 rounded-full ${barColorFn(group.score)}`}
+                      className={`absolute inset-y-0 left-0 rounded-full ${gradeBar(group.score)}`}
                     />
                   </div>
-                  <span className={`text-sm font-bold tabular-nums flex-shrink-0 ${definitiveColor(group.score)}`}>
+                  <span className={`text-sm font-bold tabular-nums flex-shrink-0 ${gradeText(group.score)}`}>
                     {group.score.toFixed(1)}
                   </span>
                 </div>
@@ -149,7 +150,7 @@ export default function StudentGradesView({ data }: { data: StudentGradeSummary 
         <p className="text-xs uppercase tracking-wider text-subtle mb-2">Nota Definitiva</p>
         {data.finalScore !== null ? (
           <>
-            <p className={`text-5xl font-bold tabular-nums ${definitiveColor(data.finalScore)}`}>
+            <p className={`text-5xl font-bold tabular-nums ${gradeText(data.finalScore)}`}>
               {data.finalScore.toFixed(1)}
             </p>
             <p className="text-sm text-subtle mt-1">/ 5.0</p>
@@ -176,14 +177,4 @@ export default function StudentGradesView({ data }: { data: StudentGradeSummary 
   );
 }
 
-function definitiveColor(score: number): string {
-  if (score >= 4.0) return 'text-emerald-600 dark:text-emerald-400';
-  if (score >= 3.0) return 'text-amber-600 dark:text-amber-400';
-  return 'text-red-600 dark:text-red-400';
-}
 
-function barColorFn(score: number): string {
-  if (score >= 4.0) return 'bg-emerald-500';
-  if (score >= 3.0) return 'bg-amber-500';
-  return 'bg-red-500';
-}
