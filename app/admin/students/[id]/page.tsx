@@ -9,7 +9,7 @@ import {
   ArrowLeft, BookOpen, FileText, CheckCircle2, Clock,
   AlertCircle, ExternalLink, FolderGit2, ChevronDown, ChevronRight,
   Paperclip, Link as LinkIcon, Eye, Download, GitBranch, Palette,
-  Plus,
+  Plus, GraduationCap,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
@@ -77,7 +77,9 @@ interface CourseDetail {
   project: ProjectInfo | null;
   grades: {
     finalGrade: number | null;
-    activityGrades: { activityId: string; score: number | null; published: boolean }[];
+    isPartial: boolean;
+    cortes: { id: string; name: string; weight: number; order: number; score: number | null }[];
+    activityGrades: { activityId: string; corteId: string | null; score: number | null; published: boolean }[];
   } | null;
 }
 
@@ -223,6 +225,13 @@ export default function AdminStudentDetailPage() {
   const totalSubmitted = courses.reduce((a, c) => a + c.submitted, 0);
   const totalPending = courses.reduce((a, c) => a + c.pending, 0);
 
+  // Promedio del semestre: media simple de los cursos que ya tienen definitiva.
+  // Los cursos sin ninguna nota no cuentan, para no arrastrar el promedio hacia abajo.
+  const gradedCourses = courses.filter((c) => c.grades?.finalGrade !== null && c.grades?.finalGrade !== undefined);
+  const semesterAvg = gradedCourses.length > 0
+    ? gradedCourses.reduce((a, c) => a + (c.grades!.finalGrade as number), 0) / gradedCourses.length
+    : null;
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Back */}
@@ -272,15 +281,25 @@ export default function AdminStudentDetailPage() {
       </motion.div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
+          {
+            label: 'Promedio',
+            value: semesterAvg === null ? '—' : semesterAvg.toFixed(1),
+            color: semesterAvg === null ? 'text-faint' : semesterAvg >= 3 ? 'text-emerald-400' : 'text-red-400',
+            icon: GraduationCap,
+            title: semesterAvg === null
+              ? 'Aún no hay cursos con nota'
+              : `Promedio de ${gradedCourses.length} curso(s) con nota`,
+          },
           { label: 'Cursos', value: courses.length, color: 'text-cyan-400', icon: BookOpen },
           { label: 'Actividades', value: totalActivities, color: 'text-purple-400', icon: FileText },
           { label: 'Entregadas', value: totalSubmitted, color: 'text-emerald-400', icon: CheckCircle2 },
           { label: 'Pendientes', value: totalPending, color: 'text-amber-400', icon: Clock },
           { label: 'Proyectos', value: courses.filter((c) => c.project).length, color: 'text-blue-400', icon: FolderGit2 },
         ].map((stat) => (
-          <div key={stat.label} className="p-3 rounded-xl border border-foreground/10 bg-foreground/5 text-center">
+          <div key={stat.label} title={'title' in stat ? stat.title as string : undefined}
+            className="p-3 rounded-xl border border-foreground/10 bg-foreground/5 text-center">
             <stat.icon className={`w-4 h-4 mx-auto mb-1 ${stat.color}`} />
             <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
             <p className="text-[10px] text-faint uppercase tracking-wider">{stat.label}</p>
@@ -406,9 +425,34 @@ function CourseSection({
             {course.grades?.finalGrade !== null && course.grades?.finalGrade !== undefined && (
               <span className={`font-medium ${course.grades.finalGrade >= 3 ? 'text-emerald-400' : 'text-red-400'}`}>
                 Nota: {course.grades.finalGrade.toFixed(1)}
+                {course.grades.isPartial && (
+                  <span className="text-faint font-normal"> (parcial)</span>
+                )}
               </span>
             )}
           </div>
+          {/* Avance por corte — visible sin expandir el curso */}
+          {course.grades && course.grades.cortes.length > 0 && (
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              {course.grades.cortes.map((corte) => (
+                <span
+                  key={corte.id}
+                  title={`${corte.name} — ${corte.weight}% de la definitiva${corte.score === null ? ' · sin calificar' : ''}`}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium border
+                    ${corte.score === null
+                      ? 'border-foreground/10 bg-foreground/5 text-faint'
+                      : corte.score >= 3
+                        ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                        : 'border-red-500/20 bg-red-500/10 text-red-400'
+                    }`}
+                >
+                  {corte.name} <span className="opacity-60">{corte.weight}%</span>
+                  {' · '}
+                  {corte.score === null ? '—' : corte.score.toFixed(1)}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         {/* Progress bar */}
         <div className="w-20 shrink-0">

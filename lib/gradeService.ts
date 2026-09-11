@@ -461,6 +461,69 @@ export async function publishGrades(activityId: string): Promise<{ published: nu
  * Acepta arrays pre-cargados para evitar lecturas adicionales a Blob.
  * Incluye actividades, parciales calificables y notas manuales.
  */
+/**
+ * calculateCorteScores — Nota por corte de un estudiante (pura, sin I/O)
+ *
+ * Nota del corte = promedio ponderado de sus ítems calificados, en escala 0.0–5.0.
+ * Solo pondera lo que ya tiene nota: un corte a medio calificar refleja lo cursado
+ * hasta ahora, no penaliza lo que aún no se ha calificado.
+ *
+ * El array `grades` debe venir ya filtrado por el llamador según a quién se le muestra:
+ * el estudiante solo ve notas publicadas (isPublished), el admin las ve todas.
+ *
+ * `activities`, `quizzes` y `manualItems` deben venir acotados al curso.
+ *
+ * @returns Record<corteId, nota 0.0–5.0 | null> — null si el corte no tiene nada calificado
+ */
+export function calculateCorteScores(
+  studentId: string,
+  cortes: Corte[],
+  activities: Activity[],
+  grades: Grade[],
+  quizzes: Quiz[],
+  attempts: QuizAttempt[],
+  manualItems: ManualGradeItem[],
+  manualGrades: ManualGrade[],
+): Record<string, number | null> {
+  const corteScores: Record<string, number | null> = {};
+
+  for (const corte of cortes) {
+    let sumWeighted = 0;
+    let sumWeights = 0;
+
+    for (const act of activities.filter((a) => a.corteId === corte.id)) {
+      const grade = grades.find((g) => g.activityId === act.id && g.studentId === studentId);
+      if (grade) {
+        sumWeighted += (grade.score / grade.maxScore) * act.weight;
+        sumWeights += act.weight;
+      }
+    }
+
+    for (const quiz of quizzes.filter((q) => q.corteId === corte.id)) {
+      const quizAttempts = attempts.filter((a) => a.quizId === quiz.id && a.studentId === studentId);
+      if (quizAttempts.length > 0) {
+        const best = quizAttempts.reduce((b, a) => a.percentage > b.percentage ? a : b);
+        sumWeighted += (best.percentage / 100) * quiz.weight!;
+        sumWeights += quiz.weight!;
+      }
+    }
+
+    for (const item of manualItems.filter((i) => i.corteId === corte.id)) {
+      const mg = manualGrades.find((g) => g.itemId === item.id && g.studentId === studentId);
+      if (mg) {
+        sumWeighted += (mg.score / mg.maxScore) * item.weight;
+        sumWeights += item.weight;
+      }
+    }
+
+    corteScores[corte.id] = sumWeights > 0
+      ? roundTo1Decimal((sumWeighted / sumWeights) * SCALE_MAX)
+      : null;
+  }
+
+  return corteScores;
+}
+
 export function calculateFinalGrade(
   studentId: string,
   courseId: string,
@@ -740,57 +803,11 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
     }
 
     // ── Per-corte score calculation ──
-    const corteScores: Record<string, number | null> = {};
-    for (const corte of courseCortes) {
-      const corteActivities = activities.filter((a) => a.corteId === corte.id);
-      const corteQuizzes = courseQuizzes.filter((q) => q.corteId === corte.id);
-      const corteManualItems = courseManualItems.filter((i) => i.corteId === corte.id);
-
-      let sumWeighted = 0;
-      let sumWeights = 0;
-
-      // Activities
-      for (const act of corteActivities) {
-        const grade = courseGrades.find(
-          (g) => g.activityId === act.id && g.studentId === student.id
-        );
-        if (grade) {
-          const normalized = grade.score / grade.maxScore;
-          sumWeighted += normalized * act.weight;
-          sumWeights += act.weight;
-        }
-      }
-
-      // Quizzes
-      for (const quiz of corteQuizzes) {
-        const attempts = allAttempts.filter(
-          (a) => a.quizId === quiz.id && a.studentId === student.id
-        );
-        if (attempts.length > 0) {
-          const best = attempts.reduce((b, a) => a.percentage > b.percentage ? a : b);
-          const qMax = quiz.maxScore ?? SCALE_MAX;
-          const normalized = (best.percentage / 100);
-          sumWeighted += normalized * quiz.weight!;
-          sumWeights += quiz.weight!;
-        }
-      }
-
-      // Manual items
-      for (const item of corteManualItems) {
-        const mg = allManualGrades.find(
-          (g) => g.itemId === item.id && g.studentId === student.id
-        );
-        if (mg) {
-          const normalized = mg.score / mg.maxScore;
-          sumWeighted += normalized * item.weight;
-          sumWeights += item.weight;
-        }
-      }
-
-      corteScores[corte.id] = sumWeights > 0
-        ? roundTo1Decimal((sumWeighted / sumWeights) * SCALE_MAX)
-        : null;
-    }
+    // Admin: courseGrades sin filtrar por isPublished (ve también lo no publicado)
+    const corteScores = calculateCorteScores(
+      student.id, courseCortes, activities, courseGrades,
+      courseQuizzes, allAttempts, courseManualItems, allManualGrades,
+    );
 
     // Definitiva (all sources, pure in-memory)
     const finalResult = calculateFinalGrade(
@@ -991,50 +1008,11 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
   // Merge all graded items
   const allDetails = [...activityDetails, ...quizDetails, ...manualDetails];
 
-  const corteScores: Record<string, number | null> = {};
-  for (const corte of courseCortes) {
-    const corteActs = activityDetails.filter((a) => a.corteId === corte.id);
-    const corteQuizzes = courseQuizzes.filter((q) => q.corteId === corte.id);
-    const corteManual = courseManualItems.filter((i) => i.corteId === corte.id);
-
-    let sumWeighted = 0;
-    let sumWeights = 0;
-
-    for (const act of corteActs) {
-      if (act.grade) {
-        const normalized = act.grade.score / act.grade.maxScore;
-        sumWeighted += normalized * act.weight;
-        sumWeights += act.weight;
-      }
-    }
-
-    for (const quiz of corteQuizzes) {
-      const attempts = allAttempts.filter(
-        (a) => a.quizId === quiz.id && a.studentId === studentId
-      );
-      if (attempts.length > 0) {
-        const best = attempts.reduce((b, a) => a.percentage > b.percentage ? a : b);
-        const normalized = best.percentage / 100;
-        sumWeighted += normalized * quiz.weight!;
-        sumWeights += quiz.weight!;
-      }
-    }
-
-    for (const item of corteManual) {
-      const mg = allManualGrades.find(
-        (g) => g.itemId === item.id && g.studentId === studentId
-      );
-      if (mg) {
-        const normalized = mg.score / mg.maxScore;
-        sumWeighted += normalized * item.weight;
-        sumWeights += item.weight;
-      }
-    }
-
-    corteScores[corte.id] = sumWeights > 0
-      ? roundTo1Decimal((sumWeighted / sumWeights) * SCALE_MAX)
-      : null;
-  }
+  // Estudiante: studentGrades ya viene filtrado a isPublished
+  const corteScores = calculateCorteScores(
+    studentId, courseCortes, activities, studentGrades,
+    courseQuizzes, allAttempts, courseManualItems, allManualGrades,
+  );
 
   // Definitiva (all sources)
   const finalResult = calculateFinalGrade(

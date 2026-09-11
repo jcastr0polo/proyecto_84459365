@@ -1,8 +1,9 @@
 /**
  * GET /api/students/[id]/detail — Detalle completo de un estudiante (admin)
  *
- * Agrega: perfil, cursos inscritos, actividades por curso, entregas, proyectos, notas
- * Optimizado: 6 lecturas paralelas a Blob, 0 por curso (todo en memoria)
+ * Agrega: perfil, cursos inscritos, actividades por curso, entregas, proyectos,
+ * notas por corte y definitiva
+ * Optimizado: 12 lecturas paralelas, 0 por curso (todo se calcula en memoria)
  */
 
 import { NextResponse } from 'next/server';
@@ -16,8 +17,13 @@ import {
   readSubmissionsFresh,
   readProjectsFresh,
   readGradesFresh,
+  readCortesFresh,
+  readQuizzesFresh,
+  readQuizAttemptsFresh,
+  readManualGradeItemsFresh,
+  readManualGradesFresh,
 } from '@/lib/dataService';
-import { calculateFinalGrade } from '@/lib/gradeService';
+import { calculateFinalGrade, calculateCorteScores } from '@/lib/gradeService';
 
 export async function GET(
   request: Request,
@@ -26,8 +32,11 @@ export async function GET(
   return withAuth(request, async () => {
     const { id } = await params;
 
-    // 6 parallel Blob reads — everything we need
-    const [allUsers, allEnrollments, allCourses, allActivities, allSubmissions, allProjects, allGrades] = await Promise.all([
+    // Lecturas en paralelo — todo lo necesario, 0 lecturas por curso
+    const [
+      allUsers, allEnrollments, allCourses, allActivities, allSubmissions, allProjects, allGrades,
+      allCortes, allQuizzes, allAttempts, allManualItems, allManualGrades,
+    ] = await Promise.all([
       readUsersFresh(),
       readEnrollmentsFresh(),
       readCoursesFresh(),
@@ -35,6 +44,11 @@ export async function GET(
       readSubmissionsFresh(),
       readProjectsFresh(),
       readGradesFresh(),
+      readCortesFresh(),
+      readQuizzesFresh(),
+      readQuizAttemptsFresh(),
+      readManualGradeItemsFresh(),
+      readManualGradesFresh(),
     ]);
 
     const student = allUsers.find((u) => u.id === id && u.role === 'student');
@@ -88,19 +102,47 @@ export async function GET(
         (p) => p.studentId === id && p.courseId === course.id
       );
 
-      // Grades — inline calculation, no extra Blob reads
+      // Cortes del curso, ordenados
+      const courseCortes = allCortes
+        .filter((c) => c.courseId === course.id)
+        .sort((a, b) => a.order - b.order);
+
+      // Ítems calificables del curso que no son actividades
+      const courseQuizzes = allQuizzes.filter(
+        (q) => q.courseId === course.id && q.type === 'graded' && q.weight && q.weight > 0
+      );
+      const courseManualItems = allManualItems.filter((i) => i.courseId === course.id);
+
+      // Grades — cálculo en memoria, sin lecturas extra.
+      // Admin: se incluyen notas no publicadas (a diferencia de la vista del estudiante).
       let grades = null;
-      const finalResult = calculateFinalGrade(id, course.id, allActivities, allGrades);
+      const finalResult = calculateFinalGrade(
+        id, course.id, allActivities, allGrades,
+        allQuizzes, allAttempts, allManualItems, allManualGrades,
+      );
       if (finalResult.totalWeight > 0) {
         const studentGrades = allGrades.filter(
           (g) => g.studentId === id && g.courseId === course.id
         );
+        const corteScores = calculateCorteScores(
+          id, courseCortes, activities, studentGrades,
+          courseQuizzes, allAttempts, courseManualItems, allManualGrades,
+        );
         grades = {
           finalGrade: finalResult.finalScore,
+          isPartial: finalResult.isPartial,
+          cortes: courseCortes.map((c) => ({
+            id: c.id,
+            name: c.name,
+            weight: c.weight,
+            order: c.order,
+            score: corteScores[c.id] ?? null,
+          })),
           activityGrades: activities.map((act) => {
             const g = studentGrades.find((gr) => gr.activityId === act.id);
             return {
               activityId: act.id,
+              corteId: act.corteId ?? null,
               score: g?.score ?? null,
               published: g?.isPublished ?? false,
             };
