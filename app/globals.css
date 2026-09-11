@@ -126,8 +126,39 @@
  * ─── Escala tipográfica ───
  * Reemplaza los 237 usos sueltos de text-[10px] / text-[11px].
  */
-@utility text-micro { font-size: 0.625rem; line-height: 1rem; }   /* 10px */
-@utility text-meta  { font-size: 0.6875rem; line-height: 1rem; }  /* 11px */
+/*
+ * Escala tipográfica por PAPEL, no por tamaño.
+ *
+ * Antes había once tamaños en uso (text-xs, sm, base, lg, xl, 2xl, 3xl,
+ * 4xl, 5xl, micro, meta) sin ninguna regla sobre cuándo usar cada uno, así
+ * que cada pantalla elegía a ojo y ninguna jerarquía se leía igual dos veces.
+ * Estas cinco clases dicen QUÉ es cada texto; el tamaño es consecuencia.
+ */
+@utility type-page {
+  font-size: 1.5rem; line-height: 1.2; font-weight: 700;
+}
+@media (min-width: 640px) {
+  .type-page { font-size: 1.875rem; }
+}
+@utility type-section { font-size: 0.75rem;   line-height: 1rem; font-weight: 600;
+                        text-transform: uppercase; letter-spacing: 0.05em; }          /* encabezado de sección */
+@utility type-body    { font-size: 0.875rem;  line-height: 1.5; }                     /* contenido */
+@utility type-meta    { font-size: 0.6875rem; line-height: 1rem; }                    /* apoyo */
+@utility type-micro   { font-size: 0.625rem;  line-height: 1rem; }                    /* etiqueta mínima */
+
+/* Alias de la escala anterior, para no romper los 192 usos ya migrados. */
+@utility text-micro { font-size: 0.625rem; line-height: 1rem; }
+@utility text-meta  { font-size: 0.6875rem; line-height: 1rem; }
+
+/*
+ * Espaciado interior por DENSIDAD, no por número.
+ *
+ * Había ocho valores de padding repartidos sin criterio (p-2, p-3, p-3.5,
+ * p-4, p-5, p-6, p-8...). Tres densidades cubren todo lo que hay.
+ */
+@utility pad-tight  { padding: 0.75rem; }   /* filas de lista */
+@utility pad-normal { padding: 1rem; }      /* tarjetas */
+@utility pad-loose  { padding: 1.25rem; }   /* bloques destacados */
 
 /*
  * ─── Respeto por prefers-reduced-motion ───

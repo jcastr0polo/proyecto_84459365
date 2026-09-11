@@ -128,7 +128,7 @@ export default function StudentDashboardViewV2({
     <div className="max-w-6xl mx-auto space-y-6">
       {/* ── Saludo ── */}
       <motion.div {...fade(0)}>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
+        <h1 className="type-page text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
           Hola, {user?.firstName ?? 'estudiante'}
         </h1>
         <p className="text-sm text-subtle mt-1">
@@ -197,8 +197,10 @@ export default function StudentDashboardViewV2({
            más urgente del panel, y si se cierra no hay vuelta atrás. */}
       {activeQuizzes.length > 0 && (
         <motion.section {...fade(0.06)}>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-3 flex items-center gap-2">
-            <ClipboardList className="w-3.5 h-3.5" />
+          {/* El parcial abierto manda: si se cierra la ventana no hay
+              vuelta atrás. Pesa más que el resto de secciones. */}
+          <h2 className="text-base font-semibold text-cyan-600 dark:text-cyan-400 mb-3 flex items-center gap-2">
+            <ClipboardList className="w-4 h-4" />
             {activeQuizzes.length === 1 ? 'Parcial abierto' : `Parciales abiertos (${activeQuizzes.length})`}
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -248,7 +250,7 @@ export default function StudentDashboardViewV2({
       {/* ── Cursos ── */}
       <motion.section {...fade(0.08)}>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle flex items-center gap-2">
+          <h2 className="type-section text-subtle flex items-center gap-2">
             <BookOpen className="w-3.5 h-3.5" /> Mis cursos
           </h2>
           <Link href="/student/courses"
@@ -273,7 +275,7 @@ export default function StudentDashboardViewV2({
       {/* ── Pendientes y notas ── */}
       <div className="grid gap-6 lg:grid-cols-2">
         <motion.section {...fade(0.12)}>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3">
+          <h2 className="type-section text-subtle mb-3">
             Pendientes ({pending.length})
           </h2>
           {pending.length > 0 ? (
@@ -302,7 +304,7 @@ export default function StudentDashboardViewV2({
         </motion.section>
 
         <motion.section {...fade(0.16)}>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3">
+          <h2 className="type-section text-subtle mb-3">
             Notas recientes
           </h2>
           {recentGrades.length > 0 ? (

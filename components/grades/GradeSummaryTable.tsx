@@ -433,7 +433,7 @@ function MobileStudentCard({
                         <p className="text-micro text-subtle mt-0.5">
                           {act.weight}% del corte
                           {g && !g.isPublished && (
-                            <span className="text-amber-600 dark:text-amber-400"> · sin publicar</span>
+                            <span className="text-subtle"> · sin publicar</span>
                           )}
                         </p>
                       </div>
@@ -508,7 +508,7 @@ function GradeCell({ grade, maxScore }: { grade: { score: number; maxScore: numb
     <td className={`px-3 py-2.5 text-center border-r border-foreground/[0.06] ${scoreColorClass(normalized)}`} title={grade.feedback ?? undefined}>
       <span className="text-sm font-medium tabular-nums">{grade.score.toFixed(1)}</span>
       <span className="text-micro text-faint ml-0.5">/{maxScore}</span>
-      {!grade.isPublished && <span className="ml-1 text-micro text-amber-400" title="No publicada">●</span>}
+      {!grade.isPublished && <span className="ml-1 text-micro text-subtle" title="No publicada">●</span>}
     </td>
   );
 }

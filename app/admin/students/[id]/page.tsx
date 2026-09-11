@@ -695,7 +695,7 @@ function CourseSection({
                         <p className="text-micro text-subtle mt-0.5">
                           {item.kind === 'quiz' ? 'Parcial' : 'Nota manual'} · {item.weight}%
                           {item.score !== null && !item.published && (
-                            <span className="text-amber-600 dark:text-amber-400"> · sin publicar</span>
+                            <span className="text-subtle"> · sin publicar</span>
                           )}
                         </p>
                       </div>

@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { ClipboardCheck, CalendarClock, Users, BookOpen, FileEdit, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { parseDateColombia, nowColombia } from '@/lib/dateUtils';
 import { dueLabel, startOfTodayColombia } from '@/lib/activityStatus';
+import { toneChip } from '@/lib/semantics';
 import type { Course, Enrollment, Activity, Submission, Semester } from '@/lib/types';
 
 /**
@@ -75,7 +76,7 @@ export default function AdminDashboardViewV2({
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <motion.div {...fade(0)}>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
+        <h1 className="type-page text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
           Panel del docente
         </h1>
         <p className="text-sm text-subtle mt-1">
@@ -86,8 +87,10 @@ export default function AdminDashboardViewV2({
       </motion.div>
 
       <motion.section {...fade(0.04)}>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3 flex items-center gap-2">
-          <ClipboardCheck className="w-3.5 h-3.5" /> Por calificar
+        {/* Jerarquía: esta es la sección que manda en la pantalla, así que
+            no puede llevar el mismo gris pequeño que las de apoyo. */}
+        <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
+          <ClipboardCheck className="w-4 h-4 text-amber-500" /> Por calificar
         </h2>
         {totalPending === 0 ? (
           <div className="rounded-2xl border border-surface-border bg-surface p-5 flex items-center gap-3">
@@ -126,7 +129,7 @@ export default function AdminDashboardViewV2({
 
       {drafts.length > 0 && (
         <motion.section {...fade(0.06)}>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3 flex items-center gap-2">
+          <h2 className="type-section text-subtle mb-3 flex items-center gap-2">
             <FileEdit className="w-3.5 h-3.5" /> Sin publicar ({drafts.length})
           </h2>
           <div className="rounded-xl border border-surface-border divide-y divide-surface-border overflow-hidden">
@@ -142,7 +145,7 @@ export default function AdminDashboardViewV2({
                   <p className="text-sm text-foreground/90 leading-snug">{activity.title}</p>
                   <p className="text-meta text-subtle mt-0.5">{course.name}</p>
                 </div>
-                <span className="text-meta text-faint shrink-0">Borrador</span>
+                <span className={`text-micro px-1.5 py-0.5 rounded border shrink-0 ${toneChip.lifecycle}`}>Borrador</span>
               </Link>
             ))}
           </div>
@@ -150,7 +153,7 @@ export default function AdminDashboardViewV2({
       )}
 
       <motion.section {...fade(0.08)}>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3 flex items-center gap-2">
+        <h2 className="type-section text-subtle mb-3 flex items-center gap-2">
           <CalendarClock className="w-3.5 h-3.5" /> Vencimientos cercanos
         </h2>
         {deadlines.length === 0 ? (
@@ -196,7 +199,7 @@ export default function AdminDashboardViewV2({
       </motion.section>
 
       <motion.section {...fade(0.1)}>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3 flex items-center gap-2">
+        <h2 className="type-section text-subtle mb-3 flex items-center gap-2">
           <BookOpen className="w-3.5 h-3.5" /> Mis cursos
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

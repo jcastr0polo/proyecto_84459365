@@ -61,7 +61,7 @@ export default function PrototypeAdminStudents() {
                 <p className="text-sm text-foreground/90 leading-snug">{t as string}</p>
                 <p className="text-micro text-subtle mt-0.5">
                   {k as string} · {w as number}%
-                  {!(pub as boolean) && <span className="text-amber-600 dark:text-amber-400"> · sin publicar</span>}
+                  {!(pub as boolean) && <span className="text-subtle"> · sin publicar</span>}
                 </p>
               </div>
               <div className="shrink-0 text-right">

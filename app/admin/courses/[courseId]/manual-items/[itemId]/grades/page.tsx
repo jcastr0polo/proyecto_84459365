@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import GradeTable, { type GradeRow } from '@/components/grades/GradeTable';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { toneBox } from '@/lib/semantics';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import type { ManualGradeItem, ManualGrade } from '@/lib/types';
@@ -174,15 +175,15 @@ export default function ManualItemGradingPage() {
       {/* El estado de publicación se muestra siempre, también cuando ya está
           todo publicado: si no, la pantalla no dice nada y la función parece
           no existir. */}
+      {/* "Sin publicar" es estado del ciclo de vida, no urgencia: va en
+          neutro. El ámbar queda reservado para lo que pide actuar pronto. */}
       {(unpublished > 0 || publishedCount > 0) && (
         <div className={`flex items-center justify-between gap-4 flex-wrap rounded-xl border p-4
-          ${unpublished > 0
-            ? 'border-amber-500/25 bg-amber-500/[0.07]'
-            : 'border-emerald-500/25 bg-emerald-500/[0.06]'}`}>
+          ${unpublished > 0 ? toneBox.lifecycle : toneBox.ok}`}>
           <div>
             {unpublished > 0 ? (
               <>
-                <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                <p className="text-sm font-medium text-foreground">
                   {unpublished} sin publicar
                   {publishedCount > 0 && <span className="text-subtle font-normal"> · {publishedCount} ya visibles</span>}
                 </p>
@@ -206,8 +207,8 @@ export default function ManualItemGradingPage() {
             <button
               onClick={() => setConfirmPublish(true)}
               disabled={publishing}
-              className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium
-                         hover:bg-amber-400 transition-colors duration-[var(--dur-fast)]
+              className="px-4 py-2 rounded-lg bg-cyan-500 text-white text-sm font-medium
+                         hover:bg-cyan-400 transition-colors duration-[var(--dur-fast)]
                          active:scale-[0.98] motion-reduce:active:scale-100
                          disabled:opacity-50 cursor-pointer shrink-0"
             >
