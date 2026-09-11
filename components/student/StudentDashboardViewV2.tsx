@@ -7,12 +7,9 @@ import { CalendarClock, ArrowRight, CheckCircle2, BookOpen, ClipboardList, Clock
 import { parseDateColombia, nowColombia, formatDateShort } from '@/lib/dateUtils';
 import { gradeText, normalize, formatScore, PASS } from '@/lib/gradeScale';
 import type { Semester } from '@/lib/types';
+import CourseCard from './CourseCard';
 import type { CourseWithMeta, UserInfo, ActiveQuiz } from './StudentDashboardView';
 
-const DAY_SHORT: Record<string, string> = {
-  lunes: 'Lun', martes: 'Mar', miércoles: 'Mié',
-  jueves: 'Jue', viernes: 'Vie', sábado: 'Sáb',
-};
 
 /**
  * StudentDashboardViewV2 — Rediseño del panel del estudiante.
@@ -91,25 +88,19 @@ export default function StudentDashboardViewV2({
     return items.sort((a, b) => a.daysLeft - b.daysLeft);
   }, [coursesData]);
 
-  /** Nota por curso y promedio del semestre, sobre lo ya calificado. */
-  const perCourse = useMemo(() => coursesData.map((cd) => {
-    const graded = cd.grades.filter((g) => g.isPublished);
-    const totalW = graded.reduce((a, g) => {
-      const act = cd.activities.find((x) => x.id === g.activityId);
-      return a + (act?.weight ?? 0);
-    }, 0);
-    const points = graded.reduce((a, g) => {
-      const act = cd.activities.find((x) => x.id === g.activityId);
-      return a + normalize(g.score, g.maxScore) * (act?.weight ?? 0);
-    }, 0);
-    const score = totalW > 0 ? points / totalW : null;
-    const gradedCount = graded.length;
-    const total = cd.activities.length;
-    return {
-      cd, score, gradedCount, total,
-      pending: pending.filter((p) => p.courseId === cd.course.id).length,
-    };
-  }), [coursesData, pending]);
+  /**
+   * Nota por curso y promedio del semestre.
+   * La nota viene del servidor (`finalScore`), que ya pondera parciales y
+   * notas manuales; recalcularla aquí daba un número distinto al de la
+   * vista de notas en los cursos que los usan.
+   */
+  const perCourse = useMemo(() => coursesData.map((cd) => ({
+    cd,
+    score: cd.finalScore ?? null,
+    gradedCount: cd.grades.length,
+    total: cd.activities.length,
+    pending: pending.filter((p) => p.courseId === cd.course.id).length,
+  })), [coursesData, pending]);
 
   const scored = perCourse.filter((c) => c.score !== null);
   const average = scored.length > 0
@@ -267,54 +258,14 @@ export default function StudentDashboardViewV2({
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {perCourse.map(({ cd, score, gradedCount, total, pending: p }) => (
-            <Link
+            <CourseCard
               key={cd.course.id}
-              href={`/student/courses/${cd.course.id}`}
-              className="rounded-xl border border-surface-border bg-surface p-4
-                         transition-colors duration-[var(--dur-fast)]
-                         hover:border-surface-border-hover hover:bg-surface-hover
-                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground leading-snug">{cd.course.name}</p>
-                  <p className="text-meta text-subtle mt-0.5 font-mono">{cd.course.code}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className={`text-xl font-bold tabular-nums leading-none ${gradeText(score)}`}>
-                    {formatScore(score)}
-                  </p>
-                  <p className="text-micro text-faint mt-0.5">/ 5.0</p>
-                </div>
-              </div>
-
-              {/* Avance de calificación */}
-              <div className="mt-3">
-                <div className="relative h-1 rounded-full bg-foreground/[0.08] overflow-hidden">
-                  <motion.div
-                    initial={reduce ? false : { scaleX: 0 }}
-                    animate={{ scaleX: total > 0 ? gradedCount / total : 0 }}
-                    transition={{ duration: reduce ? 0 : 0.28, ease: [0.16, 1, 0.3, 1] }}
-                    style={{ transformOrigin: 'left' }}
-                    className="absolute inset-0 rounded-full bg-cyan-500"
-                  />
-                </div>
-                <div className="flex items-center justify-between mt-1.5 gap-2">
-                  <span className="text-micro text-faint truncate">
-                    {gradedCount} de {total} calificadas
-                    {cd.course.schedule.length > 0 && (
-                      <> · {cd.course.schedule.map((h) =>
-                        `${DAY_SHORT[h.dayOfWeek] ?? h.dayOfWeek} ${h.startTime}`).join(', ')}</>
-                    )}
-                  </span>
-                  {p > 0 && (
-                    <span className="text-micro text-amber-600 dark:text-amber-400">
-                      {p} {p === 1 ? 'pendiente' : 'pendientes'}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </Link>
+              course={cd.course}
+              score={score}
+              gradedCount={gradedCount}
+              totalActivities={total}
+              pendingCount={p}
+            />
           ))}
         </div>
       </motion.section>

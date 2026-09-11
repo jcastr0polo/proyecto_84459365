@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import StudentDashboardView from '@/components/student/StudentDashboardViewV2';
 import type { CourseWithMeta, UserInfo, ActiveQuiz } from '@/components/student/StudentDashboardView';
 import type { Course, Enrollment, Activity, Submission, Semester, Grade, Quiz } from '@/lib/types';
@@ -17,7 +16,6 @@ import type { Course, Enrollment, Activity, Submission, Semester, Grade, Quiz } 
  * - Recent grades
  */
 export default function StudentDashboardPage() {
-  const router = useRouter();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [semester, setSemester] = useState<Semester | null>(null);
   const [coursesData, setCoursesData] = useState<CourseWithMeta[]>([]);
@@ -71,11 +69,13 @@ export default function StudentDashboardPage() {
 
         // Fetch grades for course
         let grades: Grade[] = [];
+        let finalScore: number | null = null;
         try {
           const gradeRes = await fetch(`/api/courses/${course.id}/grades`);
           if (gradeRes.ok) {
             const gradeData = await gradeRes.json();
             // Student endpoint returns StudentGradeSummary, extract grade info
+            finalScore = gradeData.finalScore ?? null;
             if (gradeData.activities) {
               grades = gradeData.activities
                 .filter((a: { grade: unknown }) => a.grade !== null)
@@ -95,6 +95,7 @@ export default function StudentDashboardPage() {
           activities,
           submissions,
           grades,
+          finalScore,
         };
       });
 

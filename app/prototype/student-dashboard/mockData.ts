@@ -89,6 +89,7 @@ export const MOCK_COURSES: CourseWithMeta[] = [
     ],
     submissions: [submission('a1', tdi.id, -23), submission('a4', tdi.id, -6)],
     grades: [grade('a1', tdi.id, 4.5, -21), grade('a4', tdi.id, 2.8, -4)],
+    finalScore: 3.4,
   },
   {
     course: log,
@@ -100,12 +101,13 @@ export const MOCK_COURSES: CourseWithMeta[] = [
     ],
     submissions: [submission('b1', log.id, -15)],
     grades: [grade('b1', log.id, 3.9, -13)],
+    finalScore: 3.9,
   },
 ];
 
 /** Variante: estudiante recién inscrito, nada entregado ni calificado. */
 export const MOCK_COURSES_EMPTY: CourseWithMeta[] = MOCK_COURSES.map((c) => ({
-  ...c, submissions: [], grades: [],
+  ...c, submissions: [], grades: [], finalScore: null,
 }));
 
 /** Un parcial abierto, para revisar esa sección del panel. */

@@ -22,6 +22,12 @@ export interface CourseWithMeta {
   activities: Activity[];
   submissions: Submission[];
   grades: Grade[];
+  /**
+   * Nota del curso tal como la calcula el servidor, que incluye parciales y
+   * notas manuales. Recalcularla en el cliente a partir de `grades` daba un
+   * número distinto al de la vista de notas en los cursos que los usan.
+   */
+  finalScore?: number | null;
 }
 
 export interface UserInfo {
