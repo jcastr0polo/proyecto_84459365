@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock } from 'lucide-react';
 
 interface DateTimePickerProps {
@@ -73,13 +73,17 @@ export default function DateTimePicker({
   const calRef = useRef<HTMLDivElement>(null);
 
   const parsed = parseDateTime(value);
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
   const [viewYear, setViewYear] = useState(parsed?.year ?? today.getFullYear());
   const [viewMonth, setViewMonth] = useState(parsed?.month ?? today.getMonth());
   const [hour, setHour] = useState(parsed?.hour ?? 8);
   const [minute, setMinute] = useState(parsed?.minute ?? 0);
 
-  useEffect(() => {
+  // Ajuste al cambiar la prop, con el patrón que recomienda React: comparar
+  // con el valor previo durante el render, sin un efecto que añada una pasada.
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
     const p = parseDateTime(value);
     if (p) {
       setViewYear(p.year);
@@ -87,7 +91,7 @@ export default function DateTimePicker({
       setHour(p.hour);
       setMinute(p.minute);
     }
-  }, [value]);
+  }
 
   // Close on outside click
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 interface DatePickerProps {
@@ -69,14 +69,26 @@ export default function DatePicker({
   const calRef = useRef<HTMLDivElement>(null);
 
   const parsed = parseYMD(value);
-  const today = new Date();
+  // Una sola marca de tiempo por render: `new Date()` en el cuerpo del
+  // componente da un valor distinto en cada pasada.
+  const today = useMemo(() => new Date(), []);
   const [viewYear, setViewYear] = useState(parsed?.year ?? today.getFullYear());
   const [viewMonth, setViewMonth] = useState(parsed?.month ?? today.getMonth());
 
-  useEffect(() => {
+  /**
+   * El mes visible se ajusta cuando cambia `value`.
+   *
+   * Antes esto vivía en un useEffect, que obliga a un render de más y a que
+   * el usuario vea momentáneamente el mes anterior. Este es el patrón que
+   * recomienda React para ajustar estado al cambiar una prop: comparar con el
+   * valor previo durante el render.
+   */
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
     const p = parseYMD(value);
     if (p) { setViewYear(p.year); setViewMonth(p.month); }
-  }, [value]);
+  }
 
   // Close on outside click
   useEffect(() => {
