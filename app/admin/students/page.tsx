@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { Users, RotateCcw, ShieldCheck, ShieldOff, Search, AlertCircle, CheckCircle2, Clock, Pencil, X, Check, Eye } from 'lucide-react';
 import { formatDateTimeColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
+import IconButton from '@/components/ui/IconButton';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import EmptyState from '@/components/ui/EmptyState';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import type { SafeUser } from '@/lib/types';
@@ -16,6 +18,7 @@ export default function AdminStudentsPage() {
   const [search, setSearch] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
+  const [confirm, setConfirm] = useState<{ student: SafeUser; action: 'resetPassword' | 'toggleActive' } | null>(null);
   const [editingName, setEditingName] = useState<{ id: string; first: string; last: string } | null>(null);
   const [editingEmail, setEditingEmail] = useState<{ id: string; value: string } | null>(null);
   const [editingDoc, setEditingDoc] = useState<{ id: string; value: string } | null>(null);
@@ -149,8 +152,34 @@ export default function AdminStudentsPage() {
 
   if (loading) return <PageLoader />;
 
+  const confirmCopy = confirm?.action === 'resetPassword'
+    ? {
+        title: '¿Restablecer la contraseña?',
+        message: `La contraseña de ${confirm.student.firstName} ${confirm.student.lastName} pasará a ser su número de documento (${confirm.student.documentNumber}) y tendrá que cambiarla al entrar. Su contraseña actual dejará de funcionar.`,
+        label: 'Restablecer',
+      }
+    : confirm
+      ? {
+          title: '¿Desactivar la cuenta?',
+          message: `${confirm.student.firstName} ${confirm.student.lastName} no podrá volver a entrar hasta que reactives su cuenta.`,
+          label: 'Desactivar',
+        }
+      : null;
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      <ConfirmModal
+        open={confirm !== null}
+        onClose={() => setConfirm(null)}
+        onConfirm={() => {
+          if (confirm) handleAction(confirm.student.id, confirm.action);
+          setConfirm(null);
+        }}
+        variant={confirm?.action === 'toggleActive' ? 'danger' : 'warning'}
+        title={confirmCopy?.title ?? ''}
+        message={confirmCopy?.message ?? ''}
+        confirmLabel={confirmCopy?.label ?? 'Confirmar'}
+      />
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-lg border
@@ -264,32 +293,31 @@ export default function AdminStudentsPage() {
                                        text-foreground text-sm w-36
                                        focus:outline-none focus:border-cyan-500/50"
                           />
-                          <button
+                          <IconButton
+                            label="Guardar"
+                            tone="positive"
                             onClick={() => handleUpdateName(student.id, editingName.first, editingName.last)}
                             disabled={actionLoading === `${student.id}-name`}
-                            className="p-2 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button
+                            icon={<Check className="w-4 h-4" />}
+                          />
+                          <IconButton
+                            label="Cancelar"
+                            tone="danger"
                             onClick={() => setEditingName(null)}
-                            className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                            icon={<X className="w-4 h-4" />}
+                          />
                         </span>
                       ) : (
                         <>
                           <p className="text-sm font-semibold text-foreground truncate">
                             {student.firstName} {student.lastName}
                           </p>
-                          <button
+                          <IconButton
+                            label="Editar nombre"
+                            tone="accent" size="sm"
                             onClick={() => setEditingName({ id: student.id, first: student.firstName, last: student.lastName })}
-                            title="Editar nombre"
-                            className="p-0.5 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors cursor-pointer"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
+                            icon={<Pencil className="w-3.5 h-3.5" />}
+                          />
                         </>
                       )}
                       {!student.isActive && <Badge variant="danger" size="sm">Inactivo</Badge>}
@@ -311,30 +339,29 @@ export default function AdminStudentsPage() {
                                        text-foreground text-[11px] w-52
                                        focus:outline-none focus:border-cyan-500/50"
                           />
-                          <button
+                          <IconButton
+                            label="Guardar"
+                            tone="positive"
                             onClick={() => handleUpdateEmail(student.id, editingEmail.value)}
                             disabled={actionLoading === `${student.id}-email`}
-                            className="p-2 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button
+                            icon={<Check className="w-4 h-4" />}
+                          />
+                          <IconButton
+                            label="Cancelar"
+                            tone="danger"
                             onClick={() => setEditingEmail(null)}
-                            className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                            icon={<X className="w-4 h-4" />}
+                          />
                         </span>
                       ) : (
                         <>
                           {student.email}
-                          <button
+                          <IconButton
+                            label="Editar email"
+                            tone="accent" size="sm"
                             onClick={() => setEditingEmail({ id: student.id, value: student.email })}
-                            title="Editar email"
-                            className="p-0.5 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors cursor-pointer"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
+                            icon={<Pencil className="w-3.5 h-3.5" />}
+                          />
                         </>
                       )}
                     </p>
@@ -357,30 +384,29 @@ export default function AdminStudentsPage() {
                                          text-foreground text-[11px] w-32 font-mono
                                          focus:outline-none focus:border-cyan-500/50"
                             />
-                            <button
-                              onClick={() => handleUpdateDocument(student.id, editingDoc.value)}
-                              disabled={actionLoading === `${student.id}-doc`}
-                              className="p-2 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer disabled:opacity-50"
-                            >
-                              <Check className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => setEditingDoc(null)}
-                              className="p-2 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                            <IconButton
+                            label="Guardar"
+                            tone="positive"
+                            onClick={() => handleUpdateDocument(student.id, editingDoc.value)}
+                            disabled={actionLoading === `${student.id}-doc`}
+                            icon={<Check className="w-4 h-4" />}
+                          />
+                            <IconButton
+                            label="Cancelar"
+                            tone="danger"
+                            onClick={() => setEditingDoc(null)}
+                            icon={<X className="w-4 h-4" />}
+                          />
                           </span>
                         ) : (
                           <>
                             {student.documentNumber}
-                            <button
-                              onClick={() => setEditingDoc({ id: student.id, value: student.documentNumber })}
-                              title="Editar documento"
-                              className="p-0.5 rounded text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors cursor-pointer"
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
+                            <IconButton
+                            label="Editar documento"
+                            tone="accent" size="sm"
+                            onClick={() => setEditingDoc({ id: student.id, value: student.documentNumber })}
+                            icon={<Pencil className="w-3.5 h-3.5" />}
+                          />
                           </>
                         )}
                       </span>
@@ -405,38 +431,31 @@ export default function AdminStudentsPage() {
 
                 {/* Right: actions */}
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
+                  <IconButton
+                    label="Ver detalle del estudiante"
+                    tone="accent" size="lg"
                     onClick={() => router.push(`/admin/students/${student.id}`)}
-                    title="Ver detalle del estudiante"
-                    className="p-2.5 rounded-lg text-subtle hover:text-cyan-400 hover:bg-cyan-500/10
-                               transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
-                  >
-                    <Eye className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => handleAction(student.id, 'resetPassword')}
+                    icon={<Eye className="w-5 h-5" />}
+                  />
+                  {/* Restablecer y desactivar sí piden confirmación: la
+                      primera deja al estudiante fuera de su contraseña actual,
+                      la segunda le corta el acceso entero. */}
+                  <IconButton
+                    label="Restablecer contraseña"
+                    tone="warning" size="lg"
                     disabled={actionLoading === `${student.id}-resetPassword`}
-                    title="Restablecer contraseña (= nro documento)"
-                    className="p-2.5 rounded-lg text-subtle hover:text-amber-400 hover:bg-amber-500/10
-                               transition-colors cursor-pointer disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                  >
-                    <RotateCcw className={`w-5 h-5 ${actionLoading === `${student.id}-resetPassword` ? 'animate-spin' : ''}`} />
-                  </button>
-                  <button
-                    onClick={() => handleAction(student.id, 'toggleActive')}
+                    onClick={() => setConfirm({ student, action: 'resetPassword' })}
+                    icon={<RotateCcw className={`w-5 h-5 ${actionLoading === `${student.id}-resetPassword` ? 'animate-spin' : ''}`} />}
+                  />
+                  <IconButton
+                    label={student.isActive ? 'Desactivar cuenta' : 'Activar cuenta'}
+                    tone={student.isActive ? 'danger' : 'positive'} size="lg"
                     disabled={actionLoading === `${student.id}-toggleActive`}
-                    title={student.isActive ? 'Desactivar cuenta' : 'Activar cuenta'}
-                    className={`p-2.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center
-                      ${student.isActive
-                        ? 'text-subtle hover:text-red-400 hover:bg-red-500/10'
-                        : 'text-subtle hover:text-emerald-400 hover:bg-emerald-500/10'
-                      }`}
-                  >
-                    {student.isActive
-                      ? <ShieldOff className="w-5 h-5" />
-                      : <ShieldCheck className="w-5 h-5" />
-                    }
-                  </button>
+                    onClick={() => student.isActive
+                      ? setConfirm({ student, action: 'toggleActive' })
+                      : handleAction(student.id, 'toggleActive')}
+                    icon={student.isActive ? <ShieldOff className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                  />
                 </div>
               </div>
             </motion.div>
