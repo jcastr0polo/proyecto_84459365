@@ -3,11 +3,16 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
-import { CalendarClock, ArrowRight, CheckCircle2, BookOpen } from 'lucide-react';
-import { parseDateTimeColombia } from '@/lib/dateUtils';
+import { CalendarClock, ArrowRight, CheckCircle2, BookOpen, ClipboardList, Clock, Shield } from 'lucide-react';
+import { parseDateColombia, nowColombia, formatDateShort } from '@/lib/dateUtils';
 import { gradeText, normalize, formatScore, PASS } from '@/lib/gradeScale';
 import type { Semester } from '@/lib/types';
 import type { CourseWithMeta, UserInfo, ActiveQuiz } from './StudentDashboardView';
+
+const DAY_SHORT: Record<string, string> = {
+  lunes: 'Lun', martes: 'Mar', miércoles: 'Mié',
+  jueves: 'Jue', viernes: 'Vie', sábado: 'Sáb',
+};
 
 /**
  * StudentDashboardViewV2 — Rediseño del panel del estudiante.
@@ -52,7 +57,7 @@ function dueLabel(daysLeft: number): string {
 }
 
 export default function StudentDashboardViewV2({
-  user, semester, coursesData,
+  user, semester, coursesData, activeQuizzes = [],
 }: {
   user: UserInfo | null;
   semester: Semester | null;
@@ -62,14 +67,18 @@ export default function StudentDashboardViewV2({
   const reduce = useReducedMotion();
 
   const pending = useMemo((): Pending[] => {
-    const now = new Date();
+    // Días calendario en hora Colombia, no milisegundos: "vence hoy" significa
+    // el mismo día, sea la hora que sea. Además así el servidor y el cliente
+    // calculan lo mismo y no hay desajuste de hidratación.
+    const today = nowColombia();
+    today.setHours(0, 0, 0, 0);
     const items: Pending[] = [];
     for (const cd of coursesData) {
       for (const act of cd.activities) {
         if (act.status !== 'published') continue;
         if (cd.submissions.some((s) => s.activityId === act.id)) continue;
-        const due = parseDateTimeColombia(act.dueDate, act.dueTime || '23:59');
-        const daysLeft = Math.floor((due.getTime() - now.getTime()) / 86400000);
+        const due = parseDateColombia(act.dueDate);
+        const daysLeft = Math.round((due.getTime() - today.getTime()) / 86400000);
         const urgency: Urgency =
           daysLeft < 0 ? 'overdue' : daysLeft === 0 ? 'today'
           : daysLeft <= 2 ? 'urgent' : daysLeft <= 7 ? 'soon' : 'relaxed';
@@ -142,7 +151,7 @@ export default function StudentDashboardViewV2({
         {/* Lo siguiente que hay que entregar */}
         {next ? (
           <Link
-            href={`/student/courses/${next.courseId}/activities/${next.id}/submit`}
+            href={`/student/courses/${next.courseId}/activities/${next.id}`}
             className="group rounded-2xl border border-surface-border bg-surface p-5
                        transition-colors duration-[var(--dur-fast)]
                        hover:border-surface-border-hover hover:bg-surface-hover
@@ -192,11 +201,70 @@ export default function StudentDashboardViewV2({
         </div>
       </motion.div>
 
+      {/* ── Parciales abiertos ──
+           Van antes que todo lo demás: un parcial con ventana abierta es lo
+           más urgente del panel, y si se cierra no hay vuelta atrás. */}
+      {activeQuizzes.length > 0 && (
+        <motion.section {...fade(0.06)}>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-3 flex items-center gap-2">
+            <ClipboardList className="w-3.5 h-3.5" />
+            {activeQuizzes.length === 1 ? 'Parcial abierto' : `Parciales abiertos (${activeQuizzes.length})`}
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {activeQuizzes.map((aq) => (
+              <Link
+                key={aq.quiz.id}
+                href={`/student/courses/${aq.courseId}/quizzes/${aq.quiz.id}`}
+                className="rounded-xl border border-cyan-500/25 bg-cyan-500/[0.06] p-4
+                           transition-colors duration-[var(--dur-fast)]
+                           hover:border-cyan-500/40 hover:bg-cyan-500/[0.10]
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground leading-snug">{aq.quiz.title}</p>
+                    <p className="text-meta text-subtle mt-0.5">{aq.courseName}</p>
+                  </div>
+                  <span className={`text-micro px-1.5 py-0.5 rounded border shrink-0 ${
+                    aq.quiz.type === 'training'
+                      ? 'border-amber-500/25 text-amber-600 dark:text-amber-400'
+                      : 'border-cyan-500/25 text-cyan-600 dark:text-cyan-400'
+                  }`}>
+                    {aq.quiz.type === 'training' ? 'Entrenamiento' : 'Calificable'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 mt-2.5 text-micro text-faint flex-wrap">
+                  <span>{aq.quiz.questions.length} preguntas</span>
+                  {aq.quiz.timeLimit && (
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{aq.quiz.timeLimit} min</span>
+                  )}
+                  {aq.quiz.maxAttempts > 0 && (
+                    <span>{aq.quiz.maxAttempts} intento{aq.quiz.maxAttempts !== 1 ? 's' : ''}</span>
+                  )}
+                  {aq.quiz.endDate && <span>Hasta {formatDateShort(aq.quiz.endDate)}</span>}
+                  {aq.quiz.lockBrowser && (
+                    <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                      <Shield className="w-3 h-3" />Navegador bloqueado
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </motion.section>
+      )}
+
       {/* ── Cursos ── */}
       <motion.section {...fade(0.08)}>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3 flex items-center gap-2">
-          <BookOpen className="w-3.5 h-3.5" /> Mis cursos
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle flex items-center gap-2">
+            <BookOpen className="w-3.5 h-3.5" /> Mis cursos
+          </h2>
+          <Link href="/student/courses"
+            className="text-meta text-cyan-600 dark:text-cyan-400 hover:underline">
+            Ver todos →
+          </Link>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {perCourse.map(({ cd, score, gradedCount, total, pending: p }) => (
             <Link
@@ -231,8 +299,14 @@ export default function StudentDashboardViewV2({
                     className="absolute inset-0 rounded-full bg-cyan-500"
                   />
                 </div>
-                <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-micro text-faint">{gradedCount} de {total} calificadas</span>
+                <div className="flex items-center justify-between mt-1.5 gap-2">
+                  <span className="text-micro text-faint truncate">
+                    {gradedCount} de {total} calificadas
+                    {cd.course.schedule.length > 0 && (
+                      <> · {cd.course.schedule.map((h) =>
+                        `${DAY_SHORT[h.dayOfWeek] ?? h.dayOfWeek} ${h.startTime}`).join(', ')}</>
+                    )}
+                  </span>
                   {p > 0 && (
                     <span className="text-micro text-amber-600 dark:text-amber-400">
                       {p} {p === 1 ? 'pendiente' : 'pendientes'}
@@ -256,7 +330,7 @@ export default function StudentDashboardViewV2({
               {pending.map((p) => (
                 <Link
                   key={p.id}
-                  href={`/student/courses/${p.courseId}/activities/${p.id}/submit`}
+                  href={`/student/courses/${p.courseId}/activities/${p.id}`}
                   className="flex items-center gap-3 p-3.5 bg-surface
                              transition-colors duration-[var(--dur-fast)] hover:bg-surface-hover"
                 >

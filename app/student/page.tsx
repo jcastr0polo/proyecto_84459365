@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import StudentDashboardView from '@/components/student/StudentDashboardView';
+import StudentDashboardView from '@/components/student/StudentDashboardViewV2';
 import type { CourseWithMeta, UserInfo, ActiveQuiz } from '@/components/student/StudentDashboardView';
 import type { Course, Enrollment, Activity, Submission, Semester, Grade, Quiz } from '@/lib/types';
 

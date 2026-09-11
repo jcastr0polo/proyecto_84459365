@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import StudentGradesView from '@/components/grades/StudentGradesView';
+import StudentGradesView from '@/components/grades/StudentGradesViewV2';
 import { useToast } from '@/components/ui/Toast';
 import type { StudentGradeSummary } from '@/lib/types';
 

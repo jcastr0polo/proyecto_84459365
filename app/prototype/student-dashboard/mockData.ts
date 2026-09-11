@@ -1,4 +1,5 @@
 import type { Course, Enrollment, Activity, Submission, Grade, Semester } from '@/lib/types';
+import type { ActiveQuiz } from '@/components/student/StudentDashboardView';
 import type { CourseWithMeta, UserInfo } from '@/components/student/StudentDashboardView';
 
 /**
@@ -106,3 +107,20 @@ export const MOCK_COURSES: CourseWithMeta[] = [
 export const MOCK_COURSES_EMPTY: CourseWithMeta[] = MOCK_COURSES.map((c) => ({
   ...c, submissions: [], grades: [],
 }));
+
+/** Un parcial abierto, para revisar esa sección del panel. */
+export const MOCK_QUIZZES: ActiveQuiz[] = [{
+  quiz: {
+    id: 'quiz-1', courseId: log.id, title: 'Parcial 2: estructuras de control',
+    type: 'graded' as const, resultVisibility: 'manual' as const,
+    resultsReleased: false, questions: new Array(15).fill(null).map((_, i) => ({
+      id: `q${i}`, type: 'single' as const, text: '', options: [], correctOptionIds: [], points: 1, order: i + 1,
+    })),
+    shuffleQuestions: true, shuffleOptions: true, maxAttempts: 1,
+    lockBrowser: true, isActive: true, timeLimit: 45,
+    endDate: day(3), weight: 20, maxScore: 5,
+    createdAt: ts(-5), updatedAt: ts(-5),
+  },
+  courseName: log.name,
+  courseId: log.id,
+}];
