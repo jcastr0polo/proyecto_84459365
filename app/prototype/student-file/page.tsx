@@ -47,6 +47,29 @@ export default function PrototypeStudentFile() {
         <Signals avg={2.6} gradedN={3} failing={['TDI-202602', 'LOG-202602']} pending={4} total={12} submitted={8} />
       </div>
       <div className="space-y-2">
+        <p className="text-meta uppercase tracking-wider text-faint">Cabecera de curso en móvil</p>
+        <div className="rounded-xl border border-surface-border bg-surface">
+          <div className="w-full flex items-center gap-3 p-4 text-left">
+            <span className="w-4 h-4 text-subtle shrink-0">›</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold text-foreground">Gerencia de Proyectos</span>
+              </div>
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span className="text-2xl font-bold tabular-nums leading-none text-amber-600 dark:text-amber-400">3.6</span>
+                <span className="text-micro text-subtle">/ 5.0 · parcial</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-subtle">
+                <span>12 actividades</span>
+                <span className="text-emerald-600 dark:text-emerald-400">8 entregadas</span>
+                <span className="text-amber-600 dark:text-amber-400">4 pendientes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
         <p className="text-meta uppercase tracking-wider text-faint">Estudiante al día</p>
         <Signals avg={4.4} gradedN={3} failing={[]} pending={0} total={12} submitted={12} />
       </div>

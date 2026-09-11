@@ -463,17 +463,27 @@ function CourseSection({
             <Badge variant="neutral" size="sm">{course.code}</Badge>
             <Badge variant="info" size="sm">{course.category}</Badge>
           </div>
-          <div className="flex items-center gap-3 mt-1.5 text-xs text-subtle">
-            <span>{course.totalActivities} actividades</span>
-            <span className="text-emerald-400">{course.submitted} entregadas</span>
-            {course.pending > 0 && <span className="text-amber-400">{course.pending} pendientes</span>}
-            {course.grades?.finalGrade !== null && course.grades?.finalGrade !== undefined && (
-              <span className={`font-medium ${gradeText(course.grades.finalGrade)}`}>
-                Nota: {course.grades.finalGrade.toFixed(1)}
-                {course.grades.isPartial && (
-                  <span className="text-faint font-normal"> (parcial)</span>
-                )}
+          {/*
+            En móvil la definitiva va en su propia línea y grande.
+            Antes los cuatro datos iban en un flex sin wrap: a 390px se
+            comprimían en columnas de dos líneas y la nota, que es el dato
+            que se viene a buscar, quedaba apretada contra el borde.
+          */}
+          {course.grades?.finalGrade !== null && course.grades?.finalGrade !== undefined && (
+            <div className="flex items-baseline gap-1.5 mt-1">
+              <span className={`text-2xl font-bold tabular-nums leading-none ${gradeText(course.grades.finalGrade)}`}>
+                {course.grades.finalGrade.toFixed(1)}
               </span>
+              <span className="text-micro text-subtle">
+                / 5.0{course.grades.isPartial && ' · parcial'}
+              </span>
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-subtle">
+            <span>{course.totalActivities} actividades</span>
+            <span className="text-emerald-600 dark:text-emerald-400">{course.submitted} entregadas</span>
+            {course.pending > 0 && (
+              <span className="text-amber-600 dark:text-amber-400">{course.pending} pendientes</span>
             )}
           </div>
           {/* Avance por corte — visible sin expandir el curso */}

@@ -14,7 +14,7 @@ export default function PrototypeGradeTable() {
     ...base,
     submissionId: `s${i}`, studentId: `st${i}`,
     studentName: `${ln}, ${fn}`, studentEmail: `${fn.toLowerCase()}@ejemplo.edu.co`,
-    score: i === 0 ? null : 4 + i * 0.2,
+    score: i === 0 ? null : i === 1 ? 3.5 : 2.4,
     isLate: i === 2,
   }));
   const [saving] = useState(false);

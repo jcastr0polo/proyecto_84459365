@@ -53,33 +53,43 @@
  * utility usages across all components without touching their JSX.
  */
 [data-theme="light"] {
+  /*
+   * Los -300 se remapeaban al tono 500, que sobre blanco da 2.09:1 de
+   * contraste: prácticamente invisible. Los 49 usos de text-*-300 del
+   * proyecto quedaban ilegibles en modo claro. Ahora van al 700, que supera
+   * el mínimo de contraste, medido con el validador de paleta.
+   *
+   * El -300 no se usa como fondo en ningún sitio salvo un caso, así que
+   * cambiar la variable no rompe superficies.
+   */
+
   /* Cyan — primary accent */
   --color-cyan-400: oklch(60.9% 0.126 221.723);   /* → cyan-600 */
-  --color-cyan-300: oklch(71.5% 0.143 215.221);   /* → cyan-500 */
+  --color-cyan-300: oklch(52.0% 0.105 223.128);   /* → cyan-700 */
 
   /* Emerald — success */
   --color-emerald-400: oklch(59.6% 0.145 163.225); /* → emerald-600 */
-  --color-emerald-300: oklch(69.6% 0.17 162.48);   /* → emerald-500 */
+  --color-emerald-300: oklch(50.8% 0.118 165.612); /* → emerald-700 */
 
   /* Amber — warning */
   --color-amber-400: oklch(66.6% 0.179 58.318);   /* → amber-600 */
-  --color-amber-300: oklch(76.9% 0.188 70.08);    /* → amber-500 */
+  --color-amber-300: oklch(55.5% 0.163 48.998);   /* → amber-700 */
 
   /* Red — danger */
   --color-red-400: oklch(57.7% 0.245 27.325);     /* → red-600 */
-  --color-red-300: oklch(63.7% 0.237 25.331);     /* → red-500 */
+  --color-red-300: oklch(50.5% 0.213 27.518);     /* → red-700 */
 
   /* Purple — design/simulation */
   --color-purple-400: oklch(55.8% 0.288 302.321); /* → purple-600 */
-  --color-purple-300: oklch(62.7% 0.265 303.9);   /* → purple-500 */
+  --color-purple-300: oklch(49.6% 0.265 301.924); /* → purple-700 */
 
   /* Blue — programming */
   --color-blue-400: oklch(54.6% 0.245 262.881);   /* → blue-600 */
-  --color-blue-300: oklch(62.3% 0.214 259.815);   /* → blue-500 */
+  --color-blue-300: oklch(48.8% 0.243 264.376);   /* → blue-700 */
 
   /* Rose — leadership */
   --color-rose-400: oklch(58.6% 0.253 17.585);    /* → rose-600 */
-  --color-rose-300: oklch(64.5% 0.246 16.439);    /* → rose-500 */
+  --color-rose-300: oklch(51.4% 0.222 16.935);    /* → rose-700 */
 }
 
 @theme inline {
