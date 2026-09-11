@@ -201,9 +201,20 @@ function ActivityRow({ activity, reduce }: { activity: StudentGradeSummary['acti
   const normalized = g ? (g.score / g.maxScore) * SCALE : null;
   const hasFeedback = Boolean(g?.feedback);
 
+  // La fila entera abre la retroalimentación: un solo objetivo, no un icono diminuto.
+  const Row = hasFeedback ? 'button' : 'div';
+  const rowProps = hasFeedback
+    ? {
+        onClick: () => setOpen((v) => !v),
+        'aria-expanded': open,
+        title: open ? 'Ocultar retroalimentación' : 'Ver retroalimentación',
+        className: 'w-full text-left flex items-center gap-3 p-3 sm:p-3.5 cursor-pointer transition-colors hover:bg-foreground/[0.03] active:bg-foreground/[0.05]',
+      }
+    : { className: 'flex items-center gap-3 p-3 sm:p-3.5' };
+
   return (
     <div className="bg-foreground/[0.01]">
-      <div className="flex items-center gap-3 p-3 sm:p-3.5">
+      <Row {...rowProps}>
         <div className="min-w-0 flex-1">
           <p className="text-sm text-foreground/90 leading-snug">{activity.title}</p>
           <p className="text-[11px] text-subtle mt-0.5">
@@ -212,15 +223,10 @@ function ActivityRow({ activity, reduce }: { activity: StudentGradeSummary['acti
         </div>
 
         {hasFeedback && (
-          <button
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            title="Ver retroalimentación"
-            className="shrink-0 p-2 rounded-lg text-subtle hover:text-cyan-400 hover:bg-cyan-500/10
-                       transition-colors cursor-pointer active:scale-[0.97]"
-          >
-            <MessageSquareText className="w-4 h-4" />
-          </button>
+          <MessageSquareText
+            aria-hidden
+            className={`w-4 h-4 shrink-0 transition-colors ${open ? 'text-cyan-400' : 'text-faint'}`}
+          />
         )}
 
         <div className="shrink-0 text-right min-w-[3.5rem]">
@@ -240,10 +246,11 @@ function ActivityRow({ activity, reduce }: { activity: StudentGradeSummary['acti
 
         {hasFeedback && (
           <ChevronDown
+            aria-hidden
             className={`w-3.5 h-3.5 text-faint shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           />
         )}
-      </div>
+      </Row>
 
       {hasFeedback && open && (
         <motion.div

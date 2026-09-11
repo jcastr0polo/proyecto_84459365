@@ -46,3 +46,6 @@ next-env.d.ts
 # Skills instaladas con `npx skills add` (se reinstalan desde skills-lock.json)
 .agents/
 .claude/skills/
+
+# Pantallazos del taller de diseño
+.screenshots/
