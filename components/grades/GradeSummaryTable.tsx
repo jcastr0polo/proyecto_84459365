@@ -2,7 +2,7 @@
 
 import React from 'react';
 import type { CourseGradeSummary } from '@/lib/types';
-import { gradeText } from '@/lib/gradeScale';
+import { gradeText, formatScore } from '@/lib/gradeScale';
 import { tableChrome } from '@/components/ui/Table';
 
 interface GradeSummaryTableProps {
@@ -61,7 +61,75 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
   );
 
   return (
-    <div className={`${tableChrome.wrapper} ${className}`}>
+    <div className={className}>
+      {/*
+        En móvil, una tarjeta por estudiante en vez de una tabla ancha.
+        Una tabla de estudiantes × actividades a 390px obliga a arrastrar en
+        horizontal perdiendo de vista el nombre, y las celdas quedan tan
+        estrechas que no se lee ni la nota.
+      */}
+      <div className="md:hidden space-y-3">
+        {students.map((student) => (
+          <div key={student.id} className="rounded-xl border border-surface-border bg-surface p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground leading-snug">
+                  {student.lastName}, {student.firstName}
+                </p>
+                <p className="text-micro text-subtle mt-0.5">{student.email}</p>
+              </div>
+              <div className="text-right shrink-0">
+                {/* `?? 0` pintaba de rojo a quien no tiene ninguna nota:
+                    "sin datos" no es lo mismo que "va perdiendo". */}
+                <p className={`text-2xl font-bold tabular-nums leading-none ${gradeText(student.finalScore)}`}>
+                  {formatScore(student.finalScore)}
+                </p>
+                <p className="text-micro text-faint mt-0.5">
+                  {student.finalScore === null
+                    ? 'sin nota'
+                    : student.isPartial
+                      ? `${gradedPercent(student, data.activities)}% calificado`
+                      : 'definitiva'}
+                </p>
+              </div>
+            </div>
+
+            {/* Notas por corte: el desglose que en la tabla son columnas. */}
+            {hasCortes && (
+              <div className="grid gap-2 mt-3" style={{ gridTemplateColumns: `repeat(${corteGroups.length}, minmax(0,1fr))` }}>
+                {corteGroups.map((group) => {
+                  const v = student.corteScores[group.id];
+                  return (
+                    <div key={group.id} className="rounded-lg border border-surface-border bg-surface-sunken p-2">
+                      <p className="text-micro text-subtle truncate">{group.name}</p>
+                      <p className={`text-sm font-semibold tabular-nums ${v != null ? scoreColorClass(v) : 'text-faint'}`}>
+                        {v != null ? v.toFixed(1) : '—'}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Actividades sin nota: lo que le falta a este estudiante. */}
+            {(() => {
+              const missing = orderedActivities.filter((act) => !student.grades[act.id]);
+              if (missing.length === 0) {
+                return <p className="text-micro text-emerald-600 dark:text-emerald-400 mt-3">Todo calificado</p>;
+              }
+              return (
+                <p className="text-micro text-subtle mt-3">
+                  Sin nota: <span className="text-amber-600 dark:text-amber-400">{missing.length}</span>
+                  {' · '}{missing.slice(0, 3).map((a) => a.title).join(', ')}
+                  {missing.length > 3 && ` y ${missing.length - 3} más`}
+                </p>
+              );
+            })()}
+          </div>
+        ))}
+      </div>
+
+      <div className={`hidden md:block ${tableChrome.wrapper}`}>
       <table className="w-full text-sm text-left">
         <thead className={tableChrome.thead}>
           {/* Corte group headers (only if cortes exist) */}
@@ -307,6 +375,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
           Las definitivas marcadas como parciales solo promedian lo que ya tiene nota:
           lo no calificado no cuenta como cero.
         </span>
+      </div>
       </div>
     </div>
   );
