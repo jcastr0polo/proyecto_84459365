@@ -55,6 +55,19 @@ export default function StudentCourseViewV2({
 
   const rows = useActivityRows(activities, submissions, now);
 
+  /**
+   * Parciales y notas manuales.
+   *
+   * La lista de arriba se arma con /api/courses/[id]/activities, que solo
+   * devuelve actividades. Pero un parcial o una nota manual pesan en la nota
+   * igual que una entrega, así que el estudiante veía una nota de curso que
+   * su propia lista de actividades no explicaba.
+   */
+  const otherItems = useMemo(
+    () => (gradeData?.activities ?? []).filter((a) => a.type === 'quiz' || a.type === 'manual'),
+    [gradeData],
+  );
+
   const pendingCount = rows.filter((r) => needsAction(r.status)).length;
 
   const fade = (d = 0) => reduce ? {} : {
@@ -147,6 +160,45 @@ export default function StudentCourseViewV2({
 
         <ActivityList rows={rows} courseId={course.id} today={today} gradeData={gradeData} />
       </motion.section>
+
+      {otherItems.length > 0 && (
+        <motion.section {...fade(0.1)}>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3">
+            Parciales y notas manuales
+          </h2>
+          <div className="rounded-xl border border-surface-border divide-y divide-surface-border overflow-hidden">
+            {otherItems.map((item) => {
+              const n = item.grade ? (item.grade.score / item.grade.maxScore) * 5 : null;
+              return (
+                <div key={item.id} className="flex items-center gap-3 p-3.5 bg-surface">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    item.grade ? 'bg-emerald-500' : 'bg-foreground/25'}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-foreground/90 leading-snug">{item.title}</p>
+                    <p className="text-meta text-subtle mt-0.5">
+                      {item.type === 'quiz' ? 'Parcial' : 'Nota manual'} · {item.weight}%
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right min-w-[3rem]">
+                    {n !== null ? (
+                      <>
+                        <p className={`text-lg font-semibold tabular-nums leading-none ${gradeText(n)}`}>
+                          {n.toFixed(1)}
+                        </p>
+                        <p className="text-micro text-faint mt-0.5">
+                          {item.grade!.score}/{item.grade!.maxScore}
+                        </p>
+                      </>
+                    ) : (
+                      <span className="text-meta text-faint">Pendiente</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </motion.section>
+      )}
     </div>
   );
 }
