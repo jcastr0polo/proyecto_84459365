@@ -124,9 +124,24 @@ export function isFuture(dateStr: string): boolean {
  * Formatea fecha para mostrar (solo fecha).
  * "25 abr 2026"
  */
+/**
+ * Marcador para una fecha ausente o inválida.
+ *
+ * `toLocaleDateString` sobre una fecha inválida NO lanza excepción: devuelve
+ * la cadena "Invalid Date". Los try/catch de abajo no la atrapaban, así que
+ * ese texto llegaba tal cual a la pantalla del usuario.
+ */
+const NO_DATE = '—';
+
+function isValid(d: Date): boolean {
+  return !Number.isNaN(d.getTime());
+}
+
 export function formatDateColombia(iso: string): string {
+  if (!iso) return NO_DATE;
   try {
     const d = parseDateColombia(iso);
+    if (!isValid(d)) return NO_DATE;
     return d.toLocaleDateString('es-CO', {
       day: '2-digit',
       month: 'short',
@@ -143,8 +158,10 @@ export function formatDateColombia(iso: string): string {
  * "25 abr 2026, 02:30 p.m."
  */
 export function formatDateTimeColombia(iso: string): string {
+  if (!iso) return NO_DATE;
   try {
     const d = parseDateColombia(iso);
+    if (!isValid(d)) return NO_DATE;
     return d.toLocaleString('es-CO', {
       day: '2-digit',
       month: 'short',
@@ -175,8 +192,10 @@ export function formatTimeColombia(): string {
  * "25 abr"
  */
 export function formatDateShort(iso: string): string {
+  if (!iso) return NO_DATE;
   try {
     const d = parseDateColombia(iso);
+    if (!isValid(d)) return NO_DATE;
     return d.toLocaleDateString('es-CO', {
       day: '2-digit',
       month: 'short',
