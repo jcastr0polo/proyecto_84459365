@@ -5,14 +5,14 @@ import { useParams, useRouter } from 'next/navigation';
 import { formatDateColombia as formatDate } from '@/lib/dateUtils';
 import Button from '@/components/ui/Button';
 import Badge, { categoryToBadgeVariant, categoryLabel } from '@/components/ui/Badge';
-import Card from '@/components/ui/Card';
+import CourseOverviewTab from '@/components/admin/CourseOverviewTab';
 import Modal from '@/components/ui/Modal';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import CourseForm from '@/components/forms/CourseForm';
 import type { CourseFormData } from '@/components/forms/CourseForm';
-import type { Course, Semester, CourseSchedule } from '@/lib/types';
-import { ArrowLeft, Pencil, FileText, Users, BookOpen, BarChart3, Rocket, Clock, Layers, ClipboardList, ListChecks } from 'lucide-react';
+import type { Course, Semester } from '@/lib/types';
+import { ArrowLeft, Pencil, FileText, Users, BookOpen, BarChart3, Rocket, Layers, ClipboardList, ListChecks } from 'lucide-react';
 
 type TabKey = 'resumen' | 'estudiantes' | 'actividades' | 'notas' | 'proyectos' | 'cortes' | 'parciales' | 'manual';
 
@@ -175,7 +175,7 @@ export default function CourseDetailPage() {
       {/* Tab content */}
       <div>
         {activeTab === 'resumen' && (
-          <ResumenTab course={course} semester={semester} />
+          <CourseOverviewTab course={course} semester={semester} />
         )}
       </div>
 
@@ -193,63 +193,3 @@ export default function CourseDetailPage() {
   );
 }
 
-/* ─── Resumen Tab ─── */
-
-function ResumenTab({ course, semester }: { course: Course; semester?: Semester }) {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      {/* Description */}
-      <Card padding="lg" className="lg:col-span-2">
-        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">Descripción</h3>
-        <p className="text-sm text-muted leading-relaxed">{course.description}</p>
-      </Card>
-
-      {/* Info */}
-      <Card padding="lg">
-        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">Información</h3>
-        <dl className="space-y-3">
-          <InfoRow label="Código" value={course.code} />
-          <InfoRow label="Categoría" value={categoryLabel(course.category)} />
-          <InfoRow label="Semestre" value={semester?.label ?? course.semesterId} />
-          <InfoRow label="Estado" value={course.isActive ? 'Activo' : 'Inactivo'} />
-          <InfoRow label="Creado" value={formatDate(course.createdAt)} />
-          <InfoRow label="Actualizado" value={formatDate(course.updatedAt)} />
-        </dl>
-      </Card>
-
-      {/* Schedule */}
-      <Card padding="lg" className="lg:col-span-3">
-        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">Horarios</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {course.schedule.map((slot: CourseSchedule, idx: number) => (
-            <div
-              key={idx}
-              className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]"
-            >
-              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center shrink-0">
-                <Clock className="w-4 h-4 text-cyan-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground/80 capitalize">{slot.dayOfWeek}</p>
-                <p className="text-xs text-subtle">
-                  {slot.startTime}–{slot.endTime}
-                  {slot.room && ` · ${slot.room}`}
-                  {` · ${slot.modality}`}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <dt className="text-xs text-subtle">{label}</dt>
-      <dd className="text-sm text-muted font-medium">{value}</dd>
-    </div>
-  );
-}

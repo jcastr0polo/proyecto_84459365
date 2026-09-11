@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Users, GraduationCap, AlertTriangle, ClipboardCheck, Clock } from 'lucide-react';
 import { gradeText, formatScore, PASS, COMFORTABLE } from '@/lib/gradeScale';
+import StatTile from '@/components/ui/StatTile';
 import type { Course, Semester, CourseGradeSummary, CourseSchedule } from '@/lib/types';
 
 /**
@@ -37,6 +38,8 @@ export default function CourseOverviewTab({
   semester?: Semester;
 }) {
   const [summary, setSummary] = useState<CourseGradeSummary | null>(null);
+  /** Qué banda se está mirando abajo; sale de tocar la barra o la métrica. */
+  const [focus, setFocus] = useState<'fail' | 'warn' | 'good' | 'none' | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -91,18 +94,30 @@ export default function CourseOverviewTab({
   return (
     <div className="space-y-5">
       {/* ── Números que responden preguntas ── */}
+      {/*
+        Cada número lleva a su origen. Un tablero cuyos datos no se pueden
+        abrir obliga a salir a buscarlos a mano, y entonces no ahorra trabajo.
+      */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <Stat icon={Users} label="Inscritos" value={String(m.total)} tone="text-foreground" />
-        <Stat icon={GraduationCap} label="Promedio del curso"
-          value={formatScore(m.avg)} tone={gradeText(m.avg)} />
-        <Stat icon={AlertTriangle} label="Van perdiendo"
+        <StatTile icon={Users} label="Inscritos" value={String(m.total)}
+          href={`/admin/courses/${course.id}/students`}
+          hint="ver la lista" />
+        <StatTile icon={GraduationCap} label="Promedio del curso"
+          value={formatScore(m.avg)} tone={gradeText(m.avg)}
+          href={`/admin/courses/${course.id}/grades`}
+          hint="ver todas las notas" />
+        <StatTile icon={AlertTriangle} label="Van perdiendo"
           value={String(m.counts.fail)}
           tone={m.counts.fail > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}
-          highlight={m.counts.fail > 0 ? 'border-red-500/25 bg-red-500/[0.06]' : undefined} />
-        <Stat icon={ClipboardCheck} label="Notas sin poner"
+          highlight={m.counts.fail > 0 ? 'border-red-500/25 bg-red-500/[0.06]' : undefined}
+          onClick={m.counts.fail > 0 ? () => setFocus('fail') : undefined}
+          hint={m.counts.fail > 0 ? 'ver quiénes' : 'ninguno'} />
+        <StatTile icon={ClipboardCheck} label="Notas sin poner"
           value={String(m.ungraded)}
           tone={m.ungraded > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}
-          highlight={m.ungraded > 0 ? 'border-amber-500/25 bg-amber-500/[0.06]' : undefined} />
+          highlight={m.ungraded > 0 ? 'border-amber-500/25 bg-amber-500/[0.06]' : undefined}
+          href={`/admin/courses/${course.id}/activities`}
+          hint={m.ungraded > 0 ? 'ir a calificar' : 'todo al día'} />
       </div>
 
       {/* ── Distribución ── */}
@@ -117,11 +132,14 @@ export default function CourseOverviewTab({
               const n = m.counts[b.key];
               if (n === 0) return null;
               return (
-                <div
+                <button
                   key={b.key}
-                  className={`h-full ${b.bar}`}
+                  onClick={() => setFocus((v) => v === b.key ? null : b.key)}
+                  aria-pressed={focus === b.key}
+                  title={`${b.label}: ${n} de ${m.total} · tocar para ver quiénes`}
+                  className={`h-full cursor-pointer transition-opacity duration-[var(--dur-fast)]
+                              ${b.bar} ${focus && focus !== b.key ? 'opacity-30' : ''}`}
                   style={{ width: `${(n / m.total) * 100}%` }}
-                  title={`${b.label}: ${n} de ${m.total}`}
                 />
               );
             })}
@@ -129,7 +147,11 @@ export default function CourseOverviewTab({
           {/* Etiqueta y conteo por tramo: la identidad nunca depende del color solo. */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
             {BANDS.map((b) => (
-              <div key={b.key} className="flex items-start gap-2">
+              <button key={b.key} onClick={() => setFocus((v) => v === b.key ? null : b.key)}
+                aria-pressed={focus === b.key}
+                className={`flex items-start gap-2 text-left rounded-lg p-1 -m-1 cursor-pointer
+                            transition-colors duration-[var(--dur-fast)] hover:bg-surface-hover
+                            ${focus === b.key ? 'bg-surface-hover' : ''}`}>
                 <span className={`w-2 h-2 rounded-sm mt-1.5 shrink-0 ${b.bar}`} />
                 <div className="min-w-0">
                   <p className={`text-sm font-semibold tabular-nums ${b.text}`}>
@@ -140,41 +162,75 @@ export default function CourseOverviewTab({
                     <span className="block text-faint">{b.hint}</span>
                   </p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* ── A quién hay que mirar ── */}
-      {m.atRisk.length > 0 && (
-        <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3">
-            Estudiantes en riesgo ({m.atRisk.length})
-          </h3>
-          <div className="rounded-xl border border-surface-border divide-y divide-surface-border overflow-hidden">
-            {m.atRisk.slice(0, 8).map((s) => (
-              <Link
-                key={s.id}
-                href={`/admin/students/${s.id}?from=${course.id}`}
-                className="flex items-center gap-3 p-3 bg-surface hover:bg-surface-hover
-                           transition-colors duration-[var(--dur-fast)]"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-foreground/90 leading-snug">
-                    {s.lastName}, {s.firstName}
-                  </p>
-                  <p className="text-micro text-subtle mt-0.5">{s.email}</p>
-                </div>
-                <span className={`text-lg font-semibold tabular-nums shrink-0 ${gradeText(s.finalScore)}`}>
-                  {formatScore(s.finalScore)}
-                </span>
-              </Link>
-            ))}
+      {/*
+        La lista responde al filtro. Antes mostraba siempre y solo a los que
+        van perdiendo; ahora tocar un tramo de la barra o una métrica muestra
+        exactamente a ese grupo, que es de lo que sirve un tablero.
+      */}
+      {(() => {
+        const band = focus ?? 'fail';
+        const list = m.students
+          .filter((s) => {
+            if (s.finalScore === null) return band === 'none';
+            if (band === 'fail') return s.finalScore < PASS;
+            if (band === 'warn') return s.finalScore >= PASS && s.finalScore < COMFORTABLE;
+            if (band === 'good') return s.finalScore >= COMFORTABLE;
+            return false;
+          })
+          .sort((a, b) => (a.finalScore ?? 0) - (b.finalScore ?? 0));
+        const meta = BANDS.find((b) => b.key === band)!;
+
+        if (list.length === 0) return null;
+        return (
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-subtle flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-sm ${meta.bar}`} />
+                {meta.label} ({list.length})
+              </h3>
+              {focus && (
+                <button onClick={() => setFocus(null)}
+                  className="text-meta text-subtle hover:text-foreground transition-colors cursor-pointer px-2 py-1">
+                  Quitar filtro
+                </button>
+              )}
+            </div>
+            <div className="rounded-xl border border-surface-border divide-y divide-surface-border overflow-hidden">
+              {list.slice(0, 12).map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/admin/students/${s.id}?from=${course.id}`}
+                  className="flex items-center gap-3 p-3 bg-surface hover:bg-surface-hover
+                             transition-colors duration-[var(--dur-fast)]"
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${meta.bar}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-foreground/90 leading-snug">
+                      {s.lastName}, {s.firstName}
+                    </p>
+                    <p className="text-micro text-subtle mt-0.5">{s.email}</p>
+                  </div>
+                  <span className={`text-lg font-semibold tabular-nums shrink-0 ${gradeText(s.finalScore)}`}>
+                    {formatScore(s.finalScore)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+            {list.length > 12 && (
+              <p className="text-micro text-faint mt-2">
+                y {list.length - 12} más · <Link href={`/admin/courses/${course.id}/grades`}
+                  className="text-cyan-600 dark:text-cyan-400 hover:underline">ver la tabla completa</Link>
+              </p>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── La información del curso, ahora al final y compacta ── */}
       <div className="rounded-xl border border-surface-border bg-surface p-4 space-y-3">
@@ -198,17 +254,3 @@ export default function CourseOverviewTab({
   );
 }
 
-function Stat({
-  icon: Icon, label, value, tone, highlight,
-}: {
-  icon: typeof Users; label: string; value: string; tone: string; highlight?: string;
-}) {
-  return (
-    <div className={`rounded-xl border p-4 ${highlight ?? 'border-surface-border bg-surface'}`}>
-      <p className="text-micro uppercase tracking-wider text-subtle flex items-center gap-1.5">
-        <Icon className="w-3.5 h-3.5" /> {label}
-      </p>
-      <p className={`text-3xl font-bold tabular-nums leading-none mt-2 ${tone}`}>{value}</p>
-    </div>
-  );
-}
