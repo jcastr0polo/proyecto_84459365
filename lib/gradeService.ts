@@ -64,6 +64,32 @@ export class GradeError extends Error {
 // ESCALA COLOMBIANA
 // ────────────────────────────────────────────────────────────
 
+/**
+ * Identificador de "nota sin entrega".
+ *
+ * Hasta ahora toda nota se guardaba atada a una entrega, así que a quien no
+ * entregaba no se le podía poner un cero: no aparecía en la tabla de
+ * calificación y su peso quedaba fuera de la definitiva, que salía inflada.
+ *
+ * La columna submission_id es NOT NULL y tiene índice único, pero NO tiene
+ * clave foránea contra submissions. Eso permite usar un identificador
+ * sintético y estable por (actividad, estudiante) sin tocar el esquema de una
+ * base con notas reales: cumple el NOT NULL y, de regalo, el índice único
+ * garantiza justo lo que queremos, una sola nota por estudiante y actividad.
+ *
+ * Si algún día se limpia el esquema, basta con permitir NULL en la columna y
+ * añadir un índice único sobre (activity_id, student_id).
+ */
+const NO_SUBMISSION_PREFIX = 'nosub';
+
+export function noSubmissionId(activityId: string, studentId: string): string {
+  return `${NO_SUBMISSION_PREFIX}:${activityId}:${studentId}`;
+}
+
+export function isNoSubmissionId(id: string): boolean {
+  return id.startsWith(`${NO_SUBMISSION_PREFIX}:`);
+}
+
 const SCALE_MAX = 5.0;
 const APPROVAL_THRESHOLD = 3.0;
 
@@ -298,15 +324,21 @@ export async function gradeSubmissionBatch(
   // Pre-validate all items before writing anything
   const validated: {
     item: BatchGradeItem;
-    submission: Submission;
+    submission: Submission | undefined;
     activity: Activity;
     finalScore: number;
     existingGradeId?: string;
   }[] = [];
 
   for (const item of items) {
-    const submission = allSubmissions.find((s) => s.id === item.submissionId);
-    if (!submission) {
+    // Un identificador sintético significa "este estudiante no entregó": no
+    // hay entrega que buscar ni coherencia que validar contra ella.
+    const noSubmission = isNoSubmissionId(item.submissionId);
+    const submission = noSubmission
+      ? undefined
+      : allSubmissions.find((s) => s.id === item.submissionId);
+
+    if (!noSubmission && !submission) {
       errors.push({ submissionId: item.submissionId, error: 'Entrega no encontrada' });
       continue;
     }
@@ -317,7 +349,7 @@ export async function gradeSubmissionBatch(
       continue;
     }
 
-    if (submission.activityId !== activity.id) {
+    if (submission && submission.activityId !== activity.id) {
       errors.push({ submissionId: item.submissionId, error: 'La entrega no corresponde a esta actividad' });
       continue;
     }
@@ -327,9 +359,9 @@ export async function gradeSubmissionBatch(
       continue;
     }
 
-    // Late penalty
+    // Penalización por tardanza: no aplica si no hubo entrega.
     let finalScore = item.score;
-    if (submission.isLate && activity.latePenaltyPercent && activity.latePenaltyPercent > 0) {
+    if (submission?.isLate && activity.latePenaltyPercent && activity.latePenaltyPercent > 0) {
       const penalty = finalScore * (activity.latePenaltyPercent / 100);
       finalScore = roundTo1Decimal(finalScore - penalty);
       if (finalScore < 0) finalScore = 0;
@@ -389,12 +421,15 @@ export async function gradeSubmissionBatch(
     await writeGrades(grades);
   });
 
-  // Single write to submissions.json — mark all as 'reviewed'
+  // Marcar como revisadas solo las que existen: quien no entregó no tiene
+  // entrega que actualizar.
+  const withSubmission = validated.filter((v) => v.submission !== undefined);
+  if (withSubmission.length > 0) {
   await withFileLock('submissions.json', async () => {
     const submissions = await readSubmissionsFresh();
 
-    for (const v of validated) {
-      const idx = submissions.findIndex((s) => s.id === v.submission.id);
+    for (const v of withSubmission) {
+      const idx = submissions.findIndex((s) => s.id === v.submission!.id);
       if (idx !== -1) {
         submissions[idx] = {
           ...submissions[idx],
@@ -406,6 +441,7 @@ export async function gradeSubmissionBatch(
 
     await writeSubmissions(submissions);
   });
+  }
 
   return { saved: validated.length, errors };
 }

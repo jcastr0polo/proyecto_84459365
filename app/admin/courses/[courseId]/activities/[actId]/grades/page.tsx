@@ -79,6 +79,18 @@ export default function AdminGradingPage() {
         const subData = await subRes.json();
         const submissions: SubmissionData[] = subData.submissions ?? subData;
 
+        // Los inscritos, no solo quienes entregaron: antes la tabla se armaba
+        // desde las entregas, así que a quien no entregaba no se le podía
+        // poner un cero y su peso desaparecía de la definitiva.
+        const enrollRes = await fetch(`/api/courses/${courseId}/enrollments`, { credentials: 'include' });
+        const enrolled: { id: string; firstName: string; lastName: string; email: string }[] =
+          enrollRes.ok
+            ? ((await enrollRes.json()).enrollments ?? [])
+                .filter((e: { status: string }) => e.status === 'active')
+                .map((e: { student: { id: string; firstName: string; lastName: string; email: string } }) => e.student)
+                .filter(Boolean)
+            : [];
+
         // Build grades lookup by submissionId (fresh from Blob)
         const gradesMap = new Map<string, GradeData>();
         if (gradesRes.ok) {
@@ -108,7 +120,33 @@ export default function AdminGradingPage() {
           };
         });
 
-        setRows(gradeRows);
+        // Fila también para cada inscrito sin entrega, con un identificador
+        // sintético que el backend reconoce como "no entregó".
+        const withSubmission = new Set(submissions.map((s) => s.studentId));
+        const missingRows: GradeRow[] = enrolled
+          .filter((st) => !withSubmission.has(st.id))
+          .map((st) => {
+            const syntheticId = `nosub:${actId}:${st.id}`;
+            const existing = gradesMap.get(syntheticId);
+            return {
+              submissionId: syntheticId,
+              studentId: st.id,
+              studentName: `${st.lastName}, ${st.firstName}`,
+              studentEmail: st.email,
+              attachmentsCount: 0,
+              linksCount: 0,
+              isLate: false,
+              submittedAt: '',
+              version: 0,
+              score: existing ? existing.score : null,
+              feedback: existing ? existing.feedback : '',
+              existingGradeId: existing?.id,
+              noSubmission: true,
+            };
+          });
+
+        setRows([...gradeRows, ...missingRows].sort((a, b) =>
+          a.studentName.localeCompare(b.studentName, 'es')));
       } catch (err) {
         toast(err instanceof Error ? err.message : 'Error cargando datos', 'error');
       } finally {

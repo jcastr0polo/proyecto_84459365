@@ -25,6 +25,8 @@ export interface GradeRow {
   existingGradeId?: string;
   score: number | null;
   feedback: string;
+  /** El estudiante está inscrito pero no entregó; se puede calificar igual. */
+  noSubmission?: boolean;
 }
 
 interface GradeTableProps {
@@ -149,20 +151,29 @@ export default function GradeTable({
                   <td className="px-4 py-3 text-xs text-subtle tabular-nums">{globalIdx + 1}</td>
                   <td className="px-4 py-3">
                     <p className="text-sm text-foreground/90 font-medium">{row.studentName}</p>
-                    <p className="text-[11px] text-subtle">{row.studentEmail}</p>
+                    <p className="text-meta text-subtle">{row.studentEmail}</p>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <span className="text-xs text-muted">v{row.version}</span>
-                      {row.isLate && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/15 text-red-400 border border-red-500/20">
-                          Tardía
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-subtle mt-0.5">
-                      {formatDateShort(row.submittedAt)}
-                    </p>
+                    {row.noSubmission ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-micro font-medium
+                                       bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                        Sin entrega
+                      </span>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span className="text-xs text-muted">v{row.version}</span>
+                          {row.isLate && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-micro font-medium bg-red-500/15 text-red-400 border border-red-500/20">
+                              Tardía
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-micro text-subtle mt-0.5">
+                          {formatDateShort(row.submittedAt)}
+                        </p>
+                      </>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className="text-xs text-muted flex items-center justify-center gap-1">
@@ -192,11 +203,11 @@ export default function GradeTable({
                   </td>
                   <td className="px-4 py-3 text-center">
                     {row.score !== null ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
                         ✓ Calificado
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-foreground/10 text-subtle border border-foreground/10">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium bg-foreground/10 text-subtle border border-foreground/10">
                         Pendiente
                       </span>
                     )}
@@ -222,31 +233,40 @@ export default function GradeTable({
             {/* Student header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-[10px] font-bold text-muted shrink-0">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center text-micro font-bold text-muted shrink-0">
                   {row.studentName.split(',').map(s => s.trim()[0]).join('')}
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground/90 truncate">{row.studentName}</p>
-                  <p className="text-[11px] text-subtle truncate">{row.studentEmail}</p>
+                  <p className="text-meta text-subtle truncate">{row.studentEmail}</p>
                 </div>
               </div>
               {row.score !== null ? (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 shrink-0">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 shrink-0">
                   ✓
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-foreground/10 text-subtle border border-foreground/10 shrink-0">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium bg-foreground/10 text-subtle border border-foreground/10 shrink-0">
                   —
                 </span>
               )}
             </div>
 
             {/* Meta row */}
-            <div className="flex items-center gap-3 text-[11px] text-subtle">
-              <span>v{row.version}</span>
-              <span>{formatDateShort(row.submittedAt)}</span>
+            <div className="flex items-center gap-3 text-meta text-subtle">
+              {row.noSubmission ? (
+                <span className="px-1.5 py-0.5 rounded text-micro font-medium bg-amber-500/15
+                                 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                  Sin entrega
+                </span>
+              ) : (
+                <>
+                  <span>v{row.version}</span>
+                  <span>{formatDateShort(row.submittedAt)}</span>
+                </>
+              )}
               {row.isLate && (
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/15 text-red-400 border border-red-500/20">
+                <span className="px-1.5 py-0.5 rounded text-micro font-medium bg-red-500/15 text-red-400 border border-red-500/20">
                   Tardía
                 </span>
               )}
@@ -290,7 +310,7 @@ export default function GradeTable({
       {/* Save bar */}
       <div className="flex items-center justify-between mt-4 p-4 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02]">
         <p className="text-xs text-subtle hidden sm:block">
-          Usa <kbd className="px-1.5 py-0.5 rounded bg-foreground/10 text-muted text-[10px] font-mono">Tab</kbd> para avanzar
+          Usa <kbd className="px-1.5 py-0.5 rounded bg-foreground/10 text-muted text-micro font-mono">Tab</kbd> para avanzar
         </p>
         <p className="text-xs text-subtle sm:hidden">
           {gradedCount} / {rows.length} calificados
