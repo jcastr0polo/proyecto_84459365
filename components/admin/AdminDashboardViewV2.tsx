@@ -108,8 +108,14 @@ export default function AdminDashboardViewV2({
         </h1>
         <p className="text-sm text-subtle mt-1">
           {semester ? `Semestre ${semester.label}` : 'Sin semestre activo'}
-          {' · '}{courseData.length} {courseData.length === 1 ? 'curso' : 'cursos'}
-          {' · '}{students} {students === 1 ? 'estudiante' : 'estudiantes'}
+          {' · '}
+          <Link href="/admin/courses" className="hover:text-foreground transition-colors underline decoration-transparent hover:decoration-current">
+            {courseData.length} {courseData.length === 1 ? 'curso' : 'cursos'}
+          </Link>
+          {' · '}
+          <Link href="/admin/students" className="hover:text-foreground transition-colors underline decoration-transparent hover:decoration-current">
+            {students} {students === 1 ? 'estudiante' : 'estudiantes'}
+          </Link>
         </p>
       </motion.div>
 
@@ -131,9 +137,17 @@ export default function AdminDashboardViewV2({
             hint={semester ? `${semester.startDate} → ${semester.endDate}` : ''} />
           <ProgressRow label="Actividades cerradas" pct={progress.workPct} tone="bg-cyan-500"
             hint={`${progress.closed} de ${progress.totalActs}`} />
+          {/* La única de las tres que lleva a alguna parte: las otras dos son
+              medidas del tiempo y del calendario, no cosas que se puedan abrir. */}
           <ProgressRow label="Entregas calificadas" pct={progress.gradedPct}
             tone={progress.gradedPct >= (progress.timePct ?? 0) ? 'bg-emerald-500' : 'bg-amber-500'}
-            hint={totalPending > 0 ? `${totalPending} sin calificar` : 'todo al día'} />
+            hint={totalPending > 0 ? `${totalPending} sin calificar` : 'todo al día'}
+            onClick={totalPending > 0
+              ? () => document.getElementById('por-calificar')?.scrollIntoView({
+                  behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                  block: 'start',
+                })
+              : undefined} />
         </div>
 
         {/* La lectura, dicha en palabras: comparar dos barras a ojo no es
@@ -147,7 +161,7 @@ export default function AdminDashboardViewV2({
         )}
       </motion.section>
 
-      <motion.section {...fade(0.04)}>
+      <motion.section id="por-calificar" {...fade(0.04)}>
         {/* Jerarquía: esta es la sección que manda en la pantalla, así que
             no puede llevar el mismo gris pequeño que las de apoyo. */}
         <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -289,11 +303,20 @@ export default function AdminDashboardViewV2({
   );
 }
 
-function ProgressRow({ label, pct, tone, hint }: {
-  label: string; pct: number; tone: string; hint?: string;
+function ProgressRow({ label, pct, tone, hint, onClick }: {
+  label: string; pct: number; tone: string; hint?: string; onClick?: () => void;
 }) {
+  const Tag = onClick ? 'button' : 'div';
   return (
-    <div>
+    <Tag
+      onClick={onClick}
+      className={onClick
+        ? `w-full text-left rounded-lg -mx-2 px-2 py-1 cursor-pointer
+           transition-colors duration-[var(--dur-fast)] ease-[var(--ease-out)]
+           hover:bg-surface-hover
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40`
+        : ''}
+    >
       <div className="flex items-center justify-between gap-3 text-xs">
         <span className="text-muted">{label}</span>
         <span className="text-subtle tabular-nums">
@@ -308,6 +331,6 @@ function ProgressRow({ label, pct, tone, hint }: {
           style={{ width: `${pct}%` }}
         />
       </div>
-    </div>
+    </Tag>
   );
 }

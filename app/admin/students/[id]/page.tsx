@@ -9,10 +9,11 @@ import {
   ArrowLeft, BookOpen, CheckCircle2,
   ExternalLink, FolderGit2, ChevronDown, ChevronRight,
   Paperclip, Link as LinkIcon, Eye, Download, GitBranch, Palette,
-  Plus,
+  Plus, GraduationCap, AlertTriangle, Clock,
 } from 'lucide-react';
 import { gradeText, gradeChip, formatScore, PASS } from '@/lib/gradeScale';
 import Badge from '@/components/ui/Badge';
+import StatTile from '@/components/ui/StatTile';
 import Card from '@/components/ui/Card';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
@@ -117,6 +118,8 @@ export default function AdminStudentDetailPage() {
   const [courses, setCourses] = useState<CourseDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  /** Qué grupo de cursos se está mirando abajo; sale de tocar una señal. */
+  const [focus, setFocus] = useState<'failing' | 'pending' | null>(null);
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
 
@@ -272,6 +275,13 @@ export default function AdminStudentDetailPage() {
     const d = risk(sa) - risk(sb);
     return d !== 0 ? d : a.name.localeCompare(b.name, 'es');
   });
+
+  /** La lista responde a la señal que se haya tocado arriba. */
+  const visibleCourses = focus === 'failing'
+    ? sortedCourses.filter((c) => c.grades?.finalGrade != null && (c.grades.finalGrade as number) < PASS)
+    : focus === 'pending'
+      ? sortedCourses.filter((c) => c.pending > 0)
+      : sortedCourses;
   const semesterAvg = gradedCourses.length > 0
     ? gradedCourses.reduce((a, c) => a + (c.grades!.finalGrade as number), 0) / gradedCourses.length
     : null;
@@ -325,59 +335,40 @@ export default function AdminStudentDetailPage() {
       </motion.div>
 
       {/*
-        Antes había seis contadores: promedio, cursos, actividades,
-        entregadas, pendientes y proyectos. Cuatro no llevan a ninguna
-        decisión. Y faltaba la señal que se busca al abrir la ficha de un
-        estudiante: en qué cursos va perdiendo.
+        Las tres señales son puertas, no adornos: tocar "va perdiendo" o
+        "sin entregar" filtra la lista de cursos de abajo a ese grupo. Un
+        número que no lleva a sus datos obliga a buscarlos a mano.
       */}
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-surface-border bg-surface p-4">
-          <p className="text-micro uppercase tracking-wider text-subtle">Promedio</p>
-          <div className="flex items-baseline gap-1.5 mt-1">
-            <span className={`text-3xl font-bold tabular-nums leading-none ${gradeText(semesterAvg)}`}>
-              {formatScore(semesterAvg)}
-            </span>
-            <span className="text-xs text-subtle">/ 5.0</span>
-          </div>
-          <p className="text-micro text-faint mt-1.5">
-            {semesterAvg === null
-              ? 'Aún no hay cursos con nota'
-              : `Sobre ${gradedCourses.length} ${gradedCourses.length === 1 ? 'curso' : 'cursos'} con nota`}
-          </p>
-        </div>
-
-        <div className={`rounded-xl border p-4 ${failing.length > 0
-          ? 'border-red-500/25 bg-red-500/[0.06]'
-          : 'border-surface-border bg-surface'}`}>
-          <p className="text-micro uppercase tracking-wider text-subtle">Va perdiendo</p>
-          <p className={`text-3xl font-bold tabular-nums leading-none mt-1 ${
-            failing.length > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-            {failing.length}
-          </p>
-          <p className="text-micro text-faint mt-1.5 truncate">
-            {failing.length === 0
-              ? 'Ningún curso por debajo de 3.0'
-              : failing.map((c) => c.code).join(', ')}
-          </p>
-        </div>
-
-        <div className={`rounded-xl border p-4 ${totalPending > 0
-          ? 'border-amber-500/25 bg-amber-500/[0.06]'
-          : 'border-surface-border bg-surface'}`}>
-          <p className="text-micro uppercase tracking-wider text-subtle">Sin entregar</p>
-          <p className={`text-3xl font-bold tabular-nums leading-none mt-1 ${
-            totalPending > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-            {totalPending}
-          </p>
-          <p className="text-micro text-faint mt-1.5">
-            de {totalActivities} actividades · {totalSubmitted} entregadas
-          </p>
-        </div>
+        <StatTile icon={GraduationCap} label="Promedio"
+          value={formatScore(semesterAvg)} tone={gradeText(semesterAvg)}
+          hint={semesterAvg === null
+            ? 'aún no hay cursos con nota'
+            : `sobre ${gradedCourses.length} ${gradedCourses.length === 1 ? 'curso' : 'cursos'}`} />
+        <StatTile icon={AlertTriangle} label="Va perdiendo"
+          value={String(failing.length)}
+          tone={failing.length > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}
+          highlight={failing.length > 0 ? 'border-red-500/25 bg-red-500/[0.06]' : undefined}
+          onClick={failing.length > 0 ? () => setFocus((v) => v === 'failing' ? null : 'failing') : undefined}
+          hint={failing.length === 0 ? 'ningún curso bajo 3.0' : failing.map((c) => c.code).join(', ')} />
+        <StatTile icon={Clock} label="Sin entregar"
+          value={String(totalPending)}
+          tone={totalPending > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}
+          highlight={totalPending > 0 ? 'border-amber-500/25 bg-amber-500/[0.06]' : undefined}
+          onClick={totalPending > 0 ? () => setFocus((v) => v === 'pending' ? null : 'pending') : undefined}
+          hint={`de ${totalActivities} actividades · ${totalSubmitted} entregadas`} />
       </div>
 
       {/* Courses */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
+          {focus && (
+            <button onClick={() => setFocus(null)}
+              className="text-meta text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer
+                         inline-flex items-center min-h-11 px-2 -ml-2">
+              Mostrando {focus === 'failing' ? 'solo los que va perdiendo' : 'solo los que tienen pendientes'} · quitar filtro
+            </button>
+          )}
           <h2 className="text-xs font-semibold text-subtle uppercase tracking-wider">
             Cursos Inscritos ({courses.length})
           </h2>
@@ -443,7 +434,7 @@ export default function AdminStudentDetailPage() {
             description="Este estudiante no está inscrito en ningún curso"
           />
         ) : (
-          sortedCourses.map((course) => (
+          visibleCourses.map((course) => (
             <CourseSection
               key={course.id}
               course={course}
