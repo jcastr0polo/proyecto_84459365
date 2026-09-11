@@ -37,6 +37,14 @@ interface GradeTableProps {
   onSave: (row: GradeRow) => Promise<void>;
   onSaveAll: (rows: GradeRow[]) => Promise<void>;
   saving: boolean;
+  /**
+   * Las notas manuales (una exposición, la participación) no tienen entrega
+   * ni archivos, así que esas dos columnas se ocultan. Todo lo demás —el
+   * salto con tabulador, el buscador, el guardado por lotes, el aviso de
+   * cambios sin guardar— es idéntico: calificar debe verse y funcionar igual
+   * en todo el sistema.
+   */
+  showSubmissionColumns?: boolean;
 }
 
 /**
@@ -48,6 +56,7 @@ export default function GradeTable({
   maxScore,
   onSaveAll,
   saving,
+  showSubmissionColumns = true,
 }: GradeTableProps) {
   const [rows, setRows] = useState<GradeRow[]>(initialRows);
   const [search, setSearch] = useState('');
@@ -131,8 +140,12 @@ export default function GradeTable({
             <tr>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">#</th>
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted">Estudiante</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted text-center">Entrega</th>
-              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted text-center">Archivos</th>
+              {showSubmissionColumns && (
+                <>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted text-center">Entrega</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted text-center">Archivos</th>
+                </>
+              )}
               <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted text-center">
                 Nota <span className="text-subtle normal-case">/ {maxScore}</span>
               </th>
@@ -153,6 +166,8 @@ export default function GradeTable({
                     <p className="text-sm text-foreground/90 font-medium">{row.studentName}</p>
                     <p className="text-meta text-subtle">{row.studentEmail}</p>
                   </td>
+                  {showSubmissionColumns && (
+                    <>
                   <td className="px-4 py-3 text-center">
                     {row.noSubmission ? (
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-micro font-medium
@@ -182,6 +197,8 @@ export default function GradeTable({
                       {row.attachmentsCount === 0 && row.linksCount === 0 && '—'}
                     </span>
                   </td>
+                    </>
+                  )}
                   <td className="px-4 py-3">
                     <div className="flex justify-center" ref={(el) => { scoreRefs.current[globalIdx] = el; }}>
                       <ScoreInput
@@ -253,6 +270,7 @@ export default function GradeTable({
             </div>
 
             {/* Meta row */}
+            {showSubmissionColumns && (
             <div className="flex items-center gap-3 text-meta text-subtle">
               {row.noSubmission ? (
                 <span className="px-1.5 py-0.5 rounded text-micro font-medium bg-amber-500/15
@@ -273,6 +291,7 @@ export default function GradeTable({
               {row.attachmentsCount > 0 && <span className="flex items-center gap-0.5"><Paperclip className="w-3 h-3" />{row.attachmentsCount}</span>}
               {row.linksCount > 0 && <span className="flex items-center gap-0.5"><LinkIcon className="w-3 h-3" />{row.linksCount}</span>}
             </div>
+            )}
 
             {/* Score input — full width on mobile */}
             <div className="flex items-center gap-3">
