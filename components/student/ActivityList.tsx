@@ -8,6 +8,7 @@ import {
   deliveryStatus, needsAction, dueLabel,
   PRIORITY, STATUS_META, TYPE_LABELS, type DeliveryStatus,
 } from '@/lib/activityStatus';
+import EmptyState from '@/components/ui/EmptyState';
 import type { Activity, Submission, StudentGradeSummary } from '@/lib/types';
 
 /**
@@ -50,7 +51,10 @@ export default function ActivityList({
   const gradeFor = (id: string) => gradeData?.activities.find((a) => a.id === id)?.grade ?? null;
 
   if (rows.length === 0) {
-    return <p className="text-sm text-subtle px-1 py-6">No hay actividades publicadas todavía.</p>;
+    return (
+      <EmptyState compact kind="empty" title="Sin actividades"
+        description="Todavía no hay actividades publicadas en este curso." />
+    );
   }
 
   return (

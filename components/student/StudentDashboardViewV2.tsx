@@ -8,6 +8,7 @@ import { parseDateColombia, nowColombia, formatDateShort } from '@/lib/dateUtils
 import { gradeText, normalize, formatScore, PASS } from '@/lib/gradeScale';
 import type { Semester } from '@/lib/types';
 import CourseCard from './CourseCard';
+import EmptyState from '@/components/ui/EmptyState';
 import type { CourseWithMeta, UserInfo, ActiveQuiz } from './StudentDashboardView';
 
 
@@ -302,7 +303,8 @@ export default function StudentDashboardViewV2({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-subtle px-1 py-6">Nada pendiente. Vas al día.</p>
+            <EmptyState compact kind="done" title="Nada pendiente"
+              description="Vas al día con todas tus entregas." />
           )}
         </motion.section>
 
@@ -327,7 +329,8 @@ export default function StudentDashboardViewV2({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-subtle px-1 py-6">Todavía no tienes notas publicadas.</p>
+            <EmptyState compact kind="empty" title="Sin notas todavía"
+              description="Aquí aparecerán tus notas cuando el docente las publique." />
           )}
         </motion.section>
       </div>

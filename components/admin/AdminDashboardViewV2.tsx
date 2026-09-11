@@ -3,10 +3,11 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ClipboardCheck, CalendarClock, Users, BookOpen, FileEdit, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ClipboardCheck, CalendarClock, Users, BookOpen, FileEdit, ArrowRight } from 'lucide-react';
 import { parseDateColombia, nowColombia } from '@/lib/dateUtils';
 import { dueLabel, startOfTodayColombia } from '@/lib/activityStatus';
 import { toneChip } from '@/lib/semantics';
+import EmptyState from '@/components/ui/EmptyState';
 import type { Course, Enrollment, Activity, Submission, Semester } from '@/lib/types';
 
 /**
@@ -93,12 +94,9 @@ export default function AdminDashboardViewV2({
           <ClipboardCheck className="w-4 h-4 text-amber-500" /> Por calificar
         </h2>
         {totalPending === 0 ? (
-          <div className="rounded-2xl border border-surface-border bg-surface p-5 flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-foreground">No tienes nada pendiente</p>
-              <p className="text-xs text-subtle mt-0.5">Todas las entregas están calificadas.</p>
-            </div>
+          <div className="rounded-2xl border border-surface-border bg-surface">
+            <EmptyState compact kind="done" title="No tienes nada pendiente"
+              description="Todas las entregas están calificadas." />
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -157,7 +155,8 @@ export default function AdminDashboardViewV2({
           <CalendarClock className="w-3.5 h-3.5" /> Vencimientos cercanos
         </h2>
         {deadlines.length === 0 ? (
-          <p className="text-sm text-subtle px-1 py-4">Nada vence en las próximas dos semanas.</p>
+          <EmptyState compact kind="done" title="Sin vencimientos cercanos"
+            description="Nada vence en las próximas dos semanas." />
         ) : (
           <div className="rounded-xl border border-surface-border divide-y divide-surface-border overflow-hidden">
             {deadlines.map(({ activity, course, days, active, submitted }) => {
