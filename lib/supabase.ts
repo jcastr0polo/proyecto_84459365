@@ -1036,29 +1036,6 @@ interface SupabaseManualGradeRow {
   updated_at: string;
 }
 
-/**
- * Añade manual_grades.is_published si aún no existe.
- *
- * Las notas manuales eran el único tipo que el estudiante veía en cuanto se
- * guardaba: no tenían concepto de publicación, a diferencia de las notas de
- * actividad (isPublished) y de los parciales (resultVisibility).
- *
- * La migración se aplica desde el propio código, una vez por proceso, porque
- * es aditiva e idempotente: ADD COLUMN IF NOT EXISTS con DEFAULT true, así
- * que las notas que ya existían siguen visibles y nadie pierde nada. Es el
- * mismo patrón de CREATE TABLE IF NOT EXISTS que ya usa la ruta de migración.
- */
-let manualGradesColumnEnsured = false;
-
-async function ensureManualGradesPublishedColumn(): Promise<void> {
-  if (manualGradesColumnEnsured) return;
-  const sql = getPgPool();
-  await sql.unsafe(
-    `ALTER TABLE manual_grades ADD COLUMN IF NOT EXISTS is_published BOOLEAN NOT NULL DEFAULT true`
-  );
-  manualGradesColumnEnsured = true;
-}
-
 function rowToManualGrade(r: SupabaseManualGradeRow): ManualGrade {
   return {
     id: r.id, itemId: r.item_id, studentId: r.student_id, courseId: r.course_id,
@@ -1087,7 +1064,6 @@ export async function supabaseReadManualGrades(): Promise<ManualGrade[]> {
 }
 
 export async function supabaseReplaceManualGrades(items: ManualGrade[]): Promise<void> {
-  await ensureManualGradesPublishedColumn();
   await replaceAllRows('manual_grades', items.map(manualGradeToRow));
 }
 

@@ -36,6 +36,7 @@ export default function ManualItemGradingPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [unpublished, setUnpublished] = useState(0);
+  const [publishedCount, setPublishedCount] = useState(0);
   const [publishing, setPublishing] = useState(false);
   const [confirmPublish, setConfirmPublish] = useState(false);
   const [search, setSearch] = useState('');
@@ -71,6 +72,7 @@ export default function ManualItemGradingPage() {
 
       const grades: ManualGrade[] = gradesRes.ok ? (await gradesRes.json()).grades ?? [] : [];
       setUnpublished(grades.filter((g) => g.isPublished === false).length);
+      setPublishedCount(grades.filter((g) => g.isPublished !== false).length);
 
       const built: Row[] = students.map((student) => {
         const g = grades.find((x) => x.studentId === student.id);
@@ -141,8 +143,9 @@ export default function ManualItemGradingPage() {
       // Guardar no publica: se recarga el conteo de lo pendiente.
       const g = await fetch(`/api/courses/${courseId}/manual-items/${itemId}/grades`);
       if (g.ok) {
-        const d = await g.json();
-        setUnpublished((d.grades ?? []).filter((x: ManualGrade) => x.isPublished === false).length);
+        const list: ManualGrade[] = (await g.json()).grades ?? [];
+        setUnpublished(list.filter((x) => x.isPublished === false).length);
+        setPublishedCount(list.filter((x) => x.isPublished !== false).length);
       }
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Error al guardar', 'error');
@@ -151,14 +154,20 @@ export default function ManualItemGradingPage() {
     }
   }
 
-  async function publish() {
+  async function setPublication(publish: boolean) {
     setPublishing(true);
     try {
-      const res = await fetch(`/api/courses/${courseId}/manual-items/${itemId}/grades`, { method: 'PATCH' });
+      const res = await fetch(`/api/courses/${courseId}/manual-items/${itemId}/grades`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publish }),
+      });
       const d = await res.json();
-      if (!res.ok) throw new Error(d.error || 'Error al publicar');
+      if (!res.ok) throw new Error(d.error || 'Error');
       toast(d.message, 'success');
-      setUnpublished(0);
+      const total = unpublished + publishedCount;
+      setUnpublished(publish ? 0 : total);
+      setPublishedCount(publish ? total : 0);
       setConfirmPublish(false);
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Error al publicar', 'error');
@@ -190,36 +199,72 @@ export default function ManualItemGradingPage() {
           placeholder="Buscar estudiante..." className="w-full sm:w-64" />
       </div>
 
-      {/* Antes las notas manuales se veían en cuanto se guardaban, sin que
-          nada lo avisara. Ahora se guardan sin publicar y se dice claramente. */}
-      {unpublished > 0 && (
-        <div className="flex items-center justify-between gap-4 flex-wrap rounded-xl border
-                        border-amber-500/25 bg-amber-500/[0.07] p-4">
+      {/*
+        El estado de publicación se muestra siempre, no solo cuando hay algo
+        pendiente. Antes el panel aparecía únicamente si había notas sin
+        publicar, así que en un ítem ya publicado la pantalla no decía nada y
+        parecía que la función no existiera.
+      */}
+      {(unpublished > 0 || publishedCount > 0) && (
+        <div className={`flex items-center justify-between gap-4 flex-wrap rounded-xl border p-4
+          ${unpublished > 0
+            ? 'border-amber-500/25 bg-amber-500/[0.07]'
+            : 'border-emerald-500/25 bg-emerald-500/[0.06]'}`}>
           <div>
-            <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
-              {unpublished} {unpublished === 1 ? 'nota sin publicar' : 'notas sin publicar'}
-            </p>
-            <p className="text-xs text-subtle mt-0.5">
-              Los estudiantes todavía no las ven. Puedes seguir ajustándolas antes de publicar.
-            </p>
+            {unpublished > 0 ? (
+              <>
+                <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                  {unpublished} sin publicar
+                  {publishedCount > 0 && <span className="text-subtle font-normal"> · {publishedCount} ya visibles</span>}
+                </p>
+                <p className="text-xs text-subtle mt-0.5">
+                  Los estudiantes todavía no ven esas notas. Puedes seguir ajustándolas antes de publicar.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                  {publishedCount} {publishedCount === 1 ? 'nota publicada' : 'notas publicadas'}
+                </p>
+                <p className="text-xs text-subtle mt-0.5">
+                  Los estudiantes ya las ven y cuentan en su nota definitiva.
+                </p>
+              </>
+            )}
           </div>
-          <button
-            onClick={() => setConfirmPublish(true)}
-            disabled={publishing}
-            className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium
-                       hover:bg-amber-400 transition-colors duration-[var(--dur-fast)]
-                       active:scale-[0.98] motion-reduce:active:scale-100
-                       disabled:opacity-50 cursor-pointer shrink-0"
-          >
-            {publishing ? 'Publicando…' : 'Publicar notas'}
-          </button>
+
+          {unpublished > 0 ? (
+            <button
+              onClick={() => setConfirmPublish(true)}
+              disabled={publishing}
+              className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium
+                         hover:bg-amber-400 transition-colors duration-[var(--dur-fast)]
+                         active:scale-[0.98] motion-reduce:active:scale-100
+                         disabled:opacity-50 cursor-pointer shrink-0"
+            >
+              {publishing ? 'Publicando…' : `Publicar ${unpublished}`}
+            </button>
+          ) : (
+            /* Sin esto no habría forma de corregir un error tras publicar. */
+            <button
+              onClick={() => setPublication(false)}
+              disabled={publishing}
+              className="px-4 py-2 rounded-lg border border-surface-border text-sm font-medium
+                         text-muted hover:text-foreground hover:bg-surface-hover
+                         transition-colors duration-[var(--dur-fast)]
+                         active:scale-[0.98] motion-reduce:active:scale-100
+                         disabled:opacity-50 cursor-pointer shrink-0"
+            >
+              {publishing ? 'Ocultando…' : 'Ocultar a estudiantes'}
+            </button>
+          )}
         </div>
       )}
 
       <ConfirmModal
         open={confirmPublish}
         onClose={() => setConfirmPublish(false)}
-        onConfirm={publish}
+        onConfirm={() => setPublication(true)}
         variant="warning"
         title="¿Publicar estas notas?"
         message={`${unpublished} ${unpublished === 1 ? 'nota quedará visible' : 'notas quedarán visibles'} para los estudiantes de inmediato, y entrarán en su nota definitiva.`}

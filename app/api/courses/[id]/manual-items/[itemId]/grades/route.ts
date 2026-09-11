@@ -142,14 +142,19 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
 }
 
 /**
- * PATCH /api/courses/[id]/manual-items/[itemId]/grades — Publicar las notas
+ * PATCH /api/courses/[id]/manual-items/[itemId]/grades — Publicar u ocultar
  *
- * Las notas manuales se guardan sin publicar; esto las hace visibles para el
- * estudiante, igual que "Publicar notas" en las actividades.
+ * Body: { publish: boolean }
+ *
+ * Publicar hace visibles las notas al estudiante; ocultar las retira. El
+ * docente necesita las dos direcciones: sin "ocultar" no hay forma de
+ * corregir un error después de publicar.
  */
 export async function PATCH(request: Request, { params }: RouteParams): Promise<NextResponse> {
   return withAuth(request, async (user) => {
     const { id: courseId, itemId } = await params;
+    const body = await request.json().catch(() => ({}));
+    const publish = (body as { publish?: boolean }).publish !== false;
 
     return withFileLock('manual-grades.json', async () => {
       const allGrades = await readManualGradesFresh();
@@ -157,15 +162,22 @@ export async function PATCH(request: Request, { params }: RouteParams): Promise<
       const now = nowColombiaISO();
 
       for (const g of allGrades) {
-        if (g.itemId === itemId && g.courseId === courseId && g.isPublished === false) {
-          g.isPublished = true;
+        if (g.itemId !== itemId || g.courseId !== courseId) continue;
+        // `isPublished` puede venir sin definir en las notas guardadas antes
+        // de que existiera la columna: eso cuenta como publicada.
+        const current = g.isPublished !== false;
+        if (current !== publish) {
+          g.isPublished = publish;
           g.updatedAt = now;
           published++;
         }
       }
 
       if (published === 0) {
-        return NextResponse.json({ published: 0, message: 'No había notas sin publicar' });
+        return NextResponse.json({
+          published: 0,
+          message: publish ? 'No había notas sin publicar' : 'No había notas publicadas',
+        });
       }
 
       await dispatchWrite(
@@ -176,14 +188,16 @@ export async function PATCH(request: Request, { params }: RouteParams): Promise<
           entityId: itemId,
           userId: user.id,
           userName: `${user.firstName} ${user.lastName}`,
-          details: `Publicó ${published} nota(s) manual(es)`,
+          details: `${publish ? 'Publicó' : 'Ocultó'} ${published} nota(s) manual(es)`,
           ...extractRequestMeta(request),
         }
       );
 
       return NextResponse.json({
         published,
-        message: `${published} ${published === 1 ? 'nota publicada' : 'notas publicadas'}`,
+        message: publish
+          ? `${published} ${published === 1 ? 'nota publicada' : 'notas publicadas'}`
+          : `${published} ${published === 1 ? 'nota oculta' : 'notas ocultas'} para los estudiantes`,
       });
     });
   }, 'admin');

@@ -321,6 +321,7 @@ CREATE TABLE IF NOT EXISTS manual_grades (
   score NUMERIC NOT NULL,
   max_score NUMERIC NOT NULL,
   feedback TEXT,
+  is_published BOOLEAN NOT NULL DEFAULT true,
   graded_by TEXT NOT NULL,
   graded_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
