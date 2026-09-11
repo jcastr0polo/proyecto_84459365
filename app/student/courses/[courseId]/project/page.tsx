@@ -8,6 +8,7 @@ import { Star, Pencil, Rocket, Upload, FileText, CheckCircle } from 'lucide-reac
 import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
+import VisibilityToggle from '@/components/projects/VisibilityToggle';
 import MarkdownViewer from '@/components/ui/MarkdownViewer';
 import type { StudentProject, Course } from '@/lib/types';
 
@@ -83,10 +84,47 @@ export default function StudentProjectPage() {
       return u.protocol === 'https:' && u.hostname.endsWith('.vercel.app');
     } catch { return false; }
   }, [vercelUrl]);
+  // Figma no se validaba, a diferencia de GitHub y Vercel: un enlace mal
+  // escrito se guardaba y luego no abría.
+  const isFigmaValid = useMemo(() => {
+    if (!figmaUrl) return true;
+    try {
+      const u = new URL(figmaUrl);
+      return u.protocol === 'https:' && /(^|\.)figma\.com$/.test(u.hostname);
+    } catch { return false; }
+  }, [figmaUrl]);
+
   const isFormValid = useMemo(
-    () => projectName.trim().length >= 1 && isGithubValid && isVercelValid,
-    [projectName, isGithubValid, isVercelValid]
+    () => projectName.trim().length >= 1 && isGithubValid && isVercelValid && isFigmaValid,
+    [projectName, isGithubValid, isVercelValid, isFigmaValid]
   );
+
+  /**
+   * Aviso antes de perder cambios sin guardar.
+   *
+   * A diferencia del formulario de entrega, aquí NO se restaura un borrador
+   * automáticamente: si el proyecto ya está guardado en el servidor, meterle
+   * encima un borrador viejo del navegador resucitaría texto que el
+   * estudiante ya había reemplazado. El aviso al salir cubre el riesgo real
+   * sin arriesgar los datos buenos.
+   */
+  const isDirty = editMode && Boolean(
+    project
+      ? projectName !== project.projectName
+        || description !== (project.description ?? '')
+        || githubUrl !== project.githubUrl
+        || vercelUrl !== (project.vercelUrl ?? '')
+        || figmaUrl !== (project.figmaUrl ?? '')
+        || isPublic !== project.isPublic
+      : projectName || description || githubUrl || vercelUrl || figmaUrl
+  );
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isDirty]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -250,7 +288,7 @@ export default function StudentProjectPage() {
             {/* Document upload section */}
             <div className="mt-6 pt-6 border-t border-foreground/[0.06]">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] text-subtle uppercase tracking-wider flex items-center gap-1.5">
+                <p className="text-meta text-subtle uppercase tracking-wider flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5" />
                   Documento del Proyecto (.md)
                 </p>
@@ -271,7 +309,7 @@ export default function StudentProjectPage() {
                     />
                   </label>
                 ) : (
-                  <span className="text-[10px] text-faint bg-foreground/5 px-2.5 py-1 rounded-lg">
+                  <span className="text-micro text-faint bg-foreground/5 px-2.5 py-1 rounded-lg">
                     Edición cerrada por el docente
                   </span>
                 )}
@@ -306,7 +344,7 @@ export default function StudentProjectPage() {
             {/* Preview card */}
             {project.isPublic && (
               <div className="mt-6 pt-6 border-t border-foreground/[0.06]">
-                <p className="text-[11px] text-subtle uppercase tracking-wider mb-3">
+                <p className="text-meta text-subtle uppercase tracking-wider mb-3">
                   Vista previa en la Vitrina
                 </p>
                 <ShowcasePreview
@@ -363,7 +401,7 @@ export default function StudentProjectPage() {
                 maxLength={1000}
                 className="w-full px-3 py-2.5 bg-foreground/[0.04] border border-foreground/[0.08] rounded-lg text-sm text-foreground/80 placeholder:text-faint focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-colors resize-y"
               />
-              <p className="text-[10px] text-faint mt-1">{description.length}/1000</p>
+              <p className="text-micro text-faint mt-1">{description.length}/1000</p>
             </div>
 
             {/* GitHub URL */}
@@ -384,7 +422,7 @@ export default function StudentProjectPage() {
                 required
               />
               {githubUrl && !isGithubValid && (
-                <p className="text-[11px] text-red-400 mt-1">Debe empezar con https://github.com/</p>
+                <p className="text-meta text-red-400 mt-1">Debe empezar con https://github.com/</p>
               )}
             </div>
 
@@ -405,7 +443,7 @@ export default function StudentProjectPage() {
                 }`}
               />
               {vercelUrl && !isVercelValid && (
-                <p className="text-[11px] text-red-400 mt-1">Debe ser HTTPS y terminar en .vercel.app</p>
+                <p className="text-meta text-red-400 mt-1">Debe ser HTTPS y terminar en .vercel.app</p>
               )}
             </div>
 
@@ -419,38 +457,23 @@ export default function StudentProjectPage() {
                 value={figmaUrl}
                 onChange={(e) => setFigmaUrl(e.target.value)}
                 placeholder="https://figma.com/file/..."
-                className="w-full px-3 py-2.5 bg-foreground/[0.04] border border-foreground/[0.08] rounded-lg text-sm text-foreground/90 placeholder:text-faint focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-colors"
+                className={`w-full px-3 py-2.5 bg-foreground/[0.04] border rounded-lg text-sm text-foreground/90 placeholder:text-faint focus:outline-none focus:ring-1 transition-colors ${
+                  figmaUrl && !isFigmaValid
+                    ? 'border-red-500/50 focus:border-red-500/60 focus:ring-red-500/20'
+                    : 'border-foreground/[0.08] focus:border-cyan-500/40 focus:ring-cyan-500/20'
+                }`}
               />
+              {figmaUrl && !isFigmaValid && (
+                <p className="text-meta text-red-400 mt-1">Debe ser un enlace HTTPS de figma.com</p>
+              )}
             </div>
 
-            {/* Public toggle */}
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.02] border border-foreground/[0.06]">
-              <label className="flex items-center gap-2.5 cursor-pointer group flex-1">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 bg-foreground/[0.08] rounded-full peer-checked:bg-cyan-500/30 transition-colors" />
-                  <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-foreground/40 rounded-full shadow peer-checked:translate-x-4 peer-checked:bg-cyan-400 transition-all" />
-                </div>
-                <div>
-                  <span className="text-sm text-muted group-hover:text-foreground/90 transition-colors">
-                    Compartir en vitrina pública
-                  </span>
-                  <p className="text-[10px] text-subtle">
-                    Tu proyecto será visible para cualquier visitante (requiere aprobación del docente)
-                  </p>
-                </div>
-              </label>
-            </div>
+            <VisibilityToggle isPublic={isPublic} onChange={setIsPublic} disabled={saving} />
 
             {/* Preview */}
             {isPublic && projectName && (
               <div>
-                <p className="text-[11px] text-subtle uppercase tracking-wider mb-3">
+                <p className="text-meta text-subtle uppercase tracking-wider mb-3">
                   Vista previa en la Vitrina
                 </p>
                 <ShowcasePreview
@@ -564,18 +587,18 @@ function ShowcasePreview({
       <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent pointer-events-none" />
       <div className="relative">
         {courseName && (
-          <p className="text-[10px] text-cyan-400/60 uppercase tracking-wider mb-2">{courseName}</p>
+          <p className="text-micro text-cyan-400/60 uppercase tracking-wider mb-2">{courseName}</p>
         )}
         <h3 className="text-sm font-semibold text-foreground">{projectName}</h3>
         {description && (
           <p className="text-xs text-subtle mt-1 line-clamp-2">{description}</p>
         )}
         <div className="flex gap-2 mt-3">
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] bg-foreground/[0.06] text-muted">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-micro bg-foreground/[0.06] text-muted">
             GitHub
           </span>
           {vercelUrl && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] bg-cyan-500/10 text-cyan-400/70">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-micro bg-cyan-500/10 text-cyan-400/70">
               Vercel
             </span>
           )}
