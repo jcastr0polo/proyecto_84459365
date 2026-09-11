@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { AlertTriangle, XCircle, Info, Paperclip, Link as LinkIcon, MessageSquare } from 'lucide-react';
+import React, { useState, useCallback, useMemo } from 'react';
+import { AlertTriangle, XCircle, Info, Paperclip, Link as LinkIcon, MessageSquare, RotateCcw } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -9,6 +9,8 @@ import Countdown from '@/components/ui/Countdown';
 import FileUploadZone from '@/components/ui/FileUploadZone';
 import LinkInput from '@/components/submissions/LinkInput';
 import { parseDateTimeColombia } from '@/lib/dateUtils';
+import { useDraft } from '@/lib/useDraft';
+import { nowColombia } from '@/lib/dateUtils';
 import type { Activity, SubmissionLink } from '@/lib/types';
 
 interface SubmitFormProps {
@@ -20,23 +22,32 @@ interface SubmitFormProps {
   }) => Promise<void>;
   loading?: boolean;
   existingVersion?: number;
+  /** Porcentaje real de subida; sin definir = indeterminado. */
+  progress?: number;
 }
 
 /**
  * SubmitForm — Formulario completo de entrega del estudiante
  * Multi-sección: resumen actividad, archivos, enlaces, comentario, confirmación
  */
-export default function SubmitForm({ activity, onSubmit, loading = false, existingVersion }: SubmitFormProps) {
+export default function SubmitForm({ activity, onSubmit, loading = false, existingVersion, progress }: SubmitFormProps) {
   const [files, setFiles] = useState<File[]>([]);
-  const [githubUrl, setGithubUrl] = useState('');
-  const [vercelUrl, setVercelUrl] = useState('');
-  const [figmaUrl, setFigmaUrl] = useState('');
-  const [otherUrl, setOtherUrl] = useState('');
-  const [content, setContent] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
-  const now = new Date();
+  // Borrador local: los archivos no se pueden guardar, el texto y los
+  // enlaces sí, que es lo que cuesta rehacer.
+  const { draft, setField, clearDraft, restored } = useDraft(`submit:${activity.id}`, {
+    githubUrl: '', vercelUrl: '', figmaUrl: '', otherUrl: '', content: '',
+  });
+  const { githubUrl, vercelUrl, figmaUrl, otherUrl, content } = draft;
+  const setGithubUrl = (v: string) => setField('githubUrl', v);
+  const setVercelUrl = (v: string) => setField('vercelUrl', v);
+  const setFigmaUrl = (v: string) => setField('figmaUrl', v);
+  const setOtherUrl = (v: string) => setField('otherUrl', v);
+  const setContent = (v: string) => setField('content', v);
+
+  // Una sola marca de tiempo por render, no `new Date()` en el cuerpo.
+  const now = useMemo(() => nowColombia(), []);
   const dueDate = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59');
   const isLate = now > dueDate;
   const isNearDue = !isLate && (dueDate.getTime() - now.getTime()) < 24 * 60 * 60 * 1000;
@@ -69,25 +80,22 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
       const links = buildLinks();
       if (links.length === 0) return 'Debes enviar al menos un enlace';
     }
+    // Un enlace mal escrito se enviaba tal cual y luego no abría.
+    const malformed = buildLinks().find((l) => !/^https?:\/\/[^\s.]+\.[^\s]{2,}$/i.test(l.url));
+    if (malformed) return `Revisa el enlace: debe empezar por https:// (${malformed.label})`;
     return null;
   }
 
   async function handleConfirmSubmit() {
-    // Simulate upload progress
-    setUploadProgress(10);
-    const progressTimer = setInterval(() => {
-      setUploadProgress((prev) => Math.min(prev + 15, 85));
-    }, 300);
-
     try {
       await onSubmit({
         files,
         links: buildLinks(),
         content: content.trim() || undefined,
       });
-      setUploadProgress(100);
+      // Enviado: el borrador ya no hace falta.
+      clearDraft();
     } finally {
-      clearInterval(progressTimer);
       setShowConfirm(false);
     }
   }
@@ -96,6 +104,24 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
 
   return (
     <div className="space-y-6">
+      {/* Se avisa de que hay texto recuperado: si no, el estudiante podría
+          pensar que envió algo que en realidad nunca salió. */}
+      {restored && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-cyan-500/25 bg-cyan-500/[0.06] p-3">
+          <RotateCcw className="w-4 h-4 text-cyan-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-muted">
+            Recuperamos lo que habías escrito y no llegaste a enviar.
+            <button
+              type="button"
+              onClick={() => { clearDraft(); window.location.reload(); }}
+              className="ml-1.5 text-cyan-600 dark:text-cyan-400 underline cursor-pointer"
+            >
+              Descartar y empezar de cero
+            </button>
+          </p>
+        </div>
+      )}
+
       {/* ─── Activity Summary ─── */}
       <Card padding="lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -245,18 +271,34 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
         <p className="mt-1 text-[11px] text-faint text-right">{content.length}/5000</p>
       </section>
 
-      {/* ─── Upload Progress ─── */}
-      {loading && uploadProgress > 0 && (
-        <div className="space-y-2">
+      {/*
+        Progreso real de la subida. Antes era un temporizador que trepaba
+        hasta 85% sin saber nada del envío: mentía sobre lo que estaba
+        pasando. Ahora viene del evento de progreso del navegador, y cuando
+        no hay archivos que subir se muestra un estado indeterminado en vez
+        de un porcentaje inventado.
+      */}
+      {loading && (
+        <div className="space-y-2" role="status" aria-live="polite">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted">Enviando entrega...</span>
-            <span className="text-cyan-400 font-mono">{uploadProgress}%</span>
+            <span className="text-muted">
+              {files.length > 0 ? 'Subiendo archivos…' : 'Enviando entrega…'}
+            </span>
+            {progress !== undefined && (
+              <span className="text-cyan-400 font-mono tabular-nums">{Math.round(progress)}%</span>
+            )}
           </div>
           <div className="w-full h-2 rounded-full bg-foreground/[0.06] overflow-hidden">
-            <div
-              className="h-full rounded-full bg-cyan-500 transition-all duration-300"
-              style={{ width: `${uploadProgress}%` }}
-            />
+            {progress === undefined ? (
+              <div className="h-full w-1/3 rounded-full bg-cyan-500 animate-[indeterminate_1.2s_ease-in-out_infinite]
+                              motion-reduce:w-full motion-reduce:animate-none" />
+            ) : (
+              <div
+                className="h-full rounded-full bg-cyan-500 origin-left transition-transform duration-200 ease-out
+                           motion-reduce:transition-none"
+                style={{ transform: `scaleX(${Math.min(progress, 100) / 100})`, width: '100%' }}
+              />
+            )}
           </div>
         </div>
       )}

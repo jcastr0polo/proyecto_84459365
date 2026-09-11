@@ -9,6 +9,7 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import SubmitForm from '@/components/submissions/SubmitForm';
 import SubmissionDetail from '@/components/submissions/SubmissionDetail';
+import { formatDateTimeColombia } from '@/lib/dateUtils';
 import type { Activity, Submission, SubmissionLink } from '@/lib/types';
 
 /**
@@ -28,6 +29,7 @@ export default function StudentSubmitPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [newSubmission, setNewSubmission] = useState<Submission | null>(null);
+  const [progress, setProgress] = useState<number | undefined>(undefined);
 
   const fetchData = useCallback(async () => {
     try {
@@ -76,25 +78,42 @@ export default function StudentSubmitPage() {
         links: data.links,
       }));
 
-      const res = await fetch(`/api/activities/${actId}/submissions`, {
-        method: 'POST',
-        body: formData,
+      // XHR y no fetch: es la única forma de saber el progreso real de la
+      // subida. Antes la barra la movía un temporizador que no sabía nada
+      // del envío y trepaba hasta el 85% aunque no hubiera salido nada.
+      const result = await new Promise<{ ok: boolean; body: { error?: string; message?: string; submission?: Submission } }>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/api/activities/${actId}/submissions`);
+        xhr.withCredentials = true;
+
+        if (data.files.length > 0) {
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) setProgress((e.loaded / e.total) * 100);
+          };
+        }
+        xhr.onload = () => {
+          let body: { error?: string; message?: string; submission?: Submission } = {};
+          try { body = JSON.parse(xhr.responseText); } catch { /* respuesta no JSON */ }
+          resolve({ ok: xhr.status >= 200 && xhr.status < 300, body });
+        };
+        xhr.onerror = () => reject(new Error('network'));
+        xhr.onabort = () => reject(new Error('abort'));
+        xhr.send(formData);
       });
 
-      const result = await res.json();
-
-      if (!res.ok) {
-        toast(result.error || 'Error al enviar entrega', 'error');
+      if (!result.ok || !result.body.submission) {
+        toast(result.body.error || 'Error al enviar entrega', 'error');
         return;
       }
 
-      setNewSubmission(result.submission);
+      setNewSubmission(result.body.submission);
       setSuccess(true);
-      toast(result.message || 'Entrega enviada', 'success');
+      toast(result.body.message || 'Entrega enviada', 'success');
     } catch {
       toast('Error de conexión', 'error');
     } finally {
       setSubmitting(false);
+      setProgress(undefined);
     }
   }
 
@@ -131,7 +150,7 @@ export default function StudentSubmitPage() {
               {newSubmission.version > 1 ? 'Re-entrega Registrada' : 'Entrega Registrada'}
             </h2>
             <p className="text-sm text-muted mb-1">
-              Versión {newSubmission.version} · {new Date(newSubmission.submittedAt).toLocaleString('es-CO')}
+              Versión {newSubmission.version} · {formatDateTimeColombia(newSubmission.submittedAt)}
             </p>
             {newSubmission.isLate && (
               <p className="text-xs text-amber-400 mt-2 flex items-center justify-center gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Marcada como entrega tardía</p>
@@ -177,6 +196,7 @@ export default function StudentSubmitPage() {
         onSubmit={handleSubmit}
         loading={submitting}
         existingVersion={existing?.version}
+        progress={progress}
       />
     </div>
   );
