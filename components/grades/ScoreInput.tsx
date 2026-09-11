@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
+import { toneOf, normalize } from '@/lib/gradeScale';
 
 interface ScoreInputProps {
   value: number | null;
@@ -87,16 +88,16 @@ export default function ScoreInput({
     }
   };
 
-  // Color based on score/maxScore ratio
-  const ratio = value !== null && maxScore > 0 ? value / maxScore : null;
-  const colorClass =
-    ratio === null
-      ? 'border-foreground/10'
-      : ratio >= 0.8
-        ? 'border-emerald-500/40 bg-emerald-500/5'
-        : ratio >= 0.6
-          ? 'border-amber-500/40 bg-amber-500/5'
-          : 'border-red-500/40 bg-red-500/5';
+  // El color usa la misma escala que ve el estudiante: los umbrales estaban
+  // escritos aquí como 0.8 y 0.6, que hoy coinciden con 4.0 y 3.0 sobre 5,
+  // pero eran una coincidencia esperando a romperse si cambia la escala.
+  const tone = value === null ? 'empty' : toneOf(normalize(value, maxScore));
+  const colorClass = {
+    good: 'border-emerald-500/40 bg-emerald-500/5',
+    warn: 'border-amber-500/40 bg-amber-500/5',
+    fail: 'border-red-500/40 bg-red-500/5',
+    empty: 'border-foreground/10',
+  }[tone];
 
   return (
     <div className={`relative ${className}`}>
@@ -114,14 +115,15 @@ export default function ScoreInput({
         aria-label={`Nota (0-${maxScore})`}
         className={`
           w-20 px-2.5 py-1.5 rounded-lg border text-center text-sm font-medium
-          bg-foreground/[0.04] text-foreground outline-none transition-all
+          bg-foreground/[0.04] text-foreground outline-none
+          transition-[border-color,background-color,box-shadow] duration-[var(--dur-fast)]
           focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25
           disabled:opacity-50 disabled:cursor-not-allowed
           ${error ? 'border-red-500/60 bg-red-500/10' : colorClass}
         `}
       />
       {error && (
-        <span className="absolute -bottom-4 left-0 text-[10px] text-red-400 whitespace-nowrap">
+        <span className="absolute -bottom-4 left-0 text-micro text-red-400 whitespace-nowrap">
           {error}
         </span>
       )}

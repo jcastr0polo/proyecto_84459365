@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import VisibilityToggle from '@/components/projects/VisibilityToggle';
+import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import MarkdownViewer from '@/components/ui/MarkdownViewer';
 import type { StudentProject, Course } from '@/lib/types';
 
@@ -119,12 +120,7 @@ export default function StudentProjectPage() {
       : projectName || description || githubUrl || vercelUrl || figmaUrl
   );
 
-  useEffect(() => {
-    if (!isDirty) return;
-    const onBeforeUnload = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
-    window.addEventListener('beforeunload', onBeforeUnload);
-    return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, [isDirty]);
+  useUnsavedGuard(isDirty);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();

@@ -63,20 +63,18 @@ export function useQuizSession(quizId: string, timeLimitMinutes?: number) {
     if (!saved) return;
 
     deadlineRef.current = saved.deadline;
+    // Retomar una sesión guardada es justamente sincronizar con un sistema
+    // externo (localStorage), que no existe en el servidor: leerlo durante el
+    // render provocaría un desajuste de hidratación. Ocurre una sola vez.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setAnswers(saved.answers ?? {});
     if (saved.deadline !== null && saved.deadline <= Date.now()) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpired(true);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStarted(true);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeLeft(0);
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStarted(true);
       if (saved.deadline !== null) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setTimeLeft(Math.ceil((saved.deadline - Date.now()) / 1000));
       }
     }

@@ -6,6 +6,7 @@ import { Paperclip, Link as LinkIcon } from 'lucide-react';
 import ScoreInput from '@/components/grades/ScoreInput';
 import SearchInput from '@/components/ui/SearchInput';
 import Pagination, { usePagination } from '@/components/ui/Pagination';
+import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 
 // ────────────────────────────────────────────────────────────
 // Types
@@ -52,6 +53,10 @@ export default function GradeTable({
 
   // Track which rows have been modified (by submissionId for stability)
   const [modifiedIds, setModifiedIds] = useState<Set<string>>(new Set());
+
+  // Un docente puede llevar treinta notas escritas y ninguna guardada:
+  // cerrar la pestaña sin aviso le costaría toda la sesión.
+  useUnsavedGuard(modifiedIds.size > 0);
 
   // Sync rows from parent when they change (e.g. after reloadGrades)
   useEffect(() => {
