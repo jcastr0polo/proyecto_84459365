@@ -3,9 +3,12 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Users, RotateCcw, ShieldCheck, ShieldOff, Search, AlertCircle, CheckCircle2, Clock, Pencil, X, Check, Eye } from 'lucide-react';
+import { Users, RotateCcw, ShieldCheck, ShieldOff, AlertCircle, CheckCircle2, Clock, Pencil, X, Check, Eye } from 'lucide-react';
 import { formatDateTimeColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
+import Chip from '@/components/ui/Chip';
+import SearchInput from '@/components/ui/SearchInput';
+import { useToast } from '@/components/ui/Toast';
 import IconButton from '@/components/ui/IconButton';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import EmptyState from '@/components/ui/EmptyState';
@@ -13,11 +16,13 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import type { SafeUser } from '@/lib/types';
 
 export default function AdminStudentsPage() {
+  const { toast } = useToast();
   const [students, setStudents] = useState<SafeUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'never'>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
+
   const [confirm, setConfirm] = useState<{ student: SafeUser; action: 'resetPassword' | 'toggleActive' } | null>(null);
   const [editingName, setEditingName] = useState<{ id: string; first: string; last: string } | null>(null);
   const [editingEmail, setEditingEmail] = useState<{ id: string; value: string } | null>(null);
@@ -37,22 +42,29 @@ export default function AdminStudentsPage() {
 
   useEffect(() => { fetchStudents(); }, [fetchStudents]);
 
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
+
+  const counts = useMemo(() => ({
+    all: students.length,
+    active: students.filter((s) => s.isActive).length,
+    inactive: students.filter((s) => !s.isActive).length,
+    never: students.filter((s) => !s.lastLoginAt).length,
+  }), [students]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return students;
+    let list = students;
+    if (filter === 'active') list = list.filter((s) => s.isActive);
+    else if (filter === 'inactive') list = list.filter((s) => !s.isActive);
+    else if (filter === 'never') list = list.filter((s) => !s.lastLoginAt);
+
+    if (!search.trim()) return list;
     const q = search.toLowerCase();
-    return students.filter((s) =>
+    return list.filter((s) =>
       s.firstName.toLowerCase().includes(q) ||
       s.lastName.toLowerCase().includes(q) ||
       s.email.toLowerCase().includes(q) ||
       s.documentNumber.includes(q)
     );
-  }, [students, search]);
+  }, [students, search, filter]);
 
   async function handleAction(id: string, action: 'resetPassword' | 'toggleActive') {
     setActionLoading(`${id}-${action}`);
@@ -64,13 +76,13 @@ export default function AdminStudentsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setToast({ msg: data.message, type: 'ok' });
+        toast(data.message, 'success');
         setStudents((prev) => prev.map((s) => s.id === id ? { ...s, ...data.student } : s));
       } else {
-        setToast({ msg: data.error || 'Error', type: 'err' });
+        toast(data.error || 'Error', 'error');
       }
     } catch {
-      setToast({ msg: 'Error de conexión', type: 'err' });
+      toast('Error de conexión', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -86,14 +98,14 @@ export default function AdminStudentsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setToast({ msg: data.message, type: 'ok' });
+        toast(data.message, 'success');
         setStudents((prev) => prev.map((s) => s.id === id ? { ...s, ...data.student } : s));
         setEditingName(null);
       } else {
-        setToast({ msg: data.error || 'Error', type: 'err' });
+        toast(data.error || 'Error', 'error');
       }
     } catch {
-      setToast({ msg: 'Error de conexión', type: 'err' });
+      toast('Error de conexión', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -109,14 +121,14 @@ export default function AdminStudentsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setToast({ msg: data.message, type: 'ok' });
+        toast(data.message, 'success');
         setStudents((prev) => prev.map((s) => s.id === id ? { ...s, ...data.student } : s));
         setEditingEmail(null);
       } else {
-        setToast({ msg: data.error || 'Error', type: 'err' });
+        toast(data.error || 'Error', 'error');
       }
     } catch {
-      setToast({ msg: 'Error de conexión', type: 'err' });
+      toast('Error de conexión', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -132,14 +144,14 @@ export default function AdminStudentsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setToast({ msg: data.message, type: 'ok' });
+        toast(data.message, 'success');
         setStudents((prev) => prev.map((s) => s.id === id ? { ...s, ...data.student } : s));
         setEditingDoc(null);
       } else {
-        setToast({ msg: data.error || 'Error', type: 'err' });
+        toast(data.error || 'Error', 'error');
       }
     } catch {
-      setToast({ msg: 'Error de conexión', type: 'err' });
+      toast('Error de conexión', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -180,59 +192,49 @@ export default function AdminStudentsPage() {
         message={confirmCopy?.message ?? ''}
         confirmLabel={confirmCopy?.label ?? 'Confirmar'}
       />
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-lg border
-          ${toast.type === 'ok'
-            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-            : 'bg-red-500/10 border-red-500/20 text-red-400'
-          }`}>
-          {toast.msg}
-        </div>
-      )}
-
-      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
-          Estudiantes ({students.length})
+        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
+          Estudiantes
         </h1>
         <p className="text-sm text-subtle mt-1">
-          Todos los usuarios tipo estudiante registrados en el sistema
+          {counts.all} registrados en el sistema
         </p>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-faint w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Buscar por nombre, email o documento..."
+      {/*
+        Los contadores ahora filtran. Antes eran cuatro tarjetas informativas:
+        se veía "Nunca han entrado: 5" y no había forma de ver quiénes son,
+        que es justo lo que uno quiere hacer al leer ese número.
+      */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Chip active={filter === 'all'} onClick={() => setFilter('all')}>
+            Todos ({counts.all})
+          </Chip>
+          <Chip active={filter === 'active'} tone="positive" dot="bg-emerald-500"
+            onClick={() => setFilter('active')}>
+            Activos ({counts.active})
+          </Chip>
+          {counts.inactive > 0 && (
+            <Chip active={filter === 'inactive'} tone="danger" dot="bg-red-500"
+              onClick={() => setFilter('inactive')}>
+              Inactivos ({counts.inactive})
+            </Chip>
+          )}
+          {counts.never > 0 && (
+            <Chip active={filter === 'never'} tone="warning" dot="bg-amber-500"
+              onClick={() => setFilter('never')}>
+              Nunca han entrado ({counts.never})
+            </Chip>
+          )}
+        </div>
+        <SearchInput
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 rounded-xl
-                     border border-foreground/10 bg-foreground/5
-                     text-foreground text-sm placeholder-faint
-                     focus:outline-none focus:border-cyan-500/20 focus:ring-1 focus:ring-cyan-500/20
-                     transition-all"
+          onChange={setSearch}
+          placeholder="Buscar por nombre, email o documento..."
+          className="w-full sm:w-72 sm:ml-auto"
         />
       </div>
-
-      {/* Summary */}
-      {students.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: 'Total', value: students.length, color: 'text-cyan-400' },
-            { label: 'Activos', value: students.filter((s) => s.isActive).length, color: 'text-emerald-400' },
-            { label: 'Inactivos', value: students.filter((s) => !s.isActive).length, color: 'text-red-400' },
-            { label: 'Nunca han entrado', value: students.filter((s) => !s.lastLoginAt).length, color: 'text-amber-400' },
-          ].map((stat) => (
-            <div key={stat.label} className="p-3 rounded-xl border border-foreground/10 bg-foreground/5 text-center">
-              <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-[10px] text-faint uppercase tracking-wider mt-0.5">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Results */}
       {filtered.length === 0 ? (
