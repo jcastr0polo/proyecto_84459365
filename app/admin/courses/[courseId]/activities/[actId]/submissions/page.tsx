@@ -10,7 +10,7 @@ import Pagination, { usePagination } from '@/components/ui/Pagination';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import EmptyState from '@/components/ui/EmptyState';
-import FilterChip from '@/components/ui/FilterChip';
+import Chip from '@/components/ui/Chip';
 import Table from '@/components/ui/Table';
 import { Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
@@ -161,24 +161,24 @@ export default function AdminSubmissionsPage() {
       */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="flex flex-wrap items-center gap-1.5">
-          <FilterChip active={statusFilter === 'pending'} onClick={() => setStatusFilter('pending')} dot="bg-cyan-500">
+          <Chip active={statusFilter === 'pending'} onClick={() => setStatusFilter('pending')} dot="bg-cyan-500">
             Por calificar ({stats.pending})
-          </FilterChip>
-          <FilterChip active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>
+          </Chip>
+          <Chip active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>
             Todas ({stats.total})
-          </FilterChip>
-          <FilterChip active={statusFilter === 'reviewed'} onClick={() => setStatusFilter('reviewed')} dot="bg-emerald-500">
+          </Chip>
+          <Chip active={statusFilter === 'reviewed'} onClick={() => setStatusFilter('reviewed')} dot="bg-emerald-500">
             Calificadas ({stats.reviewed})
-          </FilterChip>
+          </Chip>
           {stats.returned > 0 && (
-            <FilterChip active={statusFilter === 'returned'} onClick={() => setStatusFilter('returned')} dot="bg-amber-500">
+            <Chip active={statusFilter === 'returned'} onClick={() => setStatusFilter('returned')} dot="bg-amber-500">
               Devueltas ({stats.returned})
-            </FilterChip>
+            </Chip>
           )}
           {stats.late > 0 && (
-            <FilterChip active={statusFilter === 'late'} onClick={() => setStatusFilter('late')} dot="bg-red-500">
+            <Chip active={statusFilter === 'late'} onClick={() => setStatusFilter('late')} dot="bg-red-500">
               Tardías ({stats.late})
-            </FilterChip>
+            </Chip>
           )}
         </div>
         <SearchInput

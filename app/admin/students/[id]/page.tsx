@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { formatDateColombia as formatDate, formatDateTimeColombia as formatDateTime } from '@/lib/dateUtils';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -104,7 +104,6 @@ interface AvailableCourse {
 /* ─── Main Page ─── */
 export default function AdminStudentDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const fromCourse = searchParams.get('from'); // courseId if navigated from a course
   const [student, setStudent] = useState<StudentInfo | null>(null);
@@ -237,12 +236,12 @@ export default function AdminStudentDetailPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Back */}
       <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.push(fromCourse ? `/admin/courses/${fromCourse}/students` : '/admin/students')}
-          className="flex items-center gap-1.5 text-sm text-subtle hover:text-foreground transition-colors cursor-pointer"
+        <Link
+          href={fromCourse ? `/admin/courses/${fromCourse}/students` : '/admin/students'}
+          className="flex items-center gap-1.5 text-sm text-subtle hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> {fromCourse ? 'Volver al curso' : 'Volver a estudiantes'}
-        </button>
+        </Link>
         {fromCourse && (
           <Link
             href="/admin/students"
@@ -316,7 +315,7 @@ export default function AdminStudentDetailPage() {
           </h2>
           <button
             onClick={openEnrollModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/10 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/10 transition-colors duration-[var(--dur-fast)] cursor-pointer active:scale-[0.97] motion-reduce:active:scale-100"
           >
             <Plus className="w-3.5 h-3.5" /> Inscribir en curso
           </button>
@@ -348,7 +347,7 @@ export default function AdminStudentDetailPage() {
                   <button
                     onClick={handleEnroll}
                     disabled={!selectedCourseId || enrolling}
-                    className="px-4 py-1.5 text-xs font-medium rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    className="px-4 py-1.5 text-xs font-medium rounded-lg bg-cyan-500 text-white hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-[var(--dur-fast)] cursor-pointer active:scale-[0.97] motion-reduce:active:scale-100"
                   >
                     {enrolling ? 'Inscribiendo...' : 'Inscribir'}
                   </button>

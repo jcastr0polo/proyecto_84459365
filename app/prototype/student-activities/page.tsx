@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { nowColombia } from '@/lib/dateUtils';
 import { STATUS_META, startOfTodayColombia, type DeliveryStatus } from '@/lib/activityStatus';
 import ActivityList, { useActivityRows } from '@/components/student/ActivityList';
-import FilterChip from '@/components/ui/FilterChip';
+import Chip from '@/components/ui/Chip';
 import { MOCK_COURSES } from '../student-dashboard/mockData';
 import type { Submission } from '@/lib/types';
 
@@ -42,21 +42,21 @@ export default function PrototypeActivitiesPage() {
         <div>
           <p className="text-meta uppercase tracking-wider text-faint mb-2">Filtros de entregas (admin)</p>
           <div className="flex flex-wrap items-center gap-1.5">
-            <FilterChip active onClick={() => {}} dot="bg-cyan-500">Por calificar (7)</FilterChip>
-            <FilterChip active={false} onClick={() => {}}>Todas (24)</FilterChip>
-            <FilterChip active={false} onClick={() => {}} dot="bg-emerald-500">Calificadas (15)</FilterChip>
-            <FilterChip active={false} onClick={() => {}} dot="bg-amber-500">Devueltas (2)</FilterChip>
-            <FilterChip active={false} onClick={() => {}} dot="bg-red-500">Tardías (4)</FilterChip>
+            <Chip active onClick={() => {}} dot="bg-cyan-500">Por calificar (7)</Chip>
+            <Chip active={false} onClick={() => {}}>Todas (24)</Chip>
+            <Chip active={false} onClick={() => {}} dot="bg-emerald-500">Calificadas (15)</Chip>
+            <Chip active={false} onClick={() => {}} dot="bg-amber-500">Devueltas (2)</Chip>
+            <Chip active={false} onClick={() => {}} dot="bg-red-500">Tardías (4)</Chip>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
-          <FilterChip active={filter === 'all'} onClick={() => setFilter('all')}>
+          <Chip active={filter === 'all'} onClick={() => setFilter('all')}>
             Todas ({rows.length})
-          </FilterChip>
+          </Chip>
           {(Object.keys(counts) as DeliveryStatus[]).map((st) => (
-            <FilterChip key={st} active={filter === st} onClick={() => setFilter(st)} dot={STATUS_META[st].dot}>
+            <Chip key={st} active={filter === st} onClick={() => setFilter(st)} dot={STATUS_META[st].dot}>
               {STATUS_META[st].label} ({counts[st]})
-            </FilterChip>
+            </Chip>
           ))}
         </div>
         <ActivityList rows={visible} courseId={cd.course.id} today={today} />

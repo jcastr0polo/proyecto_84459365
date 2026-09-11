@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/Toast';
 import { nowColombia } from '@/lib/dateUtils';
 import { STATUS_META, startOfTodayColombia, type DeliveryStatus } from '@/lib/activityStatus';
 import ActivityList, { useActivityRows } from '@/components/student/ActivityList';
-import FilterChip from '@/components/ui/FilterChip';
+import Chip from '@/components/ui/Chip';
 import type { Activity, Submission } from '@/lib/types';
 
 /**
@@ -89,13 +89,13 @@ export default function StudentActivitiesPage() {
           que un estudiante intenta hacer al verlos. */}
       {rows.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <FilterChip active={filter === 'all'} onClick={() => setFilter('all')}>
+          <Chip active={filter === 'all'} onClick={() => setFilter('all')}>
             Todas ({rows.length})
-          </FilterChip>
+          </Chip>
           {(Object.keys(counts) as DeliveryStatus[]).map((st) => (
-            <FilterChip key={st} active={filter === st} onClick={() => setFilter(st)} dot={STATUS_META[st].dot}>
+            <Chip key={st} active={filter === st} onClick={() => setFilter(st)} dot={STATUS_META[st].dot}>
               {STATUS_META[st].label} ({counts[st]})
-            </FilterChip>
+            </Chip>
           ))}
         </div>
       )}

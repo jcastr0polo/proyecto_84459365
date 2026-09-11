@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import Chip from '@/components/ui/Chip';
+import IconButton from '@/components/ui/IconButton';
 import { Rocket, Star, Eye, EyeOff, Ban, Image as ImageIcon, FileText, Download } from 'lucide-react';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import EmptyState from '@/components/ui/EmptyState';
@@ -253,18 +255,17 @@ export default function AdminCourseProjectsPage() {
                   <h3 className="text-sm font-semibold text-foreground truncate">{p.projectName}</h3>
                   <p className="text-xs text-subtle mt-0.5">{p.studentName}</p>
                 </div>
-                <button
-                  onClick={() => toggleFeatured(p)}
+                <IconButton
+                  label={p.isFeatured ? 'Quitar destacado' : 'Destacar proyecto'}
+                  tone="warning"
                   disabled={togglingId === p.id}
-                  className={`flex-shrink-0 p-2 rounded-lg border transition-colors duration-[var(--dur-fast)] cursor-pointer active:scale-[0.97] motion-reduce:active:scale-100 ${
-                    p.isFeatured
-                      ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
-                      : 'border-foreground/[0.08] text-faint hover:text-amber-400 hover:border-amber-500/20'
-                  } ${togglingId === p.id ? 'opacity-50' : ''}`}
-                  title={p.isFeatured ? 'Quitar destacado' : 'Destacar proyecto'}
-                >
-                  <Star className={`w-4 h-4 ${p.isFeatured ? 'fill-amber-400' : ''}`} />
-                </button>
+                  onClick={() => toggleFeatured(p)}
+                  aria-pressed={p.isFeatured}
+                  className={`shrink-0 border ${p.isFeatured
+                    ? 'border-amber-500/30 bg-amber-500/10'
+                    : 'border-surface-border'}`}
+                  icon={<Star className={`w-4 h-4 ${p.isFeatured ? 'fill-amber-400 text-amber-400' : ''}`} />}
+                />
               </div>
 
               {/* Badges */}
@@ -290,33 +291,25 @@ export default function AdminCourseProjectsPage() {
 
               {/* Admin controls */}
               <div className="flex flex-wrap items-center gap-1.5 mt-4 pt-3 border-t border-foreground/[0.06]">
-                {/* Public toggle */}
-                <button
+                <Chip
+                  active={p.isPublic}
+                  tone="positive"
                   onClick={() => togglePublic(p)}
-                  className={`flex items-center gap-1 text-meta px-2.5 py-1.5 rounded-lg transition-colors duration-[var(--dur-fast)] cursor-pointer ${
-                    p.isPublic
-                      ? 'bg-emerald-500/10 text-emerald-400'
-                      : 'text-faint hover:text-muted hover:bg-foreground/[0.05]'
-                  }`}
-                  title={p.isPublic ? 'Quitar de vitrina' : 'Publicar en vitrina'}
+                  icon={p.isPublic ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                  title={p.isPublic ? 'Quitar de la vitrina' : 'Publicar en la vitrina'}
                 >
-                  {p.isPublic ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                   {p.isPublic ? 'Público' : 'Privado'}
-                </button>
+                </Chip>
 
-                {/* Block from showcase */}
-                <button
+                <Chip
+                  active={Boolean(p.isBlockedFromShowcase)}
+                  tone="danger"
                   onClick={() => toggleBlockShowcase(p)}
-                  className={`flex items-center gap-1 text-meta px-2.5 py-1.5 rounded-lg transition-colors duration-[var(--dur-fast)] cursor-pointer ${
-                    p.isBlockedFromShowcase
-                      ? 'bg-red-500/10 text-red-400'
-                      : 'text-faint hover:text-muted hover:bg-foreground/[0.05]'
-                  }`}
-                  title={p.isBlockedFromShowcase ? 'Desbloquear vitrina' : 'Bloquear de vitrina'}
+                  icon={<Ban className="w-3.5 h-3.5" />}
+                  title={p.isBlockedFromShowcase ? 'Desbloquear de la vitrina' : 'Bloquear de la vitrina'}
                 >
-                  <Ban className="w-3.5 h-3.5" />
-                  {p.isBlockedFromShowcase ? 'Desbloq' : 'Bloq'}
-                </button>
+                  {p.isBlockedFromShowcase ? 'Bloqueado' : 'Bloquear'}
+                </Chip>
 
                 {/* Edit showcase appearance */}
                 <button
