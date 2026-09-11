@@ -11,14 +11,8 @@ import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import { ArrowLeft, Plus, Pencil, Trash2, ListChecks, Users } from 'lucide-react';
 import ConfirmModal from '@/components/ui/ConfirmModal';
-import type { ManualGradeItem, ManualGrade, Corte } from '@/lib/types';
+import type { ManualGradeItem, Corte } from '@/lib/types';
 
-interface StudentInfo {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
 
 export default function ManualItemsPage() {
   const params = useParams();
@@ -43,13 +37,6 @@ export default function ManualItemsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // Grade entry modal
-  const [gradingItem, setGradingItem] = useState<ManualGradeItem | null>(null);
-  const [gradeModalOpen, setGradeModalOpen] = useState(false);
-  const [students, setStudents] = useState<StudentInfo[]>([]);
-  const [studentsLoading, setStudentsLoading] = useState(false);
-  const [existingGrades, setExistingGrades] = useState<ManualGrade[]>([]);
-  const [gradeInputs, setGradeInputs] = useState<Record<string, { score: string; feedback: string }>>({});
-  const [savingGrades, setSavingGrades] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -156,105 +143,10 @@ export default function ManualItemsPage() {
     }
   }
 
-  async function openGrading(item: ManualGradeItem) {
-    setGradingItem(item);
-    setGradeModalOpen(true);
-    // La ventana se abre antes de que lleguen los datos: sin este estado
-    // mostraba "no hay estudiantes inscritos" mientras todavía buscaba.
-    setStudentsLoading(true);
-    setStudents([]);
-    try {
-      // /api/courses/[id]/students no existe: esa ruta nunca se creó, así
-      // que la petición devolvía 404, la lista quedaba vacía y la ventana
-      // decía "no hay estudiantes inscritos" aunque el curso tuviera 16.
-      // Los inscritos salen de /enrollments, filtrando los activos.
-      const [enrollRes, gradesRes] = await Promise.all([
-        fetch(`/api/courses/${courseId}/enrollments`),
-        fetch(`/api/courses/${courseId}/manual-items/${item.id}/grades`),
-      ]);
-
-      let enrolled: { id: string; firstName: string; lastName: string; email: string }[] = [];
-      if (enrollRes.ok) {
-        const d = await enrollRes.json();
-        enrolled = (d.enrollments ?? [])
-          .filter((e: { status: string }) => e.status === 'active')
-          .map((e: { student: { id: string; firstName: string; lastName: string; email: string } }) => e.student)
-          .filter(Boolean)
-          .sort((a: { lastName: string }, b: { lastName: string }) => a.lastName.localeCompare(b.lastName, 'es'));
-      } else {
-        toast('No se pudieron cargar los estudiantes del curso', 'error');
-      }
-
-      let grades: ManualGrade[] = [];
-      if (gradesRes.ok) {
-        const d = await gradesRes.json();
-        grades = d.grades ?? [];
-      }
-
-      setStudents(enrolled);
-      setExistingGrades(grades);
-
-      const inputs: Record<string, { score: string; feedback: string }> = {};
-      for (const s of enrolled) {
-        const existing = grades.find((g) => g.studentId === s.id);
-        inputs[s.id] = {
-          score: existing ? String(existing.score) : '',
-          feedback: existing?.feedback ?? '',
-        };
-      }
-      setGradeInputs(inputs);
-    } catch {
-      toast('Error al cargar estudiantes', 'error');
-    } finally {
-      setStudentsLoading(false);
-    }
-  }
-
-  async function handleSaveGrades() {
-    if (!gradingItem) return;
-    setSavingGrades(true);
-    try {
-      const grades = Object.entries(gradeInputs)
-        .filter(([, v]) => v.score !== '')
-        .map(([studentId, v]) => ({
-          studentId,
-          score: parseFloat(v.score),
-          feedback: v.feedback || undefined,
-        }));
-
-      if (grades.length === 0) {
-        toast('No hay notas para guardar', 'info');
-        setSavingGrades(false);
-        return;
-      }
-
-      // Validate
-      for (const g of grades) {
-        if (isNaN(g.score) || g.score < 0 || g.score > gradingItem.maxScore) {
-          toast(`Nota inválida: debe ser entre 0 y ${gradingItem.maxScore}`, 'error');
-          setSavingGrades(false);
-          return;
-        }
-      }
-
-      const res = await fetch(`/api/courses/${courseId}/manual-items/${gradingItem.id}/grades`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ grades }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Error');
-      }
-
-      toast(`${grades.length} notas guardadas`, 'success');
-      setGradeModalOpen(false);
-    } catch (e) {
-      toast(e instanceof Error ? e.message : 'Error al guardar notas', 'error');
-    } finally {
-      setSavingGrades(false);
-    }
+  // Calificar ocurre en su propia página: un modal deja poco alto, obliga a
+  // dos zonas de desplazamiento y un clic fuera se lleva lo escrito.
+  function openGrading(item: ManualGradeItem) {
+    router.push(`/admin/courses/${courseId}/manual-items/${item.id}/grades`);
   }
 
   function corteName(corteId?: string) {
@@ -408,82 +300,6 @@ export default function ManualItemsPage() {
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" onClick={() => setModalOpen(false)}>Cancelar</Button>
             <Button onClick={handleSaveItem} loading={submitting}>{editingItem ? 'Guardar' : 'Crear'}</Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Grade Entry Modal */}
-      <Modal open={gradeModalOpen} onClose={() => setGradeModalOpen(false)} title={`Calificar: ${gradingItem?.title ?? ''}`} size="lg">
-        <div className="space-y-4">
-          {gradingItem && (
-            <p className="text-xs text-subtle">
-              Nota máxima: <strong>{gradingItem.maxScore}</strong> · Peso: <strong>{gradingItem.weight}%</strong>
-            </p>
-          )}
-
-          {studentsLoading ? (
-            <p className="text-sm text-subtle py-6 text-center">Cargando estudiantes…</p>
-          ) : students.length === 0 ? (
-            <div className="py-6 text-center space-y-2">
-              <p className="text-sm text-muted">Este curso no tiene estudiantes con inscripción activa.</p>
-              <a href={`/admin/courses/${courseId}/students`}
-                className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline">
-                Ver inscritos del curso →
-              </a>
-            </div>
-          ) : (
-            <div className="max-h-[60vh] overflow-y-auto">
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th>Estudiante</Th>
-                    <Th>Nota</Th>
-                    <Th>Retroalimentación</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {students.map((s) => (
-                    <Tr key={s.id}>
-                      <Td>
-                        <span className="text-sm font-medium">{s.firstName} {s.lastName}</span>
-                        <span className="text-xs text-subtle block">{s.email}</span>
-                      </Td>
-                      <Td>
-                        <input
-                          type="number"
-                          value={gradeInputs[s.id]?.score ?? ''}
-                          onChange={(e) => setGradeInputs((prev) => ({
-                            ...prev,
-                            [s.id]: { ...prev[s.id], score: e.target.value },
-                          }))}
-                          min={0}
-                          max={gradingItem?.maxScore ?? 5}
-                          step={0.1}
-                          placeholder="—"
-                          className="w-20 px-2 py-1.5 text-sm rounded-lg border border-foreground/10 bg-foreground/[0.04] text-foreground outline-none focus:border-cyan-500/50 text-center"
-                        />
-                      </Td>
-                      <Td>
-                        <input
-                          value={gradeInputs[s.id]?.feedback ?? ''}
-                          onChange={(e) => setGradeInputs((prev) => ({
-                            ...prev,
-                            [s.id]: { ...prev[s.id], feedback: e.target.value },
-                          }))}
-                          placeholder="Opcional"
-                          className="w-full px-2 py-1.5 text-sm rounded-lg border border-foreground/10 bg-foreground/[0.04] text-foreground outline-none focus:border-cyan-500/50"
-                        />
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" onClick={() => setGradeModalOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSaveGrades} loading={savingGrades}>Guardar notas</Button>
           </div>
         </div>
       </Modal>
