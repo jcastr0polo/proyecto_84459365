@@ -8,12 +8,13 @@ import Card from '@/components/ui/Card';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { useAntiCheat } from '@/components/quizzes/useAntiCheat';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Quiz, QuizAnswer, QuizSimulation } from '@/lib/types';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { Clock, Shield, AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, Eye, History } from 'lucide-react';
 import { gradeText, normalize } from '@/lib/gradeScale';
 import BackLink from '@/components/ui/BackLink';
+import QuizRunner from '@/components/quizzes/QuizRunner';
+import { useQuizSession } from '@/lib/useQuizSession';
 
 interface SimulationResult {
   attempt: {
@@ -40,25 +41,25 @@ export default function AdminQuizSimulatePage() {
 
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
-  const [started, setStarted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
-  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  /*
+   * El MISMO cronómetro del estudiante. Antes esta pantalla llevaba su propio
+   * setInterval descontando de uno en uno: se atrasaba con la pestaña en
+   * segundo plano y se reiniciaba al recargar. Es decir, el docente ensayaba
+   * con un reloj que no es el que va a sufrir el estudiante, en la única
+   * pantalla cuyo objetivo es precisamente ver lo que él ve.
+   *
+   * La clave lleva prefijo `sim:` para no pisar una sesión real si el mismo
+   * navegador tuviera una abierta.
+   */
+  const {
+    started, answers, timeLeft, expired,
+    start: startSession, setAnswer, clearSession,
+  } = useQuizSession(`sim:${quizId}`, quiz?.timeLimit);
   const [blurWarnings, setBlurWarnings] = useState(0);
-  const [confirmIncomplete, setConfirmIncomplete] = useState(false);
   const [history, setHistory] = useState<QuizSimulation[]>([]);
   const [reviewingSim, setReviewingSim] = useState<QuizSimulation | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  function shuffleArray<T>(arr: T[], seed: number): T[] {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.abs((seed * (i + 1)) % (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
 
   const fetchQuiz = useCallback(async () => {
     try {
@@ -94,7 +95,6 @@ export default function AdminQuizSimulatePage() {
   const doSubmit = useCallback(async (auto: boolean, finalBlurCount: number) => {
     if (submitting || result) return;
     setSubmitting(true);
-    if (timerRef.current) clearInterval(timerRef.current);
 
     const answerArray = Object.entries(answers).map(([questionId, value]) => {
       if (Array.isArray(value)) {
@@ -156,51 +156,17 @@ export default function AdminQuizSimulatePage() {
   const getBlurCountRef = useRef(getBlurCount);
   getBlurCountRef.current = getBlurCount;
 
+  // Se acabó el tiempo: se envía igual que en el parcial real.
   useEffect(() => {
-    if (!started || !quiz?.timeLimit || result) return;
-    const totalSeconds = quiz.timeLimit * 60;
-    setTimeLeft(totalSeconds);
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev === null) return null;
-        if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          doSubmitRef.current(true, getBlurCountRef.current());
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [started, quiz?.timeLimit, result]);
-
-  function formatTime(seconds: number): string {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  }
-
-  function selectAnswer(questionId: string, optionId: string) {
-    setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
-  }
-
-  function toggleWeightedAnswer(questionId: string, optionId: string) {
-    setAnswers((prev) => {
-      const current = prev[questionId];
-      const arr = Array.isArray(current) ? [...current] : current ? [current] : [];
-      const idx = arr.indexOf(optionId);
-      if (idx >= 0) arr.splice(idx, 1);
-      else arr.push(optionId);
-      return { ...prev, [questionId]: arr.length > 0 ? arr : [] };
-    });
-  }
+    if (expired && !result && !submitting) {
+      doSubmitRef.current(true, getBlurCountRef.current());
+    }
+  }, [expired, result, submitting]);
 
   function resetSimulation() {
-    setStarted(false);
+    clearSession();
     setSubmitting(false);
     setResult(null);
-    setAnswers({});
-    setTimeLeft(null);
     setBlurWarnings(0);
   }
 
@@ -477,7 +443,7 @@ export default function AdminQuizSimulatePage() {
           </div>
 
           <button
-            onClick={() => setStarted(true)}
+            onClick={startSession}
             className="w-full py-3.5 px-6 rounded-xl bg-purple-500 hover:bg-purple-400 text-white font-semibold text-sm transition-colors cursor-pointer shadow-lg shadow-purple-500/20"
           >
             <FlaskConical className="w-5 h-5 inline mr-2" />
@@ -527,145 +493,27 @@ export default function AdminQuizSimulatePage() {
     );
   }
 
-  // ─── TAKING QUIZ ───
-  const displayQuestions = quiz.shuffleQuestions
-    ? shuffleArray(quiz.questions, quiz.id.charCodeAt(0))
-    : quiz.questions;
-
-  const answeredCount = Object.entries(answers).filter(([, v]) => Array.isArray(v) ? v.length > 0 : !!v).length;
-  const totalQuestions = quiz.questions.length;
-
+  // ─── PRESENTANDO ───
+  // La misma pantalla que ve el estudiante, con el acento en morado para que
+  // no haya duda de que es un ensayo.
   return (
     <div className="space-y-4 max-w-3xl mx-auto pb-24">
-      {/* Simulation banner — compact */}
-      <div className="bg-purple-100 border border-purple-300 dark:bg-purple-950 dark:border-purple-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
-        <FlaskConical className="w-4 h-4 text-purple-400" />
-        <span className="text-xs font-medium text-purple-600 dark:text-purple-300">Simulación en curso</span>
+      <div className="bg-purple-100 border border-purple-300 dark:bg-purple-950 dark:border-purple-500/30
+                      rounded-lg px-3 py-2 flex items-center gap-2">
+        <FlaskConical className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" aria-hidden="true" />
+        <span className="text-xs font-medium text-purple-700 dark:text-purple-300">Simulación en curso</span>
       </div>
 
-      {/* Sticky header */}
-      <div className="sticky top-0 z-20 bg-canvas py-3 border-b border-foreground/[0.06]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-foreground truncate max-w-[200px]">{quiz.title}</h2>
-            <Badge variant="info" size="sm">{answeredCount}/{totalQuestions}</Badge>
-          </div>
-          <div className="flex items-center gap-3">
-            {blurWarnings > 0 && (
-              <Badge variant="danger" size="sm">
-                <AlertTriangle className="w-3 h-3 mr-0.5" /> Blur: {blurWarnings}
-              </Badge>
-            )}
-            {timeLeft !== null && (
-              <span className={`text-sm font-mono font-bold tabular-nums ${
-                timeLeft <= 60 ? 'text-red-400 animate-pulse' : timeLeft <= 300 ? 'text-amber-400' : 'text-foreground'
-              }`}>
-                <Clock className="w-4 h-4 inline mr-1" />
-                {formatTime(timeLeft)}
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="w-full h-1 rounded-full bg-foreground/[0.06] mt-2 overflow-hidden">
-          <div className="h-full rounded-full bg-purple-500 transition-all duration-300" style={{ width: `${(answeredCount / totalQuestions) * 100}%` }} />
-        </div>
-      </div>
-
-      {/* Questions */}
-      {displayQuestions.map((question, idx) => {
-        const displayOptions = quiz.shuffleOptions
-          ? shuffleArray(question.options, question.id.charCodeAt(0))
-          : question.options;
-        const isWeighted = question.type === 'weighted';
-        const currentAnswer = answers[question.id];
-        const selectedIds = isWeighted
-          ? (Array.isArray(currentAnswer) ? currentAnswer : currentAnswer ? [currentAnswer] : [])
-          : [];
-
-        return (
-          <div key={question.id} className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02]">
-            <div className="flex items-start gap-2 mb-3">
-              <span className="text-xs font-bold text-faint shrink-0 pt-0.5">{idx + 1}.</span>
-              <div>
-                <MarkdownRenderer content={question.text} className="text-sm font-medium text-foreground/90" />
-                <span className="text-micro text-subtle">
-                  {question.points} pts · {isWeighted ? 'Selección múltiple (selecciona las correctas)' : 'Selección única'}
-                </span>
-              </div>
-            </div>
-            <div className="ml-5 space-y-2">
-              {displayOptions.map((opt) => {
-                const isSelected = isWeighted ? selectedIds.includes(opt.id) : currentAnswer === opt.id;
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => isWeighted ? toggleWeightedAnswer(question.id, opt.id) : selectAnswer(question.id, opt.id)}
-                    className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-all cursor-pointer min-h-[44px] ${
-                      isSelected
-                        ? 'border-purple-500/50 bg-purple-500/10 text-foreground'
-                        : 'border-foreground/[0.08] bg-foreground/[0.02] text-muted hover:border-foreground/15 hover:bg-foreground/[0.05]'
-                    }`}
-                  >
-                    {isWeighted ? (
-                      <span className={`inline-block w-5 h-5 rounded mr-2 align-middle border-2 ${
-                        isSelected ? 'border-purple-400 bg-purple-400' : 'border-foreground/20'
-                      }`}>
-                        {isSelected && (
-                          <svg className="w-3 h-3 text-white mx-auto mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </span>
-                    ) : (
-                      <span className={`inline-block w-5 h-5 rounded-full border-2 mr-2 align-middle ${
-                        isSelected ? 'border-purple-400 bg-purple-400' : 'border-foreground/20'
-                      }`}>
-                        {isSelected && (
-                          <svg className="w-3 h-3 text-white mx-auto mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </span>
-                    )}
-                    {opt.text}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-
-      {/* Sticky submit */}
-      <div className="fixed bottom-0 left-0 right-0 bg-canvas border-t border-foreground/[0.06] p-4 z-20">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <p className="text-xs text-subtle">{answeredCount} de {totalQuestions} respondidas</p>
-          <Button
-            variant="primary"
-            disabled={submitting || answeredCount === 0}
-            onClick={() => {
-              if (answeredCount < totalQuestions) {
-                setConfirmIncomplete(true);
-                return;
-              }
-              doSubmit(false, getBlurCount());
-            }}
-            className="!bg-purple-500 hover:!bg-purple-400"
-          >
-            {submitting ? 'Enviando...' : 'Enviar Simulación'}
-          </Button>
-        </div>
-      </div>
-
-      <ConfirmModal
-        open={confirmIncomplete}
-        onClose={() => setConfirmIncomplete(false)}
-        onConfirm={() => { setConfirmIncomplete(false); doSubmit(false, getBlurCount()); }}
-        title="Envío incompleto"
-        message={`Solo respondiste ${answeredCount} de ${totalQuestions} preguntas. ¿Enviar simulación de todas formas?`}
-        confirmLabel="Enviar"
-        variant="warning"
+      <QuizRunner
+        quiz={quiz}
+        answers={answers}
+        onAnswer={setAnswer}
+        timeLeft={timeLeft}
+        blurWarnings={blurWarnings}
+        submitting={submitting}
+        onSubmit={() => doSubmit(false, getBlurCount())}
+        accent="purple"
+        submitLabel="Enviar simulación"
       />
     </div>
   );

@@ -3,17 +3,16 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
-import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { useQuizSession } from '@/lib/useQuizSession';
 import { useAntiCheat } from '@/components/quizzes/useAntiCheat';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Quiz } from '@/lib/types';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
-import { Clock, Shield, AlertTriangle } from 'lucide-react';
+import { Clock, Shield } from 'lucide-react';
 import BackLink from '@/components/ui/BackLink';
+import QuizRunner from '@/components/quizzes/QuizRunner';
 
 interface QuizDetailResponse {
   quiz: Quiz;
@@ -46,18 +45,8 @@ export default function StudentTakeQuizPage() {
   const [submitted, setSubmitted] = useState(false);
 
   const [blurWarnings, setBlurWarnings] = useState(0);
-  const [confirmIncomplete, setConfirmIncomplete] = useState(false);
 
   // Shuffle helper
-  function shuffleArray<T>(arr: T[], seed: number): T[] {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.abs((seed * (i + 1)) % (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-
   // Fetch quiz
   const fetchQuiz = useCallback(async () => {
     try {
@@ -161,25 +150,6 @@ export default function StudentTakeQuizPage() {
     doSubmitRef.current(true, getBlurCountRef.current());
   }, [expired, submitted]);
 
-  function formatTime(seconds: number): string {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  }
-
-  function selectAnswer(questionId: string, optionId: string) {
-    setAnswer(questionId, optionId);
-  }
-
-  function toggleWeightedAnswer(questionId: string, optionId: string) {
-    const current = answers[questionId];
-    const arr = Array.isArray(current) ? [...current] : current ? [current] : [];
-    const idx = arr.indexOf(optionId);
-    if (idx >= 0) arr.splice(idx, 1);
-    else arr.push(optionId);
-    setAnswer(questionId, arr);
-  }
-
   if (loading || !quiz) {
     return (
       <div className="max-w-4xl mx-auto space-y-5">
@@ -195,7 +165,11 @@ export default function StudentTakeQuizPage() {
   if (!quiz) return null;
 
   // Pre-start screen
-  if (!started) {
+  /* `submitted` entra aquí porque al enviar se cierra la sesión, y sin esto
+     la pantalla de inicio parpadearía un instante antes de navegar a los
+     resultados: el estudiante vería "Comenzar parcial" justo después de
+     entregarlo. */
+  if (!started && !submitted) {
     return (
       <div className="space-y-6 max-w-3xl mx-auto">
         <BackLink href={`/student/courses/${courseId}/quizzes`}>Volver a parciales</BackLink>
@@ -271,146 +245,17 @@ export default function StudentTakeQuizPage() {
     );
   }
 
-  // Taking quiz
-  const displayQuestions = quiz.shuffleQuestions
-    ? shuffleArray(quiz.questions, quiz.id.charCodeAt(0))
-    : quiz.questions;
-
-  const answeredCount = Object.entries(answers).filter(([, v]) => Array.isArray(v) ? v.length > 0 : !!v).length;
-  const totalQuestions = quiz.questions.length;
-
+  // Presentar el parcial — la MISMA pantalla que ve el docente al simular.
   return (
     <div className="space-y-4 max-w-3xl mx-auto pb-24">
-      {/* Sticky header with timer + progress */}
-      <div className="sticky top-0 z-20 bg-canvas py-3 border-b border-foreground/[0.06]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-foreground truncate max-w-[200px]">{quiz.title}</h2>
-            <Badge variant="info" size="sm">{answeredCount}/{totalQuestions}</Badge>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {blurWarnings > 0 && (
-              <Badge variant="danger" size="sm">
-                <AlertTriangle className="w-3 h-3 mr-0.5" /> {blurWarnings}
-              </Badge>
-            )}
-
-            {timeLeft !== null && (
-              <span className={`text-sm font-mono font-bold tabular-nums ${
-                timeLeft <= 60 ? 'text-red-400 animate-pulse' : timeLeft <= 300 ? 'text-amber-400' : 'text-foreground'
-              }`}>
-                <Clock className="w-4 h-4 inline mr-1" />
-                {formatTime(timeLeft)}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="w-full h-1 rounded-full bg-foreground/[0.06] mt-2 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-cyan-500 transition-all duration-300"
-            style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Questions */}
-      {displayQuestions.map((question, idx) => {
-        const displayOptions = quiz.shuffleOptions
-          ? shuffleArray(question.options, question.id.charCodeAt(0))
-          : question.options;
-        const isWeighted = question.type === 'weighted';
-        const currentAnswer = answers[question.id];
-        const selectedIds = isWeighted
-          ? (Array.isArray(currentAnswer) ? currentAnswer : currentAnswer ? [currentAnswer] : [])
-          : [];
-
-        return (
-          <div key={question.id} className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02]">
-            <div className="flex items-start gap-2 mb-3">
-              <span className="text-xs font-bold text-faint shrink-0 pt-0.5">{idx + 1}.</span>
-              <div>
-                <MarkdownRenderer content={question.text} className="text-sm font-medium text-foreground/90" />
-                <span className="text-[10px] text-subtle">
-                  {question.points} pts · {isWeighted ? 'Selección múltiple (selecciona las correctas)' : 'Selección única'}
-                </span>
-              </div>
-            </div>
-
-            <div className="ml-5 space-y-2">
-              {displayOptions.map((opt) => {
-                const isSelected = isWeighted ? selectedIds.includes(opt.id) : currentAnswer === opt.id;
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => isWeighted ? toggleWeightedAnswer(question.id, opt.id) : selectAnswer(question.id, opt.id)}
-                    className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-all cursor-pointer min-h-[44px] ${
-                      isSelected
-                        ? 'border-cyan-500/50 bg-cyan-500/10 text-foreground'
-                        : 'border-foreground/[0.08] bg-foreground/[0.02] text-muted hover:border-foreground/15 hover:bg-foreground/[0.05]'
-                    }`}
-                  >
-                    {isWeighted ? (
-                      <span className={`inline-block w-5 h-5 rounded mr-2 align-middle border-2 ${
-                        isSelected ? 'border-cyan-400 bg-cyan-400' : 'border-foreground/20'
-                      }`}>
-                        {isSelected && (
-                          <svg className="w-3 h-3 text-white mx-auto mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </span>
-                    ) : (
-                      <span className={`inline-block w-5 h-5 rounded-full border-2 mr-2 align-middle ${
-                        isSelected ? 'border-cyan-400 bg-cyan-400' : 'border-foreground/20'
-                      }`}>
-                        {isSelected && (
-                          <svg className="w-3 h-3 text-white mx-auto mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </span>
-                    )}
-                    {opt.text}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-
-      {/* Submit button — sticky bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-canvas border-t border-foreground/[0.06] p-4 z-20">
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <p className="text-xs text-subtle">{answeredCount} de {totalQuestions} respondidas</p>
-          <Button
-            variant="primary"
-            disabled={submitting || answeredCount === 0}
-            onClick={() => {
-              if (answeredCount < totalQuestions) {
-                setConfirmIncomplete(true);
-                return;
-              }
-              doSubmit(false, getBlurCount());
-            }}
-          >
-            {submitting ? 'Enviando...' : 'Enviar Parcial'}
-          </Button>
-        </div>
-      </div>
-
-      <ConfirmModal
-        open={confirmIncomplete}
-        onClose={() => setConfirmIncomplete(false)}
-        onConfirm={() => { setConfirmIncomplete(false); doSubmit(false, getBlurCount()); }}
-        title="Envío incompleto"
-        message={`Solo respondiste ${answeredCount} de ${totalQuestions} preguntas. ¿Enviar de todas formas?`}
-        confirmLabel="Enviar"
-        variant="warning"
+      <QuizRunner
+        quiz={quiz}
+        answers={answers}
+        onAnswer={setAnswer}
+        timeLeft={timeLeft}
+        blurWarnings={blurWarnings}
+        submitting={submitting}
+        onSubmit={() => doSubmit(false, getBlurCount())}
       />
     </div>
   );

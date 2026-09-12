@@ -47,9 +47,20 @@ export function useQuizSession(quizId: string, timeLimitMinutes?: number) {
     try { window.localStorage.setItem(key, JSON.stringify(s)); } catch { /* sin almacenamiento */ }
   }, [key]);
 
+  /**
+   * Cierra la sesión: borra lo guardado Y devuelve el hook a su estado
+   * inicial. Antes solo limpiaba localStorage, así que quien la llamara para
+   * "empezar de nuevo" —el botón de nueva simulación— se quedaba con
+   * `started` en true y las respuestas anteriores en memoria: volvía al
+   * parcial en curso en vez de a la pantalla de inicio.
+   */
   const clearSession = useCallback(() => {
     deadlineRef.current = null;
     try { window.localStorage.removeItem(key); } catch { /* nada que hacer */ }
+    setStarted(false);
+    setAnswers({});
+    setTimeLeft(null);
+    setExpired(false);
   }, [key]);
 
   // Se retoma la sesión al montar. En el servidor no hay localStorage, así
