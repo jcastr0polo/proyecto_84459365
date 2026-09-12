@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 import SearchInput from '@/components/ui/SearchInput';
 import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
@@ -246,16 +247,13 @@ export default function AdminQuizResultsPage() {
               </p>
             </div>
             {missing.length > 1 && (
-              <button
+              <Button
+                variant="warning" size="md" className="shrink-0"
                 onClick={() => setConfirmAll(true)}
                 disabled={busy.length > 0}
-                className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium
-                           hover:bg-amber-400 transition-colors duration-[var(--dur-fast)]
-                           active:scale-[0.98] motion-reduce:active:scale-100
-                           disabled:opacity-50 cursor-pointer shrink-0"
               >
                 Poner 0 a los {missing.length}
-              </button>
+              </Button>
             )}
           </div>
 
@@ -272,17 +270,13 @@ export default function AdminQuizResultsPage() {
                     </p>
                     <p className="text-meta text-subtle truncate">{student.email}</p>
                   </div>
-                  <button
+                  <Button
+                    variant="secondary" size="sm" className="shrink-0"
                     onClick={() => markAsMissed([student.id])}
                     disabled={working}
-                    className="shrink-0 px-3 py-2 rounded-lg border border-amber-500/30 text-xs font-medium
-                               text-amber-700 dark:text-amber-300 hover:bg-amber-500/10
-                               transition-colors duration-[var(--dur-fast)]
-                               active:scale-[0.98] motion-reduce:active:scale-100
-                               disabled:opacity-50 cursor-pointer"
                   >
                     {working ? 'Guardando…' : 'Poner 0'}
-                  </button>
+                  </Button>
                 </li>
               );
             })}
@@ -350,19 +344,14 @@ export default function AdminQuizResultsPage() {
                       <p className="text-meta text-subtle">No presentó · 0.0 cuenta en su definitiva</p>
                     </div>
                   </div>
-                  <button
+                  <Button
+                    variant="secondary" size="sm" className="shrink-0"
                     onClick={() => undoMissed(attempt.studentId)}
                     disabled={working}
-                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg
-                               border border-surface-border text-xs font-medium text-muted
-                               hover:text-foreground hover:bg-surface-hover
-                               transition-colors duration-[var(--dur-fast)]
-                               active:scale-[0.98] motion-reduce:active:scale-100
-                               disabled:opacity-50 cursor-pointer"
                   >
                     <Undo2 className="w-3.5 h-3.5" />
                     {working ? 'Deshaciendo…' : 'Deshacer 0'}
-                  </button>
+                  </Button>
                 </div>
               );
             }

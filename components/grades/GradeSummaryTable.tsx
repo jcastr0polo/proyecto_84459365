@@ -5,6 +5,7 @@ import type { CourseGradeSummary } from '@/lib/types';
 import { ChevronDown } from 'lucide-react';
 import { gradeText, formatScore } from '@/lib/gradeScale';
 import { tableChrome } from '@/components/ui/Table';
+import Button from '@/components/ui/Button';
 
 /** Ajuste vigente sobre una nota calculada. corteId null = definitiva. */
 export interface Adjustment {
@@ -479,13 +480,8 @@ function MobileStudentCard({
           en su propia fila. */}
       {onAdjust && student.finalScore !== null && (
         <div className="px-4 pb-4 -mt-1">
-          <button
+          <Button variant="secondary" size="sm" className="w-full"
             onClick={() => onAdjust(student.id, null)}
-            className="w-full min-h-[44px] rounded-lg border border-surface-border px-3 py-2
-                       text-xs font-medium text-muted hover:text-foreground hover:bg-surface-hover
-                       transition-colors duration-[var(--dur-fast)]
-                       active:scale-[0.99] motion-reduce:active:scale-100 cursor-pointer
-                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
           >
             {(() => {
               const adj = adjMap.get(`${student.id}:final`);
@@ -496,7 +492,7 @@ function MobileStudentCard({
               const dTxt = d !== null && Math.abs(d) >= 0.05 ? ` ${d > 0 ? '+' : ''}${d.toFixed(1)}` : '';
               return `Definitiva ajustada${dTxt}${adj.isPublished ? '' : ' · sin publicar'} — editar`;
             })()}
-          </button>
+          </Button>
         </div>
       )}
 

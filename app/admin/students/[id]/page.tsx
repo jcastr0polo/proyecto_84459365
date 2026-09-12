@@ -373,12 +373,9 @@ export default function AdminStudentDetailPage() {
           <h2 className="text-xs font-semibold text-subtle uppercase tracking-wider">
             Cursos Inscritos ({courses.length})
           </h2>
-          <button
-            onClick={openEnrollModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 min-h-11 text-xs font-medium text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/10 transition-colors duration-[var(--dur-fast)] cursor-pointer active:scale-[0.97] motion-reduce:active:scale-100"
-          >
-            <Plus className="w-3.5 h-3.5" /> Inscribir en curso
-          </button>
+          <Button variant="primary" size="sm" onClick={openEnrollModal}>
+            <Plus className="w-3.5 h-3.5" aria-hidden="true" /> Inscribir en curso
+          </Button>
         </div>
 
         {/* Enrollment modal */}

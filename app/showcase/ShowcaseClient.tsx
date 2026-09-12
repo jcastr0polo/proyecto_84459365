@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Rocket } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
+import Chip from '@/components/ui/Chip';
 
 export interface ShowcaseProject {
   id: string;
@@ -109,30 +110,15 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
           transition={{ delay: 0.3 }}
           className="flex items-center justify-center gap-2 mb-10"
         >
-          <button
-            onClick={() => setCourseFilter('all')}
-            className={`px-4 py-2 rounded-full text-xs font-medium transition-all cursor-pointer ${
-              courseFilter === 'all'
-                ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
-                : 'text-subtle border border-foreground/[0.06] hover:text-muted hover:border-foreground/[0.12]'
-            }`}
-          >
+          <Chip active={courseFilter === 'all'} onClick={() => setCourseFilter('all')}>
             Todos ({projects.length})
-          </button>
+          </Chip>
           {courses.map((c) => {
             const count = projects.filter((p) => p.courseId === c.id).length;
             return (
-              <button
-                key={c.id}
-                onClick={() => setCourseFilter(c.id)}
-                className={`px-4 py-2 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                  courseFilter === c.id
-                    ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
-                    : 'text-subtle border border-foreground/[0.06] hover:text-muted hover:border-foreground/[0.12]'
-                }`}
-              >
+              <Chip key={c.id} active={courseFilter === c.id} onClick={() => setCourseFilter(c.id)}>
                 {c.name} ({count})
-              </button>
+              </Chip>
             );
           })}
         </motion.div>

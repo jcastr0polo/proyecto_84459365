@@ -359,16 +359,12 @@ export default function CortesPage() {
                 ¿Los demás cursos del semestre llevan el mismo calendario? Copia estas fechas
                 de una vez, emparejando por orden de corte.
               </p>
-              <button
+              <Button variant="primary" size="sm" className="shrink-0"
                 onClick={() => setApplyOpen(true)}
-                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 min-h-11 rounded-lg
-                           border border-cyan-500/30 text-xs font-medium text-cyan-700 dark:text-cyan-300
-                           hover:bg-cyan-500/10 transition-colors duration-[var(--dur-fast)]
-                           active:scale-[0.98] motion-reduce:active:scale-100 cursor-pointer"
               >
                 <CalendarClock className="w-3.5 h-3.5" aria-hidden="true" />
                 Aplicar al semestre
-              </button>
+              </Button>
             </div>
           )}
 

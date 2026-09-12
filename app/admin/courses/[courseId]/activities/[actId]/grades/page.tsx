@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import GradeTable from '@/components/grades/GradeTable';
 import type { GradeRow } from '@/components/grades/GradeTable';
 import Modal from '@/components/ui/Modal';
+import Button from '@/components/ui/Button';
+import BackLink from '@/components/ui/BackLink';
 import { useToast } from '@/components/ui/Toast';
 import { AlertTriangle } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
@@ -301,12 +303,7 @@ export default function AdminGradingPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors mb-2 cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-          >
-            ← Volver
-          </button>
+          <BackLink onClick={() => router.back()} className="mb-2">Volver</BackLink>
           <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
             Calificar Entregas
           </h1>
@@ -317,18 +314,15 @@ export default function AdminGradingPage() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant="secondary" size="md"
             onClick={() => router.push(`/admin/courses/${courseId}/grades`)}
-            className="px-4 py-2 text-sm border border-foreground/10 rounded-lg text-muted hover:text-foreground/80 hover:border-foreground/20 transition-colors cursor-pointer"
           >
             Ver Resumen del Curso
-          </button>
-          <button
-            onClick={() => setShowPublishModal(true)}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500/90 text-white hover:bg-emerald-400 transition-colors cursor-pointer"
-          >
+          </Button>
+          <Button variant="primary" size="md" onClick={() => setShowPublishModal(true)}>
             Publicar Notas
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -371,19 +365,12 @@ export default function AdminGradingPage() {
             </p>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={() => setShowPublishModal(false)}
-              className="px-4 py-2 text-sm border border-foreground/10 rounded-lg text-muted hover:text-foreground/80 transition-colors cursor-pointer"
-            >
+            <Button variant="secondary" size="md" onClick={() => setShowPublishModal(false)} disabled={publishing}>
               Cancelar
-            </button>
-            <button
-              onClick={handlePublish}
-              disabled={publishing}
-              className="px-4 py-2 min-h-11 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {publishing ? 'Publicando...' : 'Confirmar Publicación'}
-            </button>
+            </Button>
+            <Button variant="primary" size="md" onClick={handlePublish} disabled={publishing}>
+              {publishing ? 'Publicando…' : 'Confirmar Publicación'}
+            </Button>
           </div>
         </div>
       </Modal>

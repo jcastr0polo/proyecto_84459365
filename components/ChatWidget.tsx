@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Button from '@/components/ui/Button';
 import {
   MessageCircle,
   X,
@@ -257,13 +258,9 @@ export default function ChatWidget() {
                     className="w-full px-4 py-3 rounded-xl border border-foreground/[0.08] bg-foreground/[0.04] text-foreground text-sm placeholder-faint focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/30 transition-all text-center"
                     autoFocus
                   />
-                  <button
-                    type="submit"
-                    disabled={!username.trim()}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-white text-sm font-semibold hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer disabled:opacity-30 min-h-[44px]"
-                  >
+                  <Button type="submit" variant="primary" size="lg" disabled={!username.trim()}>
                     Entrar al chat
-                  </button>
+                  </Button>
                 </form>
               </div>
             ) : (

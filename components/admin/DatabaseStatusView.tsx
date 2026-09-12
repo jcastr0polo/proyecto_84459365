@@ -3,6 +3,7 @@
 import React from 'react';
 import { Database, RefreshCw, Table2, Archive, Check, AlertTriangle } from 'lucide-react';
 import StatTile from '@/components/ui/StatTile';
+import Button from '@/components/ui/Button';
 import BackLink from '@/components/ui/BackLink';
 import { toneBox, toneText } from '@/lib/semantics';
 
@@ -100,18 +101,10 @@ export default function DatabaseStatusView({
       </div>
 
       {onRefresh && (
-        <button
-          onClick={onRefresh}
-          disabled={refreshing}
-          className="inline-flex items-center gap-2 px-4 py-2 min-h-11 rounded-lg border border-surface-border
-                     text-sm font-medium text-muted hover:text-foreground hover:bg-surface-hover
-                     transition-colors duration-[var(--dur-fast)]
-                     active:scale-[0.98] motion-reduce:active:scale-100
-                     disabled:opacity-50 cursor-pointer"
-        >
+        <Button variant="secondary" size="md" onClick={onRefresh} disabled={refreshing}>
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
           {refreshing ? 'Consultando…' : 'Actualizar'}
-        </button>
+        </Button>
       )}
 
       {/* Sin conexión no se listan las tablas en rojo como "No existe":
@@ -146,16 +139,13 @@ export default function DatabaseStatusView({
                   {m.applied ? (
                     <span className={`text-xs font-medium shrink-0 ${toneText.ok}`}>Aplicada</span>
                   ) : (
-                    <button
+                    <Button
+                      variant="warning" size="md" className="shrink-0"
                       onClick={() => onApply?.(m.id)}
                       disabled={!onApply || applying === m.id}
-                      className="shrink-0 px-4 py-2 min-h-11 rounded-lg bg-amber-500 text-white text-sm font-medium
-                                 hover:bg-amber-400 transition-colors duration-[var(--dur-fast)]
-                                 active:scale-[0.98] motion-reduce:active:scale-100
-                                 disabled:opacity-50 cursor-pointer"
                     >
                       {applying === m.id ? 'Aplicando…' : 'Aplicar'}
-                    </button>
+                    </Button>
                   )}
                 </div>
 

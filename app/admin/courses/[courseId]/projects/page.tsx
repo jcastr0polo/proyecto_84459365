@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Chip from '@/components/ui/Chip';
+import Button from '@/components/ui/Button';
 import IconButton from '@/components/ui/IconButton';
 import { Rocket, Star, Eye, EyeOff, Ban, Image as ImageIcon, FileText, Download } from 'lucide-react';
 import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
@@ -311,14 +312,14 @@ export default function AdminCourseProjectsPage() {
                 </Chip>
 
                 {/* Edit showcase appearance */}
-                <button
+                <Button
+                  variant="ghost" size="xs"
                   onClick={() => openShowcaseEdit(p)}
-                  className="flex items-center gap-1 text-meta px-2.5 py-1.5 rounded-lg text-faint hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors duration-[var(--dur-fast)] cursor-pointer"
                   title="Editar apariencia en vitrina"
                 >
                   <ImageIcon className="w-3.5 h-3.5" />
                   Vitrina
-                </button>
+                </Button>
 
                 {/* View document */}
                 {p.documentUrl && (
@@ -332,15 +333,15 @@ export default function AdminCourseProjectsPage() {
                   </a>
                 )}
                 {p.documentUrl && (
-                  <button
+                  <Button
+                    variant="ghost" size="xs"
                     onClick={() => handleDownloadDoc(p)}
                     disabled={loadingDoc && viewingDocId === p.id}
-                    className="flex items-center gap-1 text-meta px-2.5 py-1.5 rounded-lg text-faint hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors duration-[var(--dur-fast)] cursor-pointer"
                     title="Descargar .md"
                   >
                     <Download className="w-3.5 h-3.5" />
                     Descargar
-                  </button>
+                  </Button>
                 )}
               </div>
 
@@ -365,18 +366,12 @@ export default function AdminCourseProjectsPage() {
                     className="w-full px-2 py-1.5 text-xs bg-foreground/[0.04] border border-foreground/[0.08] rounded text-foreground placeholder:text-faint focus:outline-none focus:border-cyan-500/30"
                   />
                   <div className="flex gap-2 pt-1">
-                    <button
-                      onClick={saveShowcase}
-                      className="text-micro px-3 py-1 rounded bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25 transition-colors duration-[var(--dur-fast)] cursor-pointer relative after:absolute after:inset-x-0 after:top-1/2 after:-translate-y-1/2 after:h-11 after:content-['']"
-                    >
+                    <Button variant="primary" size="xs" onClick={saveShowcase}>
                       Guardar
-                    </button>
-                    <button
-                      onClick={() => setEditingShowcase(null)}
-                      className="text-micro px-3 py-1 rounded text-faint hover:text-muted transition-colors duration-[var(--dur-fast)] cursor-pointer"
-                    >
+                    </Button>
+                    <Button variant="ghost" size="xs" onClick={() => setEditingShowcase(null)}>
                       Cancelar
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}

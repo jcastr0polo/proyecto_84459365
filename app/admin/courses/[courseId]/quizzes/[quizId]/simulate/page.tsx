@@ -442,13 +442,10 @@ export default function AdminQuizSimulatePage() {
             )}
           </div>
 
-          <button
-            onClick={startSession}
-            className="w-full py-3.5 px-6 rounded-xl bg-purple-500 hover:bg-purple-400 text-white font-semibold text-sm transition-colors cursor-pointer shadow-lg shadow-purple-500/20"
-          >
-            <FlaskConical className="w-5 h-5 inline mr-2" />
+          <Button variant="primary" size="lg" className="w-full" onClick={startSession}>
+            <FlaskConical className="w-5 h-5" aria-hidden="true" />
             Iniciar Simulación
-          </button>
+          </Button>
         </Card>
 
         {/* Historial de simulaciones */}

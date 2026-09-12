@@ -10,6 +10,7 @@ import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import type { ManualGradeItem, ManualGrade } from '@/lib/types';
 import BackLink from '@/components/ui/BackLink';
+import Button from '@/components/ui/Button';
 
 /**
  * Calificación de un ítem manual, en página completa.
@@ -212,29 +213,16 @@ export default function ManualItemGradingPage() {
           </div>
 
           {unpublished > 0 ? (
-            <button
-              onClick={() => setConfirmPublish(true)}
-              disabled={publishing}
-              className="px-4 py-2 rounded-lg bg-cyan-500 text-white text-sm font-medium
-                         hover:bg-cyan-400 transition-colors duration-[var(--dur-fast)]
-                         active:scale-[0.98] motion-reduce:active:scale-100
-                         disabled:opacity-50 cursor-pointer shrink-0"
-            >
+            <Button variant="primary" size="md" className="shrink-0"
+              onClick={() => setConfirmPublish(true)} loading={publishing}>
               {publishing ? 'Publicando…' : `Publicar ${unpublished}`}
-            </button>
+            </Button>
           ) : (
             /* Sin esto no habría forma de corregir un error tras publicar. */
-            <button
-              onClick={() => setPublication(false)}
-              disabled={publishing}
-              className="px-4 py-2 rounded-lg border border-surface-border text-sm font-medium
-                         text-muted hover:text-foreground hover:bg-surface-hover
-                         transition-colors duration-[var(--dur-fast)]
-                         active:scale-[0.98] motion-reduce:active:scale-100
-                         disabled:opacity-50 cursor-pointer shrink-0"
-            >
+            <Button variant="secondary" size="md" className="shrink-0"
+              onClick={() => setPublication(false)} disabled={publishing}>
               {publishing ? 'Ocultando…' : 'Ocultar a estudiantes'}
-            </button>
+            </Button>
           )}
         </div>
       )}

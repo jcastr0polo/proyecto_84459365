@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Modal from '@/components/ui/Modal';
+import Button from '@/components/ui/Button';
 import { gradeText, formatScore, PASS, SCALE_MAX } from '@/lib/gradeScale';
 import { toneBox } from '@/lib/semantics';
 import { Plus, Minus, Trash2 } from 'lucide-react';
@@ -183,32 +184,25 @@ export default function AdjustGradeModal({
                 que va a guardar. */}
             <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
               {target.current ? (
-                <button onClick={onRemove} disabled={saving}
-                  className="inline-flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2
-                             min-h-11 rounded-lg text-xs font-medium whitespace-nowrap
-                             text-red-600 dark:text-red-400 hover:bg-red-500/10
-                             transition-colors duration-[var(--dur-fast)] disabled:opacity-50 cursor-pointer">
+                <Button variant="danger-ghost" size="sm" onClick={onRemove} disabled={saving}
+                  className="sm:justify-start whitespace-nowrap">
                   <Trash2 className="w-3.5 h-3.5" /> Quitar ajuste
-                </button>
+                </Button>
               ) : <span className="hidden sm:block" />}
 
               <div className="flex items-center gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
-                <button onClick={onClose} disabled={saving}
-                  className="px-4 py-2 min-h-11 rounded-lg border border-surface-border text-sm font-medium whitespace-nowrap
-                             text-muted hover:text-foreground hover:bg-surface-hover
-                             transition-colors duration-[var(--dur-fast)] disabled:opacity-50 cursor-pointer">
+                <Button variant="secondary" size="md" onClick={onClose} disabled={saving}
+                  className="whitespace-nowrap">
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="primary" size="md"
                   onClick={() => { setTouched(true); if (reasonOk && changed) onSave(value, reason.trim(), publish); }}
                   disabled={saving || !changed}
                   title={!changed ? 'La nota no ha cambiado' : undefined}
-                  className="px-4 py-2 min-h-11 rounded-lg bg-cyan-500 text-white text-sm font-medium whitespace-nowrap
-                             hover:bg-cyan-400 transition-colors duration-[var(--dur-fast)]
-                             active:scale-[0.98] motion-reduce:active:scale-100
-                             disabled:opacity-50 cursor-pointer">
+                  className="whitespace-nowrap">
                   {saving ? 'Guardando…' : 'Guardar ajuste'}
-                </button>
+                </Button>
               </div>
             </div>
           </>

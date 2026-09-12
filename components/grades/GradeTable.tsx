@@ -5,6 +5,7 @@ import { formatDateShort } from '@/lib/dateUtils';
 import { Paperclip, Link as LinkIcon } from 'lucide-react';
 import ScoreInput from '@/components/grades/ScoreInput';
 import SearchInput from '@/components/ui/SearchInput';
+import Button from '@/components/ui/Button';
 import Pagination, { usePagination } from '@/components/ui/Pagination';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import { tableChrome } from '@/components/ui/Table';
@@ -343,23 +344,14 @@ export default function GradeTable({
         <p className="text-xs text-subtle sm:hidden">
           {gradedCount} / {rows.length} calificados
         </p>
-        <button
+        <Button
+          variant="primary" size="md"
           onClick={() => onSaveAll(modifiedRows.length > 0 ? modifiedRows : rows.filter((r) => r.score !== null))}
-          disabled={saving || (modifiedRows.length === 0 && gradedCount === 0)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg bg-cyan-500 text-white hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          disabled={modifiedRows.length === 0 && gradedCount === 0}
+          loading={saving}
         >
-          {saving ? (
-            <>
-              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Guardando...
-            </>
-          ) : (
-            <>Guardar {modifiedRows.length > 0 ? `(${modifiedRows.length})` : 'todo'}</>
-          )}
-        </button>
+          {saving ? 'Guardando…' : <>Guardar {modifiedRows.length > 0 ? `(${modifiedRows.length})` : 'todo'}</>}
+        </Button>
       </div>
     </div>
   );

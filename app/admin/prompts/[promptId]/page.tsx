@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { formatDateTimeColombia as formatDate } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 import { Bot, Pencil } from 'lucide-react';
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
 import { Skeleton, SkeletonForm } from '@/components/ui/Skeleton';
@@ -122,22 +123,13 @@ export default function PromptDetailPage() {
 
         <div className="flex items-center gap-2">
           {mode === 'view' ? (
-            <button
-              onClick={() => setMode('edit')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium
-                         border border-foreground/[0.12] text-muted hover:text-foreground hover:bg-foreground/[0.04]
-                         transition-colors cursor-pointer"
-            >
-              <Pencil className="w-4 h-4" /> Editar
-            </button>
+            <Button variant="secondary" size="md" onClick={() => setMode('edit')}>
+              <Pencil className="w-4 h-4" aria-hidden="true" /> Editar
+            </Button>
           ) : (
-            <button
-              onClick={() => setMode('view')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium
-                         text-subtle hover:text-muted transition-colors cursor-pointer"
-            >
+            <Button variant="ghost" size="md" onClick={() => setMode('view')}>
               Cancelar
-            </button>
+            </Button>
           )}
         </div>
       </div>

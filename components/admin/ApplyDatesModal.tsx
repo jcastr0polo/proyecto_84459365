@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Modal from '@/components/ui/Modal';
+import Button from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { toneBox, toneText } from '@/lib/semantics';
 import { CalendarClock, AlertTriangle } from 'lucide-react';
@@ -226,21 +227,15 @@ export default function ApplyDatesModal({
         )}
 
         <div className="flex justify-end gap-2 pt-1">
-          <button onClick={onClose} disabled={applying}
-            className="px-4 py-2 min-h-11 rounded-lg border border-surface-border text-sm font-medium
-                       text-muted hover:text-foreground hover:bg-surface-hover
-                       transition-colors duration-[var(--dur-fast)] disabled:opacity-50 cursor-pointer">
+          <Button variant="secondary" size="md" onClick={onClose} disabled={applying}>
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary" size="md"
             onClick={aplicar}
-            disabled={applying || loading || conFechas.length === 0 || (preview?.cortes ?? 0) === 0}
-            className="px-4 py-2 min-h-11 rounded-lg bg-cyan-500 text-white text-sm font-medium
-                       hover:bg-cyan-400 transition-colors duration-[var(--dur-fast)]
-                       active:scale-[0.98] motion-reduce:active:scale-100
-                       disabled:opacity-50 cursor-pointer">
+            disabled={applying || loading || conFechas.length === 0 || (preview?.cortes ?? 0) === 0}>
             {applying ? 'Aplicando…' : 'Aplicar al semestre'}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>
