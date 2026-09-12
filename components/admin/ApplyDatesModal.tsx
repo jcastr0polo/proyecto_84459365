@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Modal from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { toneBox, toneText } from '@/lib/semantics';
@@ -53,24 +53,42 @@ export default function ApplyDatesModal({
   const [applying, setApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const conFechas = cortes.filter((c) => c.startDate || c.endDate || c.reportDeadline);
+  const conFechas = useMemo(
+    () => cortes.filter((c) => c.startDate || c.endDate || c.reportDeadline),
+    [cortes],
+  );
 
-  const payload = useCallback((extra: Record<string, unknown>) => ({
-    dates: conFechas.map((c) => ({
+  /*
+   * Las fechas como cadena estable.
+   *
+   * `cortes` llega como un array nuevo en cada render del padre, así que
+   * cualquier cosa derivada de él también cambia de identidad aunque el
+   * contenido sea idéntico. Con eso en las dependencias del efecto, la vista
+   * previa se pedía otra vez en cada render y el recuadro se quedaba cargando
+   * para siempre. La clave es el CONTENIDO, no la referencia.
+   */
+  const datesJson = useMemo(() => JSON.stringify(
+    conFechas.map((c) => ({
       order: c.order,
       startDate: c.startDate ?? '',
       endDate: c.endDate ?? '',
       reportDeadline: c.reportDeadline ?? '',
     })),
+  ), [conFechas]);
+
+  const cuerpo = useCallback((extra: Record<string, unknown>) => JSON.stringify({
+    dates: JSON.parse(datesJson),
     exceptCourseId: courseId,
     overwrite,
     ...extra,
-  }), [conFechas, courseId, overwrite]);
+  }), [datesJson, courseId, overwrite]);
 
   // La vista previa se recalcula al cambiar "sobrescribir": el número de
   // cortes que cambian depende de eso, y enseñar el de antes sería mentir.
   useEffect(() => {
-    if (!open || conFechas.length === 0) { setLoading(false); return; }
+    // Se mira el JSON, no `conFechas`, para no volver a meter la referencia
+    // inestable en las dependencias: eso era el bucle.
+    if (!open || datesJson === '[]') { setLoading(false); return; }
     let vigente = true;
     setLoading(true);
     setError(null);
@@ -80,7 +98,7 @@ export default function ApplyDatesModal({
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify(payload({ dryRun: true })),
+          body: cuerpo({ dryRun: true }),
         });
         const d = await res.json();
         if (!vigente) return;
@@ -93,7 +111,7 @@ export default function ApplyDatesModal({
       }
     })();
     return () => { vigente = false; };
-  }, [open, semesterId, overwrite, conFechas.length, payload]);
+  }, [open, semesterId, overwrite, datesJson, cuerpo]);
 
   async function aplicar() {
     setApplying(true);
@@ -102,7 +120,7 @@ export default function ApplyDatesModal({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(payload({})),
+        body: cuerpo({}),
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error ?? 'No se pudo aplicar');
