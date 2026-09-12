@@ -9,8 +9,9 @@ import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import CorteCard, { type CorteOverview } from '@/components/admin/CorteCard';
 import { toneBox } from '@/lib/semantics';
+import ApplyDatesModal from '@/components/admin/ApplyDatesModal';
 import Link from 'next/link';
-import { AlertTriangle, ArrowLeft, Plus, Layers } from 'lucide-react';
+import { CalendarClock, AlertTriangle, ArrowLeft, Plus, Layers } from 'lucide-react';
 
 /** Colores de los tramos; se repiten si hay más de cinco cortes. */
 const SEGMENT_COLORS = [
@@ -26,6 +27,8 @@ export default function CortesPage() {
   const [orphanItems, setOrphanItems] = useState<string[]>([]);
   const [totalWeight, setTotalWeight] = useState(0);
   const [courseName, setCourseName] = useState('');
+  const [semesterId, setSemesterId] = useState('');
+  const [applyOpen, setApplyOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCorte, setEditingCorte] = useState<CorteOverview | null>(null);
@@ -55,6 +58,7 @@ export default function CortesPage() {
       if (courseRes.ok) {
         const courseData = await courseRes.json();
         setCourseName(courseData.course?.name ?? '');
+        setSemesterId(courseData.course?.semesterId ?? '');
       }
     } catch {
       toast('Error al cargar cortes', 'error');
@@ -273,6 +277,29 @@ export default function CortesPage() {
         />
       ) : (
         <div className="space-y-3">
+          {/* Los cortes suelen ser los mismos en todas las asignaturas del
+              semestre. Ponerlos uno por uno en cada curso es trabajo repetido
+              y es donde se cuela la fecha tecleada distinta. */}
+          {semesterId && cortes.some((c) => c.startDate || c.endDate || c.reportDeadline) && (
+            <div className="flex items-center justify-between gap-3 flex-wrap rounded-xl
+                            border border-surface-border bg-surface-sunken px-4 py-3">
+              <p className="text-xs text-subtle max-w-prose">
+                ¿Los demás cursos del semestre llevan el mismo calendario? Copia estas fechas
+                de una vez, emparejando por orden de corte.
+              </p>
+              <button
+                onClick={() => setApplyOpen(true)}
+                className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 min-h-11 rounded-lg
+                           border border-cyan-500/30 text-xs font-medium text-cyan-700 dark:text-cyan-300
+                           hover:bg-cyan-500/10 transition-colors duration-[var(--dur-fast)]
+                           active:scale-[0.98] motion-reduce:active:scale-100 cursor-pointer"
+              >
+                <CalendarClock className="w-3.5 h-3.5" aria-hidden="true" />
+                Aplicar al semestre
+              </button>
+            </div>
+          )}
+
           {/* Lo que no está en ningún corte no entra en ningún reporte de
               notas: si el docente no lo ve aquí, no lo ve en ninguna parte. */}
           {orphanItems.length > 0 && (
@@ -307,6 +334,18 @@ export default function CortesPage() {
           ))}
         </div>
       )}
+
+      <ApplyDatesModal
+        open={applyOpen}
+        onClose={() => setApplyOpen(false)}
+        semesterId={semesterId}
+        courseId={courseId}
+        cortes={cortes.map((c) => ({
+          order: c.order, name: c.name,
+          startDate: c.startDate, endDate: c.endDate, reportDeadline: c.reportDeadline,
+        }))}
+        onDone={(m) => { toast(m, 'success'); fetchCortes(); }}
+      />
 
       {/* Create/Edit Modal */}
       <Modal
