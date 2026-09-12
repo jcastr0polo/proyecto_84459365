@@ -239,12 +239,79 @@ export async function GET(request: Request): Promise<NextResponse> {
       });
     }).sort((a, b) => a.score - b.score);
 
+    /*
+     * 4 · La forma del grupo.
+     *
+     * Un panel que lista veinte nombres no dice cómo va el curso; dice quiénes
+     * son veinte personas. Lo que un docente lee de un vistazo es DÓNDE se
+     * acumula el grupo en la escala: si la masa está pegada al 3.0 el problema
+     * es del curso, y si hay dos bultos separados el problema es otro.
+     *
+     * Los tramos siguen la escala colombiana y su umbral de aprobación, no
+     * cortes redondos arbitrarios: por eso el corte está en 3.0 y no en 2.5.
+     */
+    const BINS = [
+      { min: 0.0, max: 2.0, label: '0–1.9' },
+      { min: 2.0, max: 3.0, label: '2.0–2.9' },
+      { min: 3.0, max: 3.5, label: '3.0–3.4' },
+      { min: 3.5, max: 4.0, label: '3.5–3.9' },
+      { min: 4.0, max: 4.5, label: '4.0–4.4' },
+      { min: 4.5, max: 5.01, label: '4.5–5.0' },
+    ];
+
+    const todasLasNotas = currentCourses.flatMap((course) => {
+      const roster = enrByCourse.get(course.id) ?? [];
+      const courseCortes = cortes.filter((c) => c.courseId === course.id)
+        .sort((a, b) => a.order - b.order);
+      const courseQuizzes = quizzes.filter(
+        (q) => q.courseId === course.id && q.type === 'graded' && q.weight && q.weight > 0,
+      );
+      const courseManualItems = manualItems.filter(
+        (i) => i.courseId === course.id && !isAdjustItemId(i.id),
+      );
+      const gradedActs = gradedActivitiesOf(course.id);
+      const gradable = gradableItemsOf(gradedActs, courseQuizzes, courseManualItems);
+
+      return roster.flatMap((e) => {
+        const cs = calculateCorteScores(
+          e.studentId, courseCortes, gradedActs, grades,
+          courseQuizzes, attempts, courseManualItems, manualGrades,
+        );
+        const flat = calculateFinalGrade(
+          e.studentId, course.id, activities, grades,
+          quizzes, attempts, manualItems, manualGrades,
+        );
+        const adj = manualGrades.find(
+          (g) => g.itemId === adjustItemId(course.id) && g.studentId === e.studentId,
+        );
+        const r = resolveFinalScore(courseCortes, cs, flat, gradable, adj?.score ?? null);
+        return r.finalScore === null ? [] : [{ courseId: course.id, score: r.finalScore }];
+      });
+    });
+
+    const distribution = BINS.map((b) => ({
+      label: b.label,
+      min: b.min,
+      count: todasLasNotas.filter((n) => n.score >= b.min && n.score < b.max).length,
+    }));
+
+    const conNota = todasLasNotas.length;
+    const average = conNota > 0
+      ? Math.round((todasLasNotas.reduce((a, n) => a + n.score, 0) / conNota) * 10) / 10
+      : null;
+
     return NextResponse.json({
       semester,
       courseData,
       reportDeadlines,
       gradingQueue,
       atRisk,
+      distribution,
+      average,
+      /** Cuántas notas hay ya calculadas: sin esto el promedio no se puede leer. */
+      scoredCount: conNota,
+      /** Inscripciones activas totales del semestre, para saber sobre cuántos va. */
+      rosterCount: currentCourses.reduce((a, c) => a + (enrByCourse.get(c.id) ?? []).length, 0),
     });
   }, 'admin');
 }

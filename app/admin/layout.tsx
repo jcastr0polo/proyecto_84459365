@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -9,6 +9,7 @@ import ThumbNav from '@/components/ui/ThumbNav';
 import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import type { Semester } from '@/lib/types';
+import { useHideOnScroll } from '@/lib/useHideOnScroll';
 
 interface UserInfo {
   firstName: string;
@@ -65,6 +66,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [user, setUser] = useState<UserInfo | null>(null);
   const [semester, setSemester] = useState<Semester | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const cabeceraVisible = useHideOnScroll({ target: mainRef });
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
@@ -253,7 +256,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* ═══ Main content area ═══ */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <header className="h-16 shrink-0 flex items-center justify-between px-4 lg:px-6 border-b border-foreground/10 bg-canvas/80 backdrop-blur-lg">
+          {/*
+            Se esconde al bajar y vuelve al subir, solo en móvil.
+
+            Aquí el que se desplaza es el <main>, no el documento, así que el
+            hook escucha a ese elemento. Y como la cabecera está en el flujo y
+            no superpuesta, esconderla es colapsar su alto: con translate se
+            quedaría el hueco vacío.
+          */}
+          <header
+            className={`shrink-0 flex items-center justify-between px-4 lg:px-6
+                        border-b border-foreground/10 bg-canvas/80 backdrop-blur-lg
+                        overflow-hidden transition-[height] duration-[var(--dur-base)]
+                        ease-[var(--ease-out)] motion-reduce:transition-none
+                        ${cabeceraVisible ? 'h-16' : 'h-0 lg:h-16'}`}
+          >
             {/* Left: hamburger + breadcrumbs */}
             <div className="flex items-center gap-3">
               <button
@@ -308,7 +325,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Page content
               pb-20 en móvil: si no, la barra de pulgar tapa el último bloque
               de cada pantalla y no hay forma de llegar a él. */}
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">
+          <main ref={mainRef} className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">
             {children}
           </main>
         </div>

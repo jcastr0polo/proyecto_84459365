@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { CalendarClock, PenLine, TrendingDown, ChevronRight } from 'lucide-react';
+import { CalendarClock, PenLine, TrendingDown, ChevronRight, ChevronDown } from 'lucide-react';
 import { gradeText, formatScore } from '@/lib/gradeScale';
 import { toneBox, toneText } from '@/lib/semantics';
 
@@ -67,6 +67,7 @@ export default function DashboardPriorities({
   const proximos = reportDeadlines.filter((r) => r.days <= 21);
   const cola = gradingQueue.slice(0, 6);
   const riesgo = atRisk.slice(0, 8);
+  const [abierto, setAbierto] = useState(false);
 
   if (proximos.length === 0 && cola.length === 0 && riesgo.length === 0) return null;
 
@@ -182,47 +183,76 @@ export default function DashboardPriorities({
       {/* ── 3 · Estudiantes en riesgo ── */}
       {riesgo.length > 0 && (
         <section>
-          <h2 className="type-section text-subtle mb-3 flex items-center gap-2">
-            <TrendingDown className="w-4 h-4" aria-hidden="true" />
-            Van perdiendo
-          </h2>
-          <div className="rounded-xl border border-surface-border divide-y divide-surface-border overflow-hidden">
-            {riesgo.map((s) => (
-              <Link
-                key={`${s.studentId}-${s.courseId}`}
-                href={`/admin/students/${s.studentId}`}
-                className="flex items-center gap-3 px-4 py-3 bg-surface hover:bg-surface-hover active:bg-surface-sunken
-                           transition-colors duration-[var(--dur-fast)]
-                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset
-                           focus-visible:ring-cyan-500/40"
-              >
-                <span className={`text-lg font-bold tabular-nums shrink-0 w-10 ${gradeText(s.score)}`}>
-                  {formatScore(s.score)}
-                </span>
-                {/* Cuánto lleva cursado dice si aún hay margen de arreglarlo
-                    o si ya está casi decidido. */}
-                <div className="min-w-0 flex-1 @2xl:flex @2xl:items-center @2xl:justify-between @2xl:gap-4">
-                  <div className="min-w-0">
-                    <p className="text-sm text-foreground/90 truncate">{s.studentName}</p>
-                    <p className="text-xs text-subtle truncate">{s.courseName}</p>
+          {/*
+            Plegado por defecto, y detrás de su número.
+
+            Un panel que abre con veinte nombres no dice cómo va el curso; dice
+            quiénes son veinte personas. El dato de panel es CUÁNTOS y la forma
+            del grupo —eso lo cuenta la distribución—; los nombres son el paso
+            siguiente, cuando ya se decidió mirarlos.
+          */}
+          <button
+            onClick={() => setAbierto((v) => !v)}
+            aria-expanded={abierto}
+            className="w-full flex items-center gap-3 rounded-xl border border-surface-border
+                       bg-surface px-4 py-3 text-left cursor-pointer
+                       hover:bg-surface-hover active:bg-surface-sunken
+                       transition-colors duration-[var(--dur-fast)]
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
+          >
+            <TrendingDown className={`w-4 h-4 shrink-0 ${toneText.critical}`} aria-hidden="true" />
+            <span className="min-w-0 flex-1">
+              <span className="text-sm text-foreground block">
+                <strong className={toneText.critical}>{atRisk.length}</strong>
+                {atRisk.length === 1 ? ' estudiante va perdiendo' : ' estudiantes van perdiendo'}
+              </span>
+              <span className="text-xs text-subtle block">
+                {abierto ? 'Ocultar la lista' : 'Ver quiénes son'}
+              </span>
+            </span>
+            <ChevronDown className={`w-4 h-4 text-faint shrink-0 transition-transform duration-200
+                                     ${abierto ? 'rotate-180' : ''}`} aria-hidden="true" />
+          </button>
+
+          {abierto && (
+            <div className="rounded-xl border border-surface-border divide-y divide-surface-border
+                            overflow-hidden mt-2">
+              {riesgo.map((s) => (
+                <Link
+                  key={`${s.studentId}-${s.courseId}`}
+                  href={`/admin/students/${s.studentId}`}
+                  className="flex items-center gap-3 px-4 py-3 bg-surface hover:bg-surface-hover active:bg-surface-sunken
+                             transition-colors duration-[var(--dur-fast)]
+                             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset
+                             focus-visible:ring-cyan-500/40"
+                >
+                  <span className={`text-lg font-bold tabular-nums shrink-0 w-10 ${gradeText(s.score)}`}>
+                    {formatScore(s.score)}
+                  </span>
+                  <div className="min-w-0 flex-1 @2xl:flex @2xl:items-center @2xl:justify-between @2xl:gap-4">
+                    <div className="min-w-0">
+                      <p className="text-sm text-foreground/90 truncate">{s.studentName}</p>
+                      <p className="text-xs text-subtle truncate">{s.courseName}</p>
+                    </div>
+                    {s.progressPct !== null && (
+                      <p className="text-xs text-faint shrink-0 @2xl:text-right">
+                        {s.progressPct}% del curso cursado
+                      </p>
+                    )}
                   </div>
-                  {s.progressPct !== null && (
-                    <p className="text-xs text-faint shrink-0 @2xl:text-right">
-                      {s.progressPct}% del curso cursado
-                    </p>
-                  )}
-                </div>
-                <ChevronRight className="w-4 h-4 text-faint shrink-0" aria-hidden="true" />
-              </Link>
-            ))}
-          </div>
-          {atRisk.length > riesgo.length && (
-            <p className="text-xs text-subtle mt-2 px-1">
-              y {atRisk.length - riesgo.length} más por debajo de 3.0
-            </p>
+                  <ChevronRight className="w-4 h-4 text-faint shrink-0" aria-hidden="true" />
+                </Link>
+              ))}
+              {atRisk.length > riesgo.length && (
+                <p className="text-xs text-subtle px-4 py-2.5 bg-surface">
+                  y {atRisk.length - riesgo.length} más por debajo de 3.0
+                </p>
+              )}
+            </div>
           )}
         </section>
       )}
+
     </div>
   );
 }

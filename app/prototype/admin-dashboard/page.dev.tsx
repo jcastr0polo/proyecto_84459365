@@ -53,6 +53,17 @@ export default function PrototypeAdminDashboard() {
       { studentId: 's2', studentName: 'González Pérez, Gabriela', courseId: 'c1', courseName: 'LÓGICA Y PROGRAMACIÓN', score: 2.4, progressPct: 60 },
       { studentId: 's3', studentName: 'Ochoa Lara, Daniela', courseId: 'c3', courseName: 'GERENCIA DE PROYECTOS', score: 2.9, progressPct: 30 },
     ],
+    distribution: [
+      { label: '0–1.9', min: 0, count: 2 },
+      { label: '2.0–2.9', min: 2, count: 5 },
+      { label: '3.0–3.4', min: 3, count: 9 },
+      { label: '3.5–3.9', min: 3.5, count: 7 },
+      { label: '4.0–4.4', min: 4, count: 4 },
+      { label: '4.5–5.0', min: 4.5, count: 1 },
+    ],
+    average: 3.4,
+    scoredCount: 28,
+    rosterCount: 34,
   };
 
   return (

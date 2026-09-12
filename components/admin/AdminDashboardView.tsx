@@ -12,6 +12,7 @@ import type { Course, Enrollment, Activity, Submission, Semester } from '@/lib/t
 import DashboardPriorities, {
   type ReportDeadline, type QueueItem, type AtRiskStudent,
 } from '@/components/admin/DashboardPriorities';
+import GradeDistribution, { type Bin } from '@/components/admin/GradeDistribution';
 
 /**
  * AdminDashboardView — Rediseño del panel del docente.
@@ -35,12 +36,17 @@ export interface CourseData {
 
 export default function AdminDashboardView({
   semester, courseData, reportDeadlines, gradingQueue, atRisk,
+  distribution, average, scoredCount, rosterCount,
 }: {
   semester: Semester | null;
   courseData: CourseData[];
   reportDeadlines?: ReportDeadline[];
   gradingQueue?: QueueItem[];
   atRisk?: AtRiskStudent[];
+  distribution?: Bin[];
+  average?: number | null;
+  scoredCount?: number;
+  rosterCount?: number;
 }) {
   const reduce = useReducedMotion();
   const today = useMemo(() => startOfTodayColombia(nowColombia()), []);
@@ -193,6 +199,25 @@ export default function AdminDashboardView({
             columna, no al de la ventana. Sin esto habría que adivinar cuánto
             mide la columna en cada punto de corte. */}
         <div className="@container space-y-6 min-w-0">
+          {/*
+            El titular va primero: cómo está el grupo.
+
+            Es lo que responde "¿cómo va esto?" de un vistazo, y ninguna lista
+            de nombres lo cuenta. Después viene lo que hay que hacer. Además
+            equilibra las dos columnas: sin esto la izquierda se quedaba a
+            medias mientras el raíl seguía bajando.
+          */}
+          {distribution && distribution.length > 0 && (
+            <motion.div {...fade()}>
+              <GradeDistribution
+                bins={distribution}
+                average={average ?? null}
+                scoredCount={scoredCount ?? 0}
+                rosterCount={rosterCount ?? 0}
+              />
+            </motion.div>
+          )}
+
         {/*
           Lo que aprieta va PRIMERO.
 
@@ -261,6 +286,7 @@ export default function AdminDashboardView({
 
         {/* ── Contexto. En móvil va al final: primero el trabajo. ── */}
         <aside className="space-y-6 min-w-0 order-last xl:order-none">
+
         {/* ── Cómo va el semestre · en móvil va al final, es contexto ── */}
         <motion.section {...fade()}
           className="rounded-2xl border border-surface-border bg-surface p-5">

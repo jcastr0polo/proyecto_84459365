@@ -8,6 +8,7 @@ import { Skeleton, SkeletonCards, SkeletonList } from '@/components/ui/Skeleton'
 import { Home, BookOpen, User, Lock, LogOut, Menu, X, ChevronDown, ChevronRight, Cpu } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import ThumbNav from '@/components/ui/ThumbNav';
+import { useHideOnScroll } from '@/lib/useHideOnScroll';
 
 interface UserInfo {
   firstName: string;
@@ -26,6 +27,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   const router = useRouter();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const cabeceraVisible = useHideOnScroll();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -101,7 +103,19 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     <ToastProvider>
       <div className="min-h-screen bg-canvas">
         {/* ═══ Top Navbar ═══ */}
-        <header className="sticky top-0 z-50 border-b border-foreground/10 bg-canvas/80 backdrop-blur-xl">
+        {/*
+          Se esconde al bajar y vuelve al subir.
+
+          En un teléfono la cabecera se come una franja que no aporta nada
+          mientras se lee una lista larga. En pantalla grande no se esconde
+          nunca: ahí no falta sitio y el movimiento solo distrae.
+        */}
+        <header
+          className={`sticky top-0 z-50 border-b border-foreground/10 bg-canvas/80 backdrop-blur-xl
+                      transition-transform duration-[var(--dur-base)] ease-[var(--ease-out)]
+                      motion-reduce:transition-none
+                      ${cabeceraVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}`}
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               {/* Left: Logo + Nav */}

@@ -112,16 +112,6 @@
 
 @theme inline {
   /*
-   * Los dos tamaños que más se usan en el proyecto —450 usos de text-xs y 355
-   * de text-sm— suben un punto cada uno. Es el cambio que más se nota sin
-   * tocar una sola pantalla: 12→13 y 14→15. El interlineado sube con ellos.
-   */
-  --text-xs: 0.8125rem;
-  --text-xs--line-height: 1.15rem;
-  --text-sm: 0.9375rem;
-  --text-sm--line-height: 1.4rem;
-
-  /*
    * OJO con el nombre: un token de color llamado `base` genera la utilidad
    * `text-base`, que en Tailwind ya es un TAMAÑO de letra. El color ganaba y
    * el tamaño desaparecía, así que todo lo que llevara `text-base` se pintaba
@@ -175,26 +165,25 @@
  * Estas cinco clases dicen QUÉ es cada texto; el tamaño es consecuencia.
  */
 /*
- * ─── La escala crece en pantalla grande ───
+ * ─── La escala es FLUIDA, no da saltos ───
  *
- * Un tamaño pensado para 390px se queda corto en un monitor de 27": la misma
- * letra está más lejos de los ojos y compite con mucho más espacio alrededor.
- * Los tamaños de móvil se mantienen —ahí el problema es el sitio, no la vista—
- * y a partir de 1024px suben un punto más.
+ * Cada tamaño se define con clamp() entre 390px y 1440px de ventana, así que
+ * crece de forma continua con la pantalla en vez de pegar un brinco al cruzar
+ * un punto de corte. Un tamaño pensado para el móvil se queda corto en un
+ * monitor —la misma letra está más lejos de los ojos y compite con mucho más
+ * espacio— y uno pensado para el monitor no cabe en el teléfono.
  *
- * Va después de @theme y con el mismo peso de selector, así que gana por orden
- * de aparición sin necesidad de !important.
+ * El mínimo de la escala es 12px, que es el suelo razonable en pantalla, y
+ * ninguno de los máximos pasa de subir un punto: no se trata de agrandar por
+ * agrandar, sino de que el tamaño aparente sea el mismo a cualquier distancia.
  */
-@media (min-width: 1024px) {
-  .text-xs   { font-size: 0.875rem;  line-height: 1.25rem; }   /* 13 → 14 */
-  .text-sm   { font-size: 1rem;      line-height: 1.5rem; }    /* 15 → 16 */
-  .text-base { font-size: 1.0625rem; line-height: 1.6rem; }    /* 16 → 17 */
-  .text-micro { font-size: 0.8125rem; line-height: 1.15rem; }  /* 12 → 13 */
-  .text-meta  { font-size: 0.875rem;  line-height: 1.25rem; }  /* 13 → 14 */
-  .type-body    { font-size: 1rem;      line-height: 1.6; }
-  .type-meta    { font-size: 0.875rem;  line-height: 1.25rem; }
-  .type-micro   { font-size: 0.8125rem; line-height: 1.15rem; }
-  .type-section { font-size: 0.875rem;  line-height: 1.25rem; }
+@theme inline {
+  --text-xs: clamp(0.8125rem, calc(0.7893rem + 0.0952vw), 0.875rem);
+  --text-xs--line-height: 1.45;
+  --text-sm: clamp(0.9375rem, calc(0.9143rem + 0.0952vw), 1rem);
+  --text-sm--line-height: 1.5;
+  --text-base: clamp(1rem, calc(0.9768rem + 0.0952vw), 1.0625rem);
+  --text-base--line-height: 1.6;
 }
 
 @utility type-page {
@@ -213,15 +202,21 @@
  * razonable en pantalla, y el interlineado sube con ello para que no se
  * apelotone.
  */
-@utility type-section { font-size: 0.8125rem; line-height: 1.125rem; font-weight: 600;
-                        text-transform: uppercase; letter-spacing: 0.05em; }          /* encabezado de sección */
-@utility type-body    { font-size: 0.9375rem; line-height: 1.55; }                    /* contenido */
-@utility type-meta    { font-size: 0.8125rem; line-height: 1.15rem; }                 /* apoyo */
-@utility type-micro   { font-size: 0.75rem;   line-height: 1.05rem; }                 /* etiqueta mínima */
+@utility type-section { font-size: clamp(0.8125rem, calc(0.7893rem + 0.0952vw), 0.875rem);
+                        line-height: 1.4; font-weight: 600;
+                        text-transform: uppercase; letter-spacing: 0.05em; }
+@utility type-body    { font-size: clamp(0.9375rem, calc(0.9143rem + 0.0952vw), 1rem);
+                        line-height: 1.6; }
+@utility type-meta    { font-size: clamp(0.8125rem, calc(0.7893rem + 0.0952vw), 0.875rem);
+                        line-height: 1.45; }
+@utility type-micro   { font-size: clamp(0.75rem, calc(0.7268rem + 0.0952vw), 0.8125rem);
+                        line-height: 1.4; }
 
 /* Alias de la escala anterior, para no romper los usos ya migrados. */
-@utility text-micro { font-size: 0.75rem; line-height: 1.05rem; }
-@utility text-meta  { font-size: 0.8125rem; line-height: 1.15rem; }
+@utility text-micro { font-size: clamp(0.75rem, calc(0.7268rem + 0.0952vw), 0.8125rem);
+                      line-height: 1.4; }
+@utility text-meta  { font-size: clamp(0.8125rem, calc(0.7893rem + 0.0952vw), 0.875rem);
+                      line-height: 1.45; }
 
 /*
  * Espaciado interior por DENSIDAD, no por número.

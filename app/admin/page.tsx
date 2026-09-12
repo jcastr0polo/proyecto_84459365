@@ -5,6 +5,7 @@ import AdminDashboardView from '@/components/admin/AdminDashboardView';
 import type {
   ReportDeadline, QueueItem, AtRiskStudent,
 } from '@/components/admin/DashboardPriorities';
+import type { Bin } from '@/components/admin/GradeDistribution';
 import type { Course, Semester, Activity, Enrollment, Submission } from '@/lib/types';
 
 /* ─── Types for aggregated data ─── */
@@ -26,7 +27,9 @@ export default function AdminDashboardPage() {
   const [courseData, setCourseData] = useState<CourseData[]>([]);
   const [priorities, setPriorities] = useState<{
     reportDeadlines: ReportDeadline[]; gradingQueue: QueueItem[]; atRisk: AtRiskStudent[];
-  }>({ reportDeadlines: [], gradingQueue: [], atRisk: [] });
+    distribution: Bin[]; average: number | null; scoredCount: number; rosterCount: number;
+  }>({ reportDeadlines: [], gradingQueue: [], atRisk: [],
+       distribution: [], average: null, scoredCount: 0, rosterCount: 0 });
   const [loading, setLoading] = useState(true);
 
   /*
@@ -49,6 +52,10 @@ export default function AdminDashboardPage() {
         reportDeadlines: data.reportDeadlines ?? [],
         gradingQueue: data.gradingQueue ?? [],
         atRisk: data.atRisk ?? [],
+        distribution: data.distribution ?? [],
+        average: data.average ?? null,
+        scoredCount: data.scoredCount ?? 0,
+        rosterCount: data.rosterCount ?? 0,
       });
     } catch {
       // Fallo silencioso: se muestra el panel vacío, como antes.
