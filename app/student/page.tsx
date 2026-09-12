@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import StudentDashboardView from '@/components/student/StudentDashboardView';
 import type { CourseWithMeta, UserInfo, ActiveQuiz } from '@/components/student/types';
-import type { Course, Enrollment, Activity, Submission, Semester, Grade, Quiz } from '@/lib/types';
+import type { Semester } from '@/lib/types';
 
 /* ─── Types ─── */
 
@@ -22,104 +22,25 @@ export default function StudentDashboardPage() {
   const [activeQuizzes, setActiveQuizzes] = useState<ActiveQuiz[]>([]);
   const [loading, setLoading] = useState(true);
 
+  /*
+   * Una petición, no treinta y pico.
+   *
+   * Antes esto pedía inscripciones y actividades de TODOS los cursos del
+   * sistema para averiguar en cuáles estaba inscrito, luego entregas por
+   * actividad, luego /grades por curso —que por dentro lee diez tablas cada
+   * vez— y luego parciales por curso.
+   */
   const fetchAll = useCallback(async () => {
     try {
-      // Step 1: User info + semesters + courses
-      const [meRes, semRes, courseRes] = await Promise.all([
-        fetch('/api/auth/me'),
-        fetch('/api/semesters'),
-        fetch('/api/courses'),
-      ]);
-
-      const meData = meRes.ok ? await meRes.json() : null;
-      const userInfo = meData?.user ?? null;
-      setUser(userInfo);
-      if (!userInfo) return;
-
-      const semData = semRes.ok ? await semRes.json() : { semesters: [] };
-      const activeSem = semData.semesters?.find((s: Semester) => s.isActive) ?? null;
-      setSemester(activeSem);
-
-      const allCourses: Course[] = courseRes.ok ? (await courseRes.json()).courses ?? [] : [];
-
-      // Step 2: For each course, get enrollments to check if student is enrolled
-      const perCoursePromises = allCourses.map(async (course) => {
-        const [enrRes, actRes] = await Promise.all([
-          fetch(`/api/courses/${course.id}/enrollments`),
-          fetch(`/api/courses/${course.id}/activities`),
-        ]);
-
-        const enrollments: Enrollment[] = enrRes.ok ? (await enrRes.json()).enrollments ?? [] : [];
-        const myEnrollment = enrollments.find(
-          (e) => e.studentId === userInfo.id && e.status === 'active'
-        );
-
-        if (!myEnrollment) return null;
-
-        const activities: Activity[] = actRes.ok ? (await actRes.json()).activities ?? [] : [];
-
-        // Fetch submissions for published activities
-        const publishedActs = activities.filter((a) => a.status !== 'draft');
-        const subPromises = publishedActs.map(async (act) => {
-          const res = await fetch(`/api/activities/${act.id}/submissions`);
-          return res.ok ? ((await res.json()).submissions ?? []) as Submission[] : [];
-        });
-        const subResults = await Promise.all(subPromises);
-        const submissions = subResults.flat();
-
-        // Fetch grades for course
-        let grades: Grade[] = [];
-        let finalScore: number | null = null;
-        try {
-          const gradeRes = await fetch(`/api/courses/${course.id}/grades`);
-          if (gradeRes.ok) {
-            const gradeData = await gradeRes.json();
-            // Student endpoint returns StudentGradeSummary, extract grade info
-            finalScore = gradeData.finalScore ?? null;
-            if (gradeData.activities) {
-              grades = gradeData.activities
-                .filter((a: { grade: unknown }) => a.grade !== null)
-                .map((a: { id: string; grade: { score: number; maxScore: number; gradedAt: string } }) => ({
-                  activityId: a.id,
-                  score: a.grade.score,
-                  maxScore: a.grade.maxScore,
-                  gradedAt: a.grade.gradedAt,
-                }));
-            }
-          }
-        } catch { /* ignore */ }
-
-        return {
-          course,
-          enrollment: myEnrollment,
-          activities,
-          submissions,
-          grades,
-          finalScore,
-        };
-      });
-
-      const results = await Promise.all(perCoursePromises);
-      const enrolled = results.filter(Boolean) as CourseWithMeta[];
-      setCoursesData(enrolled);
-
-      // Fetch active quizzes for each enrolled course
-      const quizPromises = enrolled.map(async (cd) => {
-        try {
-          const res = await fetch(`/api/courses/${cd.course.id}/quizzes`);
-          if (!res.ok) return [];
-          const data = await res.json();
-          return (data.quizzes ?? []).map((q: Quiz) => ({
-            quiz: q,
-            courseName: cd.course.name,
-            courseId: cd.course.id,
-          }));
-        } catch { return []; }
-      });
-      const quizResults = await Promise.all(quizPromises);
-      setActiveQuizzes(quizResults.flat());
+      const res = await fetch('/api/student/dashboard', { credentials: 'include' });
+      if (!res.ok) throw new Error('No se pudo cargar el panel');
+      const data = await res.json();
+      setUser(data.user ?? null);
+      setSemester(data.semester ?? null);
+      setCoursesData(data.coursesData ?? []);
+      setActiveQuizzes(data.activeQuizzes ?? []);
     } catch {
-      // silent failure
+      // Fallo silencioso: se muestra el panel vacío, como antes.
     } finally {
       setLoading(false);
     }

@@ -902,7 +902,6 @@ export function calculateFinalGrade(
  */
 export async function getCourseGradeSummary(courseId: string): Promise<CourseGradeSummary> {
   // ── Batch read: 10 files in parallel ──
-  console.log('[gradeService] getCourseGradeSummary: starting parallel reads for', courseId);
 
   const results = await Promise.allSettled([
     readCoursesFresh(),
@@ -1141,7 +1140,6 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
  * Performance: 3 parallel Blob reads, then pure in-memory.
  */
 export async function getStudentGradeSummary(studentId: string, courseId: string): Promise<StudentGradeSummary> {
-  console.log('[gradeService] getStudentGradeSummary: starting parallel reads for', studentId, courseId);
 
   const results = await Promise.allSettled([
     readCoursesFresh(),
@@ -1154,13 +1152,11 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
     readManualGradesFresh(),
   ]);
 
+  // Solo se avisa de lo que falla; ver la nota en getCourseGradeSummary.
   const labels = ['courses', 'activities', 'grades', 'cortes', 'quizzes', 'quiz-attempts', 'manual-items', 'manual-grades'];
   for (let i = 0; i < results.length; i++) {
     if (results[i].status === 'rejected') {
-      console.error(`[gradeService] FAILED to read ${labels[i]}:`, (results[i] as PromiseRejectedResult).reason);
-    } else {
-      const val = (results[i] as PromiseFulfilledResult<unknown>).value;
-      console.log(`[gradeService] OK ${labels[i]}: ${Array.isArray(val) ? val.length + ' items' : 'loaded'}`);
+      console.error(`[gradeService] falló la lectura de ${labels[i]}:`, (results[i] as PromiseRejectedResult).reason);
     }
   }
 

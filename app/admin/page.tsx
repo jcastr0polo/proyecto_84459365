@@ -23,52 +23,24 @@ export default function AdminDashboardPage() {
   const [courseData, setCourseData] = useState<CourseData[]>([]);
   const [loading, setLoading] = useState(true);
 
+  /*
+   * Una petición, no once.
+   *
+   * Antes el panel se armaba encadenando desde el navegador: semestres y
+   * cursos, luego inscripciones y actividades por cada curso, y luego
+   * entregas por cada actividad publicada. El número de peticiones crecía
+   * con cada curso abierto y cada actividad publicada, y cada una volvía a
+   * leer tablas que las otras ya habían leído.
+   */
   const fetchAll = useCallback(async () => {
     try {
-      // Step 1: Semesters + Courses
-      const [semRes, courseRes] = await Promise.all([
-        fetch('/api/semesters'),
-        fetch('/api/courses'),
-      ]);
-
-      const semData = semRes.ok ? await semRes.json() : { semesters: [] };
-      const courseList: Course[] = courseRes.ok ? (await courseRes.json()).courses ?? [] : [];
-      const active = semData.semesters?.find((s: Semester) => s.isActive) ?? null;
-      setSemester(active);
-
-      // Solo los cursos del semestre activo. Antes se pedían TODOS, así que
-      // el panel mezclaba asignaturas de semestres cerrados con las del
-      // actual y los conteos no significaban nada.
-      const currentCourses = active
-        ? courseList.filter((c) => c.semesterId === active.id)
-        : courseList;
-
-      // Step 2: Per-course data (enrollments + activities) in parallel
-      const perCoursePromises = currentCourses.map(async (course) => {
-        const [enrRes, actRes] = await Promise.all([
-          fetch(`/api/courses/${course.id}/enrollments`),
-          fetch(`/api/courses/${course.id}/activities`),
-        ]);
-
-        const enrollments: Enrollment[] = enrRes.ok ? (await enrRes.json()).enrollments ?? [] : [];
-        const activities: Activity[] = actRes.ok ? (await actRes.json()).activities ?? [] : [];
-
-        // Step 3: Submissions for published activities
-        const publishedActivities = activities.filter((a) => a.status !== 'draft');
-        const subPromises = publishedActivities.map(async (act) => {
-          const res = await fetch(`/api/activities/${act.id}/submissions`);
-          return res.ok ? ((await res.json()).submissions ?? []) as Submission[] : [];
-        });
-        const subResults = await Promise.all(subPromises);
-        const submissions = subResults.flat();
-
-        return { course, enrollments, activities, submissions };
-      });
-
-      const results = await Promise.all(perCoursePromises);
-      setCourseData(results);
+      const res = await fetch('/api/admin/dashboard', { credentials: 'include' });
+      if (!res.ok) throw new Error('No se pudo cargar el panel');
+      const data = await res.json();
+      setSemester(data.semester ?? null);
+      setCourseData(data.courseData ?? []);
     } catch {
-      // Silent failure — show empty dashboard
+      // Fallo silencioso: se muestra el panel vacío, como antes.
     } finally {
       setLoading(false);
     }
