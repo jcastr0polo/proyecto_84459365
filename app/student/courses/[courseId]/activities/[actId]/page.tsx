@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import ActivityDetail from '@/components/activities/ActivityDetail';
 import Link from 'next/link';
@@ -80,7 +80,19 @@ export default function StudentActivityDetailPage() {
   const now = useMemo(() => nowColombia(), []);
   const today = useMemo(() => startOfTodayColombia(nowColombia()), []);
 
-  if (loading || !activity) return <PageLoader />;
+  if (loading || !activity) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-5">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-9 w-3/4" />
+        <div className="grid gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
+        </div>
+        <SkeletonList rows={4} />
+      </div>
+    );
+  }
+  if (!activity) return null;
 
   const isPastDue = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59') < now;
 

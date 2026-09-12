@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import StudentDashboardView from '@/components/student/StudentDashboardView';
-import StudentDashboardViewV2 from '@/components/student/StudentDashboardViewV2';
 import { MOCK_USER, MOCK_SEMESTER, MOCK_COURSES, MOCK_COURSES_EMPTY, MOCK_QUIZZES } from './mockData';
 
 /** Taller de diseño — panel del estudiante. Datos falsos, solo desarrollo. */
@@ -58,7 +57,7 @@ export default function PrototypeDashboardPage() {
             activeQuizzes={MOCK_QUIZZES}
           />
         ) : (
-          <StudentDashboardViewV2
+          <StudentDashboardView
             user={MOCK_USER}
             semester={MOCK_SEMESTER}
             coursesData={courses}

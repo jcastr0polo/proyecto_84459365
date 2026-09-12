@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import AdminDashboardViewV2, { type CourseData } from '@/components/admin/AdminDashboardViewV2';
+import AdminDashboardView, { type CourseData } from '@/components/admin/AdminDashboardView';
 import { MOCK_COURSES, MOCK_SEMESTER } from '../student-dashboard/mockData';
 
 /** Taller — panel del docente. Datos falsos, solo desarrollo. */
@@ -33,7 +33,7 @@ export default function PrototypeAdminDashboard() {
       <span className="text-meta font-semibold uppercase tracking-wider text-amber-400 block max-w-6xl mx-auto mb-4">
         Taller de diseño · datos falsos
       </span>
-      <AdminDashboardViewV2 semester={MOCK_SEMESTER} courseData={data} />
+      <AdminDashboardView semester={MOCK_SEMESTER} courseData={data} />
     </div>
   );
 }

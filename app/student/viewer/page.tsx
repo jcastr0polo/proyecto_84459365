@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Download, FileText } from 'lucide-react';
 import MarkdownViewer from '@/components/ui/MarkdownViewer';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { SkeletonText } from '@/components/ui/Skeleton';
 
 export default function StudentDocumentViewerPage() {
   const searchParams = useSearchParams();
@@ -81,7 +81,9 @@ export default function StudentDocumentViewerPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-8">
-        {loading && <PageLoader />}
+        {/* Un documento carga como líneas de texto, no como un círculo
+            girando: así el bloque ya ocupa el sitio que va a ocupar. */}
+        {loading && <SkeletonText lines={10} />}
 
         {/* El caso "sin documento" se sabe al primer render, así que se
             distingue del error de carga en vez de mezclarlos. */}

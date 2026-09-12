@@ -1,6 +1,6 @@
 import type { Course, Enrollment, Activity, Submission, Grade, Semester } from '@/lib/types';
-import type { ActiveQuiz } from '@/components/student/StudentDashboardView';
-import type { CourseWithMeta, UserInfo } from '@/components/student/StudentDashboardView';
+import type { ActiveQuiz } from '@/components/student/types';
+import type { CourseWithMeta, UserInfo } from '@/components/student/types';
 
 /**
  * Datos de prueba del panel del estudiante — NO tocan la base de datos.

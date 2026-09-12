@@ -7,7 +7,7 @@ import Button from '@/components/ui/Button';
 import Badge, { categoryToBadgeVariant, categoryLabel } from '@/components/ui/Badge';
 import CourseOverviewTab from '@/components/admin/CourseOverviewTab';
 import Modal from '@/components/ui/Modal';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import CourseForm from '@/components/forms/CourseForm';
 import type { CourseFormData } from '@/components/forms/CourseForm';
@@ -95,7 +95,19 @@ export default function CourseDetailPage() {
     }
   }
 
-  if (loading || !course) return <PageLoader />;
+  if (loading || !course) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-5">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-9 w-3/4" />
+        <div className="grid gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
+        </div>
+        <SkeletonList rows={4} />
+      </div>
+    );
+  }
+  if (!course) return null;
 
   const semester = semesters.find((s) => s.id === course.semesterId);
 

@@ -11,7 +11,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import type { Course, Enrollment, Activity, Submission, Semester } from '@/lib/types';
 
 /**
- * AdminDashboardViewV2 — Rediseño del panel del docente.
+ * AdminDashboardView — Rediseño del panel del docente.
  *
  * El panel abría con cuatro contadores: cursos, estudiantes, actividades y
  * pendientes de calificar. Solo el último es accionable, y era el último.
@@ -30,7 +30,7 @@ export interface CourseData {
   submissions: Submission[];
 }
 
-export default function AdminDashboardViewV2({
+export default function AdminDashboardView({
   semester, courseData,
 }: {
   semester: Semester | null;

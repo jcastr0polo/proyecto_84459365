@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import StudentCourseView from '@/components/student/StudentCourseView';
-import StudentCourseViewV2 from '@/components/student/StudentCourseViewV2';
 import { MOCK_COURSES } from '../student-dashboard/mockData';
 import { MOCK_GRADES } from '../student-grades/mockData';
 import type { Submission } from '@/lib/types';
@@ -48,7 +47,7 @@ export default function PrototypeCoursePage() {
             gradeData={MOCK_GRADES}
           />
         ) : (
-          <StudentCourseViewV2
+          <StudentCourseView
             course={cd.course}
             activities={cd.activities}
             submissions={submissions}

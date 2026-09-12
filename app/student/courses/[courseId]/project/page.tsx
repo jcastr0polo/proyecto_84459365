@@ -6,7 +6,7 @@ import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import { Star, Pencil, Rocket, Upload, FileText, CheckCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import VisibilityToggle from '@/components/projects/VisibilityToggle';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
@@ -227,7 +227,18 @@ export default function StudentProjectPage() {
     }
   }, [project, docContent, showDoc, toast]);
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-5">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-9 w-3/4" />
+        <div className="grid gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
+        </div>
+        <SkeletonList rows={4} />
+      </div>
+    );
+  }
 
   const showForm = !project || editMode;
 

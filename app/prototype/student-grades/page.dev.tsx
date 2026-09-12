@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import StudentGradesView from '@/components/grades/StudentGradesView';
-import StudentGradesViewV2 from '@/components/grades/StudentGradesViewV2';
 import { MOCK_GRADES, MOCK_EMPTY } from './mockData';
 
 /**
@@ -68,7 +67,7 @@ export default function PrototypePage() {
 
         {version === 'actual'
           ? <StudentGradesView data={data} />
-          : <StudentGradesViewV2 data={data} />}
+          : <StudentGradesView data={data} />}
       </div>
     </div>
   );

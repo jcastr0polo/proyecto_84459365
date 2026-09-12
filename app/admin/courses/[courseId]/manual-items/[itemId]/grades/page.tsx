@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 import GradeTable, { type GradeRow } from '@/components/grades/GradeTable';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { toneBox } from '@/lib/semantics';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import type { ManualGradeItem, ManualGrade } from '@/lib/types';
 
@@ -153,7 +153,18 @@ export default function ManualItemGradingPage() {
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-5">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-9 w-3/4" />
+        <div className="grid gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
+        </div>
+        <SkeletonList rows={4} />
+      </div>
+    );
+  }
   if (!item) return null;
 
   return (

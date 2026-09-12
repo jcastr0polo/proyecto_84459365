@@ -10,6 +10,7 @@ import Chip from '@/components/ui/Chip';
 import SearchInput from '@/components/ui/SearchInput';
 import { useToast } from '@/components/ui/Toast';
 import IconButton from '@/components/ui/IconButton';
+import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import EmptyState from '@/components/ui/EmptyState';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
@@ -17,6 +18,31 @@ import type { SafeUser } from '@/lib/types';
 
 export default function AdminStudentsPage() {
   const { toast } = useToast();
+
+  /**
+   * Guarda de una vez los campos que hayan cambiado.
+   *
+   * En móvil los tres editores se abren juntos, así que confirmarlos uno a
+   * uno serían tres toques en tres sitios distintos. Solo envía lo que
+   * cambió, para no reescribir datos que nadie tocó.
+   */
+  async function saveAllEdits(student: SafeUser) {
+    const jobs: Promise<void>[] = [];
+    if (editingName?.id === student.id &&
+        (editingName.first !== student.firstName || editingName.last !== student.lastName)) {
+      jobs.push(handleUpdateName(student.id, editingName.first, editingName.last));
+    }
+    if (editingEmail?.id === student.id && editingEmail.value !== student.email) {
+      jobs.push(handleUpdateEmail(student.id, editingEmail.value));
+    }
+    if (editingDoc?.id === student.id && editingDoc.value !== student.documentNumber) {
+      jobs.push(handleUpdateDocument(student.id, editingDoc.value));
+    }
+    if (jobs.length === 0) toast('No cambiaste nada', 'info');
+    await Promise.all(jobs);
+    setEditingName(null); setEditingEmail(null); setEditingDoc(null);
+  }
+
   const [students, setStudents] = useState<SafeUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -449,6 +475,37 @@ export default function AdminStudentsPage() {
                 <div className="flex items-center gap-1 shrink-0
                                 border-t border-surface-border pt-2 -mx-1 px-1
                                 sm:border-0 sm:pt-0 sm:mx-0 sm:px-0">
+                  {/*
+                    En móvil, un solo botón que abre los tres campos.
+                    Los lápices sueltos junto a cada dato no caben a 390px,
+                    pero esconder la edición sería quitar una herramienta en
+                    vez de adaptarla: aquí se edita lo mismo, en un gesto.
+                  */}
+                  {editingName?.id === student.id ? (
+                    <span className="sm:hidden flex items-center gap-2">
+                      <Button variant="primary" size="sm" onClick={() => saveAllEdits(student)}>
+                        Guardar
+                      </Button>
+                      <Button variant="ghost" size="sm"
+                        onClick={() => { setEditingName(null); setEditingEmail(null); setEditingDoc(null); }}>
+                        Cancelar
+                      </Button>
+                    </span>
+                  ) : (
+                  <span className="sm:hidden">
+                    <IconButton
+                      label="Editar datos"
+                      tone="accent"
+                      size="lg"
+                      onClick={() => {
+                        setEditingName({ id: student.id, first: student.firstName, last: student.lastName });
+                        setEditingEmail({ id: student.id, value: student.email });
+                        setEditingDoc({ id: student.id, value: student.documentNumber });
+                      }}
+                      icon={<Pencil className="w-5 h-5" />}
+                    />
+                  </span>
+                  )}
                   <IconButton
                     label="Ver detalle del estudiante"
                     tone="accent" size="lg"

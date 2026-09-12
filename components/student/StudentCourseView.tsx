@@ -1,63 +1,43 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { FileText, BarChart3, Rocket, MapPin, Clock, Calendar, Building2, Monitor, RefreshCw, ClipboardList } from 'lucide-react';
-import { formatDateShort as formatDate, parseDateTimeColombia, nowColombia } from '@/lib/dateUtils';
-import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
+import Link from 'next/link';
+import { motion, useReducedMotion } from 'framer-motion';
+import { FileText, BarChart3, Rocket, ClipboardList, Clock, Building2, Monitor, RefreshCw, ArrowLeft } from 'lucide-react';
+import { nowColombia } from '@/lib/dateUtils';
+import { gradeText, formatScore } from '@/lib/gradeScale';
+import { needsAction, startOfTodayColombia } from '@/lib/activityStatus';
+import ActivityList, { useActivityRows } from './ActivityList';
 import type { Course, Activity, Submission, StudentGradeSummary } from '@/lib/types';
-import { gradeText } from '@/lib/gradeScale';
 
 /**
- * StudentCourseView — Vista de un curso (presentacional, sin fetch).
- * Separada de la página para poder renderizarla con datos de prueba.
+ * StudentCourseView — Rediseño de la vista de curso.
+ *
+ * Arregla tres cosas que estaban mal, no solo feas:
+ * - El orden ponía una entrega a tres semanas por encima de una ya vencida.
+ * - El tipo de actividad salía en inglés crudo ("project", "document").
+ * - La insignia de estado pintaba dos puntos de color, uno propio y otro
+ *   del componente Badge.
+ *
+ * Y de diseño:
+ * - Las actividades pasan de tarjetas de 110px a filas; caben todas de un
+ *   vistazo en vez de obligar a rodar la página.
+ * - El plazo se dice en palabras y se muestra también en las vencidas, que
+ *   antes no decían nada.
+ * - "Parcial" pasa a "provisional": en esta misma app un Parcial es un quiz,
+ *   así que usar la palabra para "nota incompleta" se presta a confusión.
  */
 
-type DeliveryStatus = 'delivered' | 'pending' | 'overdue' | 'graded' | 'returned';
-
-function getDeliveryStatus(activity: Activity, submission: Submission | undefined, now: Date): DeliveryStatus {
-  if (submission) {
-    if (submission.status === 'reviewed') return 'graded';
-    if (submission.status === 'returned') return 'returned';
-    return 'delivered';
-  }
-  const due = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59');
-  return now > due ? 'overdue' : 'pending';
-}
-
-const STATUS_CONFIG: Record<DeliveryStatus, { label: string; variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; icon: React.ReactNode }> = {
-  delivered: { label: 'Entregada', variant: 'success', icon: <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" /> },
-  pending: { label: 'Pendiente', variant: 'warning', icon: <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /> },
-  overdue: { label: 'Vencida', variant: 'danger', icon: <span className="w-2 h-2 rounded-full bg-red-500 inline-block" /> },
-  graded: { label: 'Calificada', variant: 'info', icon: <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block" /> },
-  returned: { label: 'Devuelta', variant: 'warning', icon: <span className="text-xs">↩</span> },
+const DAY_LONG: Record<string, string> = {
+  lunes: 'Lunes', martes: 'Martes', miércoles: 'Miércoles',
+  jueves: 'Jueves', viernes: 'Viernes', sábado: 'Sábado',
 };
 
-const DAY_SHORT: Record<string, string> = {
-  lunes: 'Lun', martes: 'Mar', miércoles: 'Mié',
-  jueves: 'Jue', viernes: 'Vie', sábado: 'Sáb',
+const MODALITY: Record<string, { label: string; Icon: typeof Building2 }> = {
+  presencial: { label: 'Presencial', Icon: Building2 },
+  virtual: { label: 'Virtual', Icon: Monitor },
+  híbrido: { label: 'Híbrido', Icon: RefreshCw },
 };
-
-const MODALITY_LABELS: Record<string, React.ReactNode> = {
-  presencial: <><Building2 className="w-3 h-3 inline" /> Presencial</>,
-  virtual: <><Monitor className="w-3 h-3 inline" /> Virtual</>,
-  híbrido: <><RefreshCw className="w-3 h-3 inline" /> Híbrido</>,
-};
-
-const categoryBadge: Record<string, { variant: 'programming' | 'design' | 'management' | 'leadership' | 'other'; label: string }> = {
-  programming: { variant: 'programming', label: 'Programación' },
-  design: { variant: 'design', label: 'Diseño' },
-  management: { variant: 'management', label: 'Gerencia' },
-  leadership: { variant: 'leadership', label: 'Liderazgo' },
-  other: { variant: 'other', label: 'Otro' },
-};
-
-function getScoreColor(score: number): string {
-  return gradeText(score);
-}
-
 
 export default function StudentCourseView({
   course, activities, submissions, gradeData,
@@ -67,231 +47,158 @@ export default function StudentCourseView({
   submissions: Record<string, Submission>;
   gradeData: StudentGradeSummary | null;
 }) {
-  const router = useRouter();
+  const reduce = useReducedMotion();
 
-  // Una sola marca de tiempo por render, estable entre servidor y cliente.
-  // Antes se llamaba a Date.now() dentro del map de actividades, lo que además
-  // de impuro daba un valor distinto en cada fila.
+  // Una marca de tiempo estable por render; días calendario en hora Colombia.
   const now = useMemo(() => nowColombia(), []);
+  const today = useMemo(() => startOfTodayColombia(nowColombia()), []);
 
-  // Sort activities: pending/returned first, then by due date
-  const sortedActivities = useMemo(() => {
-    return [...activities]
-      .filter((a) => a.status !== 'draft')
-      .sort((a, b) => {
-        const statusA = getDeliveryStatus(a, submissions[a.id], now);
-        const statusB = getDeliveryStatus(b, submissions[b.id], now);
-        const priority: Record<DeliveryStatus, number> = {
-          returned: 0, pending: 1, overdue: 2, delivered: 3, graded: 4,
-        };
-        const pDiff = priority[statusA] - priority[statusB];
-        if (pDiff !== 0) return pDiff;
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-      });
-  }, [activities, submissions, now]);
+  const rows = useActivityRows(activities, submissions, now);
 
-  const pendingCount = useMemo(
-    () => sortedActivities.filter((a) => ['pending', 'overdue', 'returned'].includes(getDeliveryStatus(a, submissions[a.id], now))).length,
-    [sortedActivities, submissions, now]
+  /**
+   * Parciales y notas manuales.
+   *
+   * La lista de arriba se arma con /api/courses/[id]/activities, que solo
+   * devuelve actividades. Pero un parcial o una nota manual pesan en la nota
+   * igual que una entrega, así que el estudiante veía una nota de curso que
+   * su propia lista de actividades no explicaba.
+   */
+  const otherItems = useMemo(
+    () => (gradeData?.activities ?? []).filter((a) => a.type === 'quiz' || a.type === 'manual'),
+    [gradeData],
   );
 
-  const badge = categoryBadge[course.category] ?? categoryBadge.other;
+  const pendingCount = rows.filter((r) => needsAction(r.status)).length;
+
+  const fade = (d = 0) => reduce ? {} : {
+    initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 },
+    transition: { delay: d, duration: 0.25, ease: [0.23, 1, 0.32, 1] as const },
+  };
+
+  const actions = [
+    { href: `/student/courses/${course.id}/activities`, label: 'Actividades', Icon: FileText },
+    { href: `/student/courses/${course.id}/grades`, label: 'Mis notas', Icon: BarChart3 },
+    { href: `/student/courses/${course.id}/project`, label: 'Mi proyecto', Icon: Rocket },
+    { href: `/student/courses/${course.id}/quizzes`, label: 'Parciales', Icon: ClipboardList },
+  ];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Back */}
-      <button
-        onClick={() => router.push('/student/courses')}
-        className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Mis Cursos
-      </button>
+      <Link href="/student/courses"
+        className="inline-flex items-center gap-1.5 text-sm text-subtle hover:text-foreground
+                   transition-colors py-2 pr-3 rounded-lg">
+        <ArrowLeft className="w-4 h-4" /> Mis cursos
+      </Link>
 
-      {/* Course header */}
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
-      >
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant={badge.variant} size="sm">{badge.label}</Badge>
-            <span className="text-meta text-faint font-mono">{course.code}</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
+      {/* ── Cabecera ── */}
+      <motion.div {...fade(0)} className="flex items-start justify-between gap-6 flex-wrap">
+        <div className="min-w-0">
+          <p className="text-meta text-subtle font-mono">{course.code}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mt-0.5"
+              style={{ fontFamily: 'var(--font-playfair)' }}>
             {course.name}
           </h1>
-          {course.description && (
-            <p className="text-sm text-subtle mt-1 max-w-lg">{course.description}</p>
+          {course.schedule.length > 0 && (
+            <div className="flex items-center gap-x-4 gap-y-1 mt-2 flex-wrap text-xs text-subtle">
+              {course.schedule.map((h, i) => {
+                const m = MODALITY[h.modality];
+                return (
+                  <span key={i} className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" />
+                    {DAY_LONG[h.dayOfWeek] ?? h.dayOfWeek} {h.startTime}–{h.endTime}
+                    {m && <><m.Icon className="w-3 h-3 ml-1" />{m.label}</>}
+                    {h.room && <span className="text-faint">· {h.room}</span>}
+                  </span>
+                );
+              })}
+            </div>
           )}
         </div>
 
-        {/* Accumulated grade */}
-        {gradeData && gradeData.finalScore !== null && (
-          <div className="shrink-0 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] p-4 text-center min-w-[120px]">
-            <p className="text-xs font-medium text-subtle uppercase tracking-wider mb-1">Mi Nota</p>
-            <p className={`text-3xl font-bold ${getScoreColor(gradeData.finalScore)}`}>
-              {gradeData.finalScore.toFixed(1)}
-            </p>
-            <p className="text-xs text-faint mt-1">
-              {gradeData.isPartial ? 'Parcial' : 'Definitiva'}
-            </p>
-          </div>
-        )}
+        <Link href={`/student/courses/${course.id}/grades`}
+          className="rounded-2xl border border-surface-border bg-surface px-5 py-4 text-center shrink-0
+                     transition-colors duration-[var(--dur-fast)]
+                     hover:border-surface-border-hover hover:bg-surface-hover
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40">
+          <p className="text-micro uppercase tracking-wider text-subtle">Mi nota</p>
+          <p className={`text-3xl font-bold tabular-nums leading-none mt-1 ${gradeText(gradeData?.finalScore ?? null)}`}>
+            {formatScore(gradeData?.finalScore ?? null)}
+          </p>
+          {/* "Provisional", no "parcial": en esta app un Parcial es un quiz. */}
+          <p className="text-micro text-faint mt-1">
+            {gradeData?.finalScore == null ? 'sin notas' : gradeData.isPartial ? 'provisional' : 'definitiva'}
+          </p>
+        </Link>
       </motion.div>
 
-      {/* Schedule card */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] p-5"
-      >
-        <h2 className="text-xs font-medium text-subtle uppercase tracking-wider mb-3">Horario</h2>
-        <div className="space-y-2">
-          {course.schedule.map((s, i) => (
-            <div key={i} className="flex items-center gap-3 text-sm">
-              <span className="bg-foreground/[0.06] text-muted px-2.5 py-1 rounded-lg font-medium text-xs min-w-[40px] text-center">
-                {DAY_SHORT[s.dayOfWeek] ?? s.dayOfWeek}
-              </span>
-              <span className="text-muted">{s.startTime} – {s.endTime}</span>
-              {s.room && (
-                <span className="text-subtle text-xs flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {s.room}</span>
-              )}
-              <span className="text-faint text-xs">{MODALITY_LABELS[s.modality] ?? s.modality}</span>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+      {/* ── Accesos ── */}
+      <motion.nav {...fade(0.04)} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {actions.map(({ href, label, Icon }) => (
+          <Link key={href} href={href}
+            className="flex items-center gap-2 rounded-xl border border-surface-border bg-surface px-3 py-2.5
+                       text-sm text-muted transition-colors duration-[var(--dur-fast)]
+                       hover:border-surface-border-hover hover:bg-surface-hover hover:text-foreground
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40">
+            <Icon className="w-4 h-4 shrink-0" />
+            <span className="truncate">{label}</span>
+          </Link>
+        ))}
+      </motion.nav>
 
-      {/* Quick actions */}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => router.push(`/student/courses/${course.id}/activities`)}
-        >
-          <FileText className="w-4 h-4 inline mr-1" /> Actividades
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => router.push(`/student/courses/${course.id}/grades`)}
-        >
-          <BarChart3 className="w-4 h-4 inline mr-1" /> Mis Notas
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => router.push(`/student/courses/${course.id}/project`)}
-        >
-          <Rocket className="w-4 h-4 inline mr-1" /> Mi Proyecto
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => router.push(`/student/courses/${course.id}/quizzes`)}
-        >
-          <ClipboardList className="w-4 h-4 inline mr-1" /> Parciales
-        </Button>
-      </div>
-
-      {/* Activities list */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground tracking-tight">
-            Actividades ({sortedActivities.length})
+      {/* ── Actividades ── */}
+      <motion.section {...fade(0.08)}>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle">
+            Actividades ({rows.length})
           </h2>
           {pendingCount > 0 && (
-            <Badge variant="warning" size="sm" dot>{pendingCount} pendiente{pendingCount > 1 ? 's' : ''}</Badge>
+            <span className="text-meta text-amber-600 dark:text-amber-400">
+              {pendingCount} sin entregar
+            </span>
           )}
         </div>
 
-        {sortedActivities.length === 0 ? (
-          <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-8 text-center">
-            <FileText className="w-8 h-8 text-faint mx-auto mb-3" />
-            <p className="text-sm text-subtle">No hay actividades publicadas aún.</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {sortedActivities.map((activity, i) => {
-              const sub = submissions[activity.id];
-              const deliveryStatus = getDeliveryStatus(activity, sub, now);
-              const cfg = STATUS_CONFIG[deliveryStatus];
-              const isPastDue = parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59') < now;
-              const daysLeft = Math.ceil(
-                (parseDateTimeColombia(activity.dueDate, activity.dueTime || '23:59').getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-              );
+        <ActivityList rows={rows} courseId={course.id} today={today} gradeData={gradeData} />
+      </motion.section>
 
-              // Grade info from gradeData
-              const gradeInfo = gradeData?.activities.find((a) => a.id === activity.id)?.grade;
-
+      {otherItems.length > 0 && (
+        <motion.section {...fade(0.1)}>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-subtle mb-3">
+            Parciales y notas manuales
+          </h2>
+          <div className="rounded-xl border border-surface-border divide-y divide-surface-border overflow-hidden">
+            {otherItems.map((item) => {
+              const n = item.grade ? (item.grade.score / item.grade.maxScore) * 5 : null;
               return (
-                <motion.div
-                  key={activity.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  onClick={() => router.push(`/student/courses/${course.id}/activities/${activity.id}`)}
-                  className="p-4 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02]
-                             hover:border-foreground/15 hover:bg-foreground/[0.04] transition-all cursor-pointer"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      {/* Type + status badges */}
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <Badge variant={cfg.variant} size="sm" dot>
-                          {cfg.icon} {cfg.label}
-                        </Badge>
-                        <span className="text-xs text-faint">{activity.type}</span>
-                      </div>
-
-                      {/* Title */}
-                      <h3 className="text-sm font-semibold text-foreground/90 line-clamp-1">
-                        {activity.title}
-                      </h3>
-
-                      {/* Meta row */}
-                      <div className="flex items-center gap-3 mt-1.5 text-meta text-subtle">
-                        <span><Calendar className="w-3 h-3 inline" /> {formatDate(activity.dueDate)}</span>
-                        <span>{activity.weight}%</span>
-                        <span>Máx: {activity.maxScore}</span>
-                        {!isPastDue && deliveryStatus === 'pending' && daysLeft <= 7 && (
-                          <span className={daysLeft <= 2 ? 'text-red-400 flex items-center gap-0.5' : 'text-amber-400 flex items-center gap-0.5'}>
-                            <Clock className="w-3 h-3" /> {daysLeft}d
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Grade or countdown */}
-                    <div className="shrink-0 text-right">
-                      {gradeInfo ? (
-                        <div>
-                          <p className={`text-lg font-bold ${getScoreColor(gradeInfo.score)}`}>
-                            {gradeInfo.score.toFixed(1)}
-                          </p>
-                          <p className="text-xs text-faint">/ {gradeInfo.maxScore.toFixed(1)}</p>
-                        </div>
-                      ) : deliveryStatus === 'pending' && !isPastDue ? (
-                        <div className="text-right">
-                          <p className={`text-sm font-bold ${daysLeft <= 2 ? 'text-red-400' : daysLeft <= 7 ? 'text-amber-400' : 'text-muted'}`}>
-                            {daysLeft}
-                          </p>
-                          <p className="text-xs text-faint">días</p>
-                        </div>
-                      ) : null}
-                    </div>
+                <div key={item.id} className="flex items-center gap-3 p-3.5 bg-surface">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    item.grade ? 'bg-emerald-500' : 'bg-foreground/25'}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-foreground/90 leading-snug">{item.title}</p>
+                    <p className="text-meta text-subtle mt-0.5">
+                      {item.type === 'quiz' ? 'Parcial' : 'Nota manual'} · {item.weight}%
+                    </p>
                   </div>
-                </motion.div>
+                  <div className="shrink-0 text-right min-w-[3rem]">
+                    {n !== null ? (
+                      <>
+                        <p className={`text-lg font-semibold tabular-nums leading-none ${gradeText(n)}`}>
+                          {n.toFixed(1)}
+                        </p>
+                        <p className="text-micro text-faint mt-0.5">
+                          {item.grade!.score}/{item.grade!.maxScore}
+                        </p>
+                      </>
+                    ) : (
+                      <span className="text-meta text-faint">Pendiente</span>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
-        )}
-      </section>
+        </motion.section>
+      )}
     </div>
   );
 }

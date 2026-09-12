@@ -2,8 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import StudentCourseView from '@/components/student/StudentCourseViewV2';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import StudentCourseView from '@/components/student/StudentCourseView';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import type { Course, Activity, Submission, StudentGradeSummary } from '@/lib/types';
 
@@ -74,7 +74,18 @@ export default function StudentCourseDashboardPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-5">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-9 w-3/4" />
+        <div className="grid gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
+        </div>
+        <SkeletonList rows={4} />
+      </div>
+    );
+  }
   if (!course) return null;
 
   return (

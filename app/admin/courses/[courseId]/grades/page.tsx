@@ -7,6 +7,8 @@ import GradeStats, { calculateStats } from '@/components/grades/GradeStats';
 import SearchInput from '@/components/ui/SearchInput';
 import { useToast } from '@/components/ui/Toast';
 import type { CourseGradeSummary } from '@/lib/types';
+import EmptyState from '@/components/ui/EmptyState';
+import Link from 'next/link';
 
 /**
  * Admin — Course Grade Summary Page
@@ -168,8 +170,19 @@ export default function AdminGradeSummaryPage() {
       {data.students.length > 0 ? (
         <GradeSummaryTable data={filteredData} />
       ) : (
-        <div className="text-center py-16 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02]">
-          <p className="text-subtle">No hay estudiantes inscritos en este curso.</p>
+        <div className="rounded-xl border border-surface-border bg-surface">
+          <EmptyState
+            kind="empty"
+            title="Sin estudiantes inscritos"
+            description="Cuando inscribas estudiantes en este curso, aquí verás su tabla de notas."
+            action={
+              <Link href={`/admin/courses/${courseId}/students/new`}
+                className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline
+                           inline-flex items-center min-h-11 px-3">
+                Inscribir un estudiante →
+              </Link>
+            }
+          />
         </div>
       )}
     </div>

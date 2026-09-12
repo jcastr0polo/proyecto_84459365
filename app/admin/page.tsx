@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { parseDateColombia } from '@/lib/dateUtils';
-import AdminDashboardViewV2 from '@/components/admin/AdminDashboardViewV2';
+import AdminDashboardView from '@/components/admin/AdminDashboardView';
 import type { DeadlineItem } from '@/components/dashboard/DeadlineList';
 import type { TimelineEvent } from '@/components/dashboard/ActivityTimeline';
 import type { Course, Semester, Activity, Enrollment, Submission } from '@/lib/types';
@@ -103,5 +103,5 @@ export default function AdminDashboardPage() {
     );
   }
 
-  return <AdminDashboardViewV2 semester={semester} courseData={courseData} />;
+  return <AdminDashboardView semester={semester} courseData={courseData} />;
 }

@@ -7,6 +7,7 @@ import type { GradeRow } from '@/components/grades/GradeTable';
 import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { AlertTriangle } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
 
 interface SubmissionData {
   id: string;
@@ -337,9 +338,12 @@ export default function AdminGradingPage() {
           saving={saving}
         />
       ) : (
-        <div className="text-center py-16 text-subtle">
-          <p className="text-lg mb-2">No hay entregas para calificar</p>
-          <p className="text-sm">Los estudiantes aún no han realizado entregas para esta actividad.</p>
+        <div className="rounded-xl border border-surface-border bg-surface">
+          <EmptyState
+            kind="empty"
+            title="Sin entregas todavía"
+            description="Ningún estudiante ha entregado esta actividad. Cuando lo hagan, podrás calificarlos aquí."
+          />
         </div>
       )}
 

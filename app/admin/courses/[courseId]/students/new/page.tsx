@@ -5,13 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { CheckCircle2, Info } from 'lucide-react';
 import Card from '@/components/ui/Card';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import EnrollForm from '@/components/students/EnrollForm';
 import type { EnrollFormData } from '@/components/students/EnrollForm';
 import SearchInput from '@/components/ui/SearchInput';
 import EmptyState from '@/components/ui/EmptyState';
-import { SkeletonList } from '@/components/ui/Skeleton';
 import type { Course, SafeUser } from '@/lib/types';
 
 export default function NewStudentPage() {
@@ -112,7 +111,18 @@ export default function NewStudentPage() {
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-5">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-9 w-3/4" />
+        <div className="grid gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
+        </div>
+        <SkeletonList rows={4} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-2xl">

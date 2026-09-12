@@ -11,6 +11,7 @@ import { STATUS_META, startOfTodayColombia, type DeliveryStatus } from '@/lib/ac
 import ActivityList, { useActivityRows } from '@/components/student/ActivityList';
 import Chip from '@/components/ui/Chip';
 import type { Activity, Submission } from '@/lib/types';
+import EmptyState from '@/components/ui/EmptyState';
 
 /**
  * Lista de actividades del curso.
@@ -110,7 +111,8 @@ export default function StudentActivitiesPage() {
       <ActivityList rows={visible} courseId={courseId} today={today} />
 
       {rows.length > 0 && visible.length === 0 && (
-        <p className="text-sm text-subtle px-1">No hay actividades en ese estado.</p>
+        <EmptyState compact kind="filtered" title="Sin actividades en ese estado"
+          description="Prueba con otro filtro para ver el resto." />
       )}
     </div>
   );

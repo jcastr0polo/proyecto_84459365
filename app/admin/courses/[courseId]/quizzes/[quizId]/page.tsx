@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import QuizForm from '@/components/quizzes/QuizForm';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -133,7 +133,19 @@ export default function AdminQuizDetailPage() {
     }
   }
 
-  if (loading || !quiz) return <PageLoader />;
+  if (loading || !quiz) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-5">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-9 w-3/4" />
+        <div className="grid gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
+        </div>
+        <SkeletonList rows={4} />
+      </div>
+    );
+  }
+  if (!quiz) return null;
 
   const totalPoints = quiz.questions.reduce((s, q) => s + q.points, 0);
 

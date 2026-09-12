@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { useAntiCheat } from '@/components/quizzes/useAntiCheat';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -203,7 +203,19 @@ export default function AdminQuizSimulatePage() {
     setBlurWarnings(0);
   }
 
-  if (loading || !quiz) return <PageLoader />;
+  if (loading || !quiz) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-5">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-9 w-3/4" />
+        <div className="grid gap-3 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
+        </div>
+        <SkeletonList rows={4} />
+      </div>
+    );
+  }
+  if (!quiz) return null;
 
   const SIMULATION_BANNER = (
     <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl px-4 py-3 flex items-center gap-3 mb-4">

@@ -55,6 +55,9 @@ export default function PrototypeStudentsRow() {
             <div className="flex items-center gap-1 shrink-0
                             border-t border-surface-border pt-2 -mx-1 px-1
                             sm:border-0 sm:pt-0 sm:mx-0 sm:px-0">
+              <span className="sm:hidden">
+                <IconButton label="Editar datos" tone="accent" size="lg" icon={<Pencil className="w-5 h-5" />} />
+              </span>
               <IconButton label="Ver detalle" tone="accent" size="lg" icon={<Eye className="w-5 h-5" />} />
               <IconButton label="Restablecer contraseña" tone="warning" size="lg" icon={<RotateCcw className="w-5 h-5" />} />
               <IconButton label="Desactivar" tone="danger" size="lg" icon={<ShieldOff className="w-5 h-5" />} />
