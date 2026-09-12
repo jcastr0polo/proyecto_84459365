@@ -143,9 +143,9 @@ export default function AdminPromptsPage() {
           className="px-3 py-2 bg-foreground/[0.04] border border-foreground/[0.08] rounded-lg
                      text-sm text-muted focus:outline-none focus:border-cyan-500/40 transition-colors"
         >
-          <option value="all" className="bg-base">Todos los cursos</option>
+          <option value="all" className="bg-canvas">Todos los cursos</option>
           {courses.map((c) => (
-            <option key={c.id} value={c.id} className="bg-base">{c.name}</option>
+            <option key={c.id} value={c.id} className="bg-canvas">{c.name}</option>
           ))}
         </select>
 

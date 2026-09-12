@@ -6,21 +6,45 @@ import { ChevronDown } from 'lucide-react';
 import { gradeText, formatScore } from '@/lib/gradeScale';
 import { tableChrome } from '@/components/ui/Table';
 
+/** Ajuste vigente sobre una nota calculada. corteId null = definitiva. */
+export interface Adjustment {
+  studentId: string;
+  corteId: string | null;
+  score: number;
+  reason: string;
+  isPublished: boolean;
+}
+
 interface GradeSummaryTableProps {
   data: CourseGradeSummary;
   className?: string;
+  /** Si se pasa, las notas de corte y la definitiva se vuelven ajustables. */
+  onAdjust?: (studentId: string, corteId: string | null) => void;
+  adjustments?: Adjustment[];
 }
+
+const adjKey = (studentId: string, corteId: string | null) => `${studentId}:${corteId ?? 'final'}`;
 
 /**
  * GradeSummaryTable — Pivot table with corte grouping
  * Columns grouped by corte: [Corte 1: Act1 Act2 | Nota Corte] [Corte 2: ...] [Sin Corte: ...] | Definitiva
  */
-export default function GradeSummaryTable({ data, className = '' }: GradeSummaryTableProps) {
+export default function GradeSummaryTable({
+  data, className = '', onAdjust, adjustments = [],
+}: GradeSummaryTableProps) {
+  const adjMap = new Map(adjustments.map((a) => [adjKey(a.studentId, a.corteId), a]));
   const { activities, cortes } = data;
   const students = [...data.students].sort((a, b) =>
     a.lastName.localeCompare(b.lastName, 'es') || a.firstName.localeCompare(b.firstName, 'es')
   );
-  const totalWeight = activities.reduce((a, b) => a + b.weight, 0);
+  /*
+   * Con cortes, la definitiva sale de ponderar las notas de corte por su peso,
+   * no de sumar los pesos de los ítems. Poner "300%" bajo DEFINITIVA —la suma
+   * de los pesos internos de tres cortes— decía algo que ya no es cierto.
+   */
+  const totalWeight = cortes.length > 0
+    ? cortes.reduce((a, c) => a + c.weight, 0)
+    : activities.reduce((a, b) => a + b.weight, 0);
   const hasCortes = cortes.length > 0;
 
   // Group activities by corte
@@ -78,6 +102,8 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
             unassignedActivities={unassignedActivities}
             hasCortes={hasCortes}
             gradedPct={gradedPercent(student, data.activities)}
+            onAdjust={onAdjust}
+            adjMap={adjMap}
           />
         ))}
       </div>
@@ -209,7 +235,7 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
         <tbody className={tableChrome.tbody}>
           {students.map((student) => (
             <tr key={student.id} className="hover:bg-foreground/[0.02] transition-colors">
-              <td className="px-4 py-2.5 border-r border-foreground/[0.06] sticky left-0 bg-base z-10">
+              <td className="px-4 py-2.5 border-r border-foreground/[0.06] sticky left-0 bg-canvas z-10">
                 <p className="text-sm text-foreground/90 font-medium">{student.lastName}, {student.firstName}</p>
                 <p className="text-micro text-subtle">{student.documentNumber}</p>
               </td>
@@ -222,13 +248,12 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
                         <GradeCell key={act.id} grade={student.grades[act.id]} maxScore={act.maxScore} />
                       ))}
                       <td className="px-3 py-2.5 text-center border-r-2 border-cyan-500/20 bg-cyan-500/[0.03]">
-                        {student.corteScores[group.id] != null ? (
-                          <span className={`text-sm font-bold tabular-nums ${scoreColorClass(student.corteScores[group.id]!)}`}>
-                            {student.corteScores[group.id]!.toFixed(1)}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-faint">—</span>
-                        )}
+                        <ScoreCell
+                          score={student.corteScores[group.id] ?? null}
+                          adjustment={adjMap.get(adjKey(student.id, group.id))}
+                          onAdjust={onAdjust ? () => onAdjust(student.id, group.id) : undefined}
+                          label={`${group.name} de ${student.lastName}, ${student.firstName}`}
+                        />
                       </td>
                     </React.Fragment>
                   ))}
@@ -245,9 +270,13 @@ export default function GradeSummaryTable({ data, className = '' }: GradeSummary
               <td className="px-4 py-2.5 text-center bg-cyan-500/[0.04]">
                 {student.finalScore !== null ? (
                   <div>
-                    <span className={`text-base font-bold tabular-nums ${scoreColorClass(student.finalScore)}`}>
-                      {student.finalScore.toFixed(1)}
-                    </span>
+                    <ScoreCell
+                      score={student.finalScore}
+                      adjustment={adjMap.get(adjKey(student.id, null))}
+                      onAdjust={onAdjust ? () => onAdjust(student.id, null) : undefined}
+                      label={`Definitiva de ${student.lastName}, ${student.firstName}`}
+                      size="lg"
+                    />
                     {student.isPartial && (
                       <span
                         className="block text-micro text-amber-600 dark:text-amber-400 mt-0.5 whitespace-nowrap"
@@ -349,13 +378,15 @@ type CorteGroup = CourseGradeSummary['cortes'][number] & {
  * salía la nota.
  */
 function MobileStudentCard({
-  student, corteGroups, unassignedActivities, hasCortes, gradedPct,
+  student, corteGroups, unassignedActivities, hasCortes, gradedPct, onAdjust, adjMap,
 }: {
   student: StudentRow;
   corteGroups: CorteGroup[];
   unassignedActivities: CourseGradeSummary['activities'];
   hasCortes: boolean;
   gradedPct: number;
+  onAdjust?: (studentId: string, corteId: string | null) => void;
+  adjMap: Map<string, Adjustment>;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -401,14 +432,58 @@ function MobileStudentCard({
       {/* Resumen por corte, siempre visible. */}
       {hasCortes && (
         <div className="grid gap-2 px-4 pb-4" style={{ gridTemplateColumns: `repeat(${blocks.length}, minmax(0,1fr))` }}>
-          {blocks.map((b) => (
-            <div key={b.id} className="rounded-lg border border-surface-border bg-surface-sunken p-2">
-              <p className="text-micro text-subtle truncate">{b.name} · {b.weight}%</p>
-              <p className={`text-sm font-semibold tabular-nums ${b.score != null ? scoreColorClass(b.score) : 'text-faint'}`}>
-                {b.score != null ? b.score.toFixed(1) : '—'}
-              </p>
-            </div>
-          ))}
+          {blocks.map((b) => {
+            const adj = adjMap.get(`${student.id}:${b.id}`);
+            const inner = (
+              <>
+                <p className="text-micro text-subtle truncate">{b.name} · {b.weight}%</p>
+                <p className={`text-sm font-semibold tabular-nums ${b.score != null ? scoreColorClass(b.score) : 'text-faint'}`}>
+                  {b.score != null ? b.score.toFixed(1) : '—'}
+                </p>
+                {adj && (
+                  <p className={`text-micro truncate ${adj.isPublished ? 'text-cyan-600 dark:text-cyan-400' : 'text-subtle'}`}>
+                    ajustada{adj.isPublished ? '' : ' · sin publicar'}
+                  </p>
+                )}
+              </>
+            );
+            // Quitar el ajuste en móvil "porque no cabe" sería justo lo que no
+            // se debe hacer: se adapta el control, no se elimina.
+            return onAdjust && b.score != null ? (
+              <button key={b.id} onClick={() => onAdjust(student.id, b.id)}
+                aria-label={`Ajustar ${b.name} de ${student.lastName}, ${student.firstName}`}
+                className="text-left rounded-lg border border-surface-border bg-surface-sunken p-2 min-h-[44px]
+                           hover:bg-surface-hover transition-colors duration-[var(--dur-fast)]
+                           active:scale-[0.98] motion-reduce:active:scale-100 cursor-pointer
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40">
+                {inner}
+              </button>
+            ) : (
+              <div key={b.id} className="rounded-lg border border-surface-border bg-surface-sunken p-2">
+                {inner}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* La definitiva va en la cabecera, dentro del botón que despliega la
+          tarjeta: no se puede anidar otro botón ahí, así que su ajuste vive
+          en su propia fila. */}
+      {onAdjust && student.finalScore !== null && (
+        <div className="px-4 pb-4 -mt-1">
+          <button
+            onClick={() => onAdjust(student.id, null)}
+            className="w-full min-h-[44px] rounded-lg border border-surface-border px-3 py-2
+                       text-xs font-medium text-muted hover:text-foreground hover:bg-surface-hover
+                       transition-colors duration-[var(--dur-fast)]
+                       active:scale-[0.99] motion-reduce:active:scale-100 cursor-pointer
+                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
+          >
+            {adjMap.has(`${student.id}:final`)
+              ? `Definitiva ajustada${adjMap.get(`${student.id}:final`)!.isPublished ? '' : ' · sin publicar'} — editar`
+              : 'Ajustar definitiva'}
+          </button>
         </div>
       )}
 
@@ -527,4 +602,56 @@ function AvgCell({ value }: { value: number | null }) {
 
 function scoreColorClass(score: number): string {
   return gradeText(score);
+}
+
+/**
+ * Nota calculada que el docente puede ajustar a mano.
+ *
+ * Una nota ajustada nunca se muestra sola: al lado va de dónde salió. Un
+ * número que cambió sin decir por qué es el que no se puede sustentar cuando
+ * el estudiante pregunta, y el que hace dudar al propio docente tres semanas
+ * después.
+ */
+function ScoreCell({
+  score, adjustment, onAdjust, label, size = 'md',
+}: {
+  score: number | null;
+  adjustment?: Adjustment;
+  onAdjust?: () => void;
+  label: string;
+  size?: 'md' | 'lg';
+}) {
+  const text = size === 'lg' ? 'text-base' : 'text-sm';
+
+  const body = score === null ? (
+    <span className="text-xs text-faint">—</span>
+  ) : (
+    <>
+      <span className={`${text} font-bold tabular-nums ${scoreColorClass(score)}`}>
+        {score.toFixed(1)}
+      </span>
+      {adjustment && (
+        <span className={`block text-micro whitespace-nowrap ${
+          adjustment.isPublished ? 'text-cyan-600 dark:text-cyan-400' : 'text-subtle'
+        }`}>
+          ajustada{adjustment.isPublished ? '' : ' · sin publicar'}
+        </span>
+      )}
+    </>
+  );
+
+  if (!onAdjust || score === null) return <div>{body}</div>;
+
+  return (
+    <button
+      onClick={onAdjust}
+      aria-label={`Ajustar ${label}${adjustment ? ` (ajustada: ${adjustment.reason})` : ''}`}
+      title={adjustment ? `Ajustada — ${adjustment.reason}` : 'Ajustar esta nota'}
+      className="w-full rounded-lg px-2 py-1 cursor-pointer
+                 hover:bg-cyan-500/10 transition-colors duration-[var(--dur-fast)]
+                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
+    >
+      {body}
+    </button>
+  );
 }

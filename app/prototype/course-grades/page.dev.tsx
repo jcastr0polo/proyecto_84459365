@@ -1,11 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import GradeSummaryTable from '@/components/grades/GradeSummaryTable';
+import AdjustGradeModal, { type AdjustTarget } from '@/components/grades/AdjustGradeModal';
 import type { CourseGradeSummary } from '@/lib/types';
 
 /** Taller — tabla de notas del curso, con su vista de tarjetas en móvil. */
 export default function PrototypeCourseGrades() {
+  const [target, setTarget] = useState<AdjustTarget | null>(null);
   const cortes = [
     { id: 'c1', name: 'Corte 1', weight: 30, order: 1 },
     { id: 'c2', name: 'Corte 2', weight: 30, order: 2 },
@@ -29,7 +31,9 @@ export default function PrototypeCourseGrades() {
       id: `s-${ln}`, firstName: fn, lastName: ln, documentNumber: '1000',
       email: `${fn.toLowerCase()}@ejemplo.edu.co`, grades,
       corteScores: { c1: scores[0], c2: scores[2], c3: scores[3] },
+      corteScoresRaw: { c1: scores[0], c2: scores[2], c3: scores[3] },
       finalScore: final === null ? null : Math.round(final * 10) / 10,
+      finalScoreRaw: final === null ? null : Math.round(final * 10) / 10,
       isPartial: got.length < activities.length,
       isApproved: final === null ? null : final >= 3,
     };
@@ -50,7 +54,27 @@ export default function PrototypeCourseGrades() {
       <span className="text-meta font-semibold uppercase tracking-wider text-amber-400">
         Taller de diseño · datos falsos
       </span>
-      <GradeSummaryTable data={data} />
+      <GradeSummaryTable
+        data={data}
+        adjustments={[
+          { studentId: 's-González Pérez', corteId: 'c1', score: 4.8, reason: 'Participación sostenida', isPublished: true },
+          { studentId: 's-Restrepo Ochoa', corteId: null, score: 3.8, reason: 'Exposición voluntaria', isPublished: false },
+        ]}
+        onAdjust={(studentId, corteId) => setTarget(
+          studentId === 's-González Pérez'
+            ? { studentId, studentName: 'González Pérez, Gabriela', corteId, label: corteId ? 'Corte 1' : 'Definitiva',
+                calculated: 4.5, current: { score: 4.8, reason: 'Participación sostenida', isPublished: true } }
+            : { studentId, studentName: 'Restrepo Ochoa, Valentina', corteId, label: corteId ? 'Corte 1' : 'Definitiva',
+                calculated: 3.5, current: null }
+        )}
+      />
+      <AdjustGradeModal
+        target={target}
+        onClose={() => setTarget(null)}
+        onSave={() => setTarget(null)}
+        onRemove={() => setTarget(null)}
+        saving={false}
+      />
     </div>
   );
 }

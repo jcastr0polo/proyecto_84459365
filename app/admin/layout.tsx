@@ -115,8 +115,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
    */
   if (!user) {
     return (
-      <div className="flex h-screen bg-base overflow-hidden" role="status" aria-label="Cargando">
-        <aside className="hidden lg:flex w-60 flex-col bg-base border-r border-surface-border">
+      <div className="flex h-screen bg-canvas overflow-hidden" role="status" aria-label="Cargando">
+        <aside className="hidden lg:flex w-60 flex-col bg-canvas border-r border-surface-border">
           <div className="flex items-center gap-3 px-5 h-16 border-b border-surface-border shrink-0">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
               <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
@@ -145,7 +145,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (isFullPage) {
     return (
       <ToastProvider>
-        <div className="min-h-screen bg-base">
+        <div className="min-h-screen bg-canvas">
           {children}
         </div>
       </ToastProvider>
@@ -154,11 +154,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <ToastProvider>
-      <div className="flex h-screen bg-base overflow-hidden">
+      <div className="flex h-screen bg-canvas overflow-hidden">
         {/* Mobile backdrop */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 z-30 bg-base/60 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-30 bg-canvas/60 backdrop-blur-sm lg:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           />
@@ -168,7 +168,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <aside
           className={`
             fixed inset-y-0 left-0 z-40 w-60 flex flex-col
-            bg-base border-r border-foreground/10
+            bg-canvas border-r border-foreground/10
             transform transition-transform duration-200 ease-out
             lg:relative lg:translate-x-0
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -249,7 +249,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* ═══ Main content area ═══ */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <header className="h-16 shrink-0 flex items-center justify-between px-4 lg:px-6 border-b border-foreground/10 bg-base/80 backdrop-blur-lg">
+          <header className="h-16 shrink-0 flex items-center justify-between px-4 lg:px-6 border-b border-foreground/10 bg-canvas/80 backdrop-blur-lg">
             {/* Left: hamburger + breadcrumbs */}
             <div className="flex items-center gap-3">
               <button

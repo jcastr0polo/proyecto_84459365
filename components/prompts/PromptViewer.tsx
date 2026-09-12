@@ -50,9 +50,9 @@ export default function PromptViewer({
   }, [content, toast]);
 
   const viewer = (
-    <div className={fullscreen ? 'fixed inset-0 z-50 bg-base overflow-y-auto' : ''}>
+    <div className={fullscreen ? 'fixed inset-0 z-50 bg-canvas overflow-y-auto' : ''}>
       {/* Header */}
-      <div className={`${fullscreen ? 'sticky top-0 z-10 bg-base/95 backdrop-blur-sm border-b border-foreground/[0.06]' : ''} py-3 px-4`}>
+      <div className={`${fullscreen ? 'sticky top-0 z-10 bg-canvas/95 backdrop-blur-sm border-b border-foreground/[0.06]' : ''} py-3 px-4`}>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">

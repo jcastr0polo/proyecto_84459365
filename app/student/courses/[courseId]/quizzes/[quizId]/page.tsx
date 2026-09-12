@@ -287,7 +287,7 @@ export default function StudentTakeQuizPage() {
   return (
     <div className="space-y-4 max-w-3xl mx-auto pb-24">
       {/* Sticky header with timer + progress */}
-      <div className="sticky top-0 z-20 bg-base py-3 border-b border-foreground/[0.06]">
+      <div className="sticky top-0 z-20 bg-canvas py-3 border-b border-foreground/[0.06]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-sm font-semibold text-foreground truncate max-w-[200px]">{quiz.title}</h2>
@@ -389,7 +389,7 @@ export default function StudentTakeQuizPage() {
       })}
 
       {/* Submit button — sticky bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-base border-t border-foreground/[0.06] p-4 z-20">
+      <div className="fixed bottom-0 left-0 right-0 bg-canvas border-t border-foreground/[0.06] p-4 z-20">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <p className="text-xs text-subtle">{answeredCount} de {totalQuestions} respondidas</p>
           <Button

@@ -118,9 +118,9 @@ export default function PromptEditor({
                        transition-colors"
             required
           >
-            <option value="" className="bg-base">Seleccionar curso...</option>
+            <option value="" className="bg-canvas">Seleccionar curso...</option>
             {courses.map((c) => (
-              <option key={c.id} value={c.id} className="bg-base">
+              <option key={c.id} value={c.id} className="bg-canvas">
                 {c.name}
               </option>
             ))}

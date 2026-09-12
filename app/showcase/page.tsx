@@ -30,7 +30,7 @@ export default function ShowcasePage() {
 
   if (!loaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-base">
+      <div className="flex items-center justify-center min-h-screen bg-canvas">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-foreground/10 border-t-cyan-400" />
       </div>
     );

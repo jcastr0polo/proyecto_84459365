@@ -322,7 +322,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
       </div>
 
       {/* ─── Mobile Sticky Submit ─── */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-base/95 backdrop-blur-lg border-t border-foreground/[0.08] px-4 py-3 safe-area-bottom">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-canvas/95 backdrop-blur-lg border-t border-foreground/[0.08] px-4 py-3 safe-area-bottom">
         {validationError && (
           <p className="text-xs text-red-400 mb-2 text-center">{validationError}</p>
         )}
@@ -343,8 +343,8 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
 
       {/* ─── Confirmation Modal ─── */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-base/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm bg-base rounded-xl border border-foreground/[0.08] p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-canvas/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-canvas rounded-xl border border-foreground/[0.08] p-6 space-y-4">
             <h3 className="text-lg font-bold text-foreground">¿Confirmar entrega?</h3>
             <p className="text-sm text-muted">
               {existingVersion

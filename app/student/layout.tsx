@@ -70,7 +70,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
      se rellena el contenido, así la espera se percibe más corta. */
   if (!user) {
     return (
-      <div className="min-h-screen bg-base" role="status" aria-label="Cargando">
+      <div className="min-h-screen bg-canvas" role="status" aria-label="Cargando">
         <div className="h-16 border-b border-surface-border flex items-center gap-3 px-4 sm:px-6">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shrink-0">
             <Cpu className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
@@ -89,7 +89,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   if (isFullPage) {
     return (
       <ToastProvider>
-        <div className="min-h-screen bg-base">
+        <div className="min-h-screen bg-canvas">
           {children}
         </div>
       </ToastProvider>
@@ -98,9 +98,9 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-base">
+      <div className="min-h-screen bg-canvas">
         {/* ═══ Top Navbar ═══ */}
-        <header className="sticky top-0 z-50 border-b border-foreground/10 bg-base/80 backdrop-blur-xl">
+        <header className="sticky top-0 z-50 border-b border-foreground/10 bg-canvas/80 backdrop-blur-xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-16">
               {/* Left: Logo + Nav */}
@@ -161,7 +161,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                   {userMenuOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} aria-hidden="true" />
-                      <div className="absolute right-0 mt-2 w-56 rounded-xl border border-foreground/10 bg-base shadow-2xl z-50 overflow-hidden">
+                      <div className="absolute right-0 mt-2 w-56 rounded-xl border border-foreground/10 bg-canvas shadow-2xl z-50 overflow-hidden">
                         <div className="px-4 py-3 border-b border-foreground/10">
                           <p className="text-sm font-medium text-foreground">{user.firstName} {user.lastName}</p>
                           <p className="text-[11px] text-faint">Estudiante</p>
@@ -202,7 +202,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
           {/* Mobile nav */}
           {mobileMenuOpen && (
-            <div className="md:hidden border-t border-foreground/10 bg-base">
+            <div className="md:hidden border-t border-foreground/10 bg-canvas">
               <nav className="px-4 py-3 space-y-1" aria-label="Navegación móvil">
                 {NAV_ITEMS.map((item) => {
                   const Icon = item.icon;

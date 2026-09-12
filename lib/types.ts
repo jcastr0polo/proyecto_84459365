@@ -507,8 +507,16 @@ export interface CourseGradeSummary {
       isPublished: boolean;
       feedback?: string;
     } | null>;
-    corteScores: Record<string, number | null>;  // corteId → nota 0.0–5.0
+    corteScores: Record<string, number | null>;  // corteId → nota 0.0–5.0 (ya ajustada)
     finalScore: number | null;         // Nota definitiva 0.0–5.0 (null si no hay notas)
+    /**
+     * Las mismas notas SIN el ajuste del docente. La pantalla de ajuste
+     * necesita enseñar de dónde sale el número: si solo tuviera el valor ya
+     * ajustado, al reeditar mostraría el ajuste como si fuera la base y cada
+     * edición partiría de un punto distinto.
+     */
+    corteScoresRaw: Record<string, number | null>;
+    finalScoreRaw: number | null;
     isPartial: boolean;                // true si faltan actividades por calificar
     isApproved: boolean | null;        // finalScore ≥ 3.0 (null si no hay notas)
   }[];

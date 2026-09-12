@@ -208,7 +208,7 @@ export default function DatePicker({
       {open && (
         <div
           ref={calRef}
-          className="absolute left-0 z-50 w-[280px] rounded-xl border border-foreground/[0.08] bg-base shadow-2xl overflow-hidden"
+          className="absolute left-0 z-50 w-[280px] rounded-xl border border-foreground/[0.08] bg-canvas shadow-2xl overflow-hidden"
           style={{ animation: 'fadeSlideIn 0.15s ease-out' }}
         >
           {/* Month nav */}

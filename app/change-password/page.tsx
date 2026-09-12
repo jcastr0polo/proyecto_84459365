@@ -124,14 +124,14 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base px-4">
+    <div className="min-h-screen flex items-center justify-center bg-canvas px-4">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="w-full max-w-md"
       >
-        <div className="rounded-2xl border border-foreground/10 bg-base p-8 shadow-2xl">
+        <div className="rounded-2xl border border-foreground/10 bg-canvas p-8 shadow-2xl">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 mb-4">

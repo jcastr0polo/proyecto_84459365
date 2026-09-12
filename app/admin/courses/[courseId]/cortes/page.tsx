@@ -333,7 +333,7 @@ export default function CortesPage() {
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               placeholder="Ej: Corte 1, Primer Parcial..."
-              className="w-full px-3 py-2 rounded-lg border border-foreground/20 bg-base text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+              className="w-full px-3 py-2 rounded-lg border border-foreground/20 bg-canvas text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
               required
             />
           </div>
@@ -352,7 +352,7 @@ export default function CortesPage() {
               min={1}
               max={maxWeightForForm}
               step={1}
-              className="w-full px-3 py-2 rounded-lg border border-foreground/20 bg-base text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+              className="w-full px-3 py-2 rounded-lg border border-foreground/20 bg-canvas text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
               required
             />
           </div>
@@ -365,7 +365,7 @@ export default function CortesPage() {
               onChange={(e) => setFormOrder(Number(e.target.value))}
               min={1}
               step={1}
-              className="w-full px-3 py-2 rounded-lg border border-foreground/20 bg-base text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+              className="w-full px-3 py-2 rounded-lg border border-foreground/20 bg-canvas text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
               required
             />
           </div>

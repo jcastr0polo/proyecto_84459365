@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import GradeSummaryTable from '@/components/grades/GradeSummaryTable';
+import GradeSummaryTable, { type Adjustment } from '@/components/grades/GradeSummaryTable';
+import AdjustGradeModal, { type AdjustTarget } from '@/components/grades/AdjustGradeModal';
 import GradeStats, { calculateStats } from '@/components/grades/GradeStats';
 import SearchInput from '@/components/ui/SearchInput';
 import { useToast } from '@/components/ui/Toast';
@@ -26,24 +27,102 @@ export default function AdminGradeSummaryPage() {
   const [data, setData] = useState<CourseGradeSummary | null>(null);
   const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState('');
+  const [adjustments, setAdjustments] = useState<Adjustment[]>([]);
+  const [target, setTarget] = useState<AdjustTarget | null>(null);
+  const [savingAdj, setSavingAdj] = useState(false);
 
   const courseId = params.courseId;
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch(`/api/courses/${courseId}/grades`, { credentials: 'include' });
-        if (!res.ok) throw new Error('No se pudieron cargar las notas');
-        const json = await res.json();
-        setData(json);
-      } catch (err) {
-        toast(err instanceof Error ? err.message : 'Error cargando notas', 'error');
-      } finally {
-        setLoading(false);
-      }
+  const load = useCallback(async () => {
+    try {
+      const [gradesRes, adjRes] = await Promise.all([
+        fetch(`/api/courses/${courseId}/grades`, { credentials: 'include' }),
+        fetch(`/api/courses/${courseId}/grades/adjustments`, { credentials: 'include' }),
+      ]);
+      if (!gradesRes.ok) throw new Error('No se pudieron cargar las notas');
+      setData(await gradesRes.json());
+      if (adjRes.ok) setAdjustments((await adjRes.json()).adjustments ?? []);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Error cargando notas', 'error');
+    } finally {
+      setLoading(false);
     }
-    load();
   }, [courseId, toast]);
+
+  useEffect(() => { load(); }, [load]);
+
+  /*
+   * Ajustar una nota calculada.
+   *
+   * La nota que se le muestra al docente en el modal es la que ya trae la
+   * tabla, que YA incluye un ajuste anterior si lo hay. Para que "calculada"
+   * signifique de verdad "sin ajustar", se le resta el ajuste vigente.
+   */
+  const openAdjust = useCallback((studentId: string, corteId: string | null) => {
+    if (!data) return;
+    const student = data.students.find((s) => s.id === studentId);
+    if (!student) return;
+    const current = adjustments.find((a) => a.studentId === studentId && a.corteId === corteId) ?? null;
+    const corte = corteId ? data.cortes.find((c) => c.id === corteId) : null;
+    // Siempre la nota SIN ajustar: si se usara la mostrada, al reeditar el
+    // ajuste anterior pasaría por base y cada edición partiría de otro punto.
+    const base = corteId === null
+      ? student.finalScoreRaw
+      : (student.corteScoresRaw[corteId] ?? null);
+
+    setTarget({
+      studentId,
+      studentName: `${student.lastName}, ${student.firstName}`,
+      corteId,
+      label: corte ? corte.name : 'Definitiva',
+      calculated: base,
+      current,
+    });
+  }, [data, adjustments]);
+
+  const saveAdjust = useCallback(async (score: number, reason: string, publish: boolean) => {
+    if (!target) return;
+    setSavingAdj(true);
+    try {
+      const res = await fetch(`/api/courses/${courseId}/grades/adjustments`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ studentId: target.studentId, corteId: target.corteId, score, reason, publish }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || 'No se pudo guardar el ajuste');
+      toast(d.message ?? 'Ajuste guardado', 'success');
+      setTarget(null);
+      await load();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo guardar el ajuste', 'error');
+    } finally {
+      setSavingAdj(false);
+    }
+  }, [target, courseId, toast, load]);
+
+  const removeAdjust = useCallback(async () => {
+    if (!target) return;
+    setSavingAdj(true);
+    try {
+      const res = await fetch(`/api/courses/${courseId}/grades/adjustments`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ studentId: target.studentId, corteId: target.corteId }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || 'No se pudo quitar el ajuste');
+      toast(d.message ?? 'Ajuste quitado', 'success');
+      setTarget(null);
+      await load();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo quitar el ajuste', 'error');
+    } finally {
+      setSavingAdj(false);
+    }
+  }, [target, courseId, toast, load]);
 
   // CSV export via server-side endpoint (Fase 17)
   const handleExport = useCallback(async () => {
@@ -166,9 +245,17 @@ export default function AdminGradeSummaryPage() {
         />
       </div>
 
+      <AdjustGradeModal
+        target={target}
+        onClose={() => setTarget(null)}
+        onSave={saveAdjust}
+        onRemove={removeAdjust}
+        saving={savingAdj}
+      />
+
       {/* Pivot Table */}
       {data.students.length > 0 ? (
-        <GradeSummaryTable data={filteredData} />
+        <GradeSummaryTable data={filteredData} onAdjust={openAdjust} adjustments={adjustments} />
       ) : (
         <div className="rounded-xl border border-surface-border bg-surface">
           <EmptyState

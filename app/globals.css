@@ -93,7 +93,16 @@
 }
 
 @theme inline {
-  --color-base: var(--base-bg);
+  /*
+   * OJO con el nombre: un token de color llamado `base` genera la utilidad
+   * `text-base`, que en Tailwind ya es un TAMAÑO de letra. El color ganaba y
+   * el tamaño desaparecía, así que todo lo que llevara `text-base` se pintaba
+   * del color del fondo. Y como el CSS sale ordenado alfabéticamente,
+   * `.text-amber-*` queda ANTES que `.text-base` y perdía: por eso solo se
+   * borraban las notas ámbar —las de 3.0 a 4.0— y no las verdes ni las rojas.
+   * De ahí "las notas de los más o menos se ven en blanco sobre blanco".
+   */
+  --color-canvas: var(--base-bg);
   --color-foreground: var(--base-fg);
   --color-muted: var(--muted-fg);
   --color-subtle: var(--subtle-fg);

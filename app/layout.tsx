@@ -36,7 +36,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" data-theme="dark" className={`${playfairDisplay.variable} ${poppins.variable} antialiased`} suppressHydrationWarning>
-      <body className="min-h-screen bg-base text-foreground">
+      <body className="min-h-screen bg-canvas text-foreground">
         <ThemeProvider>
           {children}
         </ThemeProvider>

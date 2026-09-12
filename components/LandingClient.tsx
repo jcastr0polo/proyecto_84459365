@@ -91,9 +91,9 @@ export default function LandingClient() {
   const titleAnimationDuration = heroTitle.length * 0.08 + 0.6;
 
   return (
-    <div className="min-h-screen bg-base text-foreground overflow-x-hidden">
+    <div className="min-h-screen bg-canvas text-foreground overflow-x-hidden">
       {/* ═══ NAVBAR ═══ */}
-      <nav className="fixed top-0 inset-x-0 z-50 border-b border-foreground/[0.06] bg-base/80 backdrop-blur-xl">
+      <nav className="fixed top-0 inset-x-0 z-50 border-b border-foreground/[0.06] bg-canvas/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">

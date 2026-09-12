@@ -55,7 +55,7 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
   }, [projects, courseFilter]);
 
   return (
-    <div className="min-h-screen bg-base">
+    <div className="min-h-screen bg-canvas">
       {/* Theme toggle */}
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />

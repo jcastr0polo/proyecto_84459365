@@ -56,7 +56,7 @@ export default function Modal({ open, onClose, title, children, maxWidth, size }
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="absolute inset-0 bg-base/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-canvas/70 backdrop-blur-sm"
             onClick={onClose}
             aria-hidden="true"
           />
@@ -70,7 +70,7 @@ export default function Modal({ open, onClose, title, children, maxWidth, size }
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            className={`relative w-full max-w-[calc(100vw-2rem)] ${widthClass} rounded-2xl border border-foreground/[0.08] bg-base shadow-2xl`}
+            className={`relative w-full max-w-[calc(100vw-2rem)] ${widthClass} rounded-2xl border border-foreground/[0.08] bg-canvas shadow-2xl`}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-foreground/[0.06]">

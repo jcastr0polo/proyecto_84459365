@@ -82,7 +82,7 @@ export default function ConfirmModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="absolute inset-0 bg-base/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-canvas/70 backdrop-blur-sm"
             onClick={() => !loading && onClose()}
             aria-hidden="true"
           />
@@ -96,7 +96,7 @@ export default function ConfirmModal({
             role="alertdialog"
             aria-modal="true"
             aria-label={title}
-            className="relative w-full max-w-sm rounded-2xl border border-foreground/[0.08] bg-base shadow-2xl"
+            className="relative w-full max-w-sm rounded-2xl border border-foreground/[0.08] bg-canvas shadow-2xl"
           >
             <div className="px-6 pt-6 pb-2 flex flex-col items-center text-center">
               {/* Icon */}

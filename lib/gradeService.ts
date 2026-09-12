@@ -1050,11 +1050,22 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
     const finalAdjustment = allManualGrades.find(
       (g) => g.itemId === adjustItemId(courseId) && g.studentId === student.id,
     );
+    const gradable = gradableItemsOf(activities, courseQuizzes, courseManualItems);
     const resolved = resolveFinalScore(
-      courseCortes, corteScores, finalResult,
-      gradableItemsOf(activities, courseQuizzes, courseManualItems),
+      courseCortes, corteScores, finalResult, gradable,
       finalAdjustment?.score ?? null,
     );
+
+    // Y las mismas notas como si no hubiera ningún ajuste, para que la
+    // pantalla de ajuste pueda enseñar base → resultado.
+    const withoutAdjustments = allManualGrades.filter((g) => !isAdjustItemId(g.itemId));
+    const corteScoresRaw = calculateCorteScores(
+      student.id, courseCortes, activities, courseGrades,
+      courseQuizzes, allAttempts, courseManualItems, withoutAdjustments,
+    );
+    const finalScoreRaw = resolveFinalScore(
+      courseCortes, corteScoresRaw, finalResult, gradable, null,
+    ).finalScore;
 
     return {
       id: student.id,
@@ -1064,7 +1075,9 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
       email: student.email,
       grades: gradesMap,
       corteScores,
+      corteScoresRaw,
       finalScore: resolved.finalScore,
+      finalScoreRaw,
       isPartial: resolved.isPartial,
       isApproved: resolved.isApproved,
     };
