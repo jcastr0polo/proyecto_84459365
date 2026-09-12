@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import ShowcaseClient from './ShowcaseClient';
 import type { ShowcaseProject } from './ShowcaseClient';
+import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 
 /**
  * /showcase — Vitrina Pública de Proyectos Estudiantiles
@@ -30,8 +31,14 @@ export default function ShowcasePage() {
 
   if (!loaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-canvas">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-foreground/10 border-t-cyan-400" />
+      <div className="min-h-screen bg-canvas px-4 sm:px-6 py-12">
+        <div className="max-w-6xl mx-auto space-y-8">
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-72" />
+            <Skeleton className="h-4 w-96 max-w-full" />
+          </div>
+          <SkeletonCards count={6} />
+        </div>
       </div>
     );
   }

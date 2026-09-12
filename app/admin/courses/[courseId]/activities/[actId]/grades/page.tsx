@@ -8,6 +8,7 @@ import Modal from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { AlertTriangle } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 
 interface SubmissionData {
   id: string;
@@ -284,8 +285,13 @@ export default function AdminGradingPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin h-8 w-8 border-2 border-cyan-400 border-t-transparent rounded-full" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <SkeletonList rows={8} />
       </div>
     );
   }

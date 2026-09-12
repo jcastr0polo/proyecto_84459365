@@ -9,6 +9,7 @@ import SearchInput from '@/components/ui/SearchInput';
 import { useToast } from '@/components/ui/Toast';
 import type { CourseGradeSummary } from '@/lib/types';
 import EmptyState from '@/components/ui/EmptyState';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import OrphanItemsNotice from '@/components/grades/OrphanItemsNotice';
 import Link from 'next/link';
 
@@ -173,10 +174,23 @@ export default function AdminGradeSummaryPage() {
     };
   }, [data, search]);
 
+  /*
+   * Un esqueleto con la forma de la tabla que viene, no una rueda girando.
+   * La rueda no dice nada: ni cuánto falta ni qué va a aparecer, y la página
+   * da un salto cuando por fin llega.
+   */
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin h-8 w-8 border-2 border-cyan-400 border-t-transparent rounded-full" />
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8 space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-8 w-64" />
+        </div>
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20" />)}
+        </div>
+        <Skeleton className="h-10 w-full sm:w-72" />
+        <SkeletonList rows={6} />
       </div>
     );
   }
