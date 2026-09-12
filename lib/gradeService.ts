@@ -116,6 +116,43 @@ export function isNoAttemptId(id: string): boolean {
   return id.startsWith(`${NO_ATTEMPT_PREFIX}:`);
 }
 
+/**
+ * Ajuste del docente sobre una nota ya calculada.
+ *
+ * Comportamiento y participación no son un ítem más del sílabo: no compiten
+ * por peso ni diluyen a los demás. Si la apreciación fuera un ítem con peso,
+ * para subir un corte de 3.0 a 3.5 tendría que pesar 30 % del corte, porque al
+ * sumar peso también reparte. Un ajuste es una suma sobre el resultado.
+ *
+ * Se guarda como nota manual con peso 0 sobre un ítem sintético, con el mismo
+ * criterio que `nosub` y `noattempt`: id derivado de (curso, corte), estable e
+ * idempotente, sin tocar el esquema.
+ *
+ * Se guarda la NOTA RESULTANTE, no la diferencia, por dos razones: la columna
+ * score está validada como no negativa, y una diferencia guardada se aplicaría
+ * en silencio sobre una base que cambió. La diferencia se muestra siempre en
+ * pantalla, calculada contra la base del momento.
+ *
+ * `corteId` vacío = el ajuste es sobre la definitiva del curso.
+ */
+const ADJUST_PREFIX = 'ajuste';
+
+export function adjustItemId(courseId: string, corteId?: string): string {
+  return `${ADJUST_PREFIX}:${courseId}:${corteId ?? 'final'}`;
+}
+
+export function isAdjustItemId(id: string): boolean {
+  return id.startsWith(`${ADJUST_PREFIX}:`);
+}
+
+/** null si no es un ítem de ajuste; corteId undefined = ajuste de la definitiva. */
+export function parseAdjustItemId(id: string): { courseId: string; corteId?: string } | null {
+  if (!isAdjustItemId(id)) return null;
+  const [, courseId, corte] = id.split(':');
+  if (!courseId) return null;
+  return { courseId, corteId: corte === 'final' ? undefined : corte };
+}
+
 const SCALE_MAX = 5.0;
 const APPROVAL_THRESHOLD = 3.0;
 
@@ -124,6 +161,11 @@ const APPROVAL_THRESHOLD = 3.0;
  */
 function roundTo1Decimal(value: number): number {
   return Math.round(value * 10) / 10;
+}
+
+/** Ninguna nota puede salirse de la escala, venga de donde venga. */
+function clampScore(value: number): number {
+  return roundTo1Decimal(Math.min(SCALE_MAX, Math.max(0, value)));
 }
 
 // ────────────────────────────────────────────────────────────
@@ -571,6 +613,8 @@ export function calculateCorteScores(
     }
 
     for (const item of manualItems.filter((i) => i.corteId === corte.id)) {
+      // Un ajuste no promedia con lo demás: se aplica sobre el resultado.
+      if (isAdjustItemId(item.id)) continue;
       // `manualGrades` llega ya filtrado por quien llama, igual que `grades`:
       // el estudiante solo pasa las publicadas, el admin las pasa todas.
       const mg = manualGrades.find((g) => g.itemId === item.id && g.studentId === studentId);
@@ -580,12 +624,128 @@ export function calculateCorteScores(
       }
     }
 
-    corteScores[corte.id] = sumWeights > 0
+    const base = sumWeights > 0
       ? roundTo1Decimal((sumWeighted / sumWeights) * SCALE_MAX)
       : null;
+
+    // El ajuste manda sobre la base, pero solo si hay base: un corte donde
+    // todavía no se ha calificado nada no puede tener nota "ajustada".
+    const adjustment = manualGrades.find(
+      (g) => g.itemId === adjustItemId(corte.courseId, corte.id) && g.studentId === studentId,
+    );
+    corteScores[corte.id] = base !== null && adjustment
+      ? clampScore(adjustment.score)
+      : base;
   }
 
   return corteScores;
+}
+
+/**
+ * resolveFinalScore — Definitiva respetando el peso de cada corte.
+ *
+ * Hasta ahora `Corte.weight` decía "Porcentaje sobre la definitiva" y no se
+ * usaba para nada: calculateFinalGrade ni siquiera recibe los cortes. La
+ * definitiva era un promedio plano de todos los ítems del curso, así que un
+ * corte que pesa 70 % y otro que pesa 30 % pesaban lo mismo si sus ítems
+ * internos sumaban parecido. Con 5.0 en el primero y 1.0 en el segundo salía
+ * 3.0 en vez de 3.8.
+ *
+ * Salvaguarda: si el curso tiene cortes pero hay ítems calificables SIN corte
+ * asignado, ponderar por corte los dejaría fuera de la definitiva sin avisar.
+ * En ese caso se mantiene el cálculo plano y se devuelve el aviso, para que el
+ * docente asigne el corte y el curso pase solo al modo correcto.
+ */
+export interface FinalScoreResolution {
+  finalScore: number | null;
+  isPartial: boolean;
+  isApproved: boolean | null;
+  /** 'cortes' = ponderado por peso de corte · 'flat' = promedio plano de ítems */
+  basis: 'cortes' | 'flat';
+  /** Peso de corte con nota / peso total declarado (solo en basis 'cortes') */
+  countedCorteWeight: number;
+  totalCorteWeight: number;
+  /** Títulos de los ítems que impiden usar los pesos de corte */
+  orphanItems: string[];
+}
+
+/** Los ítems que deberían tener corte asignado, para detectar huérfanos. */
+export function gradableItemsOf(
+  activities: { title: string; corteId?: string }[],
+  quizzes: { title: string; corteId?: string }[],
+  manualItems: { id: string; title: string; corteId?: string }[],
+): { title: string; corteId?: string }[] {
+  return [
+    ...activities.map((a) => ({ title: a.title, corteId: a.corteId })),
+    ...quizzes.map((q) => ({ title: `[Parcial] ${q.title}`, corteId: q.corteId })),
+    ...manualItems.filter((i) => !isAdjustItemId(i.id))
+      .map((i) => ({ title: `[Manual] ${i.title}`, corteId: i.corteId })),
+  ];
+}
+
+export function resolveFinalScore(
+  cortes: Corte[],
+  corteScores: Record<string, number | null>,
+  flat: FinalGradeResult,
+  gradableItems: { title: string; corteId?: string }[] = [],
+  /** Ajuste del docente sobre la definitiva. Manda sobre todo lo demás. */
+  finalOverride?: number | null,
+): FinalScoreResolution {
+  const totalCorteWeight = cortes.reduce((acc, c) => acc + c.weight, 0);
+  const orphanItems = cortes.length > 0
+    ? gradableItems.filter((i) => !i.corteId).map((i) => i.title)
+    : [];
+
+  const usable = cortes.length > 0 && totalCorteWeight > 0 && orphanItems.length === 0;
+
+  // El ajuste sobre la definitiva solo aplica si ya hay algo calculado: no se
+  // le pone nota a un curso sin calificar nada.
+  const applyOverride = (computed: number | null) =>
+    computed !== null && finalOverride !== null && finalOverride !== undefined
+      ? clampScore(finalOverride)
+      : computed;
+
+  if (!usable) {
+    const flatScore = applyOverride(flat.totalWeight > 0 ? flat.finalScore : null);
+    return {
+      finalScore: flatScore,
+      isPartial: flat.isPartial,
+      isApproved: flatScore !== null ? flatScore >= APPROVAL_THRESHOLD : null,
+      basis: 'flat',
+      countedCorteWeight: 0,
+      totalCorteWeight,
+      orphanItems,
+    };
+  }
+
+  // Solo entran los cortes que ya tienen algo calificado: un corte que no ha
+  // empezado no debe arrastrar la definitiva hacia abajo.
+  let weighted = 0;
+  let counted = 0;
+  for (const corte of cortes) {
+    const score = corteScores[corte.id];
+    if (score === null || score === undefined || corte.weight <= 0) continue;
+    weighted += score * corte.weight;
+    counted += corte.weight;
+  }
+
+  if (counted === 0) {
+    return {
+      finalScore: null, isPartial: true, isApproved: null,
+      basis: 'cortes', countedCorteWeight: 0, totalCorteWeight, orphanItems,
+    };
+  }
+
+  const finalScore = applyOverride(roundTo1Decimal(weighted / counted))!;
+  return {
+    finalScore,
+    isPartial: counted < totalCorteWeight || flat.isPartial,
+    isApproved: finalScore >= APPROVAL_THRESHOLD,
+    basis: 'cortes',
+    countedCorteWeight: counted,
+    totalCorteWeight,
+    orphanItems,
+  };
 }
 
 export function calculateFinalGrade(
@@ -668,7 +828,8 @@ export function calculateFinalGrade(
 
   // ── Manual grades ──
   if (allManualItems && allManualGrades) {
-    const courseItems = allManualItems.filter((i) => i.courseId === courseId);
+    // Los ajustes no son ítems del sílabo: no promedian ni aparecen en el desglose.
+    const courseItems = allManualItems.filter((i) => i.courseId === courseId && !isAdjustItemId(i.id));
     for (const item of courseItems) {
       const grade = allManualGrades.find(
         (g) => g.itemId === item.id && g.studentId === studentId
@@ -714,7 +875,7 @@ export function calculateFinalGrade(
     .filter((q) => q.courseId === courseId && q.type === 'graded' && q.weight && q.weight > 0)
     .reduce((acc, q) => acc + (q.weight ?? 0), 0);
   const totalManualWeight = (allManualItems ?? [])
-    .filter((i) => i.courseId === courseId)
+    .filter((i) => i.courseId === courseId && !isAdjustItemId(i.id))
     .reduce((acc, i) => acc + i.weight, 0);
   const totalExpectedWeight = totalActivitiesWeight + totalQuizWeight + totalManualWeight;
   const isPartial = sumWeights < totalExpectedWeight;
@@ -813,7 +974,11 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
   const courseQuizzes = allQuizzes.filter(
     (q) => q.courseId === courseId && q.type === 'graded' && q.weight && q.weight > 0
   );
-  const courseManualItems = allManualItems.filter((i) => i.courseId === courseId);
+  // Los ajustes viven en la misma tabla pero no son ítems calificables: no son
+  // columna de la tabla de notas ni renglón del desglose del estudiante.
+  const courseManualItems = allManualItems.filter(
+    (i) => i.courseId === courseId && !isAdjustItemId(i.id),
+  );
 
   const students = enrollments.map((enrollment) => {
     const student = userMap.get(enrollment.studentId);
@@ -882,6 +1047,15 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
       allQuizzes, allAttempts, allManualItems, allManualGrades
     );
 
+    const finalAdjustment = allManualGrades.find(
+      (g) => g.itemId === adjustItemId(courseId) && g.studentId === student.id,
+    );
+    const resolved = resolveFinalScore(
+      courseCortes, corteScores, finalResult,
+      gradableItemsOf(activities, courseQuizzes, courseManualItems),
+      finalAdjustment?.score ?? null,
+    );
+
     return {
       id: student.id,
       firstName: student.firstName,
@@ -890,9 +1064,9 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
       email: student.email,
       grades: gradesMap,
       corteScores,
-      finalScore: finalResult.totalWeight > 0 ? finalResult.finalScore : null,
-      isPartial: finalResult.isPartial,
-      isApproved: finalResult.totalWeight > 0 ? finalResult.isApproved : null,
+      finalScore: resolved.finalScore,
+      isPartial: resolved.isPartial,
+      isApproved: resolved.isApproved,
     };
   }).filter((s): s is NonNullable<typeof s> => s !== null);
 
@@ -1021,7 +1195,11 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
   const courseQuizzes = allQuizzes.filter(
     (q) => q.courseId === courseId && q.type === 'graded' && q.weight && q.weight > 0
   );
-  const courseManualItems = allManualItems.filter((i) => i.courseId === courseId);
+  // Los ajustes viven en la misma tabla pero no son ítems calificables: no son
+  // columna de la tabla de notas ni renglón del desglose del estudiante.
+  const courseManualItems = allManualItems.filter(
+    (i) => i.courseId === courseId && !isAdjustItemId(i.id),
+  );
 
   // Add quizzes as visible items in the activities list
   const quizDetails: StudentGradeSummary['activities'] = courseQuizzes.map((quiz) => {
@@ -1097,7 +1275,15 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
     allQuizzes, allAttempts, allManualItems, publishedManualGrades
   );
 
-  const finalScore = finalResult.totalWeight > 0 ? finalResult.finalScore : null;
+  const finalAdjustment = publishedManualGrades.find(
+    (g) => g.itemId === adjustItemId(courseId) && g.studentId === studentId,
+  );
+  const resolved = resolveFinalScore(
+    courseCortes, corteScores, finalResult,
+    gradableItemsOf(activities, courseQuizzes, courseManualItems),
+    finalAdjustment?.score ?? null,
+  );
+  const finalScore = resolved.finalScore;
 
   return {
     studentId,
@@ -1107,7 +1293,7 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
     corteScores,
     activities: allDetails,
     finalScore,
-    isPartial: finalResult.isPartial,
-    isApproved: finalScore !== null ? finalScore >= APPROVAL_THRESHOLD : null,
+    isPartial: resolved.isPartial,
+    isApproved: resolved.isApproved,
   };
 }

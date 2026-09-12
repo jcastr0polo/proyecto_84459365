@@ -23,7 +23,10 @@ import {
   readManualGradeItemsFresh,
   readManualGradesFresh,
 } from '@/lib/dataService';
-import { calculateFinalGrade, calculateCorteScores } from '@/lib/gradeService';
+import {
+  calculateFinalGrade, calculateCorteScores, resolveFinalScore,
+  gradableItemsOf, adjustItemId, isAdjustItemId,
+} from '@/lib/gradeService';
 
 export async function GET(
   request: Request,
@@ -111,7 +114,11 @@ export async function GET(
       const courseQuizzes = allQuizzes.filter(
         (q) => q.courseId === course.id && q.type === 'graded' && q.weight && q.weight > 0
       );
-      const courseManualItems = allManualItems.filter((i) => i.courseId === course.id);
+      // Los ajustes del docente comparten tabla con las notas manuales pero no
+      // son ítems calificables: no van en el desglose de la ficha.
+      const courseManualItems = allManualItems.filter(
+        (i) => i.courseId === course.id && !isAdjustItemId(i.id),
+      );
 
       // Grades — cálculo en memoria, sin lecturas extra.
       // Admin: se incluyen notas no publicadas (a diferencia de la vista del estudiante).
@@ -165,10 +172,19 @@ export async function GET(
           };
         });
 
+        const finalAdjustment = allManualGrades.find(
+          (g) => g.itemId === adjustItemId(course.id) && g.studentId === id,
+        );
+        const resolved = resolveFinalScore(
+          courseCortes, corteScores, finalResult,
+          gradableItemsOf(activities, courseQuizzes, courseManualItems),
+          finalAdjustment?.score ?? null,
+        );
+
         grades = {
-          finalGrade: finalResult.finalScore,
+          finalGrade: resolved.finalScore,
           otherItems: [...quizRows, ...manualRows],
-          isPartial: finalResult.isPartial,
+          isPartial: resolved.isPartial,
           cortes: courseCortes.map((c) => ({
             id: c.id,
             name: c.name,
