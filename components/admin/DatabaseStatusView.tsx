@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Database, RefreshCw, Table2, Archive } from 'lucide-react';
+import { Database, RefreshCw, Table2, Archive, Check, AlertTriangle } from 'lucide-react';
 import StatTile from '@/components/ui/StatTile';
 import BackLink from '@/components/ui/BackLink';
 import { toneBox, toneText } from '@/lib/semantics';
@@ -23,6 +23,15 @@ export interface DbStatus {
   extras: string[];
 }
 
+export interface MigrationStatus {
+  id: string;
+  title: string;
+  why: string;
+  statements: string[];
+  applied: boolean;
+  error: string | null;
+}
+
 /**
  * Estado de la base de datos — parte visual, sin fetch.
  *
@@ -32,11 +41,15 @@ export interface DbStatus {
  * conexión, tabla que falta, tabla vacía).
  */
 export default function DatabaseStatusView({
-  status, refreshing, onRefresh,
+  status, refreshing, onRefresh, migrations = [], onApply, applying,
 }: {
   status: DbStatus;
   refreshing?: boolean;
   onRefresh?: () => void;
+  migrations?: MigrationStatus[];
+  onApply?: (id: string) => void;
+  /** ID de la migración que se está aplicando ahora mismo. */
+  applying?: string | null;
 }) {
   const totalRows = status.tables.reduce((a, t) => a + Math.max(0, t.rowCount), 0);
   const emptyTables = status.tables.filter((t) => t.exists && t.rowCount === 0);
@@ -101,6 +114,71 @@ export default function DatabaseStatusView({
 
       {/* Sin conexión no se listan las tablas en rojo como "No existe":
           seguramente existen, lo que falló fue preguntar. */}
+      {/*
+        Cambios de esquema.
+
+        Se enseña el SQL exacto antes de ejecutar nada: aplicar algo a ciegas
+        sobre una base con notas reales no. Y el navegador solo manda el
+        identificador; el texto sale del repositorio, donde se revisó en un
+        commit.
+      */}
+      {status.connected && migrations.length > 0 && (
+        <section>
+          <h2 className="type-section text-subtle mb-2 px-1">Cambios de esquema</h2>
+          <div className="space-y-2">
+            {migrations.map((m) => (
+              <div key={m.id}
+                className={`rounded-xl border p-4 ${m.applied ? 'border-surface-border bg-surface' : toneBox.attention}`}>
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                      {m.applied
+                        ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                        : <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true" />}
+                      {m.title}
+                    </p>
+                    <p className="text-xs text-subtle mt-1 max-w-prose">{m.why}</p>
+                    <p className="text-micro text-faint mt-1 font-mono">{m.id}</p>
+                  </div>
+
+                  {m.applied ? (
+                    <span className={`text-xs font-medium shrink-0 ${toneText.ok}`}>Aplicada</span>
+                  ) : (
+                    <button
+                      onClick={() => onApply?.(m.id)}
+                      disabled={!onApply || applying === m.id}
+                      className="shrink-0 px-4 py-2 min-h-11 rounded-lg bg-amber-500 text-white text-sm font-medium
+                                 hover:bg-amber-400 transition-colors duration-[var(--dur-fast)]
+                                 active:scale-[0.98] motion-reduce:active:scale-100
+                                 disabled:opacity-50 cursor-pointer"
+                    >
+                      {applying === m.id ? 'Aplicando…' : 'Aplicar'}
+                    </button>
+                  )}
+                </div>
+
+                {!m.applied && (
+                  <details className="mt-3">
+                    <summary className="text-micro text-subtle cursor-pointer hover:text-foreground
+                                        min-h-11 flex items-center">
+                      Ver lo que va a ejecutar ({m.statements.length} {m.statements.length === 1 ? 'sentencia' : 'sentencias'})
+                    </summary>
+                    <pre className="mt-2 text-micro font-mono text-muted bg-surface-sunken rounded-lg p-3
+                                    overflow-x-auto whitespace-pre-wrap">
+{m.statements.join('\n')}
+                    </pre>
+                  </details>
+                )}
+
+                {m.error && (
+                  <p className={`text-xs mt-2 ${toneText.critical}`}>No se pudo comprobar: {m.error}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {status.connected && groups.map((group) => (
         <section key={group}>
           <h2 className="type-section text-subtle mb-2 px-1">{group}</h2>

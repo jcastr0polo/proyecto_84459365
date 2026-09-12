@@ -1,12 +1,25 @@
 'use client';
 
 import React, { useState } from 'react';
-import DatabaseStatusView, { type DbStatus } from '@/components/admin/DatabaseStatusView';
+import DatabaseStatusView, { type DbStatus, type MigrationStatus } from '@/components/admin/DatabaseStatusView';
 import Chip from '@/components/ui/Chip';
 
 /** Taller — estado de la base de datos, con sus casos raros. */
 export default function PrototypeDbStatus() {
   const [caso, setCaso] = useState<'ok' | 'falta' | 'caida'>('ok');
+
+  const migs: MigrationStatus[] = [
+    {
+      id: '2026-09-cortes-fechas', title: 'Fechas del corte',
+      why: 'Añade inicio, cierre y tope de reporte de notas a los cortes. Las tres nacen vacías: ningún corte existente cambia hasta que le pongas fechas.',
+      statements: [
+        'ALTER TABLE cortes ADD COLUMN IF NOT EXISTS start_date DATE',
+        'ALTER TABLE cortes ADD COLUMN IF NOT EXISTS end_date DATE',
+        'ALTER TABLE cortes ADD COLUMN IF NOT EXISTS report_deadline DATE',
+      ],
+      applied: caso === 'ok', error: null,
+    },
+  ];
 
   const base = [
     ['users', 'Usuarios', 'Personas', 41],
@@ -49,7 +62,7 @@ export default function PrototypeDbStatus() {
         <Chip active={caso === 'falta'} onClick={() => setCaso('falta')}>Falta una tabla</Chip>
         <Chip active={caso === 'caida'} onClick={() => setCaso('caida')}>Sin conexión</Chip>
       </div>
-      <DatabaseStatusView status={status} onRefresh={() => {}} />
+      <DatabaseStatusView status={status} onRefresh={() => {}} onApply={() => {}} migrations={migs} />
     </div>
   );
 }

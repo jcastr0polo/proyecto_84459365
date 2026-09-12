@@ -931,6 +931,37 @@ function quizAttemptToRow(a: QuizAttempt): Record<string, unknown> {
 }
 
 /**
+ * supabaseRunStatements — Aplica sentencias de esquema, en una transacción.
+ *
+ * SOLO para las migraciones declaradas en lib/migrations.ts. No hay ninguna
+ * ruta por la que el cliente pueda enviar sentencias: la API recibe el ID de
+ * una migración y el texto sale de aquí, del repositorio, donde se revisó en
+ * un commit. Una caja de texto libre contra producción sería otra cosa.
+ *
+ * Todo o nada: si una falla, no queda nada aplicado a medias.
+ */
+export async function supabaseRunStatements(statements: string[]): Promise<void> {
+  const sql = getPgPool();
+  await sql.begin(async (tx) => {
+    for (const stmt of statements) await tx.unsafe(stmt);
+  });
+  // PostgREST cachea el esquema: sin esto el cliente JS no ve lo nuevo.
+  await sql`NOTIFY pgrst, 'reload schema'`;
+}
+
+/**
+ * Comprobación de una migración: true si ya está aplicada.
+ *
+ * Mira el esquema de verdad y no un registro de migraciones, así detecta
+ * también las que se aplicaron por fuera de la aplicación.
+ */
+export async function supabaseCheck(query: string): Promise<boolean> {
+  const sql = getPgPool();
+  const rows = await sql.unsafe<{ ok: boolean }[]>(query);
+  return rows[0]?.ok === true;
+}
+
+/**
  * supabaseTableStats — Existencia y número de filas de cada tabla.
  *
  * El chequeo anterior (/api/admin/supabase-migrate) solo miraba `users`, así
