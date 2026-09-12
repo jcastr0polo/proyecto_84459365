@@ -212,6 +212,24 @@ async function insertOneRow<T extends Record<string, unknown>>(table: string, ro
   if (error) throw new Error(`[supabase] insert ${table}: ${error.message}`);
 }
 
+/** Añade varias filas de una vez, sin tocar las que ya están. */
+async function insertRows(table: string, rows: Record<string, unknown>[]): Promise<void> {
+  if (rows.length === 0) return;
+  const sb = requireSupabaseClient();
+  // El tipado genérico de supabase-js rechaza un array de Record suelto; la
+  // forma de la fila ya la garantiza el *ToRow que la construye.
+  const { error } = await sb.from(table).insert(rows as never);
+  if (error) throw new Error(`[supabase] insert ${table} (${rows.length}): ${error.message}`);
+}
+
+/** Borra por id, sin tocar el resto de la tabla. */
+async function deleteRowsById(table: string, ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const sb = requireSupabaseClient();
+  const { error } = await sb.from(table).delete().in('id', ids);
+  if (error) throw new Error(`[supabase] delete ${table} (${ids.length}): ${error.message}`);
+}
+
 // ════════════════════════════════════════════════════════════════
 // USERS
 // ════════════════════════════════════════════════════════════════
@@ -1082,6 +1100,34 @@ export async function supabaseReplaceQuizAttempts(items: QuizAttempt[]): Promise
   await replaceAllRows('quiz_attempts', items.map(quizAttemptToRow));
 }
 
+/**
+ * Añade UN intento, sin tocar los demás.
+ *
+ * El envío de un parcial venía haciendo lo que se hacía contra el Blob: leer
+ * los intentos, empujar el nuevo y reescribir la colección entera. Contra un
+ * fichero era lo único posible; contra Postgres es una carrera. Veinte
+ * estudiantes enviando cerca de la hora límite se reparten en varias
+ * instancias serverless —el cerrojo de blobSync solo serializa dentro de una—,
+ * dos leen los mismos N intentos, cada una escribe N+1, y el segundo DELETE
+ * se lleva por delante el intento del primero. Sin error y sin rastro: el
+ * estudiante ve "enviado" y su parcial no existe.
+ *
+ * Un INSERT de una fila no puede perder nada de nadie.
+ */
+export async function supabaseInsertQuizAttempt(attempt: QuizAttempt): Promise<void> {
+  await insertOneRow('quiz_attempts', quizAttemptToRow(attempt));
+}
+
+/** Los ceros por no presentar: se añaden los nuevos, no se reescribe la tabla. */
+export async function supabaseInsertQuizAttempts(items: QuizAttempt[]): Promise<void> {
+  await insertRows('quiz_attempts', items.map(quizAttemptToRow));
+}
+
+/** Deshacer un cero por no presentar: borra esas filas y solo esas. */
+export async function supabaseDeleteQuizAttempts(ids: string[]): Promise<void> {
+  await deleteRowsById('quiz_attempts', ids);
+}
+
 // ════════════════════════════════════════════════════════════════
 // QUIZ SIMULATIONS
 // ════════════════════════════════════════════════════════════════
@@ -1131,6 +1177,11 @@ export async function supabaseReadQuizSimulations(): Promise<QuizSimulation[]> {
 
 export async function supabaseReplaceQuizSimulations(items: QuizSimulation[]): Promise<void> {
   await replaceAllRows('quiz_simulations', items.map(quizSimulationToRow));
+}
+
+/** Añade UNA simulación. Mismo motivo que en los intentos. */
+export async function supabaseInsertQuizSimulation(sim: QuizSimulation): Promise<void> {
+  await insertOneRow('quiz_simulations', quizSimulationToRow(sim));
 }
 
 // ════════════════════════════════════════════════════════════════

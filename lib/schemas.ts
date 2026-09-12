@@ -737,6 +737,12 @@ export const submitQuizSchema = z.object({
   })).min(1, 'Debes responder al menos una pregunta'),
   blurCount: z.number().int().min(0).optional(),
   autoSubmitted: z.boolean().optional(),
+  /**
+   * Cuándo empezó el estudiante, en ISO. Lo dice el navegador, así que el
+   * servidor lo acota antes de guardarlo (ver la ruta de envío): sirve para
+   * que la duración sea real en el caso honesto, no como medida anti-trampa.
+   */
+  startedAt: z.string().datetime().optional(),
 });
 
 const quizAnswerSchema = z.object({

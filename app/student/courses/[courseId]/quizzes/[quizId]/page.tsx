@@ -35,7 +35,7 @@ export default function StudentTakeQuizPage() {
 
   // La sesión guarda la fecha límite y las respuestas, así que recargar o
   // cambiar de pestaña ya no regala tiempo ni pierde el trabajo.
-  const { started, answers, timeLeft, expired, start, setAnswer, clearSession } =
+  const { started, answers, timeLeft, expired, start, setAnswer, clearSession, startedAtISO } =
     useQuizSession(quizId, quiz?.timeLimit);
   const [resultsAvailable, setResultsAvailable] = useState(false);
   const [notPresented, setNotPresented] = useState(false);
@@ -102,6 +102,7 @@ export default function StudentTakeQuizPage() {
           answers: answerArray.filter((a) => a.selectedOptionId || (a as { selectedOptionIds?: string[] }).selectedOptionIds?.length),
           blurCount: finalBlurCount,
           autoSubmitted: auto,
+          startedAt: startedAtISO(),
         }),
       });
       const data = await res.json();
@@ -120,7 +121,7 @@ export default function StudentTakeQuizPage() {
       toast('Error de conexión', 'error');
       setSubmitting(false);
     }
-  }, [submitting, submitted, answers, quiz, courseId, quizId, toast, router, clearSession]);
+  }, [submitting, submitted, answers, quiz, courseId, quizId, toast, router, clearSession, startedAtISO]);
 
   // Anti-cheat
   const { getBlurCount } = useAntiCheat({

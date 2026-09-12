@@ -49,6 +49,8 @@ import {
   supabaseReplaceSubmissions, supabaseReplaceGrades, supabaseReplaceCortes,
   supabaseReplacePrompts, supabaseReplaceProjects, supabaseReplaceQuizzes,
   supabaseReplaceQuizAttempts, supabaseReplaceQuizSimulations,
+  supabaseInsertQuizAttempt, supabaseInsertQuizSimulation,
+  supabaseInsertQuizAttempts, supabaseDeleteQuizAttempts,
   supabaseReplaceManualGradeItems, supabaseReplaceManualGrades,
   supabaseUpsertAppSetting,
 } from './supabase';
@@ -472,6 +474,26 @@ export async function writeQuizAttempts(attempts: QuizAttempt[]): Promise<void> 
   await supabaseReplaceQuizAttempts(attempts);
 }
 
+/**
+ * Añade un intento sin releer ni reescribir los demás.
+ *
+ * Es lo que debe usar todo lo que CREA un intento. writeQuizAttempts se queda
+ * solo para lo que de verdad reemplaza el conjunto entero.
+ */
+export async function appendQuizAttempt(attempt: QuizAttempt): Promise<void> {
+  await supabaseInsertQuizAttempt(attempt);
+}
+
+/** Varios intentos de golpe (los ceros por no presentar), sin tocar los demás. */
+export async function appendQuizAttempts(items: QuizAttempt[]): Promise<void> {
+  await supabaseInsertQuizAttempts(items);
+}
+
+/** Borra intentos concretos por id. */
+export async function deleteQuizAttempts(ids: string[]): Promise<void> {
+  await supabaseDeleteQuizAttempts(ids);
+}
+
 export async function getAttemptsByQuiz(quizId: string): Promise<QuizAttempt[]> {
   const attempts = await supabaseReadQuizAttempts();
   return attempts.filter((a) => a.quizId === quizId);
@@ -492,6 +514,11 @@ export async function readQuizSimulationsFresh(): Promise<QuizSimulation[]> {
 
 export async function writeQuizSimulations(simulations: QuizSimulation[]): Promise<void> {
   await supabaseReplaceQuizSimulations(simulations);
+}
+
+/** Añade una simulación sin tocar las demás. */
+export async function appendQuizSimulation(sim: QuizSimulation): Promise<void> {
+  await supabaseInsertQuizSimulation(sim);
 }
 
 // ────────────────────────────────────────────────────────────

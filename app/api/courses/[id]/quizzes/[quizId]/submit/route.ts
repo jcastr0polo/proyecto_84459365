@@ -18,11 +18,9 @@ import {
   getCourseById,
   getQuizById,
   readQuizAttemptsFresh,
-  writeQuizAttempts,
-  readQuizSimulationsFresh,
-  writeQuizSimulations,
+  appendQuizAttempt,
+  appendQuizSimulation,
   isStudentEnrolled,
-  withFileLock,
   parseDateColombia,
   nowColombiaISO,
 } from '@/lib/dataService';
@@ -45,7 +43,7 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
         );
       }
 
-      const { answers: rawAnswers, blurCount = 0, autoSubmitted = false } = parsed.data;
+      const { answers: rawAnswers, blurCount = 0, autoSubmitted = false, startedAt: inicioReportado } = parsed.data;
 
       // Modo simulación: admin puede probar sin guardar
       const isSimulation = body.simulate === true && user.role === 'admin';
@@ -162,8 +160,30 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
 
       const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 10000) / 100 : 0;
 
+      /* Cuándo empezó de verdad.
+         Antes esto era `now - 60s // Aprox`: los 42 intentos guardados dicen
+         todos que duraron un minuto, y la duración que ve el docente en
+         resultados no era un dato sino relleno.
+         Ahora lo dice el navegador, que es quien lo sabe, y el servidor lo
+         acota: no puede estar en el futuro ni ser más viejo que el tiempo
+         concedido más un margen. Eso deja la duración correcta en el caso
+         honesto —que es el de todos— sin fingir que esto es anti-trampa: un
+         inicio que manda el cliente se puede falsear, igual que blurCount.
+         Para impedirlo de verdad haría falta que el servidor registre el
+         comienzo del intento, y eso cambia cómo se cuentan los intentos. */
+      const MARGEN_MS = 2 * 60_000;
+      const techoMs = quiz.timeLimit ? quiz.timeLimit * 60_000 + MARGEN_MS : 12 * 60 * 60_000;
+      const inicioMs = inicioReportado ? Date.parse(inicioReportado) : NaN;
+      const duracionCruda = Number.isFinite(inicioMs) ? now.getTime() - inicioMs : null;
+
+      const excedioTiempo = duracionCruda !== null && quiz.timeLimit != null && duracionCruda > techoMs;
+      const inicioValido =
+        duracionCruda === null || duracionCruda < 0
+          ? now.getTime()                                   // ausente o en el futuro
+          : now.getTime() - Math.min(duracionCruda, techoMs); // acotado al techo
+
       // Detectar comportamiento sospechoso
-      const flagged = blurCount >= 3 || autoSubmitted;
+      const flagged = blurCount >= 3 || autoSubmitted || excedioTiempo;
 
       const attempt: QuizAttempt = {
         id: `attempt-${uuidv4()}`,
@@ -175,20 +195,20 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
         maxScore,
         percentage,
         attemptNumber: studentAttempts.length + 1,
-        startedAt: new Date(now.getTime() - 60000).toISOString(), // Aprox
+        startedAt: new Date(inicioValido).toISOString(),
         completedAt: nowColombiaISO(),
         blurCount,
         autoSubmitted,
         flagged,
       };
 
-      // Guardar intento (NO en simulación)
+      /* Guardar intento (NO en simulación).
+         Un INSERT de una fila, no una reescritura de la tabla: ver
+         supabaseInsertQuizAttempt. Con el patrón anterior, dos estudiantes
+         enviando a la vez desde instancias distintas se borraban el intento
+         el uno al otro. */
       if (!isSimulation) {
-        await withFileLock('quiz-attempts.json', async () => {
-          const attempts = await readQuizAttemptsFresh();
-          attempts.push(attempt);
-          await writeQuizAttempts(attempts);
-        });
+        await appendQuizAttempt(attempt);
       }
 
       // Simulación: siempre muestra resultados completos
@@ -210,11 +230,7 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
           simulatedAt: nowColombiaISO(),
         };
 
-        await withFileLock('quiz-simulations.json', async () => {
-          const sims = await readQuizSimulationsFresh();
-          sims.push(simulation);
-          await writeQuizSimulations(sims);
-        });
+        await appendQuizSimulation(simulation);
 
         return NextResponse.json({
           attempt,

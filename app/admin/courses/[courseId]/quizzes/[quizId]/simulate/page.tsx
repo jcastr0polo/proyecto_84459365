@@ -55,7 +55,7 @@ export default function AdminQuizSimulatePage() {
    */
   const {
     started, answers, timeLeft, expired,
-    start: startSession, setAnswer, clearSession,
+    start: startSession, setAnswer, clearSession, startedAtISO,
   } = useQuizSession(`sim:${quizId}`, quiz?.timeLimit);
   const [blurWarnings, setBlurWarnings] = useState(0);
   const [history, setHistory] = useState<QuizSimulation[]>([]);
@@ -119,6 +119,7 @@ export default function AdminQuizSimulatePage() {
           answers: answerArray.filter((a) => a.selectedOptionId || a.selectedOptionIds?.length),
           blurCount: finalBlurCount,
           autoSubmitted: auto,
+          startedAt: startedAtISO(),
           simulate: true,
         }),
       });
@@ -135,7 +136,7 @@ export default function AdminQuizSimulatePage() {
       toast('Error de conexión', 'error');
       setSubmitting(false);
     }
-  }, [submitting, result, answers, quiz, courseId, quizId, toast, fetchHistory]);
+  }, [submitting, result, answers, quiz, courseId, quizId, toast, fetchHistory, startedAtISO]);
 
   const { getBlurCount } = useAntiCheat({
     enabled: started && !result && (quiz?.lockBrowser ?? false),

@@ -32,6 +32,12 @@ export type QuizAnswers = Record<string, string | string[]>;
 
 interface Session {
   deadline: number | null;  // epoch ms; null si el parcial no tiene límite
+  /**
+   * Cuándo se pulsó "empezar", en epoch ms. Se guarda con la sesión para que
+   * sobreviva a una recarga igual que la fecha límite, y se envía al entregar:
+   * hasta ahora el servidor se inventaba la hora de inicio.
+   */
+  startedAt?: number;
   answers: QuizAnswers;
 }
 
@@ -42,6 +48,7 @@ export function useQuizSession(quizId: string, timeLimitMinutes?: number) {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [expired, setExpired] = useState(false);
   const deadlineRef = useRef<number | null>(null);
+  const startedAtRef = useRef<number | null>(null);
 
   const persist = useCallback((s: Session) => {
     try { window.localStorage.setItem(key, JSON.stringify(s)); } catch { /* sin almacenamiento */ }
@@ -56,6 +63,7 @@ export function useQuizSession(quizId: string, timeLimitMinutes?: number) {
    */
   const clearSession = useCallback(() => {
     deadlineRef.current = null;
+    startedAtRef.current = null;
     try { window.localStorage.removeItem(key); } catch { /* nada que hacer */ }
     setStarted(false);
     setAnswers({});
@@ -74,6 +82,7 @@ export function useQuizSession(quizId: string, timeLimitMinutes?: number) {
     if (!saved) return;
 
     deadlineRef.current = saved.deadline;
+    startedAtRef.current = saved.startedAt ?? null;
     // Retomar una sesión guardada es justamente sincronizar con un sistema
     // externo (localStorage), que no existe en el servidor: leerlo durante el
     // render provocaría un desajuste de hidratación. Ocurre una sola vez.
@@ -92,17 +101,19 @@ export function useQuizSession(quizId: string, timeLimitMinutes?: number) {
   }, [key]);
 
   const start = useCallback(() => {
-    const deadline = timeLimitMinutes ? Date.now() + timeLimitMinutes * 60_000 : null;
+    const ahora = Date.now();
+    const deadline = timeLimitMinutes ? ahora + timeLimitMinutes * 60_000 : null;
     deadlineRef.current = deadline;
+    startedAtRef.current = ahora;
     setStarted(true);
-    if (deadline !== null) setTimeLeft(Math.ceil((deadline - Date.now()) / 1000));
-    persist({ deadline, answers: {} });
+    if (deadline !== null) setTimeLeft(Math.ceil((deadline - ahora) / 1000));
+    persist({ deadline, startedAt: ahora, answers: {} });
   }, [timeLimitMinutes, persist]);
 
   const setAnswer = useCallback((questionId: string, value: string | string[]) => {
     setAnswers((prev) => {
       const next = { ...prev, [questionId]: value };
-      persist({ deadline: deadlineRef.current, answers: next });
+      persist({ deadline: deadlineRef.current, startedAt: startedAtRef.current ?? undefined, answers: next });
       return next;
     });
   }, [persist]);
@@ -124,5 +135,11 @@ export function useQuizSession(quizId: string, timeLimitMinutes?: number) {
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisible); };
   }, [started, expired]);
 
-  return { started, answers, timeLeft, expired, start, setAnswer, clearSession };
+  /** ISO del momento de empezar, para enviarlo al entregar. */
+  const startedAtISO = useCallback(
+    () => (startedAtRef.current === null ? undefined : new Date(startedAtRef.current).toISOString()),
+    [],
+  );
+
+  return { started, answers, timeLeft, expired, start, setAnswer, clearSession, startedAtISO };
 }

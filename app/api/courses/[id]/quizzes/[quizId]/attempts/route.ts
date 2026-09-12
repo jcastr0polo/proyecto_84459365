@@ -12,10 +12,10 @@ import {
   getCourseById,
   getQuizById,
   readQuizAttemptsFresh,
-  writeQuizAttempts,
+  appendQuizAttempts,
+  deleteQuizAttempts,
   readUsersFresh,
   getEnrollmentsByCourse,
-  withFileLock,
   nowColombiaISO,
 } from '@/lib/dataService';
 import { noAttemptId, isNoAttemptId } from '@/lib/gradeService';
@@ -163,7 +163,11 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
       const maxScore = quiz.questions.reduce((s, q) => s + q.points, 0);
       const now = nowColombiaISO();
 
-      return withFileLock('quiz-attempts.json', async () => {
+      /* Se lee para saber a quién NO hay que ponerle 0, pero se escribe solo
+         lo nuevo. Reescribir la tabla aquí es peligroso justo cuando más se
+         usa: el docente pulsa "poner 0 a los que faltan" a la hora del cierre,
+         que es exactamente cuando los rezagados están enviando. */
+      {
         const attempts = await readQuizAttemptsFresh();
         const created: QuizAttempt[] = [];
         const skipped: string[] = [];
@@ -203,7 +207,7 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
           .map((s) => (s ? `${s.lastName}, ${s.firstName}` : '?'));
 
         await dispatchWrite(
-          () => writeQuizAttempts([...attempts, ...created]),
+          () => appendQuizAttempts(created),
           {
             action: 'create',
             entity: 'quiz',
@@ -223,7 +227,7 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
             ? '0 registrado. El peso del parcial ya cuenta en su definitiva.'
             : `${created.length} ceros registrados. El peso del parcial ya cuenta en sus definitivas.`,
         }, { status: 201 });
-      });
+      }
     } catch {
       return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
     }
@@ -255,7 +259,7 @@ export async function DELETE(request: Request, { params }: RouteParams): Promise
 
       const targets = new Set(studentIds as string[]);
 
-      return withFileLock('quiz-attempts.json', async () => {
+      {
         const attempts = await readQuizAttemptsFresh();
         const removed = attempts.filter(
           (a) => a.quizId === quizId && targets.has(a.studentId) && isNoAttemptId(a.id),
@@ -265,11 +269,10 @@ export async function DELETE(request: Request, { params }: RouteParams): Promise
           return NextResponse.json({ error: 'No hay ceros por no presentar que deshacer' }, { status: 404 });
         }
 
-        const removedIds = new Set(removed.map((a) => a.id));
-        const kept = attempts.filter((a) => !removedIds.has(a.id));
+        const removedIds = removed.map((a) => a.id);
 
         await dispatchWrite(
-          () => writeQuizAttempts(kept),
+          () => deleteQuizAttempts(removedIds),
           {
             action: 'delete',
             entity: 'quiz',
@@ -288,7 +291,7 @@ export async function DELETE(request: Request, { params }: RouteParams): Promise
             ? 'Cero deshecho. El estudiante vuelve a poder presentar.'
             : `${removed.length} ceros deshechos.`,
         });
-      });
+      }
     } catch {
       return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
     }
