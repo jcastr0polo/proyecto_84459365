@@ -2,6 +2,9 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import AdminDashboardView from '@/components/admin/AdminDashboardView';
+import type {
+  ReportDeadline, QueueItem, AtRiskStudent,
+} from '@/components/admin/DashboardPriorities';
 import type { Course, Semester, Activity, Enrollment, Submission } from '@/lib/types';
 
 /* ─── Types for aggregated data ─── */
@@ -21,6 +24,9 @@ interface CourseData {
 export default function AdminDashboardPage() {
   const [semester, setSemester] = useState<Semester | null>(null);
   const [courseData, setCourseData] = useState<CourseData[]>([]);
+  const [priorities, setPriorities] = useState<{
+    reportDeadlines: ReportDeadline[]; gradingQueue: QueueItem[]; atRisk: AtRiskStudent[];
+  }>({ reportDeadlines: [], gradingQueue: [], atRisk: [] });
   const [loading, setLoading] = useState(true);
 
   /*
@@ -39,6 +45,11 @@ export default function AdminDashboardPage() {
       const data = await res.json();
       setSemester(data.semester ?? null);
       setCourseData(data.courseData ?? []);
+      setPriorities({
+        reportDeadlines: data.reportDeadlines ?? [],
+        gradingQueue: data.gradingQueue ?? [],
+        atRisk: data.atRisk ?? [],
+      });
     } catch {
       // Fallo silencioso: se muestra el panel vacío, como antes.
     } finally {
@@ -72,5 +83,5 @@ export default function AdminDashboardPage() {
     );
   }
 
-  return <AdminDashboardView semester={semester} courseData={courseData} />;
+  return <AdminDashboardView semester={semester} courseData={courseData} {...priorities} />;
 }

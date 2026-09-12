@@ -2,7 +2,7 @@
 
 import React from 'react';
 import ThumbNav from '@/components/ui/ThumbNav';
-import { LayoutDashboard, BookOpen, Users, Menu, Home, User } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, Menu } from 'lucide-react';
 
 /** Taller — barra de pulgar, y la escala de texto nueva al lado para comparar. */
 export default function PrototypeThumbNav() {

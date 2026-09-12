@@ -9,6 +9,9 @@ import { dueLabel, startOfTodayColombia } from '@/lib/activityStatus';
 import { toneChip } from '@/lib/semantics';
 import EmptyState from '@/components/ui/EmptyState';
 import type { Course, Enrollment, Activity, Submission, Semester } from '@/lib/types';
+import DashboardPriorities, {
+  type ReportDeadline, type QueueItem, type AtRiskStudent,
+} from '@/components/admin/DashboardPriorities';
 
 /**
  * AdminDashboardView — Rediseño del panel del docente.
@@ -31,10 +34,13 @@ export interface CourseData {
 }
 
 export default function AdminDashboardView({
-  semester, courseData,
+  semester, courseData, reportDeadlines, gradingQueue, atRisk,
 }: {
   semester: Semester | null;
   courseData: CourseData[];
+  reportDeadlines?: ReportDeadline[];
+  gradingQueue?: QueueItem[];
+  atRisk?: AtRiskStudent[];
 }) {
   const reduce = useReducedMotion();
   const today = useMemo(() => startOfTodayColombia(nowColombia()), []);
@@ -151,6 +157,22 @@ export default function AdminDashboardView({
         )}
       </motion.div>
 
+      {/*
+        Lo que aprieta va PRIMERO.
+
+        Antes lo primero era "cómo va el semestre": promedios y barras de
+        progreso. Eso es contexto, no trabajo. Un docente abre esto entre
+        clases para saber qué hacer, y lo que tiene que hacer estaba repartido
+        curso por curso.
+      */}
+      <motion.div {...fade(0.015)}>
+        <DashboardPriorities
+          reportDeadlines={reportDeadlines}
+          gradingQueue={gradingQueue}
+          atRisk={atRisk}
+        />
+      </motion.div>
+
       {/* ── Cómo va el semestre · en móvil va al final, es contexto ── */}
       <motion.section {...fade(0.02)}
         className="order-last sm:order-none rounded-2xl border border-surface-border bg-surface p-5">
@@ -195,10 +217,15 @@ export default function AdminDashboardView({
       </motion.section>
 
       <motion.section id="por-calificar" {...fade(0.04)}>
-        {/* Jerarquía: esta es la sección que manda en la pantalla, así que
-            no puede llevar el mismo gris pequeño que las de apoyo. */}
-        <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
-          <ClipboardCheck className="w-4 h-4 text-amber-500" /> Por calificar
+        {/*
+          Se llamaba "Por calificar" igual que la cola de arriba, y las dos
+          listaban lo mismo con criterios distintos: aquí el total POR CURSO,
+          allí las actividades concretas ordenadas por plazo. Dos secciones con
+          el mismo nombre y distinto orden se leen como un error. Esta es la
+          vista de conjunto; la de arriba dice por dónde empezar.
+        */}
+        <h2 className="type-section text-subtle mb-3 flex items-center gap-2">
+          <ClipboardCheck className="w-4 h-4" aria-hidden="true" /> Pendiente por curso
         </h2>
         {totalPending === 0 ? (
           <div className="rounded-2xl border border-surface-border bg-surface">
