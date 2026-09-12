@@ -82,6 +82,9 @@ interface CourseDetail {
   grades: {
     finalGrade: number | null;
     isPartial: boolean;
+    /** Peso de corte que ya tiene nota, sobre el total. null si el curso no
+        pondera por cortes (hay ítems sin corte asignado). */
+    progressPct: number | null;
     /** Parciales y notas manuales: pesan en el corte, así que deben verse. */
     otherItems: {
       id: string; title: string; kind: 'quiz' | 'manual';
@@ -475,8 +478,19 @@ function CourseSection({
   expandedActivities: Set<string>;
   onToggleActivity: (id: string) => void;
 }) {
-  const progress = course.totalActivities > 0
-    ? Math.round((course.submitted / course.totalActivities) * 100) : 0;
+  /*
+   * Avance del curso = peso de corte que ya tiene nota.
+   *
+   * Antes era "entregas ÷ actividades". Con una sola actividad entregada
+   * marcaba 100 % en verde mientras dos de los tres cortes seguían vacíos y
+   * la definitiva decía "parcial": la barra medía entregas y se leía como
+   * curso terminado. Y dejaba fuera parciales y notas manuales, que también
+   * son curso.
+   *
+   * Si el curso no pondera por cortes no hay avance que enseñar, y una barra
+   * inventada es peor que ninguna.
+   */
+  const progress = course.grades?.progressPct ?? null;
 
   return (
     <Card padding="none">
@@ -532,16 +546,21 @@ function CourseSection({
             </div>
           )}
         </div>
-        {/* Progress bar */}
-        <div className="w-20 shrink-0">
-          <div className="h-1.5 rounded-full bg-foreground/10 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${progress >= 100 ? 'bg-emerald-400' : progress > 0 ? 'bg-cyan-400' : 'bg-foreground/10'}`}
-              style={{ width: `${progress}%` }}
-            />
+        {progress !== null && (
+          <div className="w-20 shrink-0" title={`${progress}% del curso ya calificado`}>
+            <div className="h-1.5 rounded-full bg-foreground/10 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-[var(--dur-slow)]
+                            ${progress >= 100 ? 'bg-emerald-500' : 'bg-cyan-500'}`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            {/* "100%" a secas es lo que se leía como "curso terminado". */}
+            <p className="text-micro text-faint text-center mt-0.5">
+              {progress}% cursado
+            </p>
           </div>
-          <p className="text-micro text-faint text-center mt-0.5">{progress}%</p>
-        </div>
+        )}
       </button>
 
       {/* Expanded Content */}

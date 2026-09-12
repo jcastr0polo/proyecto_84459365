@@ -185,6 +185,16 @@ export async function GET(
           finalGrade: resolved.finalScore,
           otherItems: [...quizRows, ...manualRows],
           isPartial: resolved.isPartial,
+          /*
+           * Cuánto del curso lleva cursado ESTE estudiante, medido en peso
+           * con nota. La ficha enseñaba "entregas ÷ actividades", que ignora
+           * parciales y notas manuales: con una sola actividad entregada
+           * marcaba 100 % y se pintaba de verde mientras dos de los tres
+           * cortes seguían vacíos. Medía una cosa y se leía como otra.
+           */
+          progressPct: resolved.basis === 'cortes' && resolved.totalCorteWeight > 0
+            ? Math.round((resolved.countedCorteWeight / resolved.totalCorteWeight) * 100)
+            : null,
           cortes: courseCortes.map((c) => ({
             id: c.id,
             name: c.name,
