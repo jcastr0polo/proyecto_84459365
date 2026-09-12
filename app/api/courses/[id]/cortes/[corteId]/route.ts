@@ -6,7 +6,10 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { updateCorteSchema } from '@/lib/schemas';
-import { readCortesFresh, writeCortes, readActivitiesFresh, withFileLock, nowColombiaISO } from '@/lib/dataService';
+import {
+  readCortesFresh, writeCortes, readActivitiesFresh, readQuizzesFresh,
+  readManualGradeItemsFresh, withFileLock, nowColombiaISO,
+} from '@/lib/dataService';
 import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 
 /**
@@ -53,6 +56,20 @@ export async function PUT(
         if (updates.name !== undefined) allCortes[idx].name = updates.name;
         if (updates.weight !== undefined) allCortes[idx].weight = updates.weight;
         if (updates.order !== undefined) allCortes[idx].order = updates.order;
+        /* Cadena vacía = quitar la fecha. Sin esto no habría forma de borrar
+           una fecha puesta por error: dejarla en blanco no haría nada. */
+        if (updates.startDate !== undefined) {
+          if (updates.startDate) allCortes[idx].startDate = updates.startDate;
+          else delete allCortes[idx].startDate;
+        }
+        if (updates.endDate !== undefined) {
+          if (updates.endDate) allCortes[idx].endDate = updates.endDate;
+          else delete allCortes[idx].endDate;
+        }
+        if (updates.reportDeadline !== undefined) {
+          if (updates.reportDeadline) allCortes[idx].reportDeadline = updates.reportDeadline;
+          else delete allCortes[idx].reportDeadline;
+        }
         allCortes[idx].updatedAt = nowColombiaISO();
 
         await dispatchWrite(
@@ -104,14 +121,38 @@ export async function DELETE(
     try {
       const { id: courseId, corteId } = await params;
 
-      // Check for linked activities
-      const activities = await readActivitiesFresh();
-      const linked = activities.filter((a) => a.corteId === corteId);
-      if (linked.length > 0) {
-        return NextResponse.json(
-          { error: `No se puede eliminar: hay ${linked.length} actividad(es) vinculada(s) a este corte` },
-          { status: 409 }
-        );
+      /*
+       * Nada de borrar un corte con cosas colgando.
+       *
+       * Antes solo se miraban las actividades. Los parciales y las notas
+       * manuales también llevan corteId, así que se podía borrar un corte y
+       * dejarlos huérfanos: seguían pesando en la definitiva pero ya no
+       * pertenecían a ningún corte, y la nota del curso pasaba en silencio al
+       * cálculo plano sin que nadie lo notara.
+       *
+       * Se enumera lo que estorba, no solo cuánto: si te lo van a impedir, al
+       * menos que te digan qué mover.
+       */
+      const [activities, quizzes, manualItems] = await Promise.all([
+        readActivitiesFresh(),
+        readQuizzesFresh(),
+        readManualGradeItemsFresh(),
+      ]);
+
+      const bloqueantes = [
+        ...activities.filter((a) => a.corteId === corteId).map((a) => `Actividad: ${a.title}`),
+        ...quizzes.filter((q) => q.corteId === corteId).map((q) => `Parcial: ${q.title}`),
+        ...manualItems.filter((i) => i.corteId === corteId).map((i) => `Nota manual: ${i.title}`),
+      ];
+
+      if (bloqueantes.length > 0) {
+        return NextResponse.json({
+          error: bloqueantes.length === 1
+            ? 'No se puede eliminar: hay 1 ítem asignado a este corte'
+            : `No se puede eliminar: hay ${bloqueantes.length} ítems asignados a este corte`,
+          blockers: bloqueantes,
+          hint: 'Reasígnalos a otro corte —o quítales el corte— y vuelve a intentarlo.',
+        }, { status: 409 });
       }
 
       await withFileLock('cortes.json', async () => {

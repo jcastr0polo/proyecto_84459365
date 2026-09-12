@@ -634,6 +634,17 @@ export interface Corte {
   name: string;                        // "Corte 1", "Primer Parcial", etc.
   weight: number;                      // Porcentaje sobre la definitiva (ej: 30)
   order: number;                       // Orden de visualización (1, 2, 3...)
+  /** Inicio del corte (YYYY-MM-DD). Opcional: los cortes viejos no la tienen. */
+  startDate?: string;
+  /** Cierre del corte (YYYY-MM-DD). */
+  endDate?: string;
+  /**
+   * Fecha tope para reportar las notas de este corte en la plataforma de la
+   * universidad. No es lo mismo que el cierre del corte: primero se acaba de
+   * dictar y calificar, y después hay un plazo para subirlas. Es la fecha que
+   * de verdad aprieta al docente, y la que el panel usa para avisar.
+   */
+  reportDeadline?: string;
   createdAt: string;                   // ISO 8601
   updatedAt: string;                   // ISO 8601
 }

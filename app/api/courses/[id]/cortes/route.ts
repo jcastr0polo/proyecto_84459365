@@ -55,7 +55,7 @@ export async function POST(
         );
       }
 
-      const { name, weight, order } = parsed.data;
+      const { name, weight, order, startDate, endDate, reportDeadline } = parsed.data;
 
       // Verificar que el curso existe
       const courses = await readCoursesFresh();
@@ -82,6 +82,10 @@ export async function POST(
           name,
           weight,
           order: order ?? courseCortes.length + 1,
+          // Cadena vacía significa "sin fecha", no una fecha vacía.
+          ...(startDate ? { startDate } : {}),
+          ...(endDate ? { endDate } : {}),
+          ...(reportDeadline ? { reportDeadline } : {}),
           createdAt: now,
           updatedAt: now,
         };

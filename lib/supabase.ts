@@ -629,14 +629,28 @@ interface SupabaseCorteRow {
   name: string;
   weight: number;
   order: number;
+  /* Añadidas después: en filas anteriores a la migración llegan como null. */
+  start_date?: string | null;
+  end_date?: string | null;
+  report_deadline?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** La columna es DATE; el driver puede devolver Date o cadena. */
+function toISODate(v: unknown): string | undefined {
+  if (!v) return undefined;
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return String(v).slice(0, 10);
 }
 
 function rowToCorte(r: SupabaseCorteRow): Corte {
   return {
     id: r.id, courseId: r.course_id, name: r.name,
     weight: Number(r.weight), order: r.order,
+    ...(toISODate(r.start_date) ? { startDate: toISODate(r.start_date)! } : {}),
+    ...(toISODate(r.end_date) ? { endDate: toISODate(r.end_date)! } : {}),
+    ...(toISODate(r.report_deadline) ? { reportDeadline: toISODate(r.report_deadline)! } : {}),
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -645,6 +659,9 @@ function corteToRow(c: Corte): SupabaseCorteRow {
   return {
     id: c.id, course_id: c.courseId, name: c.name,
     weight: c.weight, order: c.order,
+    start_date: c.startDate ?? null,
+    end_date: c.endDate ?? null,
+    report_deadline: c.reportDeadline ?? null,
     created_at: c.createdAt, updated_at: c.updatedAt,
   };
 }

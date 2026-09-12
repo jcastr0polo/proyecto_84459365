@@ -4,19 +4,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
-import Table, { Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table';
 import EmptyState from '@/components/ui/EmptyState';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
+import CorteCard, { type CorteOverview } from '@/components/admin/CorteCard';
+import { toneBox } from '@/lib/semantics';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Pencil, Trash2, Layers } from 'lucide-react';
-import type { Corte } from '@/lib/types';
-
-interface CorteFormData {
-  name: string;
-  weight: number;
-  order: number;
-}
+import { AlertTriangle, ArrowLeft, Plus, Layers } from 'lucide-react';
 
 /** Colores de los tramos; se repiten si hay más de cinco cortes. */
 const SEGMENT_COLORS = [
@@ -28,24 +22,27 @@ export default function CortesPage() {
   const { toast } = useToast();
   const courseId = params.courseId as string;
 
-  const [cortes, setCortes] = useState<Corte[]>([]);
+  const [cortes, setCortes] = useState<CorteOverview[]>([]);
+  const [orphanItems, setOrphanItems] = useState<string[]>([]);
   const [totalWeight, setTotalWeight] = useState(0);
   const [courseName, setCourseName] = useState('');
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingCorte, setEditingCorte] = useState<Corte | null>(null);
+  const [editingCorte, setEditingCorte] = useState<CorteOverview | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // Form state
   const [formName, setFormName] = useState('');
   const [formWeight, setFormWeight] = useState(30);
   const [formOrder, setFormOrder] = useState(1);
+  const [formStart, setFormStart] = useState('');
+  const [formEnd, setFormEnd] = useState('');
+  const [formReport, setFormReport] = useState('');
 
   const fetchCortes = useCallback(async () => {
     try {
       const [cortesRes, courseRes] = await Promise.all([
-        fetch(`/api/courses/${courseId}/cortes`),
+        fetch(`/api/courses/${courseId}/cortes/overview`),
         fetch(`/api/courses/${courseId}`),
       ]);
 
@@ -53,6 +50,7 @@ export default function CortesPage() {
       const cortesData = await cortesRes.json();
       setCortes(cortesData.cortes ?? []);
       setTotalWeight(cortesData.totalWeight ?? 0);
+      setOrphanItems(cortesData.orphanItems ?? []);
 
       if (courseRes.ok) {
         const courseData = await courseRes.json();
@@ -75,17 +73,23 @@ export default function CortesPage() {
     setModalOpen(true);
   }
 
-  function openEdit(corte: Corte) {
+  function openEdit(corte: CorteOverview) {
     setEditingCorte(corte);
     setFormName(corte.name);
     setFormWeight(corte.weight);
     setFormOrder(corte.order);
+    setFormStart(corte.startDate ?? '');
+    setFormEnd(corte.endDate ?? '');
+    setFormReport(corte.reportDeadline ?? '');
     setModalOpen(true);
   }
 
   function closeModal() {
     setModalOpen(false);
     setEditingCorte(null);
+    setFormStart('');
+    setFormEnd('');
+    setFormReport('');
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -99,10 +103,14 @@ export default function CortesPage() {
         : `/api/courses/${courseId}/cortes`;
       const method = isEdit ? 'PUT' : 'POST';
 
-      const payload: CorteFormData = {
+      const payload = {
         name: formName,
         weight: formWeight,
         order: formOrder,
+        // Se mandan siempre, también vacías: así se puede borrar una fecha.
+        startDate: formStart,
+        endDate: formEnd,
+        reportDeadline: formReport,
       };
 
       const res = await fetch(url, {
@@ -135,12 +143,19 @@ export default function CortesPage() {
 
       const result = await res.json();
       if (!res.ok) {
-        toast(result.error || 'Error al eliminar', 'error');
+        /* El backend devuelve la lista de lo que estorba. Decir solo "no se
+           puede" deja al docente adivinando qué mover. */
+        const lista: string[] = result.blockers ?? [];
+        toast(
+          lista.length > 0
+            ? `${result.error}. ${lista.slice(0, 3).join(', ')}${lista.length > 3 ? `, y ${lista.length - 3} más` : ''}.`
+            : (result.error || 'Error al eliminar'),
+          'error',
+        );
         return;
       }
 
       toast('Corte eliminado', 'success');
-      setDeleteConfirm(null);
       await fetchCortes();
     } catch {
       toast('Error de conexión', 'error');
@@ -257,66 +272,40 @@ export default function CortesPage() {
           }
         />
       ) : (
-        <Table>
-          <Thead>
-            <Tr>
-              <Th>Orden</Th>
-              <Th>Nombre</Th>
-              <Th>Peso (%)</Th>
-              <Th>Acciones</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {cortes.map((corte) => (
-              <Tr key={corte.id}>
-                <Td>{corte.order}</Td>
-                <Td className="font-medium">{corte.name}</Td>
-                <Td>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300">
-                    {corte.weight}%
-                  </span>
-                </Td>
-                <Td>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => openEdit(corte)}
-                      className="p-1.5 rounded-md hover:bg-foreground/5 transition-colors text-foreground/60 hover:text-foreground"
-                      title="Editar"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    {deleteConfirm === corte.id ? (
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          onClick={() => handleDelete(corte.id)}
-                        >
-                          Confirmar
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => setDeleteConfirm(null)}
-                        >
-                          Cancelar
-                        </Button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setDeleteConfirm(corte.id)}
-                        className="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-foreground/60 hover:text-red-600"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
+        <div className="space-y-3">
+          {/* Lo que no está en ningún corte no entra en ningún reporte de
+              notas: si el docente no lo ve aquí, no lo ve en ninguna parte. */}
+          {orphanItems.length > 0 && (
+            <div className={`rounded-xl border p-4 ${toneBox.attention}`}>
+              <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true" />
+                {orphanItems.length === 1
+                  ? '1 ítem calificable sin corte'
+                  : `${orphanItems.length} ítems calificables sin corte`}
+              </p>
+              <p className="text-xs text-subtle mt-1 max-w-prose">
+                No pertenecen a ningún corte, así que no aparecen en ningún reporte de notas
+                y la definitiva del curso deja de ponderar por corte. Asígnales uno al editarlos.
+              </p>
+              <ul className="mt-2 flex flex-wrap gap-1.5">
+                {orphanItems.map((t) => (
+                  <li key={t} className="text-micro text-muted rounded-md border border-surface-border bg-surface px-2 py-1">
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {cortes.map((corte) => (
+            <CorteCard
+              key={corte.id}
+              corte={corte}
+              onEdit={() => openEdit(corte)}
+              onDelete={() => handleDelete(corte.id)}
+            />
+          ))}
+        </div>
       )}
 
       {/* Create/Edit Modal */}
@@ -368,6 +357,42 @@ export default function CortesPage() {
               className="w-full px-3 py-2 rounded-lg border border-foreground/20 bg-canvas text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
               required
             />
+          </div>
+
+          {/*
+            Las tres fechas.
+
+            El tope de reporte no es el cierre del corte: primero se acaba de
+            dictar y calificar, y después hay un plazo para subir las notas a
+            la plataforma de la universidad. Esa segunda fecha es la que de
+            verdad aprieta, y la que el panel usa para avisar.
+          */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="c-ini" className="block text-sm font-medium mb-1">Inicia</label>
+              <input id="c-ini" type="date" value={formStart}
+                onChange={(e) => setFormStart(e.target.value)}
+                className="w-full px-3 py-2 min-h-11 rounded-lg border border-foreground/20 bg-canvas text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/40" />
+            </div>
+            <div>
+              <label htmlFor="c-fin" className="block text-sm font-medium mb-1">Cierra</label>
+              <input id="c-fin" type="date" value={formEnd} min={formStart || undefined}
+                onChange={(e) => setFormEnd(e.target.value)}
+                className="w-full px-3 py-2 min-h-11 rounded-lg border border-foreground/20 bg-canvas text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/40" />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="c-rep" className="block text-sm font-medium mb-1">
+              Tope para reportar notas
+            </label>
+            <input id="c-rep" type="date" value={formReport} min={formEnd || formStart || undefined}
+              onChange={(e) => setFormReport(e.target.value)}
+              className="w-full px-3 py-2 min-h-11 rounded-lg border border-foreground/20 bg-canvas text-foreground focus:outline-none focus:ring-2 focus:ring-cyan-500/40" />
+            <p className="text-xs text-subtle mt-1">
+              Fecha límite para subirlas a la plataforma de la universidad. El panel avisa
+              cuando se acerca y te dice qué falta por calificar.
+            </p>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

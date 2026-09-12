@@ -590,6 +590,9 @@ export const corteSchema = z.object({
   name: z.string().min(1),
   weight: z.number().min(1, 'El peso mínimo es 1%').max(100, 'El peso máximo es 100%'),
   order: z.number().int().min(1),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  reportDeadline: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -601,7 +604,15 @@ export const createCorteSchema = z.object({
   name: z.string().min(1, 'El nombre del corte es requerido').max(100).trim(),
   weight: z.number().min(1, 'El peso mínimo es 1%').max(100, 'El peso máximo es 100%'),
   order: z.number().int().min(1).optional(),
-});
+  /* Fechas del corte. Cadena vacía = borrar la fecha, para que el formulario
+     pueda dejarla en blanco sin inventar un valor. */
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
+  reportDeadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
+}).refine((d) => !d.startDate || !d.endDate || d.startDate <= d.endDate,
+  { message: 'El corte no puede terminar antes de empezar', path: ['endDate'] })
+  .refine((d) => !d.endDate || !d.reportDeadline || d.endDate <= d.reportDeadline,
+  { message: 'El reporte de notas no puede vencer antes de que cierre el corte', path: ['reportDeadline'] });
 
 /**
  * updateCorteSchema — Validación del body de PUT /api/courses/[id]/cortes/[corteId]
@@ -610,7 +621,15 @@ export const updateCorteSchema = z.object({
   name: z.string().min(1).max(100).trim().optional(),
   weight: z.number().min(1).max(100).optional(),
   order: z.number().int().min(1).optional(),
-});
+  /* Fechas del corte. Cadena vacía = borrar la fecha, para que el formulario
+     pueda dejarla en blanco sin inventar un valor. */
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
+  reportDeadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
+}).refine((d) => !d.startDate || !d.endDate || d.startDate <= d.endDate,
+  { message: 'El corte no puede terminar antes de empezar', path: ['endDate'] })
+  .refine((d) => !d.endDate || !d.reportDeadline || d.endDate <= d.reportDeadline,
+  { message: 'El reporte de notas no puede vencer antes de que cierre el corte', path: ['reportDeadline'] });
 
 // Tipos inferidos — Cortes
 export type CorteZod = z.infer<typeof corteSchema>;
