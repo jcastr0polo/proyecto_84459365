@@ -64,37 +64,87 @@ export function requireSupabaseClient(): SupabaseClient {
 type Sql = ReturnType<typeof postgres>;
 
 let _pg: Sql | null = null;
+/** true cuando ya se cambió al enlace sin pooler tras un fallo de conexión. */
+let _pgEsReserva = false;
+
+const OPCIONES_PG = {
+  ssl: 'require' as const,
+  /*
+   * Falla rápido. Con quince segundos, la pantalla de estado de la base se
+   * quedaba cargando todo ese rato desde Vercel y luego se caía sin decir por
+   * qué. Ninguna LECTURA depende ya de esta conexión —eso va por PostgREST—,
+   * así que si no se puede abrir es mejor saberlo pronto.
+   */
+  connect_timeout: 6,
+  /*
+   * Pocas conexiones y que se suelten rápido.
+   *
+   * En Vercel cada instancia levanta su propio grupo, así que un `max` alto se
+   * multiplica por el número de instancias vivas y agota los huecos del
+   * pooler. Y cuando el pooler se agota, el síntoma es de los malos: las
+   * lecturas siguen funcionando —van por PostgREST— pero NINGUNA escritura
+   * pasa. La aplicación parece viva y no guarda nada.
+   */
+  idle_timeout: 10,
+  max: 2,
+  /*
+   * El pooler de Supabase (puerto 6543) trabaja en modo transacción y ahí las
+   * sentencias preparadas no sobreviven entre consultas.
+   */
+  prepare: false,
+};
+
+function urlPooler(): string | undefined {
+  return process.env.SUPABASE_NEXUS_POSTGRES_URL ?? process.env.POSTGRES_URL;
+}
+
+function urlDirecta(): string | undefined {
+  return process.env.SUPABASE_NEXUS_POSTGRES_URL_NON_POOLING;
+}
 
 function getPgPool(): Sql {
   if (_pg) return _pg;
-  const connString =
-    process.env.SUPABASE_NEXUS_POSTGRES_URL ??
-    process.env.SUPABASE_NEXUS_POSTGRES_URL_NON_POOLING ??
-    process.env.POSTGRES_URL;
-
+  const connString = urlPooler() ?? urlDirecta();
   if (!connString) {
     throw new Error('Postgres URL not configured (SUPABASE_NEXUS_POSTGRES_URL)');
   }
-
-  _pg = postgres(connString, {
-    ssl: 'require',
-    /*
-     * Falla rápido. Con quince segundos, la pantalla de estado de la base se
-     * quedaba cargando todo ese rato desde Vercel y luego se caía sin decir
-     * por qué. Ya nada de lectura depende de esta conexión —eso va por
-     * PostgREST—; aquí solo quedan los cambios de esquema, y si no se puede
-     * abrir, es mejor saberlo en cinco segundos y con un mensaje claro.
-     */
-    connect_timeout: 5,
-    idle_timeout: 20,
-    max: 4,
-    /*
-     * El pooler de Supabase (puerto 6543) trabaja en modo transacción y ahí
-     * las sentencias preparadas no sobreviven entre consultas.
-     */
-    prepare: false,
-  });
+  _pg = postgres(connString, OPCIONES_PG);
   return _pg;
+}
+
+/** ¿El error es de "no pude ni abrir la conexión"? */
+function esFalloDeConexion(e: unknown): boolean {
+  const code = (e as { code?: string })?.code ?? '';
+  return ['CONNECT_TIMEOUT', 'ECONNREFUSED', 'ENOTFOUND', 'ECONNRESET'].includes(code);
+}
+
+/**
+ * Ejecuta contra Postgres, con el enlace directo como reserva.
+ *
+ * Todas las escrituras de la aplicación pasan por aquí. El pooler es lo
+ * correcto en Vercel —cada instancia abre pocas conexiones y las suelta—,
+ * pero cuando se queda sin huecos deja de aceptar conexiones nuevas, y
+ * entonces las lecturas siguen yendo por PostgREST mientras las escrituras
+ * fallan en silencio: la pantalla responde y nada se guarda.
+ *
+ * Comprobado contra la base real: con el pooler saturado, el enlace sin
+ * pooler (5432) seguía entrando sin problema. Así que ante un fallo de
+ * CONEXIÓN —no ante un error de SQL, que hay que dejar salir— se reintenta
+ * una vez por ahí y se recuerda para el resto de la vida de la instancia.
+ */
+async function conPg<T>(fn: (sql: Sql) => Promise<T>): Promise<T> {
+  try {
+    return await fn(getPgPool());
+  } catch (e) {
+    const directa = urlDirecta();
+    if (_pgEsReserva || !directa || !esFalloDeConexion(e)) throw e;
+
+    console.warn('[supabase] el pooler no acepta conexiones; se pasa al enlace directo');
+    try { await _pg?.end({ timeout: 1 }); } catch { /* daba igual */ }
+    _pg = postgres(directa, OPCIONES_PG);
+    _pgEsReserva = true;
+    return fn(_pg);
+  }
 }
 
 /**
@@ -146,15 +196,14 @@ async function replaceAllRows<T extends object>(
   table: string,
   rows: T[],
 ): Promise<void> {
-  const sql = getPgPool();
-  await sql.begin(async (tx) => {
+  await conPg((sql) => sql.begin(async (tx) => {
     await tx.unsafe(`DELETE FROM "${table}"`);
     if (rows.length > 0) {
       const cols = Object.keys(rows[0] as Record<string, unknown>);
       const values = rows as unknown as Record<string, never>[];
       await tx`INSERT INTO ${tx(table)} ${tx(values, ...cols)}`;
     }
-  });
+  }));
 }
 
 async function insertOneRow<T extends Record<string, unknown>>(table: string, row: T): Promise<void> {
@@ -962,12 +1011,13 @@ function quizAttemptToRow(a: QuizAttempt): Record<string, unknown> {
  * Todo o nada: si una falla, no queda nada aplicado a medias.
  */
 export async function supabaseRunStatements(statements: string[]): Promise<void> {
-  const sql = getPgPool();
-  await sql.begin(async (tx) => {
-    for (const stmt of statements) await tx.unsafe(stmt);
+  await conPg(async (sql) => {
+    await sql.begin(async (tx) => {
+      for (const stmt of statements) await tx.unsafe(stmt);
+    });
+    // PostgREST cachea el esquema: sin esto el cliente JS no ve lo nuevo.
+    await sql`NOTIFY pgrst, 'reload schema'`;
   });
-  // PostgREST cachea el esquema: sin esto el cliente JS no ve lo nuevo.
-  await sql`NOTIFY pgrst, 'reload schema'`;
 }
 
 /**
