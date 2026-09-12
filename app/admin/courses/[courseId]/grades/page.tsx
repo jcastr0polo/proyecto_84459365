@@ -9,6 +9,7 @@ import SearchInput from '@/components/ui/SearchInput';
 import { useToast } from '@/components/ui/Toast';
 import type { CourseGradeSummary } from '@/lib/types';
 import EmptyState from '@/components/ui/EmptyState';
+import OrphanItemsNotice from '@/components/grades/OrphanItemsNotice';
 import Link from 'next/link';
 
 /**
@@ -244,6 +245,10 @@ export default function AdminGradeSummaryPage() {
           className="w-full sm:w-72"
         />
       </div>
+
+      {data.finalBasis === 'flat' && data.cortes.length > 0 && (
+        <OrphanItemsNotice items={data.orphanItems} />
+      )}
 
       <AdjustGradeModal
         target={target}

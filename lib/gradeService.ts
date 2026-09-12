@@ -980,6 +980,13 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
     (i) => i.courseId === courseId && !isAdjustItemId(i.id),
   );
 
+  // Cómo va a salir la definitiva en este curso, y qué lo impide si aplica.
+  // Es propiedad del curso, no de cada estudiante: se calcula una vez.
+  const courseBasis = resolveFinalScore(
+    courseCortes, {}, { finalScore: 0, details: [], totalWeight: 0, isPartial: true, isApproved: false },
+    gradableItemsOf(activities, courseQuizzes, courseManualItems),
+  );
+
   const students = enrollments.map((enrollment) => {
     const student = userMap.get(enrollment.studentId);
     if (!student) return null;
@@ -1114,6 +1121,8 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
   return {
     courseId,
     courseName: course.name,
+    finalBasis: courseBasis.basis,
+    orphanItems: courseBasis.orphanItems,
     cortes: cortesInfo,
     activities: allActivityEntries,
     students,
@@ -1298,6 +1307,43 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
   );
   const finalScore = resolved.finalScore;
 
+  /*
+   * Los ajustes que el estudiante ya puede ver, con la nota de la que salen.
+   * Sin esto veía un corte de 3.7 sobre un desglose que promedia 3.4 y nada
+   * que lo explicara: la nota parecía un error del sistema en vez de una
+   * decisión del docente con motivo escrito.
+   */
+  const withoutAdjustments = publishedManualGrades.filter((g) => !isAdjustItemId(g.itemId));
+  const corteScoresRaw = calculateCorteScores(
+    studentId, courseCortes, activities, studentGrades,
+    courseQuizzes, allAttempts, courseManualItems, withoutAdjustments,
+  );
+  const adjustments: StudentGradeSummary['adjustments'] = [];
+
+  for (const corte of courseCortes) {
+    const adj = publishedManualGrades.find(
+      (g) => g.itemId === adjustItemId(courseId, corte.id) && g.studentId === studentId,
+    );
+    const from = corteScoresRaw[corte.id];
+    const to = corteScores[corte.id];
+    if (adj && from !== null && to !== null && Math.abs(to - from) >= 0.05) {
+      adjustments.push({ corteId: corte.id, from, to, ...(adj.feedback ? { reason: adj.feedback } : {}) });
+    }
+  }
+
+  if (finalAdjustment && finalScore !== null) {
+    const from = resolveFinalScore(
+      courseCortes, corteScoresRaw, finalResult,
+      gradableItemsOf(activities, courseQuizzes, courseManualItems), null,
+    ).finalScore;
+    if (from !== null && Math.abs(finalScore - from) >= 0.05) {
+      adjustments.push({
+        corteId: null, from, to: finalScore,
+        ...(finalAdjustment.feedback ? { reason: finalAdjustment.feedback } : {}),
+      });
+    }
+  }
+
   return {
     studentId,
     courseId,
@@ -1305,6 +1351,7 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
     cortes: courseCortes.map((c) => ({ id: c.id, name: c.name, weight: c.weight, order: c.order })),
     corteScores,
     activities: allDetails,
+    adjustments,
     finalScore,
     isPartial: resolved.isPartial,
     isApproved: resolved.isApproved,

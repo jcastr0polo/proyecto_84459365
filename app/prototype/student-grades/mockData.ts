@@ -77,6 +77,9 @@ export const MOCK_GRADES: StudentGradeSummary = {
       grade: null,
     },
   ],
+  adjustments: [
+    { corteId: 'corte-1', from: 3.4, to: 3.7, reason: 'Participación sostenida en clase' },
+  ],
   finalScore: 3.6,
   isPartial: true,
   isApproved: true,

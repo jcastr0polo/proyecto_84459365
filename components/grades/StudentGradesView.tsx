@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ChevronDown, MessageSquareText } from 'lucide-react';
+import { ChevronDown, MessageSquareText, Sparkles } from 'lucide-react';
 import { formatDateColombia } from '@/lib/dateUtils';
 import type { StudentGradeSummary } from '@/lib/types';
 import { PASS, SCALE_MAX as SCALE, gradeText as toneText, gradeBar as toneBar, formatScore } from '@/lib/gradeScale';
@@ -37,6 +37,7 @@ export default function StudentGradesView({ data }: Props) {
         activities,
         graded,
         score: data.corteScores[c.id] ?? null,
+        adjustment: data.adjustments.find((a) => a.corteId === c.id) ?? null,
         state: graded === 0
           ? ('pendiente' as const)
           : graded === activities.length
@@ -45,6 +46,7 @@ export default function StudentGradesView({ data }: Props) {
       };
     });
 
+  const finalAdjustment = data.adjustments.find((a) => a.corteId === null) ?? null;
   const unassigned = data.activities.filter((a) => !a.corteId);
   const gradedCount = data.activities.filter((a) => a.grade !== null).length;
 
@@ -156,6 +158,16 @@ export default function StudentGradesView({ data }: Props) {
         </div>
       </motion.section>
 
+      {/* El ajuste de la definitiva va pegado a la definitiva, no al final:
+          es lo que explica el número que el estudiante acaba de leer. */}
+      {finalAdjustment && (
+        <motion.section {...fade(0.03)}>
+          <div className="rounded-xl border border-foreground/[0.08] overflow-hidden">
+            <AdjustmentRow adjustment={finalAdjustment} isFinal />
+          </div>
+        </motion.section>
+      )}
+
       {/* ── Cortes ── */}
       {cortes.map((c, i) => (
         <motion.section key={c.id} {...fade(Math.min(0.04 * (i + 1), 0.12))}>
@@ -175,6 +187,11 @@ export default function StudentGradesView({ data }: Props) {
           {c.activities.length > 0 ? (
             <div className="rounded-xl border border-foreground/[0.08] divide-y divide-foreground/[0.06] overflow-hidden">
               {c.activities.map((a) => <ActivityRow key={a.id} activity={a} />)}
+              {c.adjustment && <AdjustmentRow adjustment={c.adjustment} />}
+            </div>
+          ) : c.adjustment ? (
+            <div className="rounded-xl border border-foreground/[0.08] overflow-hidden">
+              <AdjustmentRow adjustment={c.adjustment} />
             </div>
           ) : (
             <p className="text-xs text-subtle italic px-1 py-4">Sin actividades en este corte.</p>
@@ -190,6 +207,47 @@ export default function StudentGradesView({ data }: Props) {
           </div>
         </motion.section>
       )}
+    </div>
+  );
+}
+
+/**
+ * Fila de ajuste del docente.
+ *
+ * Antes el ajuste solo movía el número del corte: el estudiante veía 3.7
+ * arriba, sumaba sus actividades y le daba 3.4, y no había nada que explicara
+ * la diferencia. Una nota que cambia sin decir por qué se lee como un error
+ * del sistema, y deja al docente sin cómo sustentarla. Aquí se dice de dónde
+ * viene, cuánto y por qué.
+ */
+function AdjustmentRow({
+  adjustment, isFinal = false,
+}: {
+  adjustment: StudentGradeSummary['adjustments'][number];
+  isFinal?: boolean;
+}) {
+  const delta = Math.round((adjustment.to - adjustment.from) * 10) / 10;
+  const up = delta > 0;
+
+  return (
+    <div className="flex items-start gap-3 px-4 py-3 bg-cyan-500/[0.04]">
+      <Sparkles className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0 mt-0.5" aria-hidden="true" />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-foreground">
+          Ajuste del docente{isFinal ? ' en la definitiva' : ''}
+        </p>
+        <p className="text-micro text-subtle mt-0.5 tabular-nums">
+          {adjustment.from.toFixed(1)} → {adjustment.to.toFixed(1)}
+        </p>
+        {adjustment.reason && (
+          <p className="text-xs text-muted mt-1 leading-snug">{adjustment.reason}</p>
+        )}
+      </div>
+      <span className={`text-sm font-bold tabular-nums shrink-0 ${
+        up ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+      }`}>
+        {up ? `+${delta.toFixed(1)}` : delta.toFixed(1)}
+      </span>
     </div>
   );
 }

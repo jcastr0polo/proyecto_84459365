@@ -6,6 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
+import { isAdjustItemId } from '@/lib/gradeService';
 import { updateManualGradeItemSchema } from '@/lib/schemas';
 import {
   getCourseById,
@@ -29,7 +30,7 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
       return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
     }
 
-    const items = await readManualGradeItemsFresh();
+    const items = (await readManualGradeItemsFresh()).filter((i) => !isAdjustItemId(i.id));
     const item = items.find((i) => i.id === itemId && i.courseId === courseId);
     if (!item) {
       return NextResponse.json({ error: 'Item no encontrado' }, { status: 404 });
@@ -61,8 +62,15 @@ export async function PUT(request: Request, { params }: RouteParams): Promise<Ne
       const updates = parsed.data;
 
       return withFileLock('manual-grade-items.json', async () => {
+        /*
+         * La lista se lee ENTERA: writeManualGradeItems reemplaza la tabla
+         * completa, así que guardar una lista filtrada borraría todos los
+         * ajustes del docente. Lo que se protege es la búsqueda.
+         */
         const items = await readManualGradeItemsFresh();
-        const index = items.findIndex((i) => i.id === itemId && i.courseId === courseId);
+        const index = isAdjustItemId(itemId)
+          ? -1
+          : items.findIndex((i) => i.id === itemId && i.courseId === courseId);
         if (index === -1) {
           return NextResponse.json({ error: 'Item no encontrado' }, { status: 404 });
         }
@@ -105,8 +113,15 @@ export async function DELETE(request: Request, { params }: RouteParams): Promise
       const { id: courseId, itemId } = await params;
 
       return withFileLock('manual-grade-items.json', async () => {
+        /*
+         * La lista se lee ENTERA: writeManualGradeItems reemplaza la tabla
+         * completa, así que guardar una lista filtrada borraría todos los
+         * ajustes del docente. Lo que se protege es la búsqueda.
+         */
         const items = await readManualGradeItemsFresh();
-        const index = items.findIndex((i) => i.id === itemId && i.courseId === courseId);
+        const index = isAdjustItemId(itemId)
+          ? -1
+          : items.findIndex((i) => i.id === itemId && i.courseId === courseId);
         if (index === -1) {
           return NextResponse.json({ error: 'Item no encontrado' }, { status: 404 });
         }

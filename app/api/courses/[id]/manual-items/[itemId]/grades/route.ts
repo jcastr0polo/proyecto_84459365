@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
+import { isAdjustItemId } from '@/lib/gradeService';
 import { bulkSetManualGradesSchema } from '@/lib/schemas';
 import {
   getCourseById,
@@ -28,7 +29,7 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
       return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
     }
 
-    const items = await readManualGradeItemsFresh();
+    const items = (await readManualGradeItemsFresh()).filter((i) => !isAdjustItemId(i.id));
     const item = items.find((i) => i.id === itemId && i.courseId === courseId);
     if (!item) {
       return NextResponse.json({ error: 'Item no encontrado' }, { status: 404 });
@@ -51,7 +52,7 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
         return NextResponse.json({ error: 'Curso no encontrado' }, { status: 404 });
       }
 
-      const items = await readManualGradeItemsFresh();
+      const items = (await readManualGradeItemsFresh()).filter((i) => !isAdjustItemId(i.id));
       const item = items.find((i) => i.id === itemId && i.courseId === courseId);
       if (!item) {
         return NextResponse.json({ error: 'Item no encontrado' }, { status: 404 });

@@ -250,6 +250,7 @@ export default function GradeSummaryTable({
                       <td className="px-3 py-2.5 text-center border-r-2 border-cyan-500/20 bg-cyan-500/[0.03]">
                         <ScoreCell
                           score={student.corteScores[group.id] ?? null}
+                          raw={student.corteScoresRaw[group.id] ?? null}
                           adjustment={adjMap.get(adjKey(student.id, group.id))}
                           onAdjust={onAdjust ? () => onAdjust(student.id, group.id) : undefined}
                           label={`${group.name} de ${student.lastName}, ${student.firstName}`}
@@ -272,6 +273,7 @@ export default function GradeSummaryTable({
                   <div>
                     <ScoreCell
                       score={student.finalScore}
+                      raw={student.finalScoreRaw}
                       adjustment={adjMap.get(adjKey(student.id, null))}
                       onAdjust={onAdjust ? () => onAdjust(student.id, null) : undefined}
                       label={`Definitiva de ${student.lastName}, ${student.firstName}`}
@@ -440,11 +442,16 @@ function MobileStudentCard({
                 <p className={`text-sm font-semibold tabular-nums ${b.score != null ? scoreColorClass(b.score) : 'text-faint'}`}>
                   {b.score != null ? b.score.toFixed(1) : '—'}
                 </p>
-                {adj && (
-                  <p className={`text-micro truncate ${adj.isPublished ? 'text-cyan-600 dark:text-cyan-400' : 'text-subtle'}`}>
-                    ajustada{adj.isPublished ? '' : ' · sin publicar'}
-                  </p>
-                )}
+                {adj && (() => {
+                  const raw = student.corteScoresRaw[b.id];
+                  const d = b.score != null && raw != null ? Math.round((b.score - raw) * 10) / 10 : null;
+                  return (
+                    <p className={`text-micro truncate ${adj.isPublished ? 'text-cyan-600 dark:text-cyan-400' : 'text-subtle'}`}>
+                      {d !== null && Math.abs(d) >= 0.05 ? `${d > 0 ? '+' : ''}${d.toFixed(1)} ajuste` : 'ajustada'}
+                      {adj.isPublished ? '' : ' · sin publicar'}
+                    </p>
+                  );
+                })()}
               </>
             );
             // Quitar el ajuste en móvil "porque no cabe" sería justo lo que no
@@ -480,9 +487,15 @@ function MobileStudentCard({
                        active:scale-[0.99] motion-reduce:active:scale-100 cursor-pointer
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
           >
-            {adjMap.has(`${student.id}:final`)
-              ? `Definitiva ajustada${adjMap.get(`${student.id}:final`)!.isPublished ? '' : ' · sin publicar'} — editar`
-              : 'Ajustar definitiva'}
+            {(() => {
+              const adj = adjMap.get(`${student.id}:final`);
+              if (!adj) return 'Ajustar definitiva';
+              const raw = student.finalScoreRaw;
+              const d = student.finalScore != null && raw != null
+                ? Math.round((student.finalScore - raw) * 10) / 10 : null;
+              const dTxt = d !== null && Math.abs(d) >= 0.05 ? ` ${d > 0 ? '+' : ''}${d.toFixed(1)}` : '';
+              return `Definitiva ajustada${dTxt}${adj.isPublished ? '' : ' · sin publicar'} — editar`;
+            })()}
           </button>
         </div>
       )}
@@ -613,15 +626,20 @@ function scoreColorClass(score: number): string {
  * después.
  */
 function ScoreCell({
-  score, adjustment, onAdjust, label, size = 'md',
+  score, raw, adjustment, onAdjust, label, size = 'md',
 }: {
   score: number | null;
+  /** La misma nota sin ajustar, para poder enseñar la diferencia. */
+  raw?: number | null;
   adjustment?: Adjustment;
   onAdjust?: () => void;
   label: string;
   size?: 'md' | 'lg';
 }) {
   const text = size === 'lg' ? 'text-base' : 'text-sm';
+  const delta = score !== null && raw !== null && raw !== undefined
+    ? Math.round((score - raw) * 10) / 10
+    : null;
 
   const body = score === null ? (
     <span className="text-xs text-faint">—</span>
@@ -631,10 +649,17 @@ function ScoreCell({
         {score.toFixed(1)}
       </span>
       {adjustment && (
+        /* El delta se calcula contra la base de AHORA, no contra la que había
+           al ajustar. Si el docente corrige una nota después, la diferencia
+           que se ve cambia sola y él lo nota, en vez de quedarse con un
+           ajuste congelado que nadie vuelve a mirar. */
         <span className={`block text-micro whitespace-nowrap ${
           adjustment.isPublished ? 'text-cyan-600 dark:text-cyan-400' : 'text-subtle'
         }`}>
-          ajustada{adjustment.isPublished ? '' : ' · sin publicar'}
+          {delta !== null && Math.abs(delta) >= 0.05
+            ? `${delta > 0 ? '+' : ''}${delta.toFixed(1)} ajuste`
+            : 'ajustada'}
+          {adjustment.isPublished ? '' : ' · sin publicar'}
         </span>
       )}
     </>

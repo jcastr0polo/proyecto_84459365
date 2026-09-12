@@ -481,6 +481,15 @@ export interface UpdateGradeRequest {
 export interface CourseGradeSummary {
   courseId: string;
   courseName: string;
+  /**
+   * Cómo se calculó la definitiva. 'cortes' = ponderando la nota de cada
+   * corte por su peso. 'flat' = promedio plano de los ítems, que es el modo
+   * al que cae el curso cuando hay ítems calificables sin corte asignado:
+   * ponderar por corte los dejaría fuera de la definitiva sin avisar.
+   */
+  finalBasis: 'cortes' | 'flat';
+  /** Ítems calificables sin corte. Mientras existan, finalBasis es 'flat'. */
+  orphanItems: string[];
   cortes: {
     id: string;
     name: string;
@@ -551,6 +560,18 @@ export interface StudentGradeSummary {
       gradedAt: string;
       publishedAt?: string;
     } | null;                          // null si no calificada o no publicada
+  }[];
+  /**
+   * Ajustes del docente ya publicados. Sin esto el estudiante veía un corte
+   * de 3.7 y un desglose que promediaba 3.4, sin nada que explicara la
+   * diferencia: justo lo contrario de por qué existe el ajuste, que es poder
+   * sustentarlo. corteId null = ajuste sobre la definitiva.
+   */
+  adjustments: {
+    corteId: string | null;
+    from: number;                      // nota calculada
+    to: number;                        // nota tras el ajuste
+    reason?: string;
   }[];
   finalScore: number | null;           // Nota definitiva 0.0–5.0
   isPartial: boolean;                  // Faltan actividades por calificar

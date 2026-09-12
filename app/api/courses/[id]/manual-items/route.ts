@@ -7,6 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
+import { isAdjustItemId } from '@/lib/gradeService';
 import { createManualGradeItemSchema } from '@/lib/schemas';
 import {
   getCourseById,
@@ -31,7 +32,14 @@ export async function GET(
     }
 
     const allItems = await readManualGradeItemsFresh();
-    const items = allItems.filter((i) => i.courseId === courseId);
+    /*
+     * Los ajustes del docente viven en esta misma tabla pero NO son ítems de
+     * calificación: no se crean aquí, no se califican aquí y su id lleva ':',
+     * que al meterse en la ruta /manual-items/[itemId]/grades no vuelve a
+     * casar y la pantalla respondía "Ítem no encontrado". Se editan desde la
+     * tabla de notas del curso, que es donde tienen sentido.
+     */
+    const items = allItems.filter((i) => i.courseId === courseId && !isAdjustItemId(i.id));
 
     return NextResponse.json({ items, total: items.length });
   }, 'admin');

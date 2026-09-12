@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import GradeSummaryTable from '@/components/grades/GradeSummaryTable';
 import AdjustGradeModal, { type AdjustTarget } from '@/components/grades/AdjustGradeModal';
+import OrphanItemsNotice from '@/components/grades/OrphanItemsNotice';
 import type { CourseGradeSummary } from '@/lib/types';
 
 /** Taller — tabla de notas del curso, con su vista de tarjetas en móvil. */
@@ -31,7 +32,7 @@ export default function PrototypeCourseGrades() {
       id: `s-${ln}`, firstName: fn, lastName: ln, documentNumber: '1000',
       email: `${fn.toLowerCase()}@ejemplo.edu.co`, grades,
       corteScores: { c1: scores[0], c2: scores[2], c3: scores[3] },
-      corteScoresRaw: { c1: scores[0], c2: scores[2], c3: scores[3] },
+      corteScoresRaw: { c1: scores[0] === null ? null : scores[0] - 0.3, c2: scores[2], c3: scores[3] },
       finalScore: final === null ? null : Math.round(final * 10) / 10,
       finalScoreRaw: final === null ? null : Math.round(final * 10) / 10,
       isPartial: got.length < activities.length,
@@ -41,6 +42,7 @@ export default function PrototypeCourseGrades() {
 
   const data: CourseGradeSummary = {
     courseId: 'c', courseName: 'Taller de Diseño Interactivo',
+    finalBasis: 'cortes', orphanItems: [],
     cortes, activities,
     students: [
       mk('González Pérez', 'Gabriela', [4.5, 4.0, 2.8, null]),
@@ -54,6 +56,7 @@ export default function PrototypeCourseGrades() {
       <span className="text-meta font-semibold uppercase tracking-wider text-amber-400">
         Taller de diseño · datos falsos
       </span>
+      <OrphanItemsNotice items={['Quiz diagnóstico', 'Salida de campo']} />
       <GradeSummaryTable
         data={data}
         adjustments={[
