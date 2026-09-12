@@ -1,617 +1,76 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Database, RefreshCw, CheckCircle, XCircle, Loader2, Cloud, Server, Download, AlertTriangle, ArrowRightLeft, Table2 } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import EmptyState from '@/components/ui/EmptyState';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
+import { useToast } from '@/components/ui/Toast';
+import DatabaseStatusView, { type DbStatus } from '@/components/admin/DatabaseStatusView';
 
-// Archivos sensibles: advertir antes de hacer seed
-const SENSITIVE_FILES = ['users.json', 'sessions.json', 'enrollments.json', 'grades.json', 'submissions.json', 'audit.json', 'quiz-attempts.json', 'quiz-simulations.json'];
+/**
+ * Estado de la base de datos.
+ *
+ * Esta pantalla era "Blob Storage — Base de Datos", de antes de la migración
+ * a Supabase. Tenía tres pestañas y 617 líneas:
+ *
+ * · "Seed selectivo (data/ → Blob)", con el aviso "SOBRESCRIBIRÁ la data en
+ *   producción". Ya no era cierto: desde la migración nadie lee datos del
+ *   Blob, así que ese botón escribía donde no alimenta nada. Un botón
+ *   peligroso que no hace lo que dice es peor que no tenerlo.
+ * · "Descargar datos" del Blob, que devolvía la foto anterior a la migración
+ *   presentada como si fuera producción.
+ * · "Verificar conexión", que solo miraba la tabla `users`: decía "conectado"
+ *   con quince tablas sin comprobar.
+ *
+ * Queda lo único que hacía falta y no existía: el estado real de las dieciséis
+ * tablas que la aplicación lee. La URL se mantiene para no romper marcadores.
+ */
+export default function DatabaseStatusPage() {
+  const { toast } = useToast();
+  const [status, setStatus] = useState<DbStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-interface DiagnosticData {
-  environment: {
-    IS_VERCEL: boolean;
-    HAS_BLOB_TOKEN: boolean;
-    BLOB_TOKEN_PREFIX: string;
-    NODE_ENV: string;
-    CACHE_READY: boolean;
-  };
-  blobFiles: Record<string, { exists: boolean; size?: number }>;
-  totalBlobFiles?: number;
-  blobListRaw?: { pathname: string; size: number; uploadedAt: string }[];
-  blobError?: string;
-}
-
-interface SyncResult {
-  results: Record<string, { status: string; size?: number; error?: string }>;
-}
-
-export default function BlobSyncPage() {
-  const [diagnostics, setDiagnostics] = useState<DiagnosticData | null>(null);
-  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
-  const [loading, setLoading] = useState<'idle' | 'diagnosing' | 'syncing' | 'downloading'>('idle');
-  const [error, setError] = useState<string | null>(null);
-  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [downloadedData, setDownloadedData] = useState<{ file: string; data: unknown } | null>(null);
-  const [activeTab, setActiveTab] = useState<'sync' | 'download' | 'supabase'>('sync');
-  const [supabaseStatus, setSupabaseStatus] = useState<{ connected: boolean; tables?: Record<string, { exists: boolean; rowCount: number }>; error?: string } | null>(null);
-  const [migrateResult, setMigrateResult] = useState<{ table: string; action: string; results: { step: string; status: string; detail?: string }[] } | null>(null);
-  const [migrateLoading, setMigrateLoading] = useState(false);
-  const [dataFiles, setDataFiles] = useState<string[]>([]);
-
-  useEffect(() => {
-    fetch('/api/admin/blob-sync')
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.dataFiles) setDataFiles(d.dataFiles); })
-      .catch(() => {});
-  }, []);
-
-  async function runDiagnostics() {
-    setLoading('diagnosing');
-    setError(null);
+  const load = useCallback(async (manual = false) => {
+    if (manual) setRefreshing(true);
     try {
-      const res = await fetch('/api/admin/blob-sync');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setDiagnostics(data);
-      if (data.dataFiles) setDataFiles(data.dataFiles);
-    } catch (err) {
-      setError(`Error al diagnosticar: ${err}`);
+      const res = await fetch('/api/admin/db-status', { credentials: 'include' });
+      if (!res.ok) throw new Error('No se pudo consultar la base de datos');
+      setStatus(await res.json());
+      if (manual) toast('Estado actualizado', 'success');
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Error al consultar', 'error');
     } finally {
-      setLoading('idle');
+      setLoading(false);
+      setRefreshing(false);
     }
-  }
+  }, [toast]);
 
-  async function forceSync(files?: string[]) {
-    setLoading('syncing');
-    setError(null);
-    setShowConfirm(false);
-    try {
-      const body = files && files.length > 0 ? JSON.stringify({ files }) : undefined;
-      const res = await fetch('/api/admin/blob-sync', {
-        method: 'POST',
-        headers: body ? { 'Content-Type': 'application/json' } : {},
-        body,
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setSyncResult(data);
-      await runDiagnostics();
-    } catch (err) {
-      setError(`Error al sincronizar: ${err}`);
-    } finally {
-      setLoading('idle');
-    }
-  }
+  useEffect(() => { load(); }, [load]);
 
-  async function downloadFile(file: string) {
-    setLoading('downloading');
-    setError(null);
-    try {
-      const res = await fetch(`/api/admin/blob-download?file=${encodeURIComponent(file)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      if (file === 'all') {
-        setDownloadedData({ file: 'all', data: json });
-      } else {
-        setDownloadedData({ file, data: json.data });
-      }
-    } catch (err) {
-      setError(`Error al descargar: ${err}`);
-    } finally {
-      setLoading('idle');
-    }
-  }
-
-  function toggleFile(file: string) {
-    const next = new Set(selectedFiles);
-    if (next.has(file)) next.delete(file);
-    else next.add(file);
-    setSelectedFiles(next);
-  }
-
-  function selectAll() {
-    setSelectedFiles(new Set(dataFiles));
-  }
-  function selectNone() {
-    setSelectedFiles(new Set());
-  }
-
-  function handleSeedSelected() {
-    const files = Array.from(selectedFiles);
-    const hasSensitive = files.some((f) => SENSITIVE_FILES.includes(f));
-    if (hasSensitive) {
-      setShowConfirm(true);
-    } else {
-      forceSync(files);
-    }
-  }
-
-  function exportAsFile(data: unknown, filename: string) {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  const StatusIcon = ({ ok }: { ok: boolean }) =>
-    ok ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-red-500" />;
-
-  async function checkSupabaseStatus() {
-    setMigrateLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/admin/supabase-migrate');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setSupabaseStatus(data);
-    } catch (err) {
-      setError(`Error Supabase: ${err}`);
-    } finally {
-      setMigrateLoading(false);
-    }
-  }
-
-  async function migrateTable(table: string, action: 'create' | 'migrate' | 'both') {
-    setMigrateLoading(true);
-    setError(null);
-    setMigrateResult(null);
-    try {
-      const res = await fetch('/api/admin/supabase-migrate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ table, action }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setMigrateResult(data);
-      await checkSupabaseStatus();
-    } catch (err) {
-      setError(`Error migrando: ${err}`);
-    } finally {
-      setMigrateLoading(false);
-    }
-  }
-
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Blob Storage — Base de Datos</h1>
-        <p className="text-sm text-muted mt-1">Diagnóstico, sync selectivo y descarga de datos.</p>
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-8 w-72" />
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20" />)}
+        </div>
+        <SkeletonList rows={6} />
       </div>
+    );
+  }
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-foreground/[0.08] pb-0">
-        {[
-          { key: 'sync', label: 'Sync & Diagnóstico' },
-          { key: 'download', label: 'Descargar Datos' },
-          { key: 'supabase', label: 'Supabase' },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key as typeof activeTab)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
-              activeTab === tab.key
-                ? 'border-cyan-500 text-cyan-400'
-                : 'border-transparent text-muted hover:text-foreground'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+  if (!status) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <EmptyState
+          kind="error"
+          title="No se pudo consultar la base de datos"
+          description="Reintenta; si sigue fallando, revisa las variables de conexión en el entorno."
+        />
       </div>
+    );
+  }
 
-      {error && (
-        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-          {error}
-        </div>
-      )}
-
-      {/* ===== TAB: SYNC ===== */}
-      {activeTab === 'sync' && (
-        <div className="space-y-6">
-          {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              onClick={runDiagnostics}
-              disabled={loading !== 'idle'}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-foreground/[0.06] hover:bg-foreground/[0.1] text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {loading === 'diagnosing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
-              Diagnosticar
-            </button>
-          </div>
-
-          {/* Selective Sync Section */}
-          <div className="p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
-            <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-              <RefreshCw className="w-4 h-4" /> Seed Selectivo (data/ → Blob)
-            </h3>
-            <p className="text-xs text-muted mb-3">
-              Selecciona los archivos a subir desde <code>data/</code> al Blob. <strong className="text-amber-400">⚠️ Esto SOBRESCRIBIRÁ la data en producción.</strong>
-            </p>
-
-            <div className="flex gap-2 mb-3">
-              <button onClick={selectAll} className="text-xs px-2 py-1 rounded bg-foreground/[0.06] hover:bg-foreground/[0.1] cursor-pointer">
-                Seleccionar todos
-              </button>
-              <button onClick={selectNone} className="text-xs px-2 py-1 rounded bg-foreground/[0.06] hover:bg-foreground/[0.1] cursor-pointer">
-                Ninguno
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
-              {dataFiles.map((file) => {
-                const isSensitive = SENSITIVE_FILES.includes(file);
-                return (
-                  <label
-                    key={file}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs cursor-pointer transition-colors ${
-                      selectedFiles.has(file) ? 'bg-cyan-500/10 border border-cyan-500/30' : 'bg-foreground/[0.03] border border-transparent'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedFiles.has(file)}
-                      onChange={() => toggleFile(file)}
-                      className="rounded"
-                    />
-                    <span className="font-mono">{file}</span>
-                    {isSensitive && <AlertTriangle className="w-3 h-3 text-amber-400" />}
-                  </label>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={handleSeedSelected}
-              disabled={loading !== 'idle' || selectedFiles.size === 0}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {loading === 'syncing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              Seed Seleccionado ({selectedFiles.size} archivo{selectedFiles.size !== 1 ? 's' : ''})
-            </button>
-          </div>
-
-          {/* Confirmation Modal */}
-          {showConfirm && (
-            <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 space-y-3">
-              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                <AlertTriangle className="w-5 h-5" /> Advertencia: Archivos Sensibles
-              </div>
-              <p className="text-sm text-amber-300/80">
-                Estás a punto de sobrescribir archivos sensibles en producción:
-              </p>
-              <ul className="text-xs font-mono text-amber-300/60 list-disc pl-5">
-                {Array.from(selectedFiles)
-                  .filter((f) => SENSITIVE_FILES.includes(f))
-                  .map((f) => <li key={f}>{f}</li>)}
-              </ul>
-              <p className="text-xs text-amber-300/60">
-                Esto eliminará los datos actuales en Blob y los reemplazará con los datos locales de <code>data/</code>.
-                Los usuarios, calificaciones y entregas se perderán si no están en los archivos locales.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => forceSync(Array.from(selectedFiles))}
-                  className="px-3 py-1.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 text-xs font-medium cursor-pointer"
-                >
-                  Confirmar — Sobrescribir
-                </button>
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  className="px-3 py-1.5 rounded bg-foreground/[0.06] text-sm cursor-pointer"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Sync Result */}
-          {syncResult && (
-            <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <h3 className="text-sm font-bold text-emerald-400 mb-3">Resultado del Seed</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {Object.entries(syncResult.results).map(([file, result]) => (
-                  <div key={file} className="flex items-center gap-2 text-xs">
-                    <StatusIcon ok={result.status === 'SEEDED'} />
-                    <span className="font-mono">{file}</span>
-                    {result.size && <span className="text-muted">({(result.size / 1024).toFixed(1)}KB)</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Diagnostics */}
-          {diagnostics && (
-            <div className="space-y-6">
-              <div className="p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
-                <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-                  <Server className="w-4 h-4" /> Entorno
-                </h3>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>IS_VERCEL: <span className="font-mono">{String(diagnostics.environment.IS_VERCEL)}</span></div>
-                  <div>HAS_BLOB_TOKEN: <StatusIcon ok={diagnostics.environment.HAS_BLOB_TOKEN} /></div>
-                  <div>TOKEN: <span className="font-mono">{diagnostics.environment.BLOB_TOKEN_PREFIX}</span></div>
-                  <div>NODE_ENV: <span className="font-mono">{diagnostics.environment.NODE_ENV}</span></div>
-                  <div>CACHE_READY: <StatusIcon ok={diagnostics.environment.CACHE_READY} /></div>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-foreground/[0.08]">
-                      <th className="text-left py-2 px-3 font-medium">Archivo</th>
-                      <th className="text-center py-2 px-3 font-medium">
-                        <div className="flex items-center justify-center gap-1"><Cloud className="w-3 h-3" /> Blob</div>
-                      </th>
-                      <th className="text-right py-2 px-3 font-medium">Tamaño</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.keys(diagnostics.blobFiles).map((file) => {
-                      const blobInfo = diagnostics.blobFiles[file] || { exists: false };
-                      return (
-                        <tr key={file} className="border-b border-foreground/[0.04] hover:bg-foreground/[0.02]">
-                          <td className="py-2 px-3 font-mono">{file}</td>
-                          <td className="py-2 px-3 text-center">
-                            <StatusIcon ok={blobInfo.exists} />
-                          </td>
-                          <td className="py-2 px-3 text-right text-muted">
-                            {blobInfo.exists && blobInfo.size ? `${(blobInfo.size / 1024).toFixed(1)} KB` : '—'}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {diagnostics.blobError && (
-                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono">
-                  {diagnostics.blobError}
-                </div>
-              )}
-
-              {diagnostics.blobListRaw && diagnostics.blobListRaw.length > 0 && (
-                <details className="text-xs">
-                  <summary className="cursor-pointer text-muted hover:text-foreground">
-                    Raw Blob List ({diagnostics.blobListRaw.length} archivos)
-                  </summary>
-                  <pre className="mt-2 p-3 rounded-lg bg-foreground/[0.03] overflow-auto max-h-60 font-mono">
-                    {JSON.stringify(diagnostics.blobListRaw, null, 2)}
-                  </pre>
-                </details>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ===== TAB: DOWNLOAD ===== */}
-      {activeTab === 'download' && (
-        <div className="space-y-6">
-          <div className="p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
-            <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-              <Download className="w-4 h-4" /> Descargar Datos del Blob
-            </h3>
-            <p className="text-xs text-muted mb-4">
-              Descarga la data actual que está en memoria (cargada desde Blob). Permite inspeccionar el estado real de producción.
-            </p>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
-              {dataFiles.map((file) => (
-                <button
-                  key={file}
-                  onClick={() => downloadFile(file)}
-                  disabled={loading !== 'idle'}
-                  className="flex items-center gap-2 px-3 py-2 rounded text-xs font-mono bg-foreground/[0.04] hover:bg-foreground/[0.08] transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  <Download className="w-3 h-3" />
-                  {file}
-                </button>
-              ))}
-            </div>
-
-            <button
-              onClick={() => downloadFile('all')}
-              disabled={loading !== 'idle'}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {loading === 'downloading' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              Descargar TODO
-            </button>
-          </div>
-
-          {/* Downloaded Data Viewer */}
-          {downloadedData && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold font-mono">{downloadedData.file}</h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => exportAsFile(downloadedData.data, downloadedData.file === 'all' ? 'blob-export-all.json' : downloadedData.file)}
-                    className="text-xs px-3 py-1.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 cursor-pointer"
-                  >
-                    Guardar como archivo
-                  </button>
-                  <button
-                    onClick={() => setDownloadedData(null)}
-                    className="text-xs px-3 py-1.5 rounded bg-foreground/[0.06] hover:bg-foreground/[0.1] cursor-pointer"
-                  >
-                    Cerrar
-                  </button>
-                </div>
-              </div>
-
-              {/* Stats */}
-              {Array.isArray(downloadedData.data) && (
-                <p className="text-xs text-muted">{downloadedData.data.length} registros</p>
-              )}
-
-              <pre className="p-4 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] overflow-auto max-h-[60vh] text-xs font-mono">
-                {JSON.stringify(downloadedData.data, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ===== TAB: SUPABASE ===== */}
-      {activeTab === 'supabase' && (
-        <div className="space-y-6">
-          {/* Connection check */}
-          <div className="p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
-            <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-              <Database className="w-4 h-4" /> Conexión Supabase
-            </h3>
-            <p className="text-xs text-muted mb-4">
-              Verifica la conexión y el estado de las tablas en Supabase.
-            </p>
-
-            <button
-              onClick={checkSupabaseStatus}
-              disabled={migrateLoading}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {migrateLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              Verificar Conexión
-            </button>
-
-            {supabaseStatus && (
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <StatusIcon ok={supabaseStatus.connected} />
-                  <span>{supabaseStatus.connected ? 'Conectado' : 'Sin conexión'}</span>
-                </div>
-
-                {supabaseStatus.error && (
-                  <div className="p-3 rounded bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
-                    {supabaseStatus.error}
-                  </div>
-                )}
-
-                {supabaseStatus.tables && (
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-muted">Tablas:</h4>
-                    {Object.entries(supabaseStatus.tables).map(([name, info]) => (
-                      <div key={name} className="flex items-center gap-3 p-2 rounded bg-foreground/[0.03] text-xs font-mono">
-                        <Table2 className="w-3.5 h-3.5 text-muted" />
-                        <span className="font-bold">{name}</span>
-                        {info.exists ? (
-                          <>
-                            <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                            <span className="text-muted">{info.rowCount} filas</span>
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="w-3.5 h-3.5 text-amber-500" />
-                            <span className="text-muted">No existe</span>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Migration actions */}
-          <div className="p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
-            <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-              <ArrowRightLeft className="w-4 h-4" /> Migrar Datos: Blob → Supabase
-            </h3>
-            <p className="text-xs text-muted mb-4">
-              Crea la tabla en Supabase si no existe y migra los datos desde el almacenamiento actual (JSON/Blob).
-            </p>
-
-            <div className="space-y-3">
-              {/* Users table */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]">
-                <Table2 className="w-4 h-4 text-cyan-400" />
-                <div className="flex-1">
-                  <span className="text-sm font-bold">users</span>
-                  <p className="text-xs text-muted">Usuarios del sistema (admin y estudiantes)</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => migrateTable('users', 'both')}
-                    disabled={migrateLoading}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-xs font-medium transition-colors disabled:opacity-50 cursor-pointer"
-                  >
-                    {migrateLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowRightLeft className="w-3 h-3" />}
-                    Crear + Migrar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Migration result */}
-          {migrateResult && (
-            <div className="p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
-              <h3 className="text-sm font-bold mb-3">Resultado: {migrateResult.table}</h3>
-              <div className="space-y-2">
-                {migrateResult.results.map((r, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2 rounded bg-foreground/[0.03] text-xs">
-                    {r.status === 'ok' ? (
-                      <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-                    ) : r.status === 'skipped' ? (
-                      <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-500 shrink-0" />
-                    )}
-                    <span className="font-mono font-bold">{r.step}</span>
-                    <span className="text-muted">{r.detail ?? r.status}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* SQL manual fallback */}
-          <details className="p-4 rounded-lg border border-foreground/[0.08] bg-foreground/[0.02]">
-            <summary className="text-sm font-bold cursor-pointer">SQL Manual (si RPC no está disponible)</summary>
-            <p className="text-xs text-muted mt-2 mb-3">
-              Si la creación automática falla, copia este SQL y ejecútalo en el <strong>SQL Editor</strong> de Supabase:
-            </p>
-            <pre className="p-3 rounded bg-foreground/[0.04] text-xs font-mono overflow-auto whitespace-pre-wrap">
-{`CREATE TABLE IF NOT EXISTS users (
-  id TEXT PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('admin', 'student')),
-  must_change_password BOOLEAN NOT NULL DEFAULT true,
-  first_name TEXT NOT NULL,
-  last_name TEXT NOT NULL,
-  document_number TEXT NOT NULL,
-  phone TEXT,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_login_at TIMESTAMPTZ
-);
-
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY service_role_all ON users FOR ALL
-  TO service_role USING (true) WITH CHECK (true);
-
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
-CREATE INDEX IF NOT EXISTS idx_users_document ON users(document_number);
-
-NOTIFY pgrst, 'reload schema';`}
-            </pre>
-          </details>
-        </div>
-      )}
-    </div>
-  );
+  return <DatabaseStatusView status={status} refreshing={refreshing} onRefresh={() => load(true)} />;
 }

@@ -515,11 +515,12 @@ export async function writeManualGrades(grades: ManualGrade[]): Promise<void> {
 }
 
 // ────────────────────────────────────────────────────────────
-// Re-exports from blobSync (kept for /admin/blob-sync inspection tools).
+// Re-exports from blobSync. Las funciones de sembrado y lectura directa del
+// Blob se retiraron: desde la migración a Supabase nadie las llamaba.
 // Productive data path does not use these — kept for the manual escape
 // hatch documented in the design.
 // ────────────────────────────────────────────────────────────
-export { withFileLock, DATA_FILES, seedAllToBlob, seedFilesToBlob, readFromBlobDirect, writeToBlobVerified } from './blobSync';
+export { withFileLock, DATA_FILES } from './blobSync';
 
 // ────────────────────────────────────────────────────────────
 // Re-exports from dateUtils (unchanged)

@@ -913,6 +913,41 @@ function quizAttemptToRow(a: QuizAttempt): Record<string, unknown> {
   };
 }
 
+/**
+ * supabaseTableStats — Existencia y número de filas de cada tabla.
+ *
+ * El chequeo anterior (/api/admin/supabase-migrate) solo miraba `users`, así
+ * que decía "conectado" con quince tablas sin comprobar. Se resuelve en dos
+ * viajes y no en dieciséis: uno para saber qué tablas hay y otro en paralelo
+ * para contar, porque contra Supabase la latencia por consulta se nota.
+ */
+export async function supabaseTableStats(
+  tables: string[],
+): Promise<{ present: string[]; counts: Record<string, number> }> {
+  const sql = getPgPool();
+
+  const rows = await sql<{ table_name: string }[]>`
+    SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'
+  `;
+  const present = rows.map((r) => r.table_name);
+  const presentSet = new Set(present);
+
+  const counts: Record<string, number> = {};
+  await Promise.all(
+    tables.filter((t) => presentSet.has(t)).map(async (t) => {
+      try {
+        const c = await sql<{ n: string }[]>`SELECT count(*)::text AS n FROM ${sql(t)}`;
+        counts[t] = Number(c[0]?.n ?? 0);
+      } catch {
+        // La tabla existe pero no se pudo contar (permisos, por ejemplo).
+        counts[t] = -1;
+      }
+    }),
+  );
+
+  return { present, counts };
+}
+
 export async function supabaseReadQuizAttempts(): Promise<QuizAttempt[]> {
   const rows = await readAllRows<SupabaseQuizAttemptRow>('quiz_attempts');
   return rows.map(rowToQuizAttempt);
