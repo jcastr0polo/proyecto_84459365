@@ -13,13 +13,21 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { MIGRATIONS, findMigration } from '@/lib/migrations';
-import { supabaseCheck, supabaseRunStatements } from '@/lib/supabase';
+import { supabaseColumnExists, supabaseRunStatements } from '@/lib/supabase';
 import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 
+/**
+ * ¿Está aplicada? Se comprueba por PostgREST, no por conexión directa: desde
+ * Vercel el pool de Postgres no responde y la pantalla se quedaba colgada
+ * quince segundos antes de caerse.
+ */
 async function estadoDe(id: string) {
   const m = findMigration(id)!;
   try {
-    return { applied: await supabaseCheck(m.check), error: null as string | null };
+    const checks = await Promise.all(
+      m.requires.map((r) => supabaseColumnExists(r.table, r.column)),
+    );
+    return { applied: checks.every(Boolean), error: null as string | null };
   } catch (e) {
     return { applied: false, error: e instanceof Error ? e.message : 'No se pudo comprobar' };
   }
@@ -90,8 +98,22 @@ export async function POST(request: Request): Promise<NextResponse> {
 
       return NextResponse.json({ applied: true, message: `"${migration.title}" aplicada.` });
     } catch (e) {
+      /*
+       * Aplicar el cambio SÍ necesita conexión directa: PostgREST no ejecuta
+       * DDL. Si desde aquí no se llega a Postgres, se dice con todas las
+       * letras y se ofrece la salida por terminal, en vez de dejar un error
+       * genérico que no lleva a ninguna parte.
+       */
+      const msg = e instanceof Error ? e.message : 'No se pudo aplicar la migración';
+      const sinConexion = /timeout|ECONNREFUSED|ENOTFOUND|not configured|terminated/i.test(msg);
       return NextResponse.json({
-        error: e instanceof Error ? e.message : 'No se pudo aplicar la migración',
+        error: sinConexion
+          ? 'No se pudo abrir una conexión directa a Postgres desde el servidor, que es lo único que puede aplicar cambios de esquema.'
+          : msg,
+        ...(sinConexion ? {
+          fallback: 'node --env-file=.env.local .scripts/migrar-cortes-fechas.mjs',
+          detail: msg,
+        } : {}),
       }, { status: 500 });
     }
   }, 'admin');

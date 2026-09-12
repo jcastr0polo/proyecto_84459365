@@ -155,7 +155,7 @@ function BlobTab() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push('/admin/blob-sync');
+    router.push('/admin/database');
   }, [router]);
 
   return (

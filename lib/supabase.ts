@@ -77,9 +77,21 @@ function getPgPool(): Sql {
 
   _pg = postgres(connString, {
     ssl: 'require',
-    connect_timeout: 15,
+    /*
+     * Falla rápido. Con quince segundos, la pantalla de estado de la base se
+     * quedaba cargando todo ese rato desde Vercel y luego se caía sin decir
+     * por qué. Ya nada de lectura depende de esta conexión —eso va por
+     * PostgREST—; aquí solo quedan los cambios de esquema, y si no se puede
+     * abrir, es mejor saberlo en cinco segundos y con un mensaje claro.
+     */
+    connect_timeout: 5,
     idle_timeout: 20,
     max: 4,
+    /*
+     * El pooler de Supabase (puerto 6543) trabaja en modo transacción y ahí
+     * las sentencias preparadas no sobreviven entre consultas.
+     */
+    prepare: false,
   });
   return _pg;
 }
@@ -950,18 +962,6 @@ export async function supabaseRunStatements(statements: string[]): Promise<void>
 }
 
 /**
- * Comprobación de una migración: true si ya está aplicada.
- *
- * Mira el esquema de verdad y no un registro de migraciones, así detecta
- * también las que se aplicaron por fuera de la aplicación.
- */
-export async function supabaseCheck(query: string): Promise<boolean> {
-  const sql = getPgPool();
-  const rows = await sql.unsafe<{ ok: boolean }[]>(query);
-  return rows[0]?.ok === true;
-}
-
-/**
  * supabaseTableStats — Existencia y número de filas de cada tabla.
  *
  * El chequeo anterior (/api/admin/supabase-migrate) solo miraba `users`, así
@@ -972,28 +972,46 @@ export async function supabaseCheck(query: string): Promise<boolean> {
 export async function supabaseTableStats(
   tables: string[],
 ): Promise<{ present: string[]; counts: Record<string, number> }> {
-  const sql = getPgPool();
+  const sb = requireSupabaseClient();
 
-  const rows = await sql<{ table_name: string }[]>`
-    SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'
-  `;
-  const present = rows.map((r) => r.table_name);
-  const presentSet = new Set(present);
+  /*
+   * Por el mismo camino que todo lo demás, no por conexión directa.
+   *
+   * La primera versión consultaba information_schema con el pool de Postgres.
+   * En local funcionaba; en Vercel la pantalla se quedaba cargando quince
+   * segundos —el connect_timeout— y se caía, porque desde allí la conexión
+   * directa no llega. Todo el resto de la aplicación va por PostgREST, así
+   * que esto también.
+   *
+   * `head: true` no trae ninguna fila, solo la cuenta: las dieciséis salen en
+   * menos de un segundo.
+   */
+  const resultados = await Promise.all(tables.map(async (t) => {
+    const { count } = await sb.from(t).select('*', { count: 'exact', head: true });
+    // count null = la tabla no existe. count 0 = existe y está vacía.
+    return { table: t, exists: count !== null, n: count ?? 0 };
+  }));
 
+  const present = resultados.filter((r) => r.exists).map((r) => r.table);
   const counts: Record<string, number> = {};
-  await Promise.all(
-    tables.filter((t) => presentSet.has(t)).map(async (t) => {
-      try {
-        const c = await sql<{ n: string }[]>`SELECT count(*)::text AS n FROM ${sql(t)}`;
-        counts[t] = Number(c[0]?.n ?? 0);
-      } catch {
-        // La tabla existe pero no se pudo contar (permisos, por ejemplo).
-        counts[t] = -1;
-      }
-    }),
-  );
+  for (const r of resultados) if (r.exists) counts[r.table] = r.n;
 
   return { present, counts };
+}
+
+/**
+ * ¿Existe esta columna? Sonda por PostgREST, sin conexión directa.
+ *
+ * Pedir una columna que no existe devuelve el error 42703 de Postgres. Es la
+ * forma de comprobar una migración sin depender del pool, que desde Vercel no
+ * responde.
+ */
+export async function supabaseColumnExists(table: string, column: string): Promise<boolean> {
+  const sb = requireSupabaseClient();
+  const { error } = await sb.from(table).select(column).limit(1);
+  if (!error) return true;
+  if (error.code === '42703') return false;
+  throw new Error(`No se pudo comprobar ${table}.${column}: ${error.message}`);
 }
 
 export async function supabaseReadQuizAttempts(): Promise<QuizAttempt[]> {

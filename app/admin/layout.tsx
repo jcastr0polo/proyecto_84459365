@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
 import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
-import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight, Shield } from 'lucide-react';
+import { Database, LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import type { Semester } from '@/lib/types';
 
@@ -22,11 +22,14 @@ const NAV_ITEMS = [
   { href: '/admin/prompts', label: 'Prompts IA', icon: Sparkles },
   { href: '/admin/audit', label: 'Auditoría', icon: Shield },
   { href: '/admin/semesters', label: 'Configuración', icon: Settings },
+  /* Estaba sin enlazar: había que escribir la URL a mano para llegar. */
+  { href: '/admin/database', label: 'Base de datos', icon: Database },
 ];
 
 /* ─── Breadcrumb helpers ─── */
 const BREADCRUMB_LABELS: Record<string, string> = {
   admin: 'Panel',
+  database: 'Base de datos',
   courses: 'Cursos',
   students: 'Estudiantes',
   prompts: 'Prompts',

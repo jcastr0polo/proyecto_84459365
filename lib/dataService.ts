@@ -57,7 +57,7 @@ import {
 // LEGACY: JSON / Blob utilities (kept but not in productive data path)
 //
 // Per the big-bang cutover decision, these helpers stay in the codebase
-// as an inspection/manual-recovery escape hatch (see /admin/blob-sync).
+// as an inspection/manual-recovery escape hatch (see /admin/database).
 // No productive code below this section calls them.
 // ────────────────────────────────────────────────────────────
 
@@ -77,14 +77,14 @@ export async function readJsonFileFresh<T>(filename: string): Promise<T> {
   return JSON.parse(raw) as T;
 }
 
-/** @deprecated No longer used by the data path. Kept for /admin/blob-sync. */
+/** @deprecated No longer used by the data path. Kept for /admin/database. */
 export async function writeJsonFile<T>(filename: string, data: T): Promise<void> {
   const content = JSON.stringify(data, null, 2) + '\n';
   const filePath = path.join(SOURCE_DATA_DIR, filename);
   fs.writeFileSync(filePath, content, 'utf-8');
 }
 
-/** @deprecated No longer used by the data path. Kept for /admin/blob-sync. */
+/** @deprecated No longer used by the data path. Kept for /admin/database. */
 export async function writeJsonFileCritical<T>(filename: string, data: T): Promise<void> {
   await writeJsonFile(filename, data);
 }
