@@ -19,6 +19,7 @@ interface QuizDetailResponse {
   attemptCount: number;
   canAttempt: boolean;
   resultsAvailable?: boolean;
+  notPresented?: boolean;
 }
 
 export default function StudentTakeQuizPage() {
@@ -37,6 +38,7 @@ export default function StudentTakeQuizPage() {
   const { started, answers, timeLeft, expired, start, setAnswer, clearSession } =
     useQuizSession(quizId, quiz?.timeLimit);
   const [resultsAvailable, setResultsAvailable] = useState(false);
+  const [notPresented, setNotPresented] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [submitting, setSubmitting] = useState(false);
@@ -69,6 +71,7 @@ export default function StudentTakeQuizPage() {
       setCanAttempt(data.canAttempt);
       setAttemptCount(data.attemptCount);
       setResultsAvailable(data.resultsAvailable ?? false);
+      setNotPresented(data.notPresented ?? false);
     } catch {
       toast('Error al cargar parcial', 'error');
     } finally {
@@ -209,7 +212,8 @@ export default function StudentTakeQuizPage() {
           <div className="grid grid-cols-2 gap-3 mb-6">
             <InfoItem label="Tipo" value={quiz.type === 'training' ? 'Entrenamiento' : 'Calificable'} />
             <InfoItem label="Preguntas" value={`${quiz.questions.length}`} />
-            <InfoItem label="Intentos" value={quiz.maxAttempts === 0 ? 'Ilimitados' : `${attemptCount}/${quiz.maxAttempts}`} />
+            <InfoItem label="Intentos"
+              value={notPresented ? 'No presentado' : quiz.maxAttempts === 0 ? 'Ilimitados' : `${attemptCount}/${quiz.maxAttempts}`} />
             {quiz.timeLimit && <InfoItem label="Tiempo" value={`${quiz.timeLimit} minutos`} />}
           </div>
 
@@ -237,8 +241,18 @@ export default function StudentTakeQuizPage() {
 
           {!canAttempt ? (
             <div className="space-y-4">
+              {/* No es lo mismo gastarse los intentos que no haberse
+                  presentado nunca; decirle lo primero cuando pasó lo segundo
+                  lo manda a reclamar por donde no es. */}
               <div className="p-4 rounded-lg bg-red-500/[0.08] border border-red-500/20 text-center">
-                <p className="text-sm font-medium text-red-300">Has alcanzado el máximo de intentos</p>
+                <p className="text-sm font-medium text-red-600 dark:text-red-300">
+                  {notPresented ? 'No presentaste este parcial' : 'Has alcanzado el máximo de intentos'}
+                </p>
+                {notPresented && (
+                  <p className="text-xs text-subtle mt-1">
+                    Tu docente lo cerró con 0. Si crees que es un error, háblalo con él.
+                  </p>
+                )}
               </div>
               <div className="flex justify-center gap-3">
                 <Button variant="secondary" size="sm" onClick={() => router.push(`/student/courses/${courseId}/quizzes`)}>

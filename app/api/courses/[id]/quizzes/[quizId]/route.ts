@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { withAuth } from '@/lib/withAuth';
+import { isNoAttemptId } from '@/lib/gradeService';
 import { updateQuizSchema } from '@/lib/schemas';
 import {
   getCourseById,
@@ -77,6 +78,9 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
         attemptCount: studentAttempts.length,
         canAttempt: quiz.maxAttempts === 0 || studentAttempts.length < quiz.maxAttempts,
         resultsAvailable: studentAttempts.length > 0,
+        // Todos sus "intentos" son ceros por no presentar: no gastó intentos,
+        // se le acabó el plazo. Decirlo así evita un reclamo mal planteado.
+        notPresented: studentAttempts.length > 0 && studentAttempts.every((a) => isNoAttemptId(a.id)),
         detailAvailable: canSeeDetail && studentAttempts.length > 0,
       });
     }

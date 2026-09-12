@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { withAuth } from '@/lib/withAuth';
+import { isNoAttemptId } from '@/lib/gradeService';
 import { createQuizSchema } from '@/lib/schemas';
 import {
   getCourseById,
@@ -75,12 +76,16 @@ export async function GET(
           q.type === 'training' ||
           q.resultVisibility === 'immediate' ||
           (q.resultVisibility === 'manual' && q.resultsReleased);
+        // El 0 que puso el docente por no presentar no es un intento: si se
+        // cuenta como tal, la lista le dice al estudiante "Completado".
+        const notPresented = myAttempts.length > 0 && myAttempts.every((a) => isNoAttemptId(a.id));
         return {
           ...q,
           attemptCount: myAttempts.length,
           canAttempt: q.maxAttempts === 0 || myAttempts.length < q.maxAttempts,
           resultsAvailable: myAttempts.length > 0,
           detailAvailable: canSeeResults && myAttempts.length > 0,
+          notPresented,
         };
       });
 

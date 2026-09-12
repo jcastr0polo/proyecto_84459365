@@ -9,8 +9,13 @@ import { useToast } from '@/components/ui/Toast';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { formatDateTimeColombia } from '@/lib/dateUtils';
 import type { QuizAttempt, QuizQuestion } from '@/lib/types';
-import { Clock, ChevronDown, ChevronUp, XCircle, CheckCircle2, ClockIcon } from 'lucide-react';
+import { Clock, ChevronDown, ChevronUp, XCircle, CheckCircle2, ClockIcon, UserX } from 'lucide-react';
 import { gradeText, normalize, formatScore } from '@/lib/gradeScale';
+
+/** Un 0 registrado por el docente por no presentar, no un intento real. */
+interface StudentAttempt extends QuizAttempt {
+  noAttempt?: boolean;
+}
 
 interface QuizInfo {
   id: string;
@@ -27,7 +32,7 @@ export default function StudentQuizResultsPage() {
   const quizId = params.quizId as string;
 
   const [quizInfo, setQuizInfo] = useState<QuizInfo | null>(null);
-  const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
+  const [attempts, setAttempts] = useState<StudentAttempt[]>([]);
   const [detailAvailable, setDetailAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -83,6 +88,30 @@ export default function StudentQuizResultsPage() {
           {attempts.map((attempt) => {
             const isExpanded = expandedId === attempt.id;
             const questions = quizInfo?.questions;
+
+            /*
+             * Un 0 por no presentar mostrado como "Intento #1 · 0%" con todas
+             * las preguntas en rojo le dice al estudiante que lo presentó y
+             * falló todo. No fue eso lo que pasó, y la diferencia importa a la
+             * hora de reclamar.
+             */
+            if (attempt.noAttempt) {
+              return (
+                <Card key={attempt.id} padding="lg">
+                  <div className="flex items-start gap-3">
+                    <UserX className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">No presentaste este parcial</p>
+                      <p className="text-3xl font-bold tabular-nums text-red-600 dark:text-red-400 mt-1">0.0</p>
+                      <p className="text-xs text-subtle mt-1">
+                        Cuenta como 0 en tu nota definitiva. Si crees que es un error, habla con tu docente.
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              );
+            }
+
             return (
               <Card key={attempt.id} padding="none" className="overflow-hidden">
                 {/* Summary header — clickable if detail available */}

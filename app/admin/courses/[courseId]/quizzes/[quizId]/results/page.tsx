@@ -7,22 +7,35 @@ import SearchInput from '@/components/ui/SearchInput';
 import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { QuizAttempt, QuizQuestion } from '@/lib/types';
-import { AlertTriangle, Shield, Clock, ChevronDown, ChevronUp, Eye, CheckCircle2, XCircle } from 'lucide-react';
+import { AlertTriangle, Shield, Clock, ChevronDown, ChevronUp, Eye, CheckCircle2, XCircle, UserX, Undo2 } from 'lucide-react';
 import { gradeText, normalize, formatScore, PASS } from '@/lib/gradeScale';
+import { toneBox } from '@/lib/semantics';
 import StatTile from '@/components/ui/StatTile';
 import Chip from '@/components/ui/Chip';
 
 type SortKey = 'recent' | 'top' | 'bottom' | 'name';
 
+interface Student {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  documentNumber: string;
+}
+
 interface EnrichedAttempt extends QuizAttempt {
-  student: { id: string; firstName: string; lastName: string; email: string; documentNumber: string } | null;
+  student: Student | null;
+  /** true si es un 0 registrado por el docente, no un intento real. */
+  noAttempt?: boolean;
 }
 
 interface QuizInfo {
   id: string;
   title: string;
   type: string;
+  weight: number | null;
   maxScore: number;
   questions: QuizQuestion[];
 }
@@ -35,8 +48,13 @@ export default function AdminQuizResultsPage() {
   const quizId = params.quizId as string;
 
   const [attempts, setAttempts] = useState<EnrichedAttempt[]>([]);
+  const [missing, setMissing] = useState<Student[]>([]);
+  const [enrolledCount, setEnrolledCount] = useState(0);
   const [quizInfo, setQuizInfo] = useState<QuizInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  /** Estudiantes con una escritura en vuelo: deshabilitan su propio botón. */
+  const [busy, setBusy] = useState<string[]>([]);
+  const [confirmAll, setConfirmAll] = useState(false);
   const [search, setSearch] = useState('');
   const [flagFilter, setFlagFilter] = useState(false);
   const [failedOnly, setFailedOnly] = useState(false);
@@ -49,6 +67,8 @@ export default function AdminQuizResultsPage() {
       if (res.ok) {
         const data = await res.json();
         setAttempts(data.attempts ?? []);
+        setMissing(data.missing ?? []);
+        setEnrolledCount(data.enrolledCount ?? 0);
         setQuizInfo(data.quiz ?? null);
       } else {
         toast('No se pudieron cargar los resultados', 'error');
@@ -62,6 +82,58 @@ export default function AdminQuizResultsPage() {
   }, [courseId, quizId, toast, router]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  /*
+   * Poner 0 a quien no presentó.
+   *
+   * No es cosmético: mientras un estudiante no tenga NINGÚN intento, el peso
+   * del parcial se cae del cálculo de su definitiva y le sale más alta que a
+   * quien sí lo presentó y sacó 2.0. Con el 0 registrado, el peso entra.
+   *
+   * Se hace a mano, nunca solo: un parcial sin presentar hoy puede estar
+   * abierto todavía o tener supletorio. La decisión de que ya no hay plazo es
+   * del docente.
+   */
+  const markAsMissed = useCallback(async (studentIds: string[]) => {
+    if (studentIds.length === 0) return;
+    setBusy((prev) => [...prev, ...studentIds]);
+    try {
+      const res = await fetch(`/api/courses/${courseId}/quizzes/${quizId}/attempts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentIds }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'No se pudo registrar el 0');
+      toast(data.message ?? '0 registrado', 'success');
+      setConfirmAll(false);
+      await fetchData();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo registrar el 0', 'error');
+    } finally {
+      setBusy((prev) => prev.filter((id) => !studentIds.includes(id)));
+    }
+  }, [courseId, quizId, toast, fetchData]);
+
+  /* Sin esto un 0 puesto por error sería definitivo y bloquearía el intento. */
+  const undoMissed = useCallback(async (studentId: string) => {
+    setBusy((prev) => [...prev, studentId]);
+    try {
+      const res = await fetch(`/api/courses/${courseId}/quizzes/${quizId}/attempts`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentIds: [studentId] }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'No se pudo deshacer');
+      toast(data.message ?? 'Cero deshecho', 'success');
+      await fetchData();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo deshacer', 'error');
+    } finally {
+      setBusy((prev) => prev.filter((id) => id !== studentId));
+    }
+  }, [courseId, quizId, toast, fetchData]);
 
   const filtered = useMemo(() => {
     let result = attempts;
@@ -93,6 +165,9 @@ export default function AdminQuizResultsPage() {
   }, [attempts, flagFilter, failedOnly, search, sortBy]);
 
   // Stats
+  // Los ceros por no presentar son notas, no intentos: cuentan en el promedio
+  // y en los reprobados, pero no en "presentaron".
+  const presentedCount = attempts.filter((a) => !a.noAttempt).length;
   const avgPercentage = attempts.length > 0
     ? Math.round(attempts.reduce((s, a) => s + a.percentage, 0) / attempts.length) : 0;
   // Reprobado según la escala del sistema: 3.0 sobre 5 son 60% de aciertos.
@@ -130,9 +205,9 @@ export default function AdminQuizResultsPage() {
         tenía que convertir de cabeza. Y faltaba lo accionable: cuántos
         reprobaron. Los contadores filtran, no solo informan.
       */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Intentos" value={String(attempts.length)}
-          hint={`${new Set(attempts.map((a) => a.studentId)).size} estudiantes`} />
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        <StatTile label="Presentaron" value={String(presentedCount)}
+          hint={enrolledCount > 0 ? `de ${enrolledCount} inscritos` : `${new Set(attempts.map((a) => a.studentId)).size} estudiantes`} />
         <StatTile label="Promedio" value={formatScore(normalize(avgPercentage, 100))}
           tone={gradeText(normalize(avgPercentage, 100))} hint={`${avgPercentage}% de aciertos`} />
         <StatTile label="Reprobados" value={String(failedCount)}
@@ -140,12 +215,96 @@ export default function AdminQuizResultsPage() {
           highlight={failedCount > 0 ? 'border-red-500/25 bg-red-500/[0.06]' : undefined}
           onClick={failedCount > 0 ? () => { setFailedOnly((v) => !v); setFlagFilter(false); } : undefined}
           hint={failedCount > 0 ? (failedOnly ? 'quitar filtro' : 'ver quiénes') : 'ninguno bajo 3.0'} />
+        <StatTile label="Sin nota" value={String(missing.length)}
+          tone={missing.length > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}
+          highlight={missing.length > 0 ? 'border-amber-500/25 bg-amber-500/[0.06]' : undefined}
+          hint={missing.length > 0 ? 'no presentaron ni tienen 0' : 'todos calificados'} />
         <StatTile label="Sospechosos" value={String(flaggedCount)}
           tone={flaggedCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}
           highlight={flaggedCount > 0 ? 'border-amber-500/25 bg-amber-500/[0.06]' : undefined}
           onClick={flaggedCount > 0 ? () => { setFlagFilter((v) => !v); setFailedOnly(false); } : undefined}
           hint={flaggedCount > 0 ? (flagFilter ? 'quitar filtro' : 'ver cuáles') : 'sin incidencias'} />
       </div>
+
+      {/*
+        Los ausentes, visibles y accionables.
+
+        Esta pantalla solo mostraba intentos, así que quien no presentó
+        simplemente no existía aquí: no había manera de verlo ni de ponerle el
+        0, y el peso del parcial se caía de su definitiva sin avisar.
+      */}
+      {missing.length > 0 && (
+        <div className={`rounded-xl border p-4 space-y-3 ${toneBox.attention}`}>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                <UserX className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                {missing.length === 1
+                  ? '1 estudiante sin nota en este parcial'
+                  : `${missing.length} estudiantes sin nota en este parcial`}
+              </p>
+              <p className="text-xs text-subtle mt-1 max-w-prose">
+                Mientras no tengan nota
+                {quizInfo?.weight ? `, el ${quizInfo.weight}% que pesa este parcial` : ', el peso del parcial'}
+                {' '}no entra en su definitiva y les sale más alta de lo que es.
+                Ponles 0 cuando ya no haya plazo.
+              </p>
+            </div>
+            {missing.length > 1 && (
+              <button
+                onClick={() => setConfirmAll(true)}
+                disabled={busy.length > 0}
+                className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium
+                           hover:bg-amber-400 transition-colors duration-[var(--dur-fast)]
+                           active:scale-[0.98] motion-reduce:active:scale-100
+                           disabled:opacity-50 cursor-pointer shrink-0"
+              >
+                Poner 0 a los {missing.length}
+              </button>
+            )}
+          </div>
+
+          <ul className="space-y-1.5">
+            {missing.map((student) => {
+              const working = busy.includes(student.id);
+              return (
+                <li key={student.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-surface-border
+                             bg-surface px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-sm text-foreground/90 truncate">
+                      {student.lastName}, {student.firstName}
+                    </p>
+                    <p className="text-meta text-subtle truncate">{student.email}</p>
+                  </div>
+                  <button
+                    onClick={() => markAsMissed([student.id])}
+                    disabled={working}
+                    className="shrink-0 px-3 py-2 rounded-lg border border-amber-500/30 text-xs font-medium
+                               text-amber-700 dark:text-amber-300 hover:bg-amber-500/10
+                               transition-colors duration-[var(--dur-fast)]
+                               active:scale-[0.98] motion-reduce:active:scale-100
+                               disabled:opacity-50 cursor-pointer"
+                  >
+                    {working ? 'Guardando…' : 'Poner 0'}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      <ConfirmModal
+        open={confirmAll}
+        onClose={() => setConfirmAll(false)}
+        onConfirm={() => markAsMissed(missing.map((s) => s.id))}
+        variant="warning"
+        title={`¿Poner 0 a ${missing.length} estudiantes?`}
+        message={`Quedará registrado como parcial no presentado y contará en su nota definitiva. Si el parcial permite un solo intento, ya no podrán presentarlo. Se puede deshacer uno por uno.`}
+        confirmLabel="Poner 0"
+        loading={busy.length > 0}
+      />
 
       {attempts.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-3 flex-wrap sm:items-center">
@@ -164,12 +323,55 @@ export default function AdminQuizResultsPage() {
       {filtered.length === 0 ? (
         <div className="text-center py-12 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02]">
           <p className="text-subtle">{attempts.length === 0 ? 'Nadie ha presentado este parcial aún.' : 'Sin resultados para esos filtros.'}</p>
+          {attempts.length === 0 && missing.length > 0 && (
+            <p className="text-xs text-subtle mt-1">Arriba puedes registrar el 0 de quienes no lo presenten.</p>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
           {filtered.map((attempt, idx) => {
             const isExpanded = expandedId === attempt.id;
             const showRank = sortBy === 'top' || sortBy === 'bottom';
+
+            /*
+             * Un 0 por no presentar no tiene respuestas que revisar. Pintarlo
+             * como "intento 1 · 0%" con su chevron sería mentir sobre lo que
+             * pasó: se muestra como lo que es, y con su deshacer al lado.
+             */
+            if (attempt.noAttempt) {
+              const working = busy.includes(attempt.studentId);
+              return (
+                <div
+                  key={attempt.id}
+                  className="rounded-xl border border-surface-border bg-surface p-4
+                             flex items-center justify-between gap-3 flex-wrap"
+                >
+                  <div className="min-w-0 flex items-center gap-2.5">
+                    <UserX className="w-4 h-4 text-subtle shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground/90 truncate">
+                        {attempt.student ? `${attempt.student.lastName}, ${attempt.student.firstName}` : attempt.studentId}
+                      </p>
+                      <p className="text-meta text-subtle">No presentó · 0.0 cuenta en su definitiva</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => undoMissed(attempt.studentId)}
+                    disabled={working}
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg
+                               border border-surface-border text-xs font-medium text-muted
+                               hover:text-foreground hover:bg-surface-hover
+                               transition-colors duration-[var(--dur-fast)]
+                               active:scale-[0.98] motion-reduce:active:scale-100
+                               disabled:opacity-50 cursor-pointer"
+                  >
+                    <Undo2 className="w-3.5 h-3.5" />
+                    {working ? 'Deshaciendo…' : 'Deshacer 0'}
+                  </button>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={attempt.id}

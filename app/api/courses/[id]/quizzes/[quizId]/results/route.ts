@@ -17,6 +17,7 @@ import {
   nowColombiaISO,
 } from '@/lib/dataService';
 import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
+import { isNoAttemptId } from '@/lib/gradeService';
 
 type RouteParams = { params: Promise<{ id: string; quizId: string }> };
 
@@ -41,7 +42,12 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
     }
 
     const allAttempts = await readQuizAttemptsFresh();
-    const quizAttempts = allAttempts.filter((a) => a.quizId === quizId);
+    // `noAttempt` marca los ceros que puso el docente por no presentar. Sin
+    // esa bandera el cliente los pinta como un intento con todo malo, que es
+    // otra cosa muy distinta a no haberse presentado.
+    const quizAttempts = allAttempts
+      .filter((a) => a.quizId === quizId)
+      .map((a) => ({ ...a, noAttempt: isNoAttemptId(a.id) }));
 
     if (user.role === 'admin') {
       // Admin: resultados completos con estadísticas

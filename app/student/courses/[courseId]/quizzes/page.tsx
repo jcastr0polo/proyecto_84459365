@@ -16,6 +16,7 @@ interface QuizWithAttemptInfo extends Quiz {
   attemptCount: number;
   canAttempt: boolean;
   resultsAvailable: boolean;
+  notPresented?: boolean;
 }
 
 export default function StudentQuizzesPage() {
@@ -84,7 +85,7 @@ export default function StudentQuizzesPage() {
                 ? Math.round((parseDateColombia(quiz.endDate).getTime() - today.getTime()) / 86400000)
                 : null;
               const urgent = closes !== null && closes <= 2 && quiz.canAttempt;
-              const done = quiz.attemptCount > 0 && !quiz.canAttempt;
+              const done = quiz.attemptCount > 0 && !quiz.canAttempt && !quiz.notPresented;
 
               return (
                 <div
@@ -111,6 +112,7 @@ export default function StudentQuizzesPage() {
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {done && <Badge variant="neutral" size="sm">Completado</Badge>}
+                        {quiz.notPresented && <Badge variant="danger" size="sm">No presentado</Badge>}
                         <Badge variant={quiz.type === 'training' ? 'warning' : 'info'} size="sm">
                           {quiz.type === 'training' ? 'Entrenamiento' : 'Calificable'}
                         </Badge>
@@ -122,8 +124,11 @@ export default function StudentQuizzesPage() {
                       {quiz.timeLimit && (
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{quiz.timeLimit} min</span>
                       )}
-                      {quiz.maxAttempts > 0 && (
+                      {quiz.maxAttempts > 0 && !quiz.notPresented && (
                         <span>{quiz.attemptCount} de {quiz.maxAttempts} intentos</span>
+                      )}
+                      {quiz.notPresented && (
+                        <span className="text-red-600 dark:text-red-400">Quedó en 0</span>
                       )}
                       {quiz.lockBrowser && (
                         <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">

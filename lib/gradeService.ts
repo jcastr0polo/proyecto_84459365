@@ -90,6 +90,32 @@ export function isNoSubmissionId(id: string): boolean {
   return id.startsWith(`${NO_SUBMISSION_PREFIX}:`);
 }
 
+/**
+ * Identificador de "parcial no presentado".
+ *
+ * El mismo problema que `nosub`, pero en parciales: si un estudiante nunca
+ * abrió el parcial no existe ningún intento suyo, y el cálculo dejaba fuera
+ * TODO el peso del parcial. Resultado: al que no lo presentó le salía la
+ * definitiva más alta que al que lo presentó y sacó 2.0.
+ *
+ * `quiz_attempts` tampoco tiene clave foránea ni índice único, así que un id
+ * derivado de (parcial, estudiante) es estable, reconocible y idempotente: si
+ * se marca dos veces, es la misma fila.
+ *
+ * Es una acción explícita del docente, nunca automática: que un parcial esté
+ * sin presentar hoy no significa un cero — puede estar abierto, o haber
+ * supletorio. El cero lo pone quien decide que ya no hay más plazo.
+ */
+const NO_ATTEMPT_PREFIX = 'noattempt';
+
+export function noAttemptId(quizId: string, studentId: string): string {
+  return `${NO_ATTEMPT_PREFIX}:${quizId}:${studentId}`;
+}
+
+export function isNoAttemptId(id: string): boolean {
+  return id.startsWith(`${NO_ATTEMPT_PREFIX}:`);
+}
+
 const SCALE_MAX = 5.0;
 const APPROVAL_THRESHOLD = 3.0;
 
@@ -624,7 +650,9 @@ export function calculateFinalGrade(
 
         details.push({
           activityId: quiz.id,
-          activityTitle: `[Parcial] ${quiz.title}`,
+          activityTitle: isNoAttemptId(bestAttempt.id)
+            ? `[Parcial] ${quiz.title} — no presentó`
+            : `[Parcial] ${quiz.title}`,
           score,
           maxScore: quizMaxScore,
           weight: quiz.weight!,
@@ -819,6 +847,7 @@ export async function getCourseGradeSummary(courseId: string): Promise<CourseGra
           score: roundTo1Decimal((best.percentage / 100) * maxScore),
           maxScore,
           isPublished: true,
+          ...(isNoAttemptId(best.id) ? { feedback: 'No presentó' } : {}),
         };
       } else {
         gradesMap[quiz.id] = null;
@@ -1014,6 +1043,9 @@ export async function getStudentGradeSummary(studentId: string, courseId: string
         ? {
             score: roundTo1Decimal((best.percentage / 100) * maxScore),
             maxScore,
+            // Un 0 sin explicación se lee como error del sistema. Si el cero
+            // viene de no haberlo presentado, que lo diga.
+            ...(isNoAttemptId(best.id) ? { feedback: 'No presentaste este parcial.' } : {}),
             gradedAt: best.completedAt ?? new Date().toISOString(),
           }
         : null,
