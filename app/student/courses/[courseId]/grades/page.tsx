@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import StudentGradesView from '@/components/grades/StudentGradesView';
 import { useToast } from '@/components/ui/Toast';
 import type { StudentGradeSummary } from '@/lib/types';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
+import BackLink from '@/components/ui/BackLink';
 
 /**
  * Student — My Grades Page
@@ -17,7 +18,6 @@ import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
  */
 export default function StudentGradesPage() {
   const params = useParams<{ courseId: string }>();
-  const router = useRouter();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -74,12 +74,7 @@ export default function StudentGradesPage() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
       <div className="mb-8">
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors mb-2 cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-        >
-          ← Volver al curso
-        </button>
+        <BackLink href={`/student/courses/${courseId}`} className="mb-2">Volver al curso</BackLink>
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
           Mis Notas
         </h1>

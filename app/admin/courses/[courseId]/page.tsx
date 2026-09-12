@@ -2,7 +2,6 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { formatDateColombia as formatDate } from '@/lib/dateUtils';
 import Button from '@/components/ui/Button';
 import Badge, { categoryToBadgeVariant, categoryLabel } from '@/components/ui/Badge';
 import CourseOverviewTab from '@/components/admin/CourseOverviewTab';
@@ -12,7 +11,8 @@ import { useToast } from '@/components/ui/Toast';
 import CourseForm from '@/components/forms/CourseForm';
 import type { CourseFormData } from '@/components/forms/CourseForm';
 import type { Course, Semester } from '@/lib/types';
-import { ArrowLeft, Pencil, FileText, Users, BookOpen, BarChart3, Rocket, Layers, ClipboardList, ListChecks } from 'lucide-react';
+import { Pencil, FileText, Users, BookOpen, BarChart3, Rocket, Layers, ClipboardList, ListChecks } from 'lucide-react';
+import BackLink from '@/components/ui/BackLink';
 
 type TabKey = 'resumen' | 'estudiantes' | 'actividades' | 'notas' | 'proyectos' | 'cortes' | 'parciales' | 'manual';
 
@@ -115,13 +115,7 @@ export default function CourseDetailPage() {
     <div className="space-y-6">
       {/* Back + Header */}
       <div>
-        <button
-          onClick={() => router.push('/admin/courses')}
-          className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors mb-4 cursor-pointer"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Volver a cursos
-        </button>
+        <BackLink href="/admin/courses" className="mb-4">Volver a cursos</BackLink>
 
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>

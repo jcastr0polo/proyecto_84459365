@@ -3,13 +3,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import GradeTable, { type GradeRow } from '@/components/grades/GradeTable';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { toneBox } from '@/lib/semantics';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import type { ManualGradeItem, ManualGrade } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 /**
  * Calificación de un ítem manual, en página completa.
@@ -169,10 +169,7 @@ export default function ManualItemGradingPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
-      <Link href={`/admin/courses/${courseId}/manual-items`}
-        className="inline-flex items-center gap-1.5 text-sm text-subtle hover:text-foreground transition-colors py-2 pr-3">
-        <ArrowLeft className="w-4 h-4" /> Notas manuales
-      </Link>
+      <BackLink href={`/admin/courses/${courseId}/manual-items`}>Notas manuales</BackLink>
 
       <div>
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>

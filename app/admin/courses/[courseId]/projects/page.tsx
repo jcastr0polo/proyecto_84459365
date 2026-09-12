@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Chip from '@/components/ui/Chip';
@@ -11,6 +11,7 @@ import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
 import type { StudentProject, Course } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 type EnrichedProject = StudentProject & { studentName: string; courseName: string };
 
@@ -20,7 +21,6 @@ type EnrichedProject = StudentProject & { studentName: string; courseName: strin
  */
 export default function AdminCourseProjectsPage() {
   const params = useParams();
-  const router = useRouter();
   const { toast } = useToast();
   const courseId = params.courseId as string;
 
@@ -213,15 +213,7 @@ export default function AdminCourseProjectsPage() {
       />
 
       {/* Back link */}
-      <button
-        onClick={() => router.push(`/admin/courses/${courseId}`)}
-        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors duration-[var(--dur-fast)] cursor-pointer"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Volver al curso
-      </button>
+      <BackLink href={`/admin/courses/${courseId}`}>Volver al curso</BackLink>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

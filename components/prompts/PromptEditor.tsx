@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import TagInput from '@/components/prompts/TagInput';
 import type { Course } from '@/lib/types';

@@ -13,6 +13,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Quiz } from '@/lib/types';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { Clock, Shield, AlertTriangle } from 'lucide-react';
+import BackLink from '@/components/ui/BackLink';
 
 interface QuizDetailResponse {
   quiz: Quiz;
@@ -197,13 +198,7 @@ export default function StudentTakeQuizPage() {
   if (!started) {
     return (
       <div className="space-y-6 max-w-3xl mx-auto">
-        <button
-          onClick={() => router.push(`/student/courses/${courseId}/quizzes`)}
-          className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-          Volver a parciales
-        </button>
+        <BackLink href={`/student/courses/${courseId}/quizzes`}>Volver a parciales</BackLink>
 
         <Card padding="lg">
           <h1 className="text-2xl font-bold text-foreground mb-2">{quiz.title}</h1>

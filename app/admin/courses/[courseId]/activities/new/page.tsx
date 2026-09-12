@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/Toast';
 import ActivityForm from '@/components/activities/ActivityForm';
 import type { ActivityFormData } from '@/components/activities/ActivityForm';
 import type { Course, ActivityAttachment } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 /**
  * Admin — Create New Activity Page
@@ -127,15 +128,7 @@ export default function NewActivityPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Back link */}
-      <button
-        onClick={() => router.push(`/admin/courses/${courseId}/activities`)}
-        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Volver a actividades
-      </button>
+      <BackLink href={`/admin/courses/${courseId}/activities`}>Volver a actividades</BackLink>
 
       {/* Header */}
       <div>

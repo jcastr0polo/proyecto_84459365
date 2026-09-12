@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Badge from '@/components/ui/Badge';
-import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
 import SearchInput from '@/components/ui/SearchInput';
 import Chip from '@/components/ui/Chip';

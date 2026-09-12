@@ -9,6 +9,7 @@ import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import type { Quiz, Course } from '@/lib/types';
 import { ClipboardList, Search, Clock, Shield, Eye, EyeOff } from 'lucide-react';
+import BackLink from '@/components/ui/BackLink';
 
 type TypeFilter = 'all' | 'training' | 'graded';
 
@@ -76,13 +77,7 @@ export default function CourseQuizzesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <button
-          onClick={() => router.push(`/admin/courses/${courseId}`)}
-          className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors mb-4 cursor-pointer"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-          Volver al curso
-        </button>
+        <BackLink href={`/admin/courses/${courseId}`}>Volver al curso</BackLink>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

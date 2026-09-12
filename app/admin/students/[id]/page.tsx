@@ -6,7 +6,7 @@ import { formatDateColombia as formatDate, formatDateTimeColombia as formatDateT
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, BookOpen, CheckCircle2,
+  BookOpen, CheckCircle2,
   ExternalLink, FolderGit2, ChevronDown, ChevronRight,
   Paperclip, Link as LinkIcon, Eye, Download, GitBranch, Palette,
   Plus, GraduationCap, AlertTriangle, Clock,
@@ -18,6 +18,7 @@ import Card from '@/components/ui/Card';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
 import Button from '@/components/ui/Button';
+import BackLink from '@/components/ui/BackLink';
 
 /* ─── Types ─── */
 interface SubmissionAttachment {
@@ -290,12 +291,9 @@ export default function AdminStudentDetailPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Back */}
       <div className="flex items-center gap-3">
-        <Link
-          href={fromCourse ? `/admin/courses/${fromCourse}/students` : '/admin/students'}
-          className="flex items-center gap-1.5 text-sm text-subtle hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> {fromCourse ? 'Volver al curso' : 'Volver a estudiantes'}
-        </Link>
+        <BackLink href={fromCourse ? `/admin/courses/${fromCourse}/students` : '/admin/students'}>
+          {fromCourse ? 'Volver al curso' : 'Volver a estudiantes'}
+        </BackLink>
         {fromCourse && (
           <Link
             href="/admin/students"

@@ -1,10 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { parseDateColombia } from '@/lib/dateUtils';
+import React, { useCallback, useEffect, useState } from 'react';
 import AdminDashboardView from '@/components/admin/AdminDashboardView';
-import type { DeadlineItem } from '@/components/dashboard/DeadlineList';
-import type { TimelineEvent } from '@/components/dashboard/ActivityTimeline';
 import type { Course, Semester, Activity, Enrollment, Submission } from '@/lib/types';
 
 /* ─── Types for aggregated data ─── */

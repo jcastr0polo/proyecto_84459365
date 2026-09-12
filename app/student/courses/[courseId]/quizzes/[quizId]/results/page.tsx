@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
@@ -10,7 +10,8 @@ import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { formatDateTimeColombia } from '@/lib/dateUtils';
 import type { QuizAttempt, QuizQuestion } from '@/lib/types';
 import { Clock, ChevronDown, ChevronUp, XCircle, CheckCircle2, ClockIcon, UserX } from 'lucide-react';
-import { gradeText, normalize, formatScore } from '@/lib/gradeScale';
+import { gradeText, normalize } from '@/lib/gradeScale';
+import BackLink from '@/components/ui/BackLink';
 
 /** Un 0 registrado por el docente por no presentar, no un intento real. */
 interface StudentAttempt extends QuizAttempt {
@@ -26,7 +27,6 @@ interface QuizInfo {
 
 export default function StudentQuizResultsPage() {
   const params = useParams();
-  const router = useRouter();
   const { toast } = useToast();
   const courseId = params.courseId as string;
   const quizId = params.quizId as string;
@@ -68,13 +68,7 @@ export default function StudentQuizResultsPage() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <button
-        onClick={() => router.push(`/student/courses/${courseId}/quizzes`)}
-        className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-        Volver a parciales
-      </button>
+      <BackLink href={`/student/courses/${courseId}/quizzes`}>Volver a parciales</BackLink>
 
       <h1 className="text-2xl font-bold text-foreground tracking-tight">Mis Resultados</h1>
       {quizInfo && <p className="text-sm text-subtle">{quizInfo.title}</p>}

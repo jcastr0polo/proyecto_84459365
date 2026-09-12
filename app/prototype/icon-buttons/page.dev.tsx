@@ -4,6 +4,7 @@ import React from 'react';
 import { Pencil, Check, X, Eye, RotateCcw, ShieldOff } from 'lucide-react';
 import IconButton from '@/components/ui/IconButton';
 import Chip from '@/components/ui/Chip';
+import BackLink from '@/components/ui/BackLink';
 
 /** Taller — tonos y tamaños de IconButton, y su área de pulsación. */
 export default function PrototypeIconButtons() {
@@ -17,6 +18,17 @@ export default function PrototypeIconButtons() {
   return (
     <div className="px-4 py-8 max-w-lg mx-auto space-y-6">
       <h1 className="text-xl font-bold text-foreground">IconButton</h1>
+
+      {/* BackLink: el mismo gesto que antes estaba escrito a mano 43 veces */}
+      <section className="space-y-2">
+        <p className="text-micro font-semibold uppercase tracking-wider text-subtle">BackLink</p>
+        <div className="flex flex-col items-start gap-1">
+          <BackLink href="/prototype">Volver al curso</BackLink>
+          <BackLink href="/prototype">Volver a estudiantes</BackLink>
+          <BackLink onClick={() => {}}>Volver (acción, no navega)</BackLink>
+        </div>
+      </section>
+
       <div className="flex items-center gap-2">
         {rows.map(([tone, icon]) => (
           <IconButton key={tone} label={tone} tone={tone} icon={icon} />

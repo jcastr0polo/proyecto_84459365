@@ -21,8 +21,7 @@ import {
   getUserByEmail,
   readEnrollmentsFresh,
   writeEnrollments,
-  isStudentEnrolled,
-} from '@/lib/dataService';
+  } from '@/lib/dataService';
 import { nowColombiaISO } from '@/lib/dateUtils';
 import { withFileLock } from '@/lib/dataService';
 import type {

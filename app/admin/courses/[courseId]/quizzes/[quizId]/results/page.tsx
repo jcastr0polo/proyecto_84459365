@@ -14,6 +14,7 @@ import { gradeText, normalize, formatScore, PASS } from '@/lib/gradeScale';
 import { toneBox } from '@/lib/semantics';
 import StatTile from '@/components/ui/StatTile';
 import Chip from '@/components/ui/Chip';
+import BackLink from '@/components/ui/BackLink';
 
 type SortKey = 'recent' | 'top' | 'bottom' | 'name';
 
@@ -186,13 +187,7 @@ export default function AdminQuizResultsPage() {
   return (
     <div className="space-y-6">
       {/* Back */}
-      <button
-        onClick={() => router.push(`/admin/courses/${courseId}/quizzes/${quizId}`)}
-        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-        Volver al parcial
-      </button>
+      <BackLink href={`/admin/courses/${courseId}/quizzes/${quizId}`}>Volver al parcial</BackLink>
 
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Resultados</h1>

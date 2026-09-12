@@ -15,7 +15,7 @@ import {
   readSubmissionsFresh,
   writeSubmissions,
 } from '@/lib/dataService';
-import { nowColombiaISO, parseDateColombia, parseDateTimeColombia } from '@/lib/dateUtils';
+import { nowColombiaISO, parseDateTimeColombia } from '@/lib/dateUtils';
 import { withFileLock } from '@/lib/dataService';
 import type {
   Submission,

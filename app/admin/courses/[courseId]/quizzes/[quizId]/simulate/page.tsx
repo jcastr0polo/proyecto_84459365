@@ -13,6 +13,7 @@ import type { Quiz, QuizAnswer, QuizSimulation } from '@/lib/types';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { Clock, Shield, AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, Eye, History } from 'lucide-react';
 import { gradeText, normalize } from '@/lib/gradeScale';
+import BackLink from '@/components/ui/BackLink';
 
 interface SimulationResult {
   attempt: {
@@ -222,7 +223,7 @@ export default function AdminQuizSimulatePage() {
       <FlaskConical className="w-5 h-5 text-purple-400 shrink-0" />
       <div className="flex-1">
         <p className="text-sm font-semibold text-purple-300">Modo Simulación</p>
-        <p className="text-[11px] text-purple-400/70">Estás probando el parcial como docente. Nada se guarda.</p>
+        <p className="text-meta text-purple-400/70">Estás probando el parcial como docente. Nada se guarda.</p>
       </div>
       <Badge variant="neutral" size="sm">Admin</Badge>
     </div>
@@ -235,13 +236,7 @@ export default function AdminQuizSimulatePage() {
 
     return (
       <div className="space-y-6 max-w-3xl mx-auto">
-        <button
-          onClick={() => router.push(`/admin/courses/${courseId}/quizzes/${quizId}`)}
-          className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-          Volver al parcial
-        </button>
+        <BackLink href={`/admin/courses/${courseId}/quizzes/${quizId}`}>Volver al parcial</BackLink>
 
         {SIMULATION_BANNER}
 
@@ -283,7 +278,7 @@ export default function AdminQuizSimulatePage() {
                   <span className="text-xs font-bold text-faint shrink-0 pt-0.5">{idx + 1}.</span>
                   <div className="flex-1">
                     <MarkdownRenderer content={question.text} className="text-sm font-medium text-foreground/90" />
-                    <span className={`text-[10px] font-medium ${
+                    <span className={`text-micro font-medium ${
                       isCorrect ? 'text-emerald-400' : isPartial ? 'text-amber-400' : 'text-red-400'
                     }`}>
                       {earned}/{question.points} pts
@@ -318,7 +313,7 @@ export default function AdminQuizSimulatePage() {
                         {!isSelected && isCorrectOpt && !isBestOpt && <Eye className="w-4 h-4 text-amber-400/50 shrink-0" />}
                         <span className="flex-1">{opt.text}</span>
                         {question.type === 'weighted' && (
-                          <span className={`text-[10px] shrink-0 font-mono ${opt.weight >= 80 ? 'text-emerald-400' : opt.weight > 0 ? 'text-amber-400' : 'text-faint'}`}>peso: {opt.weight}</span>
+                          <span className={`text-micro shrink-0 font-mono ${opt.weight >= 80 ? 'text-emerald-400' : opt.weight > 0 ? 'text-amber-400' : 'text-faint'}`}>peso: {opt.weight}</span>
                         )}
                       </div>
                     );
@@ -346,13 +341,9 @@ export default function AdminQuizSimulatePage() {
     const simAnswers = reviewingSim.answers ?? [];
     return (
       <div className="space-y-6 max-w-3xl mx-auto">
-        <button
-          onClick={() => setReviewingSim(null)}
-          className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-          Volver al historial
-        </button>
+        {/* No navega: cierra la revisión y vuelve al estado anterior de esta
+            misma pantalla. Eso es una acción, así que sí va como botón. */}
+        <BackLink onClick={() => setReviewingSim(null)}>Volver al historial</BackLink>
 
         <Card padding="lg" className="text-center">
           <History className="w-10 h-10 text-purple-400 mx-auto mb-3" />
@@ -387,7 +378,7 @@ export default function AdminQuizSimulatePage() {
                   <span className="text-xs font-bold text-faint shrink-0 pt-0.5">{idx + 1}.</span>
                   <div className="flex-1">
                     <MarkdownRenderer content={question.text} className="text-sm font-medium text-foreground/90" />
-                    <span className={`text-[10px] font-medium ${
+                    <span className={`text-micro font-medium ${
                       isCorrect ? 'text-emerald-400' : isPartial ? 'text-amber-400' : 'text-red-400'
                     }`}>
                       {earned}/{question.points} pts
@@ -422,7 +413,7 @@ export default function AdminQuizSimulatePage() {
                         {!isSelected && isCorrectOpt && !isBestOpt && <Eye className="w-4 h-4 text-amber-400/50 shrink-0" />}
                         <span className="flex-1">{opt.text}</span>
                         {question.type === 'weighted' && (
-                          <span className={`text-[10px] shrink-0 font-mono ${opt.weight >= 80 ? 'text-emerald-400' : opt.weight > 0 ? 'text-amber-400' : 'text-faint'}`}>peso: {opt.weight}</span>
+                          <span className={`text-micro shrink-0 font-mono ${opt.weight >= 80 ? 'text-emerald-400' : opt.weight > 0 ? 'text-amber-400' : 'text-faint'}`}>peso: {opt.weight}</span>
                         )}
                       </div>
                     );
@@ -449,13 +440,7 @@ export default function AdminQuizSimulatePage() {
   if (!started) {
     return (
       <div className="space-y-6 max-w-3xl mx-auto">
-        <button
-          onClick={() => router.push(`/admin/courses/${courseId}/quizzes/${quizId}`)}
-          className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-          Volver al parcial
-        </button>
+        <BackLink href={`/admin/courses/${courseId}/quizzes/${quizId}`}>Volver al parcial</BackLink>
 
         {SIMULATION_BANNER}
 
@@ -476,7 +461,7 @@ export default function AdminQuizSimulatePage() {
                 <Shield className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-medium text-amber-300">Anti-trampas activo</p>
-                  <p className="text-[11px] text-amber-400/70">Si cambias de pestaña, el parcial se enviará automáticamente. Prueba esto durante la simulación.</p>
+                  <p className="text-meta text-amber-400/70">Si cambias de pestaña, el parcial se enviará automáticamente. Prueba esto durante la simulación.</p>
                 </div>
               </div>
             )}
@@ -485,7 +470,7 @@ export default function AdminQuizSimulatePage() {
                 <Clock className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-medium text-cyan-300">Cronómetro de {quiz.timeLimit} minutos</p>
-                  <p className="text-[11px] text-cyan-400/70">Se enviará automáticamente al acabarse el tiempo.</p>
+                  <p className="text-meta text-cyan-400/70">Se enviará automáticamente al acabarse el tiempo.</p>
                 </div>
               </div>
             )}
@@ -519,7 +504,7 @@ export default function AdminQuizSimulatePage() {
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
                       {sim.autoSubmitted && <Badge variant="warning" size="sm">Auto-enviado</Badge>}
-                      {sim.blurCount > 0 && <span className="text-[10px] text-amber-400">{sim.blurCount} blur</span>}
+                      {sim.blurCount > 0 && <span className="text-micro text-amber-400">{sim.blurCount} blur</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0 ml-3">
@@ -529,7 +514,7 @@ export default function AdminQuizSimulatePage() {
                       }`}>
                         {sim.percentage}%
                       </p>
-                      <p className="text-[10px] text-subtle">{sim.score}/{sim.maxScore} pts</p>
+                      <p className="text-micro text-subtle">{sim.score}/{sim.maxScore} pts</p>
                     </div>
                     <Eye className="w-4 h-4 text-purple-400/50" />
                   </div>
@@ -603,7 +588,7 @@ export default function AdminQuizSimulatePage() {
               <span className="text-xs font-bold text-faint shrink-0 pt-0.5">{idx + 1}.</span>
               <div>
                 <MarkdownRenderer content={question.text} className="text-sm font-medium text-foreground/90" />
-                <span className="text-[10px] text-subtle">
+                <span className="text-micro text-subtle">
                   {question.points} pts · {isWeighted ? 'Selección múltiple (selecciona las correctas)' : 'Selección única'}
                 </span>
               </div>
@@ -689,7 +674,7 @@ export default function AdminQuizSimulatePage() {
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="p-2.5 rounded-lg bg-foreground/[0.02] border border-foreground/[0.06]">
-      <p className="text-[10px] text-subtle uppercase tracking-wider">{label}</p>
+      <p className="text-micro text-subtle uppercase tracking-wider">{label}</p>
       <p className="text-sm font-medium text-muted">{value}</p>
     </div>
   );

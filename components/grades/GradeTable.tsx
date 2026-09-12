@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { formatDateShort } from '@/lib/dateUtils';
 import { Paperclip, Link as LinkIcon } from 'lucide-react';
 import ScoreInput from '@/components/grades/ScoreInput';

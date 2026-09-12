@@ -3,12 +3,13 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
-import { FileText, BarChart3, Rocket, ClipboardList, Clock, Building2, Monitor, RefreshCw, ArrowLeft } from 'lucide-react';
+import { FileText, BarChart3, Rocket, ClipboardList, Clock, Building2, Monitor, RefreshCw } from 'lucide-react';
 import { nowColombia } from '@/lib/dateUtils';
 import { gradeText, formatScore } from '@/lib/gradeScale';
 import { needsAction, startOfTodayColombia } from '@/lib/activityStatus';
 import ActivityList, { useActivityRows } from './ActivityList';
 import type { Course, Activity, Submission, StudentGradeSummary } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 /**
  * StudentCourseView — Rediseño de la vista de curso.
@@ -84,11 +85,7 @@ export default function StudentCourseView({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <Link href="/student/courses"
-        className="inline-flex items-center gap-1.5 text-sm text-subtle hover:text-foreground
-                   transition-colors py-2 pr-3 rounded-lg">
-        <ArrowLeft className="w-4 h-4" /> Mis cursos
-      </Link>
+      <BackLink href="/student/courses">Mis cursos</BackLink>
 
       {/* ── Cabecera ── */}
       <motion.div {...fade(0)} className="flex items-start justify-between gap-6 flex-wrap">

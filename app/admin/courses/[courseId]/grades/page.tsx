@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import GradeSummaryTable, { type Adjustment } from '@/components/grades/GradeSummaryTable';
 import AdjustGradeModal, { type AdjustTarget } from '@/components/grades/AdjustGradeModal';
 import GradeStats, { calculateStats } from '@/components/grades/GradeStats';
@@ -12,6 +12,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import OrphanItemsNotice from '@/components/grades/OrphanItemsNotice';
 import Link from 'next/link';
+import BackLink from '@/components/ui/BackLink';
 
 /**
  * Admin — Course Grade Summary Page
@@ -22,7 +23,6 @@ import Link from 'next/link';
  */
 export default function AdminGradeSummaryPage() {
   const params = useParams<{ courseId: string }>();
-  const router = useRouter();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -210,12 +210,7 @@ export default function AdminGradeSummaryPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors mb-2 cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-          >
-            ← Volver al curso
-          </button>
+          <BackLink href={`/admin/courses/${courseId}`} className="mb-2">Volver al curso</BackLink>
           <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
             Resumen de Notas
           </h1>

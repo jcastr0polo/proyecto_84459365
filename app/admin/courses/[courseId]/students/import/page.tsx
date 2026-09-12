@@ -9,6 +9,7 @@ import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import CSVImporter from '@/components/students/CSVImporter';
 import type { Course } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 interface ImportResult {
   summary: { total: number; enrolled: number; alreadyEnrolled: number; errors: number };
@@ -90,15 +91,7 @@ export default function ImportStudentsPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Back */}
-      <button
-        onClick={() => router.push(`/admin/courses/${courseId}/students`)}
-        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Volver a estudiantes
-      </button>
+      <BackLink href={`/admin/courses/${courseId}/students`}>Volver a estudiantes</BackLink>
 
       {/* Header */}
       <div>

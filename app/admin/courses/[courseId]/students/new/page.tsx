@@ -12,6 +12,7 @@ import type { EnrollFormData } from '@/components/students/EnrollForm';
 import SearchInput from '@/components/ui/SearchInput';
 import EmptyState from '@/components/ui/EmptyState';
 import type { Course, SafeUser } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 export default function NewStudentPage() {
   const params = useParams();
@@ -127,15 +128,7 @@ export default function NewStudentPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       {/* Back link */}
-      <button
-        onClick={() => router.push(`/admin/courses/${courseId}/students`)}
-        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Volver a estudiantes
-      </button>
+      <BackLink href={`/admin/courses/${courseId}/students`}>Volver a estudiantes</BackLink>
 
       {/* Header */}
       <div>

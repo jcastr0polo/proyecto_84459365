@@ -10,10 +10,11 @@ import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import QuizForm from '@/components/quizzes/QuizForm';
 import ConfirmModal from '@/components/ui/ConfirmModal';
-import type { Quiz, Course, QuizAttempt } from '@/lib/types';
+import type { Quiz, Course } from '@/lib/types';
 import type { QuestionData } from '@/components/quizzes/QuestionEditor';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { Pencil, Trash2, Eye, EyeOff, Clock, Shield, Users, AlertTriangle, PlayCircle, PauseCircle, BarChart3, FlaskConical } from 'lucide-react';
+import BackLink from '@/components/ui/BackLink';
 
 export default function AdminQuizDetailPage() {
   const params = useParams();
@@ -175,13 +176,7 @@ export default function AdminQuizDetailPage() {
   return (
     <div className="space-y-6">
       {/* Back */}
-      <button
-        onClick={() => router.push(`/admin/courses/${courseId}/quizzes`)}
-        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-        Volver a parciales
-      </button>
+      <BackLink href={`/admin/courses/${courseId}/quizzes`}>Volver a parciales</BackLink>
 
       {course && <p className="text-xs text-subtle">{course.name} · <span className="font-mono">{course.code}</span></p>}
 

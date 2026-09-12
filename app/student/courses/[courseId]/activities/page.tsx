@@ -2,8 +2,6 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { nowColombia } from '@/lib/dateUtils';
@@ -12,6 +10,7 @@ import ActivityList, { useActivityRows } from '@/components/student/ActivityList
 import Chip from '@/components/ui/Chip';
 import type { Activity, Submission } from '@/lib/types';
 import EmptyState from '@/components/ui/EmptyState';
+import BackLink from '@/components/ui/BackLink';
 
 /**
  * Lista de actividades del curso.
@@ -83,11 +82,7 @@ export default function StudentActivitiesPage() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <Link href={`/student/courses/${courseId}`}
-        className="inline-flex items-center gap-1.5 text-sm text-subtle hover:text-foreground
-                   transition-colors py-2 pr-3 rounded-lg">
-        <ArrowLeft className="w-4 h-4" /> Volver al curso
-      </Link>
+      <BackLink href={`/student/courses/${courseId}`}>Volver al curso</BackLink>
 
       <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
         Mis actividades

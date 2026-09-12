@@ -2,12 +2,12 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { Skeleton, SkeletonForm } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import QuizForm from '@/components/quizzes/QuizForm';
 import type { Course } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 export default function NewQuizPage() {
   const params = useParams();
@@ -71,13 +71,7 @@ export default function NewQuizPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <button
-        onClick={() => router.push(`/admin/courses/${courseId}/quizzes`)}
-        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-        Volver a parciales
-      </button>
+      <BackLink href={`/admin/courses/${courseId}/quizzes`}>Volver a parciales</BackLink>
 
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Nuevo Parcial</h1>

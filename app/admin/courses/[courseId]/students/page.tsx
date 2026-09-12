@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { FileUp, Users, Search } from 'lucide-react';
-import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
@@ -13,6 +12,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { EnrollmentWithStudent, Course } from '@/lib/types';
 import SearchInput from '@/components/ui/SearchInput';
 import Chip from '@/components/ui/Chip';
+import BackLink from '@/components/ui/BackLink';
 
 export default function CourseStudentsPage() {
   const params = useParams();
@@ -113,15 +113,7 @@ export default function CourseStudentsPage() {
     <div className="space-y-6">
       {/* Back link + header */}
       <div>
-        <button
-          onClick={() => router.push(`/admin/courses/${courseId}`)}
-          className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors mb-4 cursor-pointer"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-          Volver al curso
-        </button>
+        <BackLink href={`/admin/courses/${courseId}`}>Volver al curso</BackLink>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

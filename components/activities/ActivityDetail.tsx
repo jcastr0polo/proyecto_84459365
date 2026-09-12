@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Paperclip, Link as LinkIcon, Clock, Eye, Download, ArrowDownToLine } from 'lucide-react';
+import { Paperclip, Link as LinkIcon, Clock, Eye, Download } from 'lucide-react';
 import { formatDateColombia as formatDate, parseDateTimeColombia } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';

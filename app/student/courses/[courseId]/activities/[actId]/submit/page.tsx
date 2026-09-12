@@ -11,6 +11,7 @@ import SubmitForm from '@/components/submissions/SubmitForm';
 import SubmissionDetail from '@/components/submissions/SubmissionDetail';
 import { formatDateTimeColombia } from '@/lib/dateUtils';
 import type { Activity, Submission, SubmissionLink } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 /**
  * Student — Submit Delivery Page
@@ -132,7 +133,7 @@ export default function StudentSubmitPage() {
   if (existing && existing.status === 'reviewed') {
     return (
       <div className="space-y-6 max-w-3xl mx-auto">
-        <BackLink courseId={courseId} actId={actId} router={router} />
+        <BackLink href={`/student/courses/${courseId}/activities/${actId}`}>Volver a la actividad</BackLink>
         <Card padding="lg">
           <div className="text-center py-8">
             <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
@@ -151,7 +152,7 @@ export default function StudentSubmitPage() {
   if (success && newSubmission) {
     return (
       <div className="space-y-6 max-w-3xl mx-auto">
-        <BackLink courseId={courseId} actId={actId} router={router} />
+        <BackLink href={`/student/courses/${courseId}/activities/${actId}`}>Volver a la actividad</BackLink>
         <Card padding="lg">
           <div className="text-center py-8">
             <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
@@ -194,7 +195,7 @@ export default function StudentSubmitPage() {
   // Submit form
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <BackLink courseId={courseId} actId={actId} router={router} />
+      <BackLink href={`/student/courses/${courseId}/activities/${actId}`}>Volver a la actividad</BackLink>
 
       <h1 className="text-2xl font-bold text-foreground tracking-tight">
         {existing ? 'Re-enviar Entrega' : 'Enviar Entrega'}
@@ -211,16 +212,3 @@ export default function StudentSubmitPage() {
   );
 }
 
-function BackLink({ courseId, actId, router }: { courseId: string; actId: string; router: ReturnType<typeof useRouter> }) {
-  return (
-    <button
-      onClick={() => router.push(`/student/courses/${courseId}/activities/${actId}`)}
-      className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <polyline points="15 18 9 12 15 6" />
-      </svg>
-      Volver a la actividad
-    </button>
-  );
-}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
@@ -11,6 +11,7 @@ import { ClipboardList, Clock, Shield, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import { parseDateColombia, nowColombia } from '@/lib/dateUtils';
 import { startOfTodayColombia } from '@/lib/activityStatus';
+import BackLink from '@/components/ui/BackLink';
 
 interface QuizWithAttemptInfo extends Quiz {
   attemptCount: number;
@@ -21,7 +22,6 @@ interface QuizWithAttemptInfo extends Quiz {
 
 export default function StudentQuizzesPage() {
   const params = useParams();
-  const router = useRouter();
   const { toast } = useToast();
   const courseId = params.courseId as string;
 
@@ -56,13 +56,7 @@ export default function StudentQuizzesPage() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <button
-        onClick={() => router.push(`/student/courses/${courseId}`)}
-        className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-        Volver al curso
-      </button>
+      <BackLink href={`/student/courses/${courseId}`}>Volver al curso</BackLink>
 
       <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
         Parciales

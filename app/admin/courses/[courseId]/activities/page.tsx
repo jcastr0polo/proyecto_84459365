@@ -10,6 +10,7 @@ import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import ActivityCard from '@/components/activities/ActivityCard';
 import type { Activity, Course } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 type StatusFilter = 'all' | 'draft' | 'published' | 'closed';
 type TypeFilter = 'all' | Activity['type'];
@@ -93,15 +94,7 @@ export default function CourseActivitiesPage() {
     <div className="space-y-6">
       {/* Back link + header */}
       <div>
-        <button
-          onClick={() => router.push(`/admin/courses/${courseId}`)}
-          className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors mb-4 cursor-pointer"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-          Volver al curso
-        </button>
+        <BackLink href={`/admin/courses/${courseId}`}>Volver al curso</BackLink>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

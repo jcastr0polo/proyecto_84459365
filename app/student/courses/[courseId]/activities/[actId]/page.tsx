@@ -6,14 +6,13 @@ import Card from '@/components/ui/Card';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import ActivityDetail from '@/components/activities/ActivityDetail';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import SubmissionStatus from '@/components/student/SubmissionStatus';
 import { nowColombia } from '@/lib/dateUtils';
 import { startOfTodayColombia } from '@/lib/activityStatus';
 import PromptViewer from '@/components/prompts/PromptViewer';
 import type { Activity, Submission, AIPrompt } from '@/lib/types';
 import { parseDateTimeColombia } from '@/lib/dateUtils';
+import BackLink from '@/components/ui/BackLink';
 
 /**
  * Student — Activity Detail Page
@@ -99,11 +98,7 @@ export default function StudentActivityDetailPage() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       {/* Back link */}
-      <Link href={`/student/courses/${courseId}/activities`}
-        className="inline-flex items-center gap-1.5 text-sm text-subtle hover:text-foreground
-                   transition-colors py-2 pr-3 rounded-lg">
-        <ArrowLeft className="w-4 h-4" /> Volver a actividades
-      </Link>
+      <BackLink href={`/student/courses/${courseId}/activities`}>Volver a actividades</BackLink>
 
       <ActivityDetail
         activity={activity}

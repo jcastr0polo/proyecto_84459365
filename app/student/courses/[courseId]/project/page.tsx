@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import { Star, Pencil, Rocket, Upload, FileText, CheckCircle } from 'lucide-react';
@@ -12,6 +12,7 @@ import VisibilityToggle from '@/components/projects/VisibilityToggle';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import MarkdownViewer from '@/components/ui/MarkdownViewer';
 import type { StudentProject, Course } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 /**
  * Estudiante — Mi Proyecto del Curso
@@ -21,7 +22,6 @@ import type { StudentProject, Course } from '@/lib/types';
  */
 export default function StudentProjectPage() {
   const params = useParams();
-  const router = useRouter();
   const { toast } = useToast();
   const courseId = params.courseId as string;
 
@@ -245,15 +245,7 @@ export default function StudentProjectPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Back link */}
-      <button
-        onClick={() => router.push(`/student/courses/${courseId}`)}
-        className="inline-flex items-center gap-2 text-sm text-subtle hover:text-muted transition-colors cursor-pointer py-2 pr-3 rounded-lg hover:bg-foreground/[0.04] min-h-[44px]"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Volver al curso
-      </button>
+      <BackLink href={`/student/courses/${courseId}`}>Volver al curso</BackLink>
 
       {/* Header */}
       <div>

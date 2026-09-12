@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { formatDateTimeColombia as formatDate } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import { Inbox, Search as SearchIcon, GitBranch, Palette, Link as LinkIcon, Paperclip } from 'lucide-react';
@@ -18,6 +18,7 @@ import { useToast } from '@/components/ui/Toast';
 import SubmissionDetail from '@/components/submissions/SubmissionDetail';
 import { SUBMISSION_STATUS_CONFIG } from '@/components/submissions/SubmissionCard';
 import type { SubmissionWithDetails, Activity } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 type StatusFilter = 'all' | 'pending' | 'submitted' | 'reviewed' | 'returned' | 'resubmitted' | 'late';
 
@@ -27,7 +28,6 @@ type StatusFilter = 'all' | 'pending' | 'submitted' | 'reviewed' | 'returned' | 
  */
 export default function AdminSubmissionsPage() {
   const params = useParams();
-  const router = useRouter();
   const { toast } = useToast();
   const courseId = params.courseId as string;
   const actId = params.actId as string;
@@ -142,15 +142,7 @@ export default function AdminSubmissionsPage() {
   return (
     <div className="space-y-6">
       {/* Back link */}
-      <button
-        onClick={() => router.push(`/admin/courses/${courseId}/activities/${actId}`)}
-        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Volver a la actividad
-      </button>
+      <BackLink href={`/admin/courses/${courseId}/activities/${actId}`}>Volver a la actividad</BackLink>
 
       {/* Header */}
       <div>

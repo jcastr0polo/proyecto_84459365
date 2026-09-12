@@ -9,9 +9,10 @@ import Table, { Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table';
 import EmptyState from '@/components/ui/EmptyState';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
-import { ArrowLeft, Plus, Pencil, Trash2, ListChecks, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, ListChecks, Users } from 'lucide-react';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { ManualGradeItem, Corte } from '@/lib/types';
+import BackLink from '@/components/ui/BackLink';
 
 
 export default function ManualItemsPage() {
@@ -165,13 +166,7 @@ export default function ManualItemsPage() {
 
   return (
     <div className="space-y-6">
-      <button
-        onClick={() => router.push(`/admin/courses/${courseId}`)}
-        className="inline-flex items-center gap-1.5 text-xs text-subtle hover:text-muted transition-colors cursor-pointer"
-      >
-        <ArrowLeft size={14} />
-        Volver al curso
-      </button>
+      <BackLink href={`/admin/courses/${courseId}`}>Volver al curso</BackLink>
 
       {courseName && <p className="text-xs text-subtle">{courseName}</p>}
 
