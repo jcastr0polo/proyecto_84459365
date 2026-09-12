@@ -29,6 +29,12 @@ export default function CortesPage() {
   const [courseName, setCourseName] = useState('');
   const [semesterId, setSemesterId] = useState('');
   const [applyOpen, setApplyOpen] = useState(false);
+  const [importable, setImportable] = useState<{
+    source: string;
+    items: { order: number; name: string; weight: number; reportDeadline?: string }[];
+    wouldCreate: number;
+  } | null>(null);
+  const [importing, setImporting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCorte, setEditingCorte] = useState<CorteOverview | null>(null);
@@ -54,6 +60,15 @@ export default function CortesPage() {
       setCortes(cortesData.cortes ?? []);
       setTotalWeight(cortesData.totalWeight ?? 0);
       setOrphanItems(cortesData.orphanItems ?? []);
+
+      /* Solo hace falta cuando no hay cortes: es el estado en el que cae el
+         docente al crear la asignatura. */
+      if ((cortesData.cortes ?? []).length === 0) {
+        const impRes = await fetch(`/api/courses/${courseId}/cortes/import`);
+        if (impRes.ok) setImportable(await impRes.json());
+      } else {
+        setImportable(null);
+      }
 
       if (courseRes.ok) {
         const courseData = await courseRes.json();
@@ -86,6 +101,21 @@ export default function CortesPage() {
     setFormEnd(corte.endDate ?? '');
     setFormReport(corte.reportDeadline ?? '');
     setModalOpen(true);
+  }
+
+  async function importarCortes() {
+    setImporting(true);
+    try {
+      const res = await fetch(`/api/courses/${courseId}/cortes/import`, { method: 'POST' });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'No se pudo importar');
+      toast(d.message ?? 'Cortes importados', 'success');
+      await fetchCortes();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se pudo importar', 'error');
+    } finally {
+      setImporting(false);
+    }
   }
 
   function closeModal() {
@@ -262,19 +292,61 @@ export default function CortesPage() {
         )}
       </div>
 
-      {/* Cortes table */}
       {cortes.length === 0 ? (
-        <EmptyState
-          icon={<Layers className="h-12 w-12" />}
-          title="Sin cortes configurados"
-          description="Crea los cortes de evaluación para este curso. Ej: Corte 1 (30%), Corte 2 (30%), Corte 3 (40%)"
-          action={
-            <Button onClick={openCreate}>
-              <Plus className="h-4 w-4 mr-1" />
-              Crear Primer Corte
-            </Button>
-          }
-        />
+        <div className="space-y-3">
+          {/*
+            Aquí es donde cae el docente nada más crear una asignatura, y en la
+            práctica sus cortes son los mismos de las demás del semestre. Que
+            lo primero que vea sea "impórtalos" y no "tecléalos de nuevo".
+          */}
+          {importable && importable.items.length > 0 && (
+            <div className={`rounded-xl border p-4 ${toneBox.action}`}>
+              <p className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Layers className="w-4 h-4 text-cyan-600 dark:text-cyan-400 shrink-0" aria-hidden="true" />
+                {importable.source === 'semester'
+                  ? 'El semestre ya tiene un calendario de cortes'
+                  : 'Las demás asignaturas del semestre ya tienen sus cortes'}
+              </p>
+              <p className="text-xs text-subtle mt-1 max-w-prose">
+                Se crearán {importable.wouldCreate} {importable.wouldCreate === 1 ? 'corte' : 'cortes'} con
+                su nombre, peso y fechas. Después puedes cambiar lo que quieras: importar no ata a nada.
+              </p>
+
+              <ul className="mt-2.5 flex flex-wrap gap-1.5">
+                {importable.items.map((i) => (
+                  <li key={i.order}
+                    className="text-micro text-muted rounded-md border border-surface-border bg-surface px-2 py-1">
+                    {i.name} · {i.weight}%
+                    {i.reportDeadline && <span className="text-cyan-600 dark:text-cyan-400"> · reporte {i.reportDeadline.slice(8)}/{i.reportDeadline.slice(5, 7)}</span>}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                <Button onClick={importarCortes} loading={importing}>
+                  Importar {importable.wouldCreate} {importable.wouldCreate === 1 ? 'corte' : 'cortes'}
+                </Button>
+                <Button variant="secondary" onClick={openCreate}>
+                  Crearlos a mano
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {(!importable || importable.items.length === 0) && (
+            <EmptyState
+              icon={<Layers className="h-12 w-12" />}
+              title="Sin cortes configurados"
+              description="Crea los cortes de evaluación para este curso. Ej: Corte 1 (30%), Corte 2 (30%), Corte 3 (40%)"
+              action={
+                <Button onClick={openCreate}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Crear Primer Corte
+                </Button>
+              }
+            />
+          )}
+        </div>
       ) : (
         <div className="space-y-3">
           {/* Los cortes suelen ser los mismos en todas las asignaturas del

@@ -46,6 +46,21 @@ export const MIGRATIONS: Migration[] = [
       { table: 'cortes', column: 'report_deadline' },
     ],
   },
+  {
+    id: '2026-09-semestre-plantilla-cortes',
+    title: 'Calendario de cortes del semestre',
+    why:
+      'Guarda en el semestre el esquema de cortes que comparten sus asignaturas: '
+      + 'nombre, peso y fechas de cada corte. Sirve para definirlo una vez y que una '
+      + 'asignatura nueva lo importe en un clic, en vez de teclearlo curso por curso. '
+      + 'Nace vacío: nada cambia hasta que lo llenes.',
+    statements: [
+      'ALTER TABLE semesters ADD COLUMN IF NOT EXISTS corte_template JSONB',
+    ],
+    requires: [
+      { table: 'semesters', column: 'corte_template' },
+    ],
+  },
 ];
 
 export function findMigration(id: string): Migration | undefined {

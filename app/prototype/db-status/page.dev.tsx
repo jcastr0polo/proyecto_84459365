@@ -19,6 +19,12 @@ export default function PrototypeDbStatus() {
       ],
       applied: caso === 'ok', error: null,
     },
+    {
+      id: '2026-09-semestre-plantilla-cortes', title: 'Calendario de cortes del semestre',
+      why: 'Guarda en el semestre el esquema de cortes que comparten sus asignaturas. Sirve para definirlo una vez y que una asignatura nueva lo importe en un clic.',
+      statements: ['ALTER TABLE semesters ADD COLUMN IF NOT EXISTS corte_template JSONB'],
+      applied: false, error: null,
+    },
   ];
 
   const base = [

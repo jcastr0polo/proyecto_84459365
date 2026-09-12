@@ -21,7 +21,8 @@ import type {
   User, Session, Semester, Course, Enrollment, Activity, Submission, Grade,
   Corte, AIPrompt, StudentProject, Quiz, QuizAttempt, QuizSimulation,
   ManualGradeItem, ManualGrade, AppConfig, HomeData,
-  ActivityAttachment, SubmissionAttachment, SubmissionLink, CourseSchedule, QuizQuestion, QuizAnswer,
+  ActivityAttachment, SubmissionAttachment, SubmissionLink, CourseSchedule,
+  QuizQuestion, QuizAnswer, CorteTemplateItem,
 } from '@/lib/types';
 import type { AuditEntry } from '@/lib/auditService';
 
@@ -307,6 +308,8 @@ interface SupabaseSemesterRow {
   start_date: string;
   end_date: string;
   is_active: boolean;
+  /* Añadida después: en filas anteriores a la migración llega como null. */
+  corte_template?: CorteTemplateItem[] | null;
   created_at: string;
 }
 
@@ -314,7 +317,11 @@ function rowToSemester(r: SupabaseSemesterRow): Semester {
   return {
     id: r.id, label: r.label,
     startDate: r.start_date, endDate: r.end_date,
-    isActive: r.is_active, createdAt: r.created_at,
+    isActive: r.is_active,
+    ...(Array.isArray(r.corte_template) && r.corte_template.length > 0
+      ? { corteTemplate: r.corte_template }
+      : {}),
+    createdAt: r.created_at,
   };
 }
 
@@ -322,7 +329,9 @@ function semesterToRow(s: Semester): SupabaseSemesterRow {
   return {
     id: s.id, label: s.label,
     start_date: s.startDate, end_date: s.endDate,
-    is_active: s.isActive, created_at: s.createdAt,
+    is_active: s.isActive,
+    corte_template: s.corteTemplate ?? null,
+    created_at: s.createdAt,
   };
 }
 

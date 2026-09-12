@@ -125,7 +125,28 @@ export interface Semester {
   startDate: string;                   // Fecha inicio (ISO date: "2026-02-01")
   endDate: string;                     // Fecha fin (ISO date: "2026-06-30")
   isActive: boolean;                   // Solo uno activo a la vez (RN-SEM-01)
+  /**
+   * Esquema de cortes que comparten las asignaturas del semestre.
+   *
+   * Los cortes suelen ser los mismos en todas: las mismas semanas y el mismo
+   * tope para reportar notas. Se define aquí una vez y cada curso lo importa,
+   * en vez de teclearlo asignatura por asignatura —que es donde se cuela la
+   * fecha distinta sin que nadie se entere—. Cada curso puede después
+   * particularizar lo suyo: importar no ata a nada.
+   */
+  corteTemplate?: CorteTemplateItem[];
   createdAt: string;                   // ISO timestamp
+}
+
+/** Un corte del calendario del semestre. Las fechas son YYYY-MM-DD. */
+export interface CorteTemplateItem {
+  order: number;
+  name: string;
+  weight: number;
+  startDate?: string;
+  endDate?: string;
+  /** Tope para subir las notas a la plataforma de la universidad. */
+  reportDeadline?: string;
 }
 
 /**
