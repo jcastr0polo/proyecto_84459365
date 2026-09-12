@@ -1,4 +1,4 @@
-import type { Course, Enrollment, Activity, Submission, Grade, Semester } from '@/lib/types';
+import type { Course, Enrollment, Activity, Submission, Semester } from '@/lib/types';
 import type { ActiveQuiz } from '@/components/student/types';
 import type { CourseWithMeta, UserInfo } from '@/components/student/types';
 
@@ -59,12 +59,12 @@ function submission(activityId: string, courseId: string, offset: number): Submi
   };
 }
 
-function grade(activityId: string, courseId: string, score: number, offset: number): Grade {
-  return {
-    id: `grade-${activityId}`, submissionId: `sub-${activityId}`, activityId, courseId,
-    studentId: 'student-demo', score, maxScore: 5, isPublished: true,
-    gradedBy: 'admin-1', gradedAt: ts(offset), updatedAt: ts(offset),
-  };
+/** La nota tal como la manda el servidor: título ya resuelto y de qué fuente sale. */
+function grade(
+  id: string, title: string, score: number, offset: number,
+  kind: 'activity' | 'quiz' | 'manual' = 'activity',
+) {
+  return { id: `grade-${id}`, title, kind, score, maxScore: 5, gradedAt: ts(offset), isPublished: true };
 }
 
 const enrollment = (courseId: string): Enrollment => ({
@@ -88,7 +88,8 @@ export const MOCK_COURSES: CourseWithMeta[] = [
       activity('a7', tdi.id, 'Entrega final: producto interactivo con documentación de proceso', 'project', 21, 70),
     ],
     submissions: [submission('a1', tdi.id, -23), submission('a4', tdi.id, -6)],
-    grades: [grade('a1', tdi.id, 4.5, -21), grade('a4', tdi.id, 2.8, -4)],
+    grades: [grade('a1', 'Moodboard y referentes visuales', 4.5, -21),
+             grade('q1', 'Parcial 1 — Fundamentos', 2.8, -4, 'quiz')],
     finalScore: 3.4,
   },
   {
@@ -100,7 +101,7 @@ export const MOCK_COURSES: CourseWithMeta[] = [
       activity('b3', log.id, 'Proyecto: API en Next.js', 'project', 9, 50),
     ],
     submissions: [submission('b1', log.id, -15)],
-    grades: [grade('b1', log.id, 3.9, -13)],
+    grades: [grade('m1', 'Participación', 3.9, -13, 'manual')],
     finalScore: 3.9,
   },
 ];

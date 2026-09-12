@@ -125,18 +125,80 @@ export async function GET(request: Request): Promise<NextResponse> {
         enrollment,
         activities: courseActivities,
         submissions: mySubmissions,
-        grades: myGrades.map((g) => ({
-          activityId: g.activityId, score: g.score, maxScore: g.maxScore, gradedAt: g.gradedAt,
-        })),
+        /*
+         * Las notas que el estudiante ya puede ver, de las TRES fuentes.
+         *
+         * Antes esto solo devolvía notas de ACTIVIDAD, y encima sin `id` ni
+         * `isPublished` —que es justo por lo que la vista filtra—, así que
+         * "Notas recientes" salía vacío incluso para quien tenía nota. Un
+         * estudiante con un 3.6 leía "Sin notas todavía".
+         *
+         * Y los parciales y las notas manuales pesan en la definitiva igual
+         * que una actividad: dejarlos fuera de su lista de notas es esconderle
+         * de dónde sale su propio número.
+         */
+        grades: [
+          ...myGrades.map((g) => ({
+            id: g.id,
+            title: courseActivities.find((a) => a.id === g.activityId)?.title ?? 'Actividad',
+            kind: 'activity' as const,
+            score: g.score, maxScore: g.maxScore,
+            gradedAt: g.gradedAt, isPublished: true,
+          })),
+          ...courseQuizzes.flatMap((quiz) => {
+            const mine = attempts.filter((a) => a.quizId === quiz.id && a.studentId === user.id);
+            if (mine.length === 0) return [];
+            const best = mine.reduce((b, a) => (a.percentage > b.percentage ? a : b));
+            const max = quiz.maxScore ?? 5;
+            return [{
+              id: `q-${quiz.id}`,
+              title: quiz.title,
+              kind: 'quiz' as const,
+              score: Math.round((best.percentage / 100) * max * 10) / 10,
+              maxScore: max,
+              gradedAt: best.completedAt ?? best.startedAt,
+              isPublished: true,
+            }];
+          }),
+          ...courseManualItems.flatMap((item) => {
+            const mg = publishedManual.find(
+              (g) => g.itemId === item.id && g.studentId === user.id,
+            );
+            return mg ? [{
+              id: mg.id,
+              title: item.title,
+              kind: 'manual' as const,
+              score: mg.score, maxScore: mg.maxScore,
+              gradedAt: mg.gradedAt, isPublished: true,
+            }] : [];
+          }),
+        ],
         finalScore: resolved.finalScore,
         needed,
       };
     });
 
-    // Parciales de sus cursos, con el nombre del curso ya puesto.
+    /*
+     * Parciales realmente ABIERTOS.
+     *
+     * Antes se devolvían todos los del curso sin mirar nada, así que la
+     * sección "Parcial abierto" enseñaba parciales cuya ventana había cerrado
+     * el día anterior. Eso no es un detalle: esa sección va la primera y en
+     * cian porque significa "esto se cierra y no hay vuelta atrás". Si miente,
+     * deja de leerse.
+     *
+     * Abierto = dentro de su ventana y con intentos disponibles.
+     */
+    const ahora = Date.now();
     const activeQuizzes = myCourses.flatMap((course) =>
       quizzes
-        .filter((q) => q.courseId === course.id)
+        .filter((q) => {
+          if (q.courseId !== course.id) return false;
+          if (q.startDate && new Date(q.startDate).getTime() > ahora) return false;
+          if (q.endDate && new Date(q.endDate).getTime() < ahora) return false;
+          const mine = attempts.filter((a) => a.quizId === q.id && a.studentId === user.id);
+          return q.maxAttempts === 0 || mine.length < q.maxAttempts;
+        })
         .map((quiz) => ({ quiz, courseName: course.name, courseId: course.id })));
 
     return NextResponse.json({

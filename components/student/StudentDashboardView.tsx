@@ -110,9 +110,13 @@ export default function StudentDashboardView({
     : null;
 
   const recentGrades = useMemo(() => {
+    /* El título viene ya resuelto del servidor: antes se buscaba en la lista
+       de actividades, y por eso un parcial o una nota manual no tenían dónde
+       encontrarse y se quedaban fuera. */
     const out = coursesData.flatMap((cd) => cd.grades.filter((g) => g.isPublished).map((g) => ({
       key: g.id,
-      title: cd.activities.find((a) => a.id === g.activityId)?.title ?? 'Actividad',
+      title: g.title,
+      kind: g.kind,
       courseName: cd.course.name,
       score: normalize(g.score, g.maxScore),
       gradedAt: g.gradedAt,
@@ -339,7 +343,14 @@ export default function StudentDashboardView({
                 <div key={g.key} className="flex items-center gap-3 p-3.5 bg-surface">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-foreground/90 leading-snug">{g.title}</p>
-                    <p className="text-meta text-subtle mt-0.5">{g.courseName}</p>
+                    <p className="text-meta text-subtle mt-0.5">
+                      {g.courseName}
+                      {g.kind !== 'activity' && (
+                        <span className="text-faint">
+                          {' · '}{g.kind === 'quiz' ? 'Parcial' : 'Nota manual'}
+                        </span>
+                      )}
+                    </p>
                   </div>
                   {/* El número lleva el color, no la tarjeta entera: si no, el
                       color de rendimiento compite con el de urgencia. */}
