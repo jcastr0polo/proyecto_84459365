@@ -261,14 +261,17 @@ export default function AdminStudentsPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: Math.min(i * 0.02, 0.3) }}
-              className={`p-4 rounded-xl border transition-all
+              /* Sin opacity global: atenuar la tarjeta entera vuelve ilegible
+                 el texto. Marcar un estado no es lo mismo que esconderlo. */
+              className={`p-4 rounded-xl border transition-colors duration-[var(--dur-fast)]
                 ${student.isActive
-                  ? 'border-foreground/10 bg-foreground/5 hover:bg-foreground/[0.04]'
-                  : 'border-red-500/20 bg-red-500/5 opacity-60'
+                  ? 'border-surface-border bg-surface hover:bg-surface-hover'
+                  : 'border-red-500/20 bg-red-500/[0.04]'
                 }`}
             >
-              <div className="flex items-start justify-between gap-4">
-                {/* Left: student info */}
+              {/* En móvil se apila: acciones y contenido no pueden pelear por
+                  el mismo eje horizontal en 390px. Desde sm vuelve a dos columnas. */}
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                 <div className="flex items-start gap-3 min-w-0 flex-1">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0
                     ${student.isActive ? 'bg-cyan-500/10 text-cyan-400' : 'bg-red-500/10 text-red-400'}`}>
@@ -321,15 +324,16 @@ export default function AdminStudentsPage() {
                         </span>
                       ) : (
                         <>
-                          <p className="text-sm font-semibold text-foreground truncate">
+                          {/* Sin truncar: con apellidos compuestos, cortar a
+                              15 caracteres impide distinguir a dos personas. */}
+                          <p className="text-sm font-semibold text-foreground leading-snug">
                             {student.firstName} {student.lastName}
                           </p>
-                          <IconButton
-                            label="Editar nombre"
+                          <span className="hidden sm:contents"><IconButton
+                                                        label="Editar nombre"
                             tone="accent" size="sm"
                             onClick={() => setEditingName({ id: student.id, first: student.firstName, last: student.lastName })}
-                            icon={<Pencil className="w-3.5 h-3.5" />}
-                          />
+                            icon={<Pencil className="w-3.5 h-3.5" />} /></span>
                         </>
                       )}
                       {!student.isActive && <Badge variant="danger" size="sm">Inactivo</Badge>}
@@ -368,12 +372,11 @@ export default function AdminStudentsPage() {
                       ) : (
                         <>
                           {student.email}
-                          <IconButton
-                            label="Editar email"
+                          <span className="hidden sm:contents"><IconButton
+                                                        label="Editar email"
                             tone="accent" size="sm"
                             onClick={() => setEditingEmail({ id: student.id, value: student.email })}
-                            icon={<Pencil className="w-3.5 h-3.5" />}
-                          />
+                            icon={<Pencil className="w-3.5 h-3.5" />} /></span>
                         </>
                       )}
                     </p>
@@ -413,12 +416,11 @@ export default function AdminStudentsPage() {
                         ) : (
                           <>
                             {student.documentNumber}
-                            <IconButton
+                            <span className="hidden sm:contents"><IconButton
                             label="Editar documento"
                             tone="accent" size="sm"
                             onClick={() => setEditingDoc({ id: student.id, value: student.documentNumber })}
-                            icon={<Pencil className="w-3.5 h-3.5" />}
-                          />
+                            icon={<Pencil className="w-3.5 h-3.5" />} /></span>
                           </>
                         )}
                       </span>
@@ -442,7 +444,11 @@ export default function AdminStudentsPage() {
                 </div>
 
                 {/* Right: actions */}
-                <div className="flex items-center gap-1 shrink-0">
+                {/* En móvil ocupan su propia fila, separadas: apretadas
+                    junto al nombre pesaban más que el dato. */}
+                <div className="flex items-center gap-1 shrink-0
+                                border-t border-surface-border pt-2 -mx-1 px-1
+                                sm:border-0 sm:pt-0 sm:mx-0 sm:px-0">
                   <IconButton
                     label="Ver detalle del estudiante"
                     tone="accent" size="lg"
