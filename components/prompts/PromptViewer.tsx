@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { Bot, ClipboardCopy } from 'lucide-react';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { useToast } from '@/components/ui/Toast';
+import Button from '@/components/ui/Button';
 
 interface PromptViewerProps {
   title: string;
@@ -67,12 +68,9 @@ export default function PromptViewer({
             )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={handleCopy}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-cyan-500 text-white hover:bg-cyan-400 transition-colors cursor-pointer"
-            >
-              <ClipboardCopy className="w-3.5 h-3.5" /> Copiar Prompt
-            </button>
+            <Button size="sm" onClick={handleCopy}>
+              <ClipboardCopy className="w-3.5 h-3.5" aria-hidden="true" /> Copiar prompt
+            </Button>
             <button
               onClick={() => setFullscreen(!fullscreen)}
               className="p-1.5 rounded-lg border border-foreground/10 text-muted hover:text-foreground/80 hover:border-foreground/20 transition-colors cursor-pointer"

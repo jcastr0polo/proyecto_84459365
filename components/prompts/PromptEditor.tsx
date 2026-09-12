@@ -4,6 +4,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import TagInput from '@/components/prompts/TagInput';
 import type { Course } from '@/lib/types';
+import Button from '@/components/ui/Button';
 
 interface PromptEditorProps {
   initialTitle?: string;
@@ -208,19 +209,9 @@ export default function PromptEditor({
         <p className="text-[11px] text-subtle">
           * Campos requeridos
         </p>
-        <button
-          type="submit"
-          disabled={!isValid || loading}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
-                     bg-cyan-500 text-white hover:bg-cyan-400
-                     disabled:opacity-40 disabled:cursor-not-allowed
-                     transition-colors cursor-pointer"
-        >
-          {loading && (
-            <div className="w-4 h-4 border-2 border-foreground/30 border-t-white rounded-full animate-spin" />
-          )}
+        <Button type="submit" loading={loading} disabled={!isValid}>
           {submitLabel}
-        </button>
+        </Button>
       </div>
     </form>
   );

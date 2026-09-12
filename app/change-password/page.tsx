@@ -16,6 +16,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { CheckCircle2 } from 'lucide-react';
+import Button from '@/components/ui/Button';
 
 interface UserData {
   role: 'admin' | 'student';
@@ -324,22 +325,15 @@ export default function ChangePasswordPage() {
               )}
 
               {/* Submit button */}
-              <button
+              <Button
                 type="submit"
-                disabled={loading || newPassword.length < 8 || newPassword !== confirmPassword}
-                className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:bg-foreground/[0.06]
-                           disabled:text-faint text-white text-sm font-semibold
-                           transition-all duration-200 cursor-pointer disabled:cursor-not-allowed"
+                size="lg"
+                className="w-full"
+                loading={loading}
+                disabled={newPassword.length < 8 || newPassword !== confirmPassword}
               >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-foreground/20 border-t-white" />
-                    Actualizando...
-                  </span>
-                ) : (
-                  'Cambiar Contraseña'
-                )}
-              </button>
+                {loading ? 'Actualizando…' : 'Cambiar contraseña'}
+              </Button>
 
               {/* Back link */}
               <div className="text-center">

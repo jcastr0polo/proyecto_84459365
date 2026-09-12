@@ -367,7 +367,7 @@ export default function AdminCourseProjectsPage() {
                   <div className="flex gap-2 pt-1">
                     <button
                       onClick={saveShowcase}
-                      className="text-micro px-3 py-1 rounded bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25 transition-colors duration-[var(--dur-fast)] cursor-pointer"
+                      className="text-micro px-3 py-1 rounded bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25 transition-colors duration-[var(--dur-fast)] cursor-pointer relative after:absolute after:inset-x-0 after:top-1/2 after:-translate-y-1/2 after:h-11 after:content-['']"
                     >
                       Guardar
                     </button>

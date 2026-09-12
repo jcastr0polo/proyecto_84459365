@@ -233,12 +233,9 @@ export default function StudentTakeQuizPage() {
               </div>
             </div>
           ) : (
-            <button
-              onClick={start}
-              className="w-full py-3.5 px-6 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white font-semibold text-sm transition-colors cursor-pointer shadow-lg shadow-cyan-500/20"
-            >
+            <Button size="lg" className="w-full shadow-lg shadow-cyan-500/20" onClick={start}>
               Comenzar Parcial
-            </button>
+            </Button>
           )}
         </Card>
       </div>

@@ -375,7 +375,7 @@ export default function AdminStudentDetailPage() {
           </h2>
           <button
             onClick={openEnrollModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/10 transition-colors duration-[var(--dur-fast)] cursor-pointer active:scale-[0.97] motion-reduce:active:scale-100"
+            className="flex items-center gap-1.5 px-3 py-1.5 min-h-11 text-xs font-medium text-cyan-400 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/10 transition-colors duration-[var(--dur-fast)] cursor-pointer active:scale-[0.97] motion-reduce:active:scale-100"
           >
             <Plus className="w-3.5 h-3.5" /> Inscribir en curso
           </button>
@@ -404,13 +404,9 @@ export default function AdminStudentDetailPage() {
                   ))}
                 </select>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleEnroll}
-                    disabled={!selectedCourseId || enrolling}
-                    className="px-4 py-1.5 text-xs font-medium rounded-lg bg-cyan-500 text-white hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-[var(--dur-fast)] cursor-pointer active:scale-[0.97] motion-reduce:active:scale-100"
-                  >
-                    {enrolling ? 'Inscribiendo...' : 'Inscribir'}
-                  </button>
+                  <Button size="sm" onClick={handleEnroll} loading={enrolling} disabled={!selectedCourseId}>
+                    {enrolling ? 'Inscribiendo…' : 'Inscribir'}
+                  </Button>
                   <button
                     onClick={() => setShowEnroll(false)}
                     className="px-4 py-1.5 text-xs text-subtle hover:text-foreground transition-colors cursor-pointer"

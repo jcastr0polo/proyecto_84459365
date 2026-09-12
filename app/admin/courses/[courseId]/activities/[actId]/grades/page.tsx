@@ -380,7 +380,7 @@ export default function AdminGradingPage() {
             <button
               onClick={handlePublish}
               disabled={publishing}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition-colors disabled:opacity-50 cursor-pointer"
+              className="px-4 py-2 min-h-11 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition-colors disabled:opacity-50 cursor-pointer"
             >
               {publishing ? 'Publicando...' : 'Confirmar Publicación'}
             </button>

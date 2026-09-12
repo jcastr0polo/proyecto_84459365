@@ -670,6 +670,10 @@ function ScoreCell({
   return (
     <button
       onClick={onAdjust}
+      /* Sin min-h-11 a propósito: esta celda vive en la tabla, que es
+         `hidden md:block`. Subir la altura engordaría cada fila en escritorio
+         para cumplir una regla que solo aplica al dedo. En móvil el ajuste se
+         hace desde las tarjetas, y ahí sí son 44px. */
       aria-label={`Ajustar ${label}${adjustment ? ` (ajustada: ${adjustment.reason})` : ''}`}
       title={adjustment ? `Ajustada — ${adjustment.reason}` : 'Ajustar esta nota'}
       className="w-full rounded-lg px-2 py-1 cursor-pointer
