@@ -49,6 +49,9 @@ export default function AdminDashboardViewV2({
     .sort((a, b) => b.pending - a.pending), [courseData]);
 
   const totalPending = grading.reduce((a, c) => a + c.pending, 0);
+  const overdue = useMemo(() => courseData.flatMap((cd) =>
+    cd.activities.filter((a) => a.status === 'published'
+      && parseDateColombia(a.dueDate) < today)).length, [courseData, today]);
 
   const drafts = useMemo(() => courseData.flatMap((cd) =>
     cd.activities.filter((a) => a.status === 'draft')
@@ -101,7 +104,7 @@ export default function AdminDashboardViewV2({
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 flex flex-col sm:block">
       <motion.div {...fade(0)}>
         <h1 className="type-page text-foreground" style={{ fontFamily: 'var(--font-playfair)' }}>
           Panel del docente
@@ -119,8 +122,38 @@ export default function AdminDashboardViewV2({
         </p>
       </motion.div>
 
-      {/* ── Cómo va el semestre ── */}
-      <motion.section {...fade(0.02)} className="rounded-2xl border border-surface-border bg-surface p-5">
+      {/*
+        Resumen de una línea. En móvil es lo primero que se ve, porque un
+        docente abre esto entre clases y necesita saber qué hacer en tres
+        segundos, no cómo va el calendario.
+      */}
+      <motion.div {...fade(0.01)} className="flex flex-wrap items-center gap-x-4 gap-y-2 sm:hidden">
+        {totalPending > 0 ? (
+          <a href="#por-calificar"
+            className="flex items-baseline gap-1.5 text-amber-600 dark:text-amber-400">
+            <span className="text-2xl font-bold tabular-nums leading-none">{totalPending}</span>
+            <span className="text-xs">por calificar</span>
+          </a>
+        ) : (
+          <span className="text-sm text-emerald-600 dark:text-emerald-400">Todo calificado</span>
+        )}
+        {overdue > 0 && (
+          <span className="flex items-baseline gap-1.5 text-red-600 dark:text-red-400">
+            <span className="text-2xl font-bold tabular-nums leading-none">{overdue}</span>
+            <span className="text-xs">{overdue === 1 ? 'vencida' : 'vencidas'}</span>
+          </span>
+        )}
+        {drafts.length > 0 && (
+          <span className="flex items-baseline gap-1.5 text-subtle">
+            <span className="text-2xl font-bold tabular-nums leading-none">{drafts.length}</span>
+            <span className="text-xs">sin publicar</span>
+          </span>
+        )}
+      </motion.div>
+
+      {/* ── Cómo va el semestre · en móvil va al final, es contexto ── */}
+      <motion.section {...fade(0.02)}
+        className="order-last sm:order-none rounded-2xl border border-surface-border bg-surface p-5">
         <div className="flex items-baseline justify-between gap-4 flex-wrap">
           <h2 className="text-base font-semibold text-foreground">Cómo va el semestre</h2>
           {progress.timePct !== null && (
@@ -173,26 +206,32 @@ export default function AdminDashboardViewV2({
               description="Todas las entregas están calificadas." />
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          /* En móvil, filas: una tarjeta de 120px para un número y un nombre
+             desperdicia media pantalla. Desde sm vuelven a ser tarjetas. */
+          <div className="rounded-xl border border-amber-500/25 divide-y divide-amber-500/15 overflow-hidden
+                          sm:border-0 sm:divide-y-0 sm:rounded-none sm:grid sm:gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {grading.map(({ course, pending }) => (
               <Link
                 key={course.id}
                 href={`/admin/courses/${course.id}/activities`}
-                className="group rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-4
+                className="group flex items-center gap-3 p-3.5 bg-amber-500/[0.06]
                            transition-colors duration-[var(--dur-fast)] hover:bg-amber-500/[0.10]
-                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
+                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40
+                           sm:block sm:rounded-xl sm:border sm:border-amber-500/25 sm:p-4"
               >
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold tabular-nums text-amber-600 dark:text-amber-400 leading-none">
-                    {pending}
+                <span className="text-3xl font-bold tabular-nums text-amber-600 dark:text-amber-400 leading-none shrink-0">
+                  {pending}
+                </span>
+                <span className="min-w-0 flex-1 sm:block sm:mt-2">
+                  <span className="block text-sm text-foreground/90 leading-snug truncate sm:whitespace-normal">
+                    {course.name}
                   </span>
-                  <span className="text-xs text-subtle">{pending === 1 ? 'entrega' : 'entregas'}</span>
-                </div>
-                <p className="text-sm text-foreground/90 mt-2 leading-snug">{course.name}</p>
-                <p className="text-meta text-subtle mt-0.5 font-mono flex items-center gap-1">
-                  {course.code}
-                  <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </p>
+                  <span className="block text-meta text-subtle mt-0.5">
+                    <span className="font-mono">{course.code}</span>
+                    <span className="sm:inline"> · {pending === 1 ? 'entrega' : 'entregas'} sin calificar</span>
+                  </span>
+                </span>
+                <ArrowRight className="w-4 h-4 text-amber-600/50 dark:text-amber-400/50 shrink-0 sm:hidden" />
               </Link>
             ))}
           </div>
@@ -246,14 +285,17 @@ export default function AdminDashboardViewV2({
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-foreground/90 leading-snug">{activity.title}</p>
-                    <p className="text-meta text-subtle mt-0.5">
-                      {course.name} · <span className={tone}>{dueLabel(activity.dueDate, today)}</span>
+                    <p className="text-meta text-subtle mt-0.5 truncate">
+                      {course.name}
                     </p>
+                    <p className={`text-meta mt-0.5 ${tone}`}>{dueLabel(activity.dueDate, today)}</p>
                   </div>
                   {/* Cuántos han entregado: en un vencimiento eso es lo que el
-                      docente necesita saber, no solo la fecha. */}
-                  <div className="shrink-0 text-right w-24">
-                    <p className="text-meta text-muted tabular-nums">{submitted} de {active}</p>
+                      docente necesita saber, no solo la fecha. A 390px una
+                      columna de 96px deja la barra en 60px y el título
+                      envolviendo en tres líneas, así que en móvil va debajo. */}
+                  <div className="shrink-0 text-right w-20 sm:w-24">
+                    <p className="text-meta text-muted tabular-nums">{submitted}/{active}</p>
                     <div className="relative h-1 rounded-full bg-foreground/[0.08] overflow-hidden mt-1">
                       <motion.div
                         initial={reduce ? false : { scaleX: 0 }}
