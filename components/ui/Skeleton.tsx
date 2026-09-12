@@ -52,3 +52,31 @@ export function SkeletonCards({ count = 3, className = '' }: { count?: number; c
     </div>
   );
 }
+
+/** Formulario: etiquetas y campos, para las pantallas de crear y editar. */
+export function SkeletonForm({ fields = 4, className = '' }: { fields?: number; className?: string }) {
+  return (
+    <div role="status" aria-label="Cargando"
+      className={`rounded-xl border border-surface-border bg-surface p-5 space-y-5 ${className}`}>
+      {Array.from({ length: fields }).map((_, i) => (
+        <div key={i} className="space-y-2">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+      ))}
+      <Skeleton className="h-10 w-32" />
+    </div>
+  );
+}
+
+/** Documento: líneas de texto de anchos desiguales, como un párrafo real. */
+export function SkeletonText({ lines = 8, className = '' }: { lines?: number; className?: string }) {
+  const widths = ['w-full', 'w-11/12', 'w-full', 'w-4/5', 'w-full', 'w-3/4'];
+  return (
+    <div role="status" aria-label="Cargando" className={`space-y-3 ${className}`}>
+      {Array.from({ length: lines }).map((_, i) => (
+        <Skeleton key={i} className={`h-3.5 ${widths[i % widths.length]}`} />
+      ))}
+    </div>
+  );
+}

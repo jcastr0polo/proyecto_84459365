@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { Bot } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import PromptCard from '@/components/prompts/PromptCard';
 import type { AIPrompt, Course } from '@/lib/types';
@@ -85,7 +85,14 @@ export default function AdminPromptsPage() {
     return result;
   }, [prompts, courseFilter, templateFilter, search]);
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonCards count={6} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

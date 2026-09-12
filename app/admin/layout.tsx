@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
+import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight, Shield, Layers } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import type { Semester } from '@/lib/types';
@@ -102,10 +103,41 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isFullPage = /\/admin\/courses\/[^/]+\/quizzes\/[^/]+\/simulate/.test(pathname)
     || pathname === '/admin/viewer';
 
+  /*
+   * Mientras se resuelve la sesión se muestra el armazón, no un spinner
+   * centrado en una pantalla vacía.
+   *
+   * Es lo primero que ve cualquiera en cada carga y en cada recarga: con el
+   * spinner, la pantalla pasa de negro a la aplicación entera de golpe. Con
+   * el armazón, la barra lateral y la cabecera ya están donde van a estar y
+   * solo se rellena el contenido. La espera se percibe más corta aunque dure
+   * exactamente lo mismo.
+   */
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-base">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-foreground/10 border-t-cyan-400" />
+      <div className="flex h-screen bg-base overflow-hidden" role="status" aria-label="Cargando">
+        <aside className="hidden lg:flex w-60 flex-col bg-base border-r border-surface-border">
+          <div className="flex items-center gap-3 px-5 h-16 border-b border-surface-border shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
+              <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
+            </div>
+            <span className="text-sm font-bold text-foreground tracking-tight">NEXUS</span>
+          </div>
+          <div className="flex-1 py-4 px-3 space-y-1">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-full" />
+            ))}
+          </div>
+        </aside>
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="h-16 border-b border-surface-border flex items-center px-6">
+            <Skeleton className="h-4 w-40" />
+          </div>
+          <div className="flex-1 p-6 space-y-4">
+            <Skeleton className="h-9 w-64" />
+            <SkeletonCards count={3} />
+          </div>
+        </div>
       </div>
     );
   }

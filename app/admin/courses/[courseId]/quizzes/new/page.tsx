@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonForm } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import QuizForm from '@/components/quizzes/QuizForm';
 import type { Course } from '@/lib/types';
@@ -60,7 +60,14 @@ export default function NewQuizPage() {
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <Skeleton className="h-9 w-64" />
+        <SkeletonForm fields={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">

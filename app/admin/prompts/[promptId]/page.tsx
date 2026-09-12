@@ -6,7 +6,7 @@ import { formatDateTimeColombia as formatDate } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import { Bot, Pencil } from 'lucide-react';
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonForm } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import PromptEditor from '@/components/prompts/PromptEditor';
 import PromptViewer from '@/components/prompts/PromptViewer';
@@ -89,7 +89,16 @@ export default function PromptDetailPage() {
     [promptId, toast]
   );
 
-  if (loading || !prompt) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <Skeleton className="h-9 w-64" />
+        <SkeletonForm fields={5} />
+      </div>
+    );
+  }
+  // El guard original era compuesto: sin esto se renderiza con datos nulos.
+  if (!prompt) return null;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">

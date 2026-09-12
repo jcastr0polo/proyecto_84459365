@@ -7,7 +7,7 @@ import { Lock } from 'lucide-react';
 import { formatDateTimeColombia, formatDateShort } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import type { Course, Enrollment, SafeUser, Semester } from '@/lib/types';
 
 interface EnrolledCourse {
@@ -73,7 +73,14 @@ export default function StudentProfilePage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonCards count={6} />
+      </div>
+    );
+  }
   if (!user) return null;
 
   const initials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;

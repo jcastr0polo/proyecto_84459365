@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonForm } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import ActivityForm from '@/components/activities/ActivityForm';
 import type { ActivityFormData } from '@/components/activities/ActivityForm';
@@ -115,7 +115,14 @@ export default function NewActivityPage() {
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <Skeleton className="h-9 w-64" />
+        <SkeletonForm fields={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl">

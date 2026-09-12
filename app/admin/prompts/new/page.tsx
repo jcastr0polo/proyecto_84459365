@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Card, { CardHeader, CardTitle } from '@/components/ui/Card';
 import { Bot } from 'lucide-react';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonForm } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import PromptEditor from '@/components/prompts/PromptEditor';
 import type { Course } from '@/lib/types';
@@ -56,7 +56,14 @@ export default function NewPromptPage() {
     [router, toast]
   );
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <Skeleton className="h-9 w-64" />
+        <SkeletonForm fields={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonForm } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import SubmitForm from '@/components/submissions/SubmitForm';
 import SubmissionDetail from '@/components/submissions/SubmissionDetail';
@@ -117,7 +117,16 @@ export default function StudentSubmitPage() {
     }
   }
 
-  if (loading || !activity) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <Skeleton className="h-9 w-64" />
+        <SkeletonForm fields={5} />
+      </div>
+    );
+  }
+  // El guard original era compuesto: sin esto se renderiza con datos nulos.
+  if (!activity) return null;
 
   // Block: reviewed submission
   if (existing && existing.status === 'reviewed') {

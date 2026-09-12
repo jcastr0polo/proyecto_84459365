@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { nowColombia } from '@/lib/dateUtils';
 import { STATUS_META, startOfTodayColombia, type DeliveryStatus } from '@/lib/activityStatus';
@@ -71,7 +71,14 @@ export default function StudentActivitiesPage() {
 
   const visible = filter === 'all' ? rows : rows.filter((r) => r.status === filter);
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonList rows={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">

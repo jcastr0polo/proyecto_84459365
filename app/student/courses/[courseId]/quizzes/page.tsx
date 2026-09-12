@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import type { Quiz } from '@/lib/types';
 import { ClipboardList, Clock, Shield, BarChart3 } from 'lucide-react';
@@ -44,7 +44,14 @@ export default function StudentQuizzesPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonList rows={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">

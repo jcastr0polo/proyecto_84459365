@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { formatDateTimeColombia } from '@/lib/dateUtils';
@@ -52,7 +52,14 @@ export default function StudentQuizResultsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonList rows={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">

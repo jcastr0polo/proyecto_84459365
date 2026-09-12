@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { Inbox } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import CourseCard from '@/components/student/CourseCard';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import type { Course, Enrollment, Activity, Submission, Semester } from '@/lib/types';
 
 interface CourseWithMeta {
@@ -99,7 +99,14 @@ export default function StudentCoursesPage() {
   // Stats summary
   const totalPending = useMemo(() => coursesData.reduce((s, c) => s + c.pendingCount, 0), [coursesData]);
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonCards count={6} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">

@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
 import SearchInput from '@/components/ui/SearchInput';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import type { QuizAttempt, QuizQuestion } from '@/lib/types';
@@ -99,7 +99,14 @@ export default function AdminQuizResultsPage() {
   const failedCount = attempts.filter((a) => normalize(a.percentage, 100) < PASS).length;
   const flaggedCount = attempts.filter((a) => a.flagged).length;
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonCards count={6} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

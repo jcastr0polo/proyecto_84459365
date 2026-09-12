@@ -7,7 +7,7 @@ import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
 import SearchInput from '@/components/ui/SearchInput';
 import Chip from '@/components/ui/Chip';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import {
   Shield, X, LogIn, LogOut, Plus, Pencil, Trash2, Upload, Database, Key, Eye,
   Clock, User, FileText, Hash, Info, Globe, Monitor,
@@ -106,7 +106,14 @@ export default function AuditPage() {
     };
   }, [entries]);
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonList rows={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

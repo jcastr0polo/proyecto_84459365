@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import { AlertTriangle, ClipboardList, Search } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import ActivityCard from '@/components/activities/ActivityCard';
 import type { Activity, Course } from '@/lib/types';
@@ -80,7 +80,14 @@ export default function CourseActivitiesPage() {
   const publishedCount = activities.filter((a) => a.status === 'published').length;
   const closedCount = activities.filter((a) => a.status === 'closed').length;
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonCards count={6} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

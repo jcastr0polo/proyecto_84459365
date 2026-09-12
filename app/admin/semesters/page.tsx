@@ -8,7 +8,7 @@ import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import Table, { Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table';
 import EmptyState from '@/components/ui/EmptyState';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import SemesterForm from '@/components/forms/SemesterForm';
 import type { SemesterFormData } from '@/components/forms/SemesterForm';
@@ -68,7 +68,14 @@ function GeneralTab() {
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonList rows={5} />
+      </div>
+    );
+  }
 
   const TIMEZONES = [
     'America/Bogota',
@@ -257,7 +264,14 @@ function SemestersTab() {
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonList rows={4} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

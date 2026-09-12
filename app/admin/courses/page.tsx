@@ -8,7 +8,7 @@ import Badge, { categoryToBadgeVariant, categoryLabel } from '@/components/ui/Ba
 import Card from '@/components/ui/Card';
 import Modal from '@/components/ui/Modal';
 import EmptyState from '@/components/ui/EmptyState';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import CourseForm from '@/components/forms/CourseForm';
 import type { CourseFormData } from '@/components/forms/CourseForm';
@@ -77,7 +77,14 @@ export default function CoursesPage() {
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonCards count={6} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

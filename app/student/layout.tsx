@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
+import { Skeleton, SkeletonCards, SkeletonList } from '@/components/ui/Skeleton';
 import { Home, BookOpen, User, Lock, LogOut, Menu, X, ChevronDown, ChevronRight, Cpu } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 
@@ -65,10 +66,22 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     || pathname === '/student/viewer'
   );
 
+  /* Armazón en vez de spinner: la cabecera ya está donde va a estar y solo
+     se rellena el contenido, así la espera se percibe más corta. */
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-base">
-        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-foreground/10 border-t-cyan-400" />
+      <div className="min-h-screen bg-base" role="status" aria-label="Cargando">
+        <div className="h-16 border-b border-surface-border flex items-center gap-3 px-4 sm:px-6">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shrink-0">
+            <Cpu className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+          </div>
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-4">
+          <Skeleton className="h-9 w-56" />
+          <SkeletonCards count={2} />
+          <SkeletonList rows={4} />
+        </div>
       </div>
     );
   }

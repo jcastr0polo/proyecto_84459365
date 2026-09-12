@@ -7,7 +7,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import Chip from '@/components/ui/Chip';
 import IconButton from '@/components/ui/IconButton';
 import { Rocket, Star, Eye, EyeOff, Ban, Image as ImageIcon, FileText, Download } from 'lucide-react';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
 import type { StudentProject, Course } from '@/lib/types';
@@ -188,7 +188,14 @@ export default function AdminCourseProjectsPage() {
     if (ok) setEditingShowcase(null);
   };
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonCards count={6} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

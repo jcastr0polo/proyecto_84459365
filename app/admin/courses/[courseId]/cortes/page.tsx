@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import Table, { Thead, Th, Tbody, Tr, Td } from '@/components/ui/Table';
 import EmptyState from '@/components/ui/EmptyState';
-import { PageLoader } from '@/components/ui/LoadingSpinner';
+import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Pencil, Trash2, Layers } from 'lucide-react';
@@ -152,7 +152,14 @@ export default function CortesPage() {
     ? remainingWeight + editingCorte.weight
     : remainingWeight;
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-9 w-56" />
+        <SkeletonList rows={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
