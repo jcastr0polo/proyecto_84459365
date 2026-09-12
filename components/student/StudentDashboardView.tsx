@@ -100,7 +100,8 @@ export default function StudentDashboardView({
     cd,
     score: cd.finalScore ?? null,
     gradedCount: cd.grades.length,
-    total: cd.activities.length,
+    // Actividades + parciales + notas manuales: lo mismo que cuenta gradedCount.
+    total: cd.gradableTotal ?? cd.activities.length,
     pending: pending.filter((p) => p.courseId === cd.course.id).length,
   })), [coursesData, pending]);
 

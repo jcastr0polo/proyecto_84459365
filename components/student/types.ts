@@ -38,6 +38,8 @@ export interface CourseWithMeta {
    * curso no pondera por cortes.
    */
   needed?: { score: number; remainingWeight: number } | null;
+  /** Actividades + parciales + notas manuales del curso. */
+  gradableTotal?: number;
 }
 
 export interface UserInfo {

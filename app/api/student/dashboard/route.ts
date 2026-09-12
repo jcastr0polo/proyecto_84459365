@@ -175,6 +175,15 @@ export async function GET(request: Request): Promise<NextResponse> {
         ],
         finalScore: resolved.finalScore,
         needed,
+        /*
+         * Cuántas cosas calificables tiene el curso EN TOTAL.
+         *
+         * La tarjeta enseñaba "N de M calificadas" con M = número de
+         * actividades. Al empezar a contar también parciales y notas manuales
+         * en la N, salía un "2 de 1 calificadas": el numerador miraba tres
+         * fuentes y el denominador una sola.
+         */
+        gradableTotal: visible.length + courseQuizzes.length + courseManualItems.length,
       };
     });
 

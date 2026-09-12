@@ -16,6 +16,8 @@ interface CourseWithMeta {
   /** Nota del servidor: la misma que ve en la vista de notas. */
   finalScore: number | null;
   gradedCount: number;
+  /** Actividades + parciales + notas manuales: lo que cuenta gradedCount. */
+  gradableTotal?: number;
 }
 
 /**
@@ -73,16 +75,26 @@ export default function StudentCoursesPage() {
         // La nota la da el servidor, que ya pondera parciales y notas manuales.
         let finalScore: number | null = null;
         let gradedCount = 0;
+        /*
+         * El total tiene que contar LO MISMO que el numerador.
+         *
+         * `gradedCount` sale de g.activities, que incluye actividades,
+         * parciales y notas manuales. Si el denominador cuenta solo
+         * actividades sale un "2 de 1 calificadas".
+         */
+        let gradableTotal = 0;
         try {
           const gRes = await fetch(`/api/courses/${course.id}/grades`);
           if (gRes.ok) {
             const g = await gRes.json();
             finalScore = g.finalScore ?? null;
-            gradedCount = (g.activities ?? []).filter((a: { grade: unknown }) => a.grade !== null).length;
+            const items = g.activities ?? [];
+            gradedCount = items.filter((a: { grade: unknown }) => a.grade !== null).length;
+            gradableTotal = items.length;
           }
         } catch { /* ignore */ }
 
-        return { course, activities, submissions, pendingCount, deliveredCount, finalScore, gradedCount };
+        return { course, activities, submissions, pendingCount, deliveredCount, finalScore, gradedCount, gradableTotal };
       });
 
       const results = await Promise.all(perCoursePromises);
@@ -136,7 +148,7 @@ export default function StudentCoursesPage() {
               course={cd.course}
               score={cd.finalScore}
               gradedCount={cd.gradedCount}
-              totalActivities={cd.activities.filter((a) => a.status !== 'draft').length}
+              totalActivities={cd.gradableTotal || cd.activities.filter((a) => a.status !== 'draft').length}
               pendingCount={cd.pendingCount}
               detailed
             />
