@@ -1,6 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  /*
+   * El taller de diseño (/prototype) solo existe en desarrollo.
+   *
+   * Sus páginas se llaman `page.dev.tsx`, y esa extensión solo entra en
+   * pageExtensions fuera de producción. Antes se compilaban las 19 y se
+   * desplegaban: devolvían 404 por el guard del layout, pero seguían
+   * gastando tiempo de build y ocupando sitio en el manifiesto de rutas.
+   * Así el build de producción ni las ve.
+   */
+  pageExtensions: process.env.NODE_ENV === 'production'
+    ? ['tsx', 'ts']
+    : ['dev.tsx', 'tsx', 'ts'],
+
   typescript: {
     ignoreBuildErrors: false,
   },
