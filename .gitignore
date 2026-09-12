@@ -52,3 +52,6 @@ next-env.d.ts
 
 # Scripts locales contra la base de datos (credenciales en .env.local)
 .scripts/
+
+# Credenciales para verificación manual con datos reales. NUNCA se sube.
+.credenciales
