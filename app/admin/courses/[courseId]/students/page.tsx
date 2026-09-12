@@ -11,6 +11,8 @@ import { useToast } from '@/components/ui/Toast';
 import StudentTable from '@/components/students/StudentTable';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { EnrollmentWithStudent, Course } from '@/lib/types';
+import SearchInput from '@/components/ui/SearchInput';
+import Chip from '@/components/ui/Chip';
 
 export default function CourseStudentsPage() {
   const params = useParams();
@@ -144,57 +146,34 @@ export default function CourseStudentsPage() {
         </div>
       </div>
 
-      {/* Counters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Badge variant="info" size="md">
-          {enrollments.length} total
-        </Badge>
-        <Badge variant="success" size="md" dot>
-          {activeCount} activos
-        </Badge>
-        {withdrawnCount > 0 && (
-          <Badge variant="danger" size="md" dot>
-            {withdrawnCount} retirados
-          </Badge>
-        )}
-      </div>
-
-      {/* Filters */}
+      {/*
+        Los contadores filtran, con el mismo Chip del resto del sistema.
+        El buscador era un <input> a mano con `text-white` fijo: en modo claro
+        se escribía en blanco sobre fondo casi blanco. Pasa a SearchInput.
+      */}
       {enrollments.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <svg
-              width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-faint"
-            >
-              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              type="text"
-              placeholder="Buscar por nombre, email, documento..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              aria-label="Buscar estudiantes"
-              className="w-full pl-10 pr-3 py-2 text-sm rounded-lg border border-foreground/10
-                         bg-foreground/[0.04] text-white placeholder:text-faint
-                         outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25"
-            />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Chip active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>
+              Todos ({enrollments.length})
+            </Chip>
+            <Chip active={statusFilter === 'active'} tone="positive" dot="bg-emerald-500"
+              onClick={() => setStatusFilter('active')}>
+              Activos ({activeCount})
+            </Chip>
+            {withdrawnCount > 0 && (
+              <Chip active={statusFilter === 'withdrawn'} tone="danger" dot="bg-red-500"
+                onClick={() => setStatusFilter('withdrawn')}>
+                Retirados ({withdrawnCount})
+              </Chip>
+            )}
           </div>
-
-          {/* Status filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'withdrawn')}
-            aria-label="Filtrar por estado"
-            className="px-3 py-2 rounded-lg border border-foreground/10 bg-foreground/[0.04] text-sm text-foreground
-                       outline-none focus:border-cyan-500/50 appearance-none cursor-pointer"
-          >
-            <option value="all">Todos los estados</option>
-            <option value="active">Solo activos</option>
-            <option value="withdrawn">Solo retirados</option>
-          </select>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Buscar por nombre, email o documento..."
+            className="w-full sm:w-72 sm:ml-auto"
+          />
         </div>
       )}
 

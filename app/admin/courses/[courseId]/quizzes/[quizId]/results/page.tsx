@@ -3,13 +3,15 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Badge from '@/components/ui/Badge';
-import Card from '@/components/ui/Card';
 import SearchInput from '@/components/ui/SearchInput';
 import { PageLoader } from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/components/ui/Toast';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import type { QuizAttempt, QuizQuestion } from '@/lib/types';
-import { AlertTriangle, Shield, Clock, ChevronDown, ChevronUp, Eye, CheckCircle2, XCircle, ArrowUpDown } from 'lucide-react';
+import { AlertTriangle, Shield, Clock, ChevronDown, ChevronUp, Eye, CheckCircle2, XCircle } from 'lucide-react';
+import { gradeText, normalize, formatScore, PASS } from '@/lib/gradeScale';
+import StatTile from '@/components/ui/StatTile';
+import Chip from '@/components/ui/Chip';
 
 type SortKey = 'recent' | 'top' | 'bottom' | 'name';
 
@@ -37,6 +39,7 @@ export default function AdminQuizResultsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [flagFilter, setFlagFilter] = useState(false);
+  const [failedOnly, setFailedOnly] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>('top');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -63,6 +66,7 @@ export default function AdminQuizResultsPage() {
   const filtered = useMemo(() => {
     let result = attempts;
     if (flagFilter) result = result.filter((a) => a.flagged);
+    if (failedOnly) result = result.filter((a) => normalize(a.percentage, 100) < PASS);
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter((a) =>
@@ -86,11 +90,13 @@ export default function AdminQuizResultsPage() {
       }
     });
     return result;
-  }, [attempts, flagFilter, search, sortBy]);
+  }, [attempts, flagFilter, failedOnly, search, sortBy]);
 
   // Stats
   const avgPercentage = attempts.length > 0
     ? Math.round(attempts.reduce((s, a) => s + a.percentage, 0) / attempts.length) : 0;
+  // Reprobado según la escala del sistema: 3.0 sobre 5 son 60% de aciertos.
+  const failedCount = attempts.filter((a) => normalize(a.percentage, 100) < PASS).length;
   const flaggedCount = attempts.filter((a) => a.flagged).length;
 
   if (loading) return <PageLoader />;
@@ -111,57 +117,39 @@ export default function AdminQuizResultsPage() {
         {quizInfo && <p className="text-sm text-subtle mt-1">{quizInfo.title}</p>}
       </div>
 
-      {/* Stats summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card padding="md" className="text-center">
-          <p className="text-2xl font-bold text-cyan-400">{attempts.length}</p>
-          <p className="text-[10px] text-subtle uppercase tracking-wider">Intentos</p>
-        </Card>
-        <Card padding="md" className="text-center">
-          <p className="text-2xl font-bold text-foreground">{avgPercentage}%</p>
-          <p className="text-[10px] text-subtle uppercase tracking-wider">Promedio</p>
-        </Card>
-        <Card padding="md" className="text-center">
-          <p className="text-2xl font-bold text-emerald-400">
-            {attempts.length > 0 ? Math.max(...attempts.map((a) => a.percentage)) : 0}%
-          </p>
-          <p className="text-[10px] text-subtle uppercase tracking-wider">Mejor</p>
-        </Card>
-        <Card padding="md" className="text-center">
-          <p className={`text-2xl font-bold ${flaggedCount > 0 ? 'text-red-400' : 'text-foreground'}`}>{flaggedCount}</p>
-          <p className="text-[10px] text-subtle uppercase tracking-wider">Sospechosos</p>
-        </Card>
+      {/*
+        Métricas que responden preguntas. El promedio iba en porcentaje
+        mientras todo el resto del sistema va sobre 5, así que el docente
+        tenía que convertir de cabeza. Y faltaba lo accionable: cuántos
+        reprobaron. Los contadores filtran, no solo informan.
+      */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        <StatTile label="Intentos" value={String(attempts.length)}
+          hint={`${new Set(attempts.map((a) => a.studentId)).size} estudiantes`} />
+        <StatTile label="Promedio" value={formatScore(normalize(avgPercentage, 100))}
+          tone={gradeText(normalize(avgPercentage, 100))} hint={`${avgPercentage}% de aciertos`} />
+        <StatTile label="Reprobados" value={String(failedCount)}
+          tone={failedCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}
+          highlight={failedCount > 0 ? 'border-red-500/25 bg-red-500/[0.06]' : undefined}
+          onClick={failedCount > 0 ? () => { setFailedOnly((v) => !v); setFlagFilter(false); } : undefined}
+          hint={failedCount > 0 ? (failedOnly ? 'quitar filtro' : 'ver quiénes') : 'ninguno bajo 3.0'} />
+        <StatTile label="Sospechosos" value={String(flaggedCount)}
+          tone={flaggedCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}
+          highlight={flaggedCount > 0 ? 'border-amber-500/25 bg-amber-500/[0.06]' : undefined}
+          onClick={flaggedCount > 0 ? () => { setFlagFilter((v) => !v); setFailedOnly(false); } : undefined}
+          hint={flaggedCount > 0 ? (flagFilter ? 'quitar filtro' : 'ver cuáles') : 'sin incidencias'} />
       </div>
 
-      {/* Filters & Sort */}
       {attempts.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-          <SearchInput value={search} onChange={setSearch} placeholder="Buscar estudiante..." className="w-full sm:w-72" />
-          <div className="flex items-center gap-1.5">
-            <ArrowUpDown className="w-3.5 h-3.5 text-subtle shrink-0" />
-            {([['top', 'Mejor → Peor'], ['bottom', 'Peor → Mejor'], ['name', 'Nombre'], ['recent', 'Reciente']] as [SortKey, string][]).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setSortBy(key)}
-                className={`px-2.5 py-1 text-xs rounded-lg border transition-colors cursor-pointer ${
-                  sortBy === key
-                    ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-400 font-medium'
-                    : 'border-foreground/[0.08] text-subtle hover:text-muted hover:border-foreground/15'
-                }`}
-              >
+        <div className="flex flex-col sm:flex-row gap-3 flex-wrap sm:items-center">
+          <SearchInput value={search} onChange={setSearch} placeholder="Buscar estudiante..." className="w-full sm:w-64" />
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {([['top', 'Mejor primero'], ['bottom', 'Peor primero'], ['name', 'Por nombre'], ['recent', 'Más reciente']] as [SortKey, string][]).map(([key, label]) => (
+              <Chip key={key} active={sortBy === key} onClick={() => setSortBy(key)}>
                 {label}
-              </button>
+              </Chip>
             ))}
           </div>
-          <label className="flex items-center gap-2 cursor-pointer text-sm text-muted">
-            <input
-              type="checkbox"
-              checked={flagFilter}
-              onChange={(e) => setFlagFilter(e.target.checked)}
-              className="w-4 h-4 rounded accent-red-500"
-            />
-            Solo sospechosos ({flaggedCount})
-          </label>
         </div>
       )}
 
@@ -200,12 +188,15 @@ export default function AdminQuizResultsPage() {
                         <p className="text-sm font-medium text-foreground/90 truncate">
                           {attempt.student ? `${attempt.student.lastName}, ${attempt.student.firstName}` : attempt.studentId}
                         </p>
-                        {attempt.student && <p className="text-[11px] text-subtle truncate">{attempt.student.email}</p>}
+                        {attempt.student && <p className="text-meta text-subtle truncate">{attempt.student.email}</p>}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className={`text-lg font-bold tabular-nums ${
-                        attempt.percentage >= 70 ? 'text-emerald-400' : attempt.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
+                        /* La escala del sistema, no una propia: con los
+                           umbrales anteriores un 55% salía en ámbar estando
+                           reprobado, y un 72% en verde yendo raspando. */
+                        gradeText(normalize(attempt.percentage, 100))
                       }`}>
                         {attempt.percentage}%
                       </span>
@@ -258,7 +249,7 @@ export default function AdminQuizResultsPage() {
                       return (
                         <div key={question.id} className="space-y-2">
                           <div className="flex items-start gap-2">
-                            <span className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                            <span className={`shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-micro font-bold ${
                               isCorrect
                                 ? 'bg-emerald-500/20 text-emerald-400'
                                 : isPartial
@@ -310,7 +301,7 @@ export default function AdminQuizResultsPage() {
                                   {icon || <span className="w-3.5 h-3.5 shrink-0" />}
                                   <span className="flex-1">{opt.text}</span>
                                   {question.type === 'weighted' && opt.weight > 0 && (
-                                    <span className="text-[10px] text-subtle shrink-0">{opt.weight}%</span>
+                                    <span className="text-micro text-subtle shrink-0">{opt.weight}%</span>
                                   )}
                                 </div>
                               );

@@ -10,6 +10,7 @@ import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { formatDateTimeColombia } from '@/lib/dateUtils';
 import type { QuizAttempt, QuizQuestion } from '@/lib/types';
 import { Clock, ChevronDown, ChevronUp, XCircle, CheckCircle2, ClockIcon } from 'lucide-react';
+import { gradeText, normalize, formatScore } from '@/lib/gradeScale';
 
 interface QuizInfo {
   id: string;
@@ -86,7 +87,10 @@ export default function StudentQuizResultsPage() {
                     <div>
                       <p className="text-xs text-subtle">Intento #{attempt.attemptNumber}</p>
                       <p className={`text-3xl font-bold tabular-nums ${
-                        attempt.percentage >= 70 ? 'text-emerald-400' : attempt.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
+                        /* La escala del sistema, no una propia: con los
+                           umbrales anteriores un 55% salía en ámbar estando
+                           reprobado, y un 72% en verde yendo raspando. */
+                        gradeText(normalize(attempt.percentage, 100))
                       }`}>
                         {attempt.percentage}%
                       </p>

@@ -12,6 +12,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Quiz, QuizAnswer, QuizSimulation } from '@/lib/types';
 import MarkdownRenderer from '@/components/activities/MarkdownRenderer';
 import { Clock, Shield, AlertTriangle, CheckCircle2, FlaskConical, RotateCcw, Eye, History } from 'lucide-react';
+import { gradeText, normalize } from '@/lib/gradeScale';
 
 interface SimulationResult {
   attempt: {
@@ -240,7 +241,7 @@ export default function AdminQuizSimulatePage() {
           {attempt.percentage !== undefined && (
             <div className="mb-4">
               <p className={`text-4xl font-bold ${
-                attempt.percentage >= 70 ? 'text-emerald-400' : attempt.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
+                gradeText(normalize(attempt.percentage, 100))
               }`}>
                 {attempt.percentage}%
               </p>
@@ -349,7 +350,7 @@ export default function AdminQuizSimulatePage() {
             {reviewingSim.adminName ? ` · ${reviewingSim.adminName}` : ''}
           </p>
           <p className={`text-4xl font-bold ${
-            reviewingSim.percentage >= 70 ? 'text-emerald-400' : reviewingSim.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
+            gradeText(normalize(reviewingSim.percentage, 100))
           }`}>
             {reviewingSim.percentage}%
           </p>
@@ -512,7 +513,7 @@ export default function AdminQuizSimulatePage() {
                   <div className="flex items-center gap-3 shrink-0 ml-3">
                     <div className="text-right">
                       <p className={`text-lg font-bold tabular-nums ${
-                        sim.percentage >= 70 ? 'text-emerald-400' : sim.percentage >= 50 ? 'text-amber-400' : 'text-red-400'
+                        gradeText(normalize(sim.percentage, 100))
                       }`}>
                         {sim.percentage}%
                       </p>
