@@ -11,7 +11,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/withAuth';
 import { toSafeUser } from '@/lib/withAuth';
-import { getUserById, getEnrollmentsByStudent, getCourseById, readUsersFresh, writeUsers, withFileLock, nowColombiaISO } from '@/lib/dataService';
+import { getUserById, getEnrollmentsByStudent, readCoursesFresh, readUsersFresh, writeUsers, withFileLock, nowColombiaISO } from '@/lib/dataService';
 import { hashPassword } from '@/lib/auth';
 import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 
@@ -36,12 +36,18 @@ export async function GET(
       return NextResponse.json({ error: 'Estudiante no encontrado' }, { status: 404 });
     }
 
-    // Obtener enrollments con datos del curso
-    const enrollments = await getEnrollmentsByStudent(id);
-    const enrolledCourses = (await Promise.all(enrollments
+    // Enrollments con datos del curso: una lectura de cursos y un mapa, en
+    // vez de una consulta por cada curso en el que está inscrito.
+    const [enrollments, allCourses] = await Promise.all([
+      getEnrollmentsByStudent(id),
+      readCoursesFresh(),
+    ]);
+    const courseById = new Map(allCourses.map((c) => [c.id, c]));
+
+    const enrolledCourses = enrollments
       .filter((e) => e.status === 'active')
-      .map(async (e) => {
-        const course = await getCourseById(e.courseId);
+      .map((e) => {
+        const course = courseById.get(e.courseId);
         return {
           enrollmentId: e.id,
           enrolledAt: e.enrolledAt,
@@ -49,7 +55,7 @@ export async function GET(
             ? { id: course.id, code: course.code, name: course.name, category: course.category }
             : null,
         };
-      })))
+      })
       .filter((e) => e.course !== null);
 
     return NextResponse.json({

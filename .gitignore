@@ -49,3 +49,6 @@ next-env.d.ts
 
 # Pantallazos del taller de diseño
 .screenshots/
+
+# Scripts locales contra la base de datos (credenciales en .env.local)
+.scripts/

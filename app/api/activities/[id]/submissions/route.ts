@@ -12,7 +12,7 @@ import { createSubmissionSchema } from '@/lib/schemas';
 import {
   readActivitiesFresh,
   readSubmissionsFresh,
-  getUserById,
+  readUsersFresh,
 } from '@/lib/dataService';
 import { uploadFile, UploadError } from '@/lib/uploadService';
 import { submitWork, SubmissionError } from '@/lib/submissionService';
@@ -59,9 +59,18 @@ export async function GET(
       filtered = filtered.filter((s) => s.status === statusFilter);
     }
 
-    // Enrich with student data
-    const enriched: SubmissionWithDetails[] = await Promise.all(filtered.map(async (s) => {
-      const student = await getUserById(s.studentId);
+    /*
+     * Enriquecer con datos del estudiante.
+     *
+     * Iba en Promise.all, así que al menos no esperaba una por una, pero
+     * seguían siendo N consultas para pedir N veces la misma tabla. Con una
+     * lectura y un mapa es una sola.
+     */
+    const allUsers = await readUsersFresh();
+    const usersById = new Map(allUsers.map((u) => [u.id, u]));
+
+    const enriched: SubmissionWithDetails[] = filtered.map((s) => {
+      const student = usersById.get(s.studentId);
       return {
         ...s,
         student: {
@@ -77,7 +86,7 @@ export async function GET(
           dueDate: activity.dueDate,
         },
       };
-    }));
+    });
 
     return NextResponse.json({
       submissions: enriched,
