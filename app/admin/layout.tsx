@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
 import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
+import ThumbNav from '@/components/ui/ThumbNav';
 import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import type { Semester } from '@/lib/types';
@@ -304,12 +305,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </header>
 
-          {/* Page content */}
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          {/* Page content
+              pb-20 en móvil: si no, la barra de pulgar tapa el último bloque
+              de cada pantalla y no hay forma de llegar a él. */}
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">
             {children}
           </main>
         </div>
       </div>
+
+      {/*
+        Accesos al alcance del pulgar.
+
+        En un teléfono, el menú vivía detrás del botón de la esquina superior
+        izquierda: dos gestos y estirar la mano para cambiar de sección. Abajo
+        es un toque, con el dedo donde ya está.
+
+        "Más" abre ese mismo cajón: la barra son atajos a lo de siempre, no un
+        recorte del menú. Nada deja de estar accesible.
+      */}
+      <ThumbNav
+        hideAt="lg"
+        items={[
+          { href: '/admin', label: 'Panel', icon: <LayoutDashboard className="w-5 h-5" /> },
+          { href: '/admin/courses', label: 'Cursos', icon: <BookOpen className="w-5 h-5" /> },
+          { href: '/admin/students', label: 'Alumnos', icon: <Users className="w-5 h-5" /> },
+          { label: 'Más', icon: <Menu className="w-5 h-5" />, onClick: () => setSidebarOpen(true) },
+        ]}
+      />
     </ToastProvider>
   );
 }

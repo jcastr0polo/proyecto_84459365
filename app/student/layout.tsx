@@ -7,6 +7,7 @@ import { ToastProvider } from '@/components/ui/Toast';
 import { Skeleton, SkeletonCards, SkeletonList } from '@/components/ui/Skeleton';
 import { Home, BookOpen, User, Lock, LogOut, Menu, X, ChevronDown, ChevronRight, Cpu } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
+import ThumbNav from '@/components/ui/ThumbNav';
 
 interface UserInfo {
   firstName: string;
@@ -232,11 +233,21 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         {/* Breadcrumbs for deep navigation */}
         <Breadcrumbs pathname={pathname} />
 
-        {/* Page content */}
-        <main className="max-w-7xl mx-auto p-4 sm:p-6">
+        {/* pb-20 en móvil: la barra de pulgar tapa el último bloque si no. */}
+        <main className="max-w-7xl mx-auto p-4 sm:p-6 pb-20 md:pb-6">
           {children}
         </main>
       </div>
+
+      {/* Lo mismo para el estudiante, que entra casi siempre desde el móvil. */}
+      <ThumbNav
+        items={[
+          { href: '/student', label: 'Inicio', icon: <Home className="w-5 h-5" /> },
+          { href: '/student/courses', label: 'Cursos', icon: <BookOpen className="w-5 h-5" /> },
+          { href: '/student/profile', label: 'Perfil', icon: <User className="w-5 h-5" /> },
+          { label: 'Más', icon: <Menu className="w-5 h-5" />, onClick: () => setMobileMenuOpen(true) },
+        ]}
+      />
     </ToastProvider>
   );
 }

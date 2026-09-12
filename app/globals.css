@@ -9,9 +9,20 @@
 [data-theme="light"] {
   --base-bg: #f8fafc;       /* slate-50 — softer than pure white */
   --base-fg: #0f172a;       /* slate-900 */
-  --muted-fg: #475569;      /* slate-600 — readable secondary text */
-  --subtle-fg: #64748b;     /* slate-500 — labels, hints */
-  --faint-fg: #94a3b8;      /* slate-400 — decorative */
+  /*
+   * Los tres grises, MEDIDOS contra el fondo (#f8fafc) y contra la tarjeta
+   * (#ffffff). Los tres pasan el 4.5:1 que pide la norma para texto normal.
+   *
+   * Antes `faint` era slate-400: 2.45:1. Eso no es "decorativo", es texto que
+   * no se lee —y se usaba para fechas, pesos y contadores, no para adornos—.
+   * `subtle` iba justo en 4.55 y en oscuro se caía a 3.98.
+   *
+   * Cada nivel baja un escalón de slate y se queda por encima del mínimo:
+   *   muted 9.90:1 · subtle 7.24:1 · faint 4.55:1
+   */
+  --muted-fg: #334155;      /* slate-700 — texto secundario */
+  --subtle-fg: #475569;     /* slate-600 — etiquetas, apoyos */
+  --faint-fg: #64748b;      /* slate-500 — el nivel más tenue que aún se lee */
   /* Superficies — una sola definición de "tarjeta" para todo el sitio */
   --surface-bg: #ffffff;
   --surface-border: #e2e8f0;          /* slate-200 */
@@ -29,9 +40,16 @@
 [data-theme="dark"] {
   --base-bg: #0d1117;       /* GitHub-style soft dark */
   --base-fg: #e2e8f0;       /* slate-200 */
-  --muted-fg: #94a3b8;      /* slate-400 — readable secondary text */
-  --subtle-fg: #64748b;     /* slate-500 — labels, hints */
-  --faint-fg: #475569;      /* slate-600 — decorative */
+  /*
+   * Misma regla en oscuro, medido contra el fondo (#0d1117) y la tarjeta:
+   *   muted 12.75:1 · subtle 7.38:1 · faint 5.03:1 (4.60 sobre tarjeta)
+   *
+   * `faint` no es un tono de la paleta: es el punto más tenue entre slate-500
+   * y slate-400 que todavía pasa el 4.5:1 sobre las dos superficies.
+   */
+  --muted-fg: #cbd5e1;      /* slate-300 — texto secundario */
+  --subtle-fg: #94a3b8;     /* slate-400 — etiquetas, apoyos */
+  --faint-fg: #75859b;      /* el nivel más tenue que aún se lee */
   --surface-bg: rgba(255,255,255,0.03);
   --surface-border: rgba(255,255,255,0.08);
   --surface-bg-hover: rgba(255,255,255,0.055);
@@ -94,6 +112,16 @@
 
 @theme inline {
   /*
+   * Los dos tamaños que más se usan en el proyecto —450 usos de text-xs y 355
+   * de text-sm— suben un punto cada uno. Es el cambio que más se nota sin
+   * tocar una sola pantalla: 12→13 y 14→15. El interlineado sube con ellos.
+   */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.15rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.4rem;
+
+  /*
    * OJO con el nombre: un token de color llamado `base` genera la utilidad
    * `text-base`, que en Tailwind ya es un TAMAÑO de letra. El color ganaba y
    * el tamaño desaparecía, así que todo lo que llevara `text-base` se pintaba
@@ -152,15 +180,25 @@
 @media (min-width: 640px) {
   .type-page { font-size: 1.875rem; }
 }
-@utility type-section { font-size: 0.75rem;   line-height: 1rem; font-weight: 600;
+/*
+ * Los tamaños subieron un escalón entero.
+ *
+ * La escala bajaba hasta 10px y 11px, y a partir de los cuarenta eso deja de
+ * leerse de un vistazo: hay que acercar el teléfono. Y no era letra pequeña
+ * para adornos —fechas de entrega, pesos, contadores de calificados—, era
+ * información que hay que leer. Nada baja ya de 12px, que es el suelo
+ * razonable en pantalla, y el interlineado sube con ello para que no se
+ * apelotone.
+ */
+@utility type-section { font-size: 0.8125rem; line-height: 1.125rem; font-weight: 600;
                         text-transform: uppercase; letter-spacing: 0.05em; }          /* encabezado de sección */
-@utility type-body    { font-size: 0.875rem;  line-height: 1.5; }                     /* contenido */
-@utility type-meta    { font-size: 0.6875rem; line-height: 1rem; }                    /* apoyo */
-@utility type-micro   { font-size: 0.625rem;  line-height: 1rem; }                    /* etiqueta mínima */
+@utility type-body    { font-size: 0.9375rem; line-height: 1.55; }                    /* contenido */
+@utility type-meta    { font-size: 0.8125rem; line-height: 1.15rem; }                 /* apoyo */
+@utility type-micro   { font-size: 0.75rem;   line-height: 1.05rem; }                 /* etiqueta mínima */
 
-/* Alias de la escala anterior, para no romper los 192 usos ya migrados. */
-@utility text-micro { font-size: 0.625rem; line-height: 1rem; }
-@utility text-meta  { font-size: 0.6875rem; line-height: 1rem; }
+/* Alias de la escala anterior, para no romper los usos ya migrados. */
+@utility text-micro { font-size: 0.75rem; line-height: 1.05rem; }
+@utility text-meta  { font-size: 0.8125rem; line-height: 1.15rem; }
 
 /*
  * Espaciado interior por DENSIDAD, no por número.
