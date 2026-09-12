@@ -79,7 +79,7 @@ export default function DashboardPriorities({
             <CalendarClock className="w-4 h-4" aria-hidden="true" />
             Reporte de notas
           </h2>
-          <div className="space-y-2">
+          <div className="grid gap-2 @3xl:grid-cols-2">
             {proximos.map((r) => {
               const urge = r.days <= 7;
               return (
@@ -87,7 +87,7 @@ export default function DashboardPriorities({
                   key={`${r.courseId}-${r.corteId}`}
                   href={`/admin/courses/${r.courseId}/grades`}
                   className={`block rounded-xl border p-4 transition-colors duration-[var(--dur-fast)]
-                              hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2
+                              hover:bg-surface-hover active:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2
                               focus-visible:ring-cyan-500/40
                               ${urge ? (r.days <= 0 ? toneBox.critical : toneBox.attention) : 'border-surface-border bg-surface'}`}
                 >
@@ -135,7 +135,7 @@ export default function DashboardPriorities({
               <Link
                 key={q.activityId}
                 href={`/admin/courses/${q.courseId}/activities/${q.activityId}/grades`}
-                className="flex items-center gap-3 px-4 py-3 bg-surface hover:bg-surface-hover
+                className="flex items-center gap-3 px-4 py-3 bg-surface hover:bg-surface-hover active:bg-surface-sunken
                            transition-colors duration-[var(--dur-fast)]
                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset
                            focus-visible:ring-cyan-500/40"
@@ -144,22 +144,27 @@ export default function DashboardPriorities({
                                   ${q.urgencyDays !== null && q.urgencyDays <= 7 ? toneText.attention : 'text-foreground'}`}>
                   {q.pending}
                 </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-foreground/90 truncate">{q.title}</p>
-                  <p className="text-xs text-subtle truncate">{q.courseName}</p>
-                  {/*
-                    El motivo de la urgencia va en su propio renglón.
-                    Pegado al nombre del curso se cortaba en móvil —"LÓGICA Y
-                    PROGRAMACIÓN · reporte e…"— y justo eso es lo que explica
-                    por qué esta fila está arriba. Truncar la razón del orden
-                    deja la lista pareciendo arbitraria.
-                  */}
+                {/*
+                  En estrecho, el motivo va debajo en su propio renglón: pegado
+                  al nombre del curso se cortaba —"LÓGICA Y PROGRAMACIÓN ·
+                  reporte e…"— y truncar la razón del orden deja la lista
+                  pareciendo arbitraria. En ancho se va a la derecha, que si no
+                  la fila estira tres datos a lo largo de mil píxeles y deja la
+                  flecha a un palmo del texto.
+                */}
+                <div className="min-w-0 flex-1 @2xl:flex @2xl:items-center @2xl:justify-between @2xl:gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm text-foreground/90 truncate">{q.title}</p>
+                    <p className="text-xs text-subtle truncate">{q.courseName}</p>
+                  </div>
                   {q.reportInDays !== null ? (
-                    <p className={`text-xs ${tonoPorDias(q.reportInDays)}`}>
+                    <p className={`text-xs shrink-0 @2xl:text-right ${tonoPorDias(q.reportInDays)}`}>
                       Reporte {plazo(q.reportInDays)}
                     </p>
                   ) : q.dueInDays !== null && q.dueInDays < 0 ? (
-                    <p className={`text-xs ${toneText.attention}`}>Entrega {plazo(q.dueInDays)}</p>
+                    <p className={`text-xs shrink-0 @2xl:text-right ${toneText.attention}`}>
+                      Entrega {plazo(q.dueInDays)}
+                    </p>
                   ) : null}
                 </div>
                 <ChevronRight className="w-4 h-4 text-faint shrink-0" aria-hidden="true" />
@@ -186,7 +191,7 @@ export default function DashboardPriorities({
               <Link
                 key={`${s.studentId}-${s.courseId}`}
                 href={`/admin/students/${s.studentId}`}
-                className="flex items-center gap-3 px-4 py-3 bg-surface hover:bg-surface-hover
+                className="flex items-center gap-3 px-4 py-3 bg-surface hover:bg-surface-hover active:bg-surface-sunken
                            transition-colors duration-[var(--dur-fast)]
                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset
                            focus-visible:ring-cyan-500/40"
@@ -194,14 +199,17 @@ export default function DashboardPriorities({
                 <span className={`text-lg font-bold tabular-nums shrink-0 w-10 ${gradeText(s.score)}`}>
                   {formatScore(s.score)}
                 </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-foreground/90 truncate">{s.studentName}</p>
-                  <p className="text-xs text-subtle truncate">{s.courseName}</p>
-                  {/* Cuánto lleva cursado dice si aún hay margen de arreglarlo
-                      o si ya está casi decidido. Se corta si va en la misma
-                      línea que el nombre del curso. */}
+                {/* Cuánto lleva cursado dice si aún hay margen de arreglarlo
+                    o si ya está casi decidido. */}
+                <div className="min-w-0 flex-1 @2xl:flex @2xl:items-center @2xl:justify-between @2xl:gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm text-foreground/90 truncate">{s.studentName}</p>
+                    <p className="text-xs text-subtle truncate">{s.courseName}</p>
+                  </div>
                   {s.progressPct !== null && (
-                    <p className="text-xs text-faint">{s.progressPct}% del curso cursado</p>
+                    <p className="text-xs text-faint shrink-0 @2xl:text-right">
+                      {s.progressPct}% del curso cursado
+                    </p>
                   )}
                 </div>
                 <ChevronRight className="w-4 h-4 text-faint shrink-0" aria-hidden="true" />

@@ -174,6 +174,29 @@
  * que cada pantalla elegía a ojo y ninguna jerarquía se leía igual dos veces.
  * Estas cinco clases dicen QUÉ es cada texto; el tamaño es consecuencia.
  */
+/*
+ * ─── La escala crece en pantalla grande ───
+ *
+ * Un tamaño pensado para 390px se queda corto en un monitor de 27": la misma
+ * letra está más lejos de los ojos y compite con mucho más espacio alrededor.
+ * Los tamaños de móvil se mantienen —ahí el problema es el sitio, no la vista—
+ * y a partir de 1024px suben un punto más.
+ *
+ * Va después de @theme y con el mismo peso de selector, así que gana por orden
+ * de aparición sin necesidad de !important.
+ */
+@media (min-width: 1024px) {
+  .text-xs   { font-size: 0.875rem;  line-height: 1.25rem; }   /* 13 → 14 */
+  .text-sm   { font-size: 1rem;      line-height: 1.5rem; }    /* 15 → 16 */
+  .text-base { font-size: 1.0625rem; line-height: 1.6rem; }    /* 16 → 17 */
+  .text-micro { font-size: 0.8125rem; line-height: 1.15rem; }  /* 12 → 13 */
+  .text-meta  { font-size: 0.875rem;  line-height: 1.25rem; }  /* 13 → 14 */
+  .type-body    { font-size: 1rem;      line-height: 1.6; }
+  .type-meta    { font-size: 0.875rem;  line-height: 1.25rem; }
+  .type-micro   { font-size: 0.8125rem; line-height: 1.15rem; }
+  .type-section { font-size: 0.875rem;  line-height: 1.25rem; }
+}
+
 @utility type-page {
   font-size: 1.5rem; line-height: 1.2; font-weight: 700;
 }
