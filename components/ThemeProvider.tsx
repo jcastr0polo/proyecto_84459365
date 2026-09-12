@@ -123,9 +123,15 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
   return (
     <button
       onClick={toggleTheme}
-      className={`p-2 rounded-lg transition-colors cursor-pointer
+      /* Medía 32px en toda la aplicación. El área de pulsación sube a 44
+         con un pseudo-elemento, como Chip e IconButton: engordar el icono
+         desencajaría las barras donde vive. */
+      className={`relative p-2 rounded-lg transition-colors cursor-pointer
                   text-subtle hover:text-foreground/80
-                  hover:bg-foreground/[0.06] ${className}`}
+                  hover:bg-foreground/[0.06]
+                  after:absolute after:left-1/2 after:top-1/2
+                  after:-translate-x-1/2 after:-translate-y-1/2
+                  after:w-11 after:h-11 after:content-[''] ${className}`}
       aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
       title={isDark ? 'Modo claro' : 'Modo oscuro'}
     >

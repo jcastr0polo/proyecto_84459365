@@ -19,6 +19,7 @@ import {
   Users,
   GitBranch,
   Cpu,
+  Database,
   Palette,
   BarChart3,
   Globe,
@@ -51,8 +52,9 @@ const STACK_ITEMS = [
   { name: 'TypeScript', desc: 'Tipado estricto', icon: Code2 },
   { name: 'React 19', desc: 'UI declarativa', icon: Zap },
   { name: 'Tailwind', desc: 'Utility-first CSS', icon: Palette },
+  { name: 'Supabase', desc: 'Postgres gestionado', icon: Database },
   { name: 'Vercel', desc: 'Deploy global', icon: Rocket },
-  { name: 'GitHub', desc: 'Version control', icon: GitBranch },
+  { name: 'GitHub', desc: 'Control de versiones', icon: GitBranch },
 ];
 
 const STEPS = [
@@ -69,25 +71,19 @@ const categoryConfig: Record<string, { gradient: string; border: string; badge: 
   other: { gradient: 'from-white/5 to-white/[0.02]', border: 'hover:border-foreground/20', badge: 'Otro', badgeClass: 'bg-foreground/10 text-muted border-foreground/20', icon: BookOpen },
 };
 
-export default function LandingClient() {
-  const [heroTitle, setHeroTitle] = React.useState('NEXUS');
-  const [heroSubtitle, setHeroSubtitle] = React.useState('');
-  const [heroDescription, setHeroDescription] = React.useState('');
+export interface LandingProps {
+  /** Portada editable desde la aplicación. null si no se pudo leer. */
+  hero: { title: string; subtitle: string; description: string } | null;
+  /** Etiqueta del semestre activo, tal cual está en la base ("2026 - Segundo Semestre"). */
+  semesterLabel: string | null;
+  /** Cursos activos de ese semestre. Vacío = no se anuncia ningún catálogo. */
+  courses: Course[];
+}
 
-  React.useEffect(() => {
-    fetch('/api/data')
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data?.hero) {
-          setHeroTitle(data.hero.title || 'NEXUS');
-          setHeroSubtitle(data.hero.subtitle || '');
-          setHeroDescription(data.hero.description || '');
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const courses = FALLBACK_COURSES;
+export default function LandingClient({ hero, semesterLabel, courses }: LandingProps) {
+  const heroTitle = hero?.title || 'NEXUS';
+  const heroSubtitle = hero?.subtitle ?? '';
+  const heroDescription = hero?.description ?? '';
   const titleAnimationDuration = heroTitle.length * 0.08 + 0.6;
 
   return (
@@ -95,7 +91,7 @@ export default function LandingClient() {
       {/* ═══ NAVBAR ═══ */}
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-foreground/[0.06] bg-canvas/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
+          <Link href="/" className="flex items-center gap-2.5 group min-h-11 pr-2 rounded-lg">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
               <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
             </div>
@@ -105,11 +101,11 @@ export default function LandingClient() {
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href="/showcase" className="flex items-center gap-1.5 text-xs font-medium text-subtle hover:text-muted transition-colors px-3 py-2 rounded-lg hover:bg-foreground/[0.04]">
+            <Link href="/showcase" className="flex items-center gap-1.5 text-sm font-medium text-subtle hover:text-foreground transition-colors px-3 min-h-11 rounded-lg hover:bg-foreground/[0.04]">
               <ExternalLink className="w-3.5 h-3.5" />
               Vitrina
             </Link>
-            <Link href="/login" className="flex items-center gap-1.5 text-xs font-bold bg-gradient-to-r from-cyan-400 to-blue-500 text-black px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-200">
+            <Link href="/login" className="flex items-center gap-1.5 text-sm font-bold bg-gradient-to-r from-cyan-400 to-blue-500 text-black px-4 min-h-11 rounded-lg hover:shadow-lg hover:shadow-cyan-500/25 transition-all duration-200">
               <LogIn className="w-3.5 h-3.5" />
               Ingresar
             </Link>
@@ -126,6 +122,9 @@ export default function LandingClient() {
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
+          {/* Sin semestre activo no se anuncia ninguno: el punto verde que
+              parpadea dice "en curso", y eso tiene que ser verdad. */}
+          {semesterLabel && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -136,8 +135,9 @@ export default function LandingClient() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
             </span>
-            <span className="text-meta font-medium text-muted tracking-wide">Semestre 2026-1 · En curso</span>
+            <span className="text-meta font-medium text-muted tracking-wide">{semesterLabel} · En curso</span>
           </motion.div>
+          )}
 
           <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tighter" style={{ fontFamily: 'var(--font-playfair)' }}>
             <AnimatedText text={heroTitle} delay={0.2} />
@@ -170,7 +170,7 @@ export default function LandingClient() {
             className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
           >
             <Link href="/login" className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black text-sm font-bold hover:shadow-lg hover:shadow-cyan-500/20 transition-all duration-300">
-              Comenzar ahora
+              Entrar a la plataforma
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <Link href="/showcase" className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-foreground/[0.1] text-muted text-sm font-medium hover:bg-foreground/[0.04] hover:text-foreground hover:border-foreground/20 transition-all duration-200">
@@ -190,22 +190,25 @@ export default function LandingClient() {
       </section>
 
       {/* ═══ COURSES ═══ */}
+      {courses.length > 0 && (
       <Section className="py-6 sm:py-10 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/[0.08] border border-cyan-500/10 mb-4">
               <GraduationCap className="w-3.5 h-3.5 text-cyan-400/70" />
-              <span className="text-meta font-medium text-cyan-400/70 tracking-wider uppercase">Semestre 2026-1</span>
+              <span className="text-meta font-medium text-cyan-400/70 tracking-wider uppercase">{semesterLabel}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               Cursos del Semestre
             </h2>
             <p className="mt-4 text-sm text-subtle max-w-lg mx-auto leading-relaxed">
-              Tres disciplinas, un mismo stack. Cada curso explora una faceta del desarrollo moderno de software.
+              {courses.length === 1
+                ? 'Un curso, un stack completo, de la primera línea al despliegue.'
+                : `${courses.length} asignaturas, un mismo stack. Cada una explora una faceta del desarrollo moderno de software.`}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className={`grid grid-cols-1 gap-5 ${courses.length === 1 ? 'max-w-md mx-auto' : courses.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
             {courses.map((course, i) => {
               const cfg = categoryConfig[course.category] ?? categoryConfig.other;
               const Icon = cfg.icon;
@@ -227,15 +230,21 @@ export default function LandingClient() {
                     <span className="text-micro font-mono text-faint">{course.code}</span>
                   </div>
                   <h3 className="text-lg font-semibold text-foreground/90 mb-2 group-hover:text-foreground transition-colors">{course.name}</h3>
-                  <p className="text-xs text-subtle leading-relaxed line-clamp-3">
-                    {course.description || 'Curso del programa académico.'}
-                  </p>
+                  {/* En la base, la descripción de estas asignaturas es su
+                      propio nombre, así que la tarjeta lo decía dos veces.
+                      Mejor una línea menos que una línea repetida. */}
+                  {course.description
+                    && course.description.trim().toLowerCase() !== course.name.trim().toLowerCase() && (
+                    <p className="text-sm text-subtle leading-relaxed line-clamp-3">
+                      {course.description}
+                    </p>
+                  )}
                   <div className="mt-5 pt-4 border-t border-foreground/[0.06] flex items-center gap-3 text-meta text-faint">
                     <span className="flex items-center gap-1"><Users className="w-3 h-3" /> Activo</span>
                     {course.schedule?.length > 0 && (
                       <span className="flex items-center gap-1">
                         <BookOpen className="w-3 h-3" />
-                        {course.schedule.length} sesión/sem
+                        {course.schedule.length} {course.schedule.length === 1 ? 'sesión' : 'sesiones'}/sem
                       </span>
                     )}
                   </div>
@@ -245,6 +254,7 @@ export default function LandingClient() {
           </div>
         </div>
       </Section>
+      )}
 
       {/* ═══ HOW IT WORKS ═══ */}
       <Section className="py-6 sm:py-10 px-6">
@@ -310,7 +320,7 @@ export default function LandingClient() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
             {STACK_ITEMS.map((item, i) => {
               const Icon = item.icon;
               return (
@@ -327,8 +337,11 @@ export default function LandingClient() {
                     <Icon className="w-5 h-5 text-subtle group-hover:text-muted transition-colors" />
                   </div>
                   <div className="text-center">
-                    <p className="text-xs font-semibold text-muted">{item.name}</p>
-                    <p className="text-micro text-faint mt-0.5">{item.desc}</p>
+                    <p className="text-sm font-semibold text-foreground">{item.name}</p>
+                    {/* Esto es texto para leer, no una etiqueta: sube del suelo
+                        de 12px al resto de la escala. Los otros text-micro del
+                        home son códigos y ordinales, y ahí 12px se sostiene. */}
+                    <p className="text-xs text-subtle mt-0.5">{item.desc}</p>
                   </div>
                 </motion.div>
               );
@@ -348,8 +361,8 @@ export default function LandingClient() {
                 <p className="text-meta text-subtle mt-1">TypeScript — Zero any</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground/80">JSON</p>
-                <p className="text-meta text-subtle mt-1">Base de datos en archivos</p>
+                <p className="text-2xl font-bold text-foreground/80">Postgres</p>
+                <p className="text-meta text-subtle mt-1">Datos en Supabase</p>
               </div>
               <div>
                 <p className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">IA</p>
@@ -370,15 +383,15 @@ export default function LandingClient() {
               </div>
               <div>
                 <p className="text-sm font-bold text-muted">NEXUS</p>
-                <p className="text-meta text-faint">Plataforma Académica · 2026-1</p>
+                <p className="text-meta text-faint">Plataforma Académica{semesterLabel ? ` · ${semesterLabel}` : ''}</p>
               </div>
             </div>
-            <div className="flex items-center gap-6 text-xs text-subtle">
-              <Link href="/login" className="hover:text-muted transition-colors flex items-center gap-1.5">
-                <LogIn className="w-3 h-3" /> Login
+            <div className="flex items-center gap-2 text-sm text-subtle">
+              <Link href="/login" className="hover:text-foreground hover:bg-foreground/[0.04] transition-colors flex items-center gap-1.5 px-3 min-h-11 rounded-lg">
+                <LogIn className="w-4 h-4" aria-hidden="true" /> Entrar
               </Link>
-              <Link href="/showcase" className="hover:text-muted transition-colors flex items-center gap-1.5">
-                <ExternalLink className="w-3 h-3" /> Vitrina
+              <Link href="/showcase" className="hover:text-foreground hover:bg-foreground/[0.04] transition-colors flex items-center gap-1.5 px-3 min-h-11 rounded-lg">
+                <ExternalLink className="w-4 h-4" aria-hidden="true" /> Vitrina
               </Link>
             </div>
             <p className="text-micro text-faint">
@@ -393,28 +406,3 @@ export default function LandingClient() {
     </div>
   );
 }
-
-/* ─── Fallback courses ─── */
-const FALLBACK_COURSES: Course[] = [
-  {
-    id: 'course-log-202601', code: 'LOG-202601', name: 'Lógica y Programación',
-    description: 'Fundamentos de programación fullstack con TypeScript, Next.js y despliegue en Vercel. Uso de IA como herramienta de desarrollo.',
-    semesterId: '202601', category: 'programming',
-    schedule: [{ dayOfWeek: 'lunes', startTime: '08:00', endTime: '10:00', modality: 'presencial' }],
-    isActive: true, createdAt: '', updatedAt: '',
-  },
-  {
-    id: 'course-dis-202601', code: 'DIS-202601', name: 'Diseño de Interfaces RA',
-    description: 'Diseño de interfaces de usuario y experiencia de usuario. Prototipado, wireframing y desarrollo de UI con React.',
-    semesterId: '202601', category: 'design',
-    schedule: [{ dayOfWeek: 'martes', startTime: '10:00', endTime: '12:00', modality: 'presencial' }],
-    isActive: true, createdAt: '', updatedAt: '',
-  },
-  {
-    id: 'course-ger-202601', code: 'GER-202601', name: 'Gerencia de Proyectos',
-    description: 'Gestión de proyectos de software, metodologías ágiles, liderazgo de equipos y entrega de valor al cliente.',
-    semesterId: '202601', category: 'management',
-    schedule: [{ dayOfWeek: 'miércoles', startTime: '14:00', endTime: '16:00', modality: 'presencial' }],
-    isActive: true, createdAt: '', updatedAt: '',
-  },
-];
