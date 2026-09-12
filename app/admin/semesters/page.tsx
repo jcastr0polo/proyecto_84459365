@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { formatDateColombia as formatDate } from '@/lib/dateUtils';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -15,13 +14,14 @@ import type { SemesterFormData } from '@/components/forms/SemesterForm';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Semester, AppConfig } from '@/lib/types';
 import { Calendar, Globe, Database } from 'lucide-react';
+import DatabaseStatusPanel from '@/components/admin/DatabaseStatusPanel';
 
 type SettingsTab = 'semesters' | 'general' | 'blob';
 
 const TABS: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
   { id: 'semesters', label: 'Semestres', icon: <Calendar className="w-4 h-4" /> },
   { id: 'general', label: 'General', icon: <Globe className="w-4 h-4" /> },
-  { id: 'blob', label: 'Blob Sync', icon: <Database className="w-4 h-4" /> },
+  { id: 'blob', label: 'Base de datos', icon: <Database className="w-4 h-4" /> },
 ];
 
 // ═══════════════════════════════════════════════
@@ -149,20 +149,17 @@ function GeneralTab() {
 }
 
 // ═══════════════════════════════════════════════
-// Tab: Blob Sync (redirect to existing page)
+// Pestaña: Base de datos
 // ═══════════════════════════════════════════════
+/*
+ * Antes esta pestaña rebotaba a otra página con un router.push al montarse:
+ * pulsabas una pestaña y acababas en otro sitio, sin poder volver con el
+ * botón atrás sin quedar atrapado en el rebote. Ahora se muestra aquí, que es
+ * donde la fuiste a buscar. La ruta /admin/database sigue existiendo para
+ * abrirla suelta o para un marcador guardado.
+ */
 function BlobTab() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.push('/admin/database');
-  }, [router]);
-
-  return (
-    <div className="flex items-center justify-center py-12">
-      <p className="text-sm text-subtle">Redirigiendo a Blob Sync...</p>
-    </div>
-  );
+  return <DatabaseStatusPanel />;
 }
 
 // ═══════════════════════════════════════════════

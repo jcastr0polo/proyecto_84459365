@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
 import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
-import { Database, LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight, Shield } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import type { Semester } from '@/lib/types';
 
@@ -21,9 +21,9 @@ const NAV_ITEMS = [
   { href: '/admin/students', label: 'Estudiantes', icon: Users },
   { href: '/admin/prompts', label: 'Prompts IA', icon: Sparkles },
   { href: '/admin/audit', label: 'Auditoría', icon: Shield },
+  /* La base de datos NO va aquí: es una herramienta puntual, no un sitio al
+     que se entra a diario. Vive dentro de Configuración. */
   { href: '/admin/semesters', label: 'Configuración', icon: Settings },
-  /* Estaba sin enlazar: había que escribir la URL a mano para llegar. */
-  { href: '/admin/database', label: 'Base de datos', icon: Database },
 ];
 
 /* ─── Breadcrumb helpers ─── */

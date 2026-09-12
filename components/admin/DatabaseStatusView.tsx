@@ -41,7 +41,7 @@ export interface MigrationStatus {
  * conexión, tabla que falta, tabla vacía).
  */
 export default function DatabaseStatusView({
-  status, refreshing, onRefresh, migrations = [], onApply, applying,
+  status, refreshing, onRefresh, migrations = [], onApply, applying, standalone = false,
 }: {
   status: DbStatus;
   refreshing?: boolean;
@@ -50,6 +50,8 @@ export default function DatabaseStatusView({
   onApply?: (id: string) => void;
   /** ID de la migración que se está aplicando ahora mismo. */
   applying?: string | null;
+  /** Como página suelta lleva su enlace de volver; incrustada en una pestaña, no. */
+  standalone?: boolean;
 }) {
   const totalRows = status.tables.reduce((a, t) => a + Math.max(0, t.rowCount), 0);
   const emptyTables = status.tables.filter((t) => t.exists && t.rowCount === 0);
@@ -57,7 +59,7 @@ export default function DatabaseStatusView({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <BackLink href="/admin">Volver al panel</BackLink>
+      {standalone && <BackLink href="/admin">Volver al panel</BackLink>}
 
       <div>
         <h1 className="type-page text-foreground">Estado de la base de datos</h1>
