@@ -9,6 +9,7 @@ import { gradeText, normalize, formatScore, PASS } from '@/lib/gradeScale';
 import type { Semester } from '@/lib/types';
 import CourseCard from './CourseCard';
 import EmptyState from '@/components/ui/EmptyState';
+import WhatYouNeed from './WhatYouNeed';
 import type { CourseWithMeta, UserInfo, ActiveQuiz } from './types';
 
 
@@ -191,6 +192,26 @@ export default function StudentDashboardView({
             </p>
           )}
         </div>
+      </motion.div>
+
+      {/*
+        Qué necesita para pasar.
+
+        Va justo después de "vas por X": el número solo no dice si es
+        recuperable, y esa es la pregunta que viene inmediatamente detrás.
+      */}
+      <motion.div {...fade(0.05)}>
+        <WhatYouNeed
+          items={coursesData.flatMap((cd) => (cd.needed
+            ? [{
+                courseId: cd.course.id,
+                courseName: cd.course.name,
+                current: cd.finalScore ?? null,
+                needed: cd.needed.score,
+                remainingWeight: cd.needed.remainingWeight,
+              }]
+            : []))}
+        />
       </motion.div>
 
       {/* ── Parciales abiertos ──

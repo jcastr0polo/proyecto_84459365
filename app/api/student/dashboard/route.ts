@@ -26,6 +26,7 @@ import {
   calculateCorteScores, calculateFinalGrade, resolveFinalScore,
   gradableItemsOf, adjustItemId, isAdjustItemId,
 } from '@/lib/gradeService';
+import { PASS } from '@/lib/gradeScale';
 
 export async function GET(request: Request): Promise<NextResponse> {
   return withAuth(request, async (user) => {
@@ -92,6 +93,33 @@ export async function GET(request: Request): Promise<NextResponse> {
         finalAdjustment?.score ?? null,
       );
 
+      /*
+       * Cuánto necesita en lo que queda para pasar.
+       *
+       * Es la pregunta con la que un estudiante mira sus notas y la única que
+       * el sistema nunca le respondía: veía un 2.6 y no sabía si eso era
+       * recuperable o no. La cuenta ya está toda aquí —peso de cada corte y
+       * cuáles tienen nota—, solo faltaba despejarla.
+       *
+       *   definitiva = (ganado + X · peso_restante) / peso_total = 3.0
+       *   X = (3.0 · peso_total − ganado) / peso_restante
+       *
+       * Si sale por encima de 5.0 se dice el número igual, sin veredicto: es
+       * un dato para ir a hablar con el docente, no una sentencia.
+       */
+      let needed: { score: number; remainingWeight: number } | null = null;
+      if (resolved.basis === 'cortes' && resolved.totalCorteWeight > 0) {
+        const restante = resolved.totalCorteWeight - resolved.countedCorteWeight;
+        if (restante > 0) {
+          const ganado = courseCortes.reduce((acc, c) => {
+            const v = corteScores[c.id];
+            return v === null || v === undefined ? acc : acc + v * c.weight;
+          }, 0);
+          const x = (PASS * resolved.totalCorteWeight - ganado) / restante;
+          needed = { score: Math.round(x * 10) / 10, remainingWeight: restante };
+        }
+      }
+
       return {
         course,
         enrollment,
@@ -101,6 +129,7 @@ export async function GET(request: Request): Promise<NextResponse> {
           activityId: g.activityId, score: g.score, maxScore: g.maxScore, gradedAt: g.gradedAt,
         })),
         finalScore: resolved.finalScore,
+        needed,
       };
     });
 

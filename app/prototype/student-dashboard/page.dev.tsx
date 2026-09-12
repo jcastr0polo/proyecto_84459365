@@ -8,7 +8,16 @@ import { MOCK_USER, MOCK_SEMESTER, MOCK_COURSES, MOCK_COURSES_EMPTY, MOCK_QUIZZE
 export default function PrototypeDashboardPage() {
   const [version, setVersion] = useState<'actual' | 'v2'>('v2');
   const [dataset, setDataset] = useState<'activo' | 'nuevo'>('activo');
-  const courses = dataset === 'activo' ? MOCK_COURSES : MOCK_COURSES_EMPTY;
+  const base = dataset === 'activo' ? MOCK_COURSES : MOCK_COURSES_EMPTY;
+  /* Tres situaciones distintas: apretado, imposible y holgado. La tercera no
+     debe salir en el bloque — a quien va bien no le sirve saber que le basta
+     con un 0.8. */
+  const necesita = [
+    { score: 4.5, remainingWeight: 40 },
+    { score: 6.0, remainingWeight: 40 },
+    { score: 0.8, remainingWeight: 40 },
+  ];
+  const courses = base.map((c, i) => ({ ...c, needed: necesita[i % necesita.length] }));
 
   return (
     <div className="min-h-screen">

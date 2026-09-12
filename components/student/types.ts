@@ -19,6 +19,12 @@ export interface CourseWithMeta {
    * la vista de notas.
    */
   finalScore?: number | null;
+  /**
+   * Qué media necesita en lo que queda para llegar a 3.0, y cuánto peso del
+   * curso falta por calificar. null si ya no queda nada por calificar o si el
+   * curso no pondera por cortes.
+   */
+  needed?: { score: number; remainingWeight: number } | null;
 }
 
 export interface UserInfo {
