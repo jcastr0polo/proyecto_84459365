@@ -212,7 +212,7 @@ export default function DateTimePicker({
       </button>
 
       {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
-      {!error && hint && <p className="mt-1 text-[11px] text-faint">{hint}</p>}
+      {!error && hint && <p className="mt-1 text-meta text-faint">{hint}</p>}
 
       {open && (
         <div
@@ -246,7 +246,7 @@ export default function DateTimePicker({
           {/* Day headers */}
           <div className="grid grid-cols-7 px-2 pt-2">
             {DAYS_ES.map((d) => (
-              <span key={d} className="text-center text-[10px] font-medium text-faint py-1">
+              <span key={d} className="text-center text-micro font-medium text-faint py-1">
                 {d}
               </span>
             ))}
@@ -286,7 +286,7 @@ export default function DateTimePicker({
           {/* Time picker */}
           <div className="px-3 py-2.5 border-t border-foreground/[0.06] flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 text-subtle shrink-0" />
-            <span className="text-[11px] text-subtle">Hora:</span>
+            <span className="text-meta text-subtle">Hora:</span>
             <select
               value={hour}
               onChange={(e) => updateTime(+e.target.value, minute)}
@@ -319,7 +319,7 @@ export default function DateTimePicker({
                   onChange(toFull(today.getFullYear(), today.getMonth(), today.getDate(), hour, minute));
                 }
               }}
-              className="text-[11px] text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
+              className="text-meta text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
             >
               Hoy — {today.getDate()} {MONTHS_ES[today.getMonth()].substring(0, 3)}
             </button>
@@ -327,7 +327,7 @@ export default function DateTimePicker({
               <button
                 type="button"
                 onClick={() => { setOpen(false); onBlur?.(); }}
-                className="text-[11px] font-medium text-cyan-400 hover:text-cyan-300 px-2 py-1 rounded-md hover:bg-cyan-500/10 transition-colors cursor-pointer"
+                className="text-meta font-medium text-cyan-400 hover:text-cyan-300 px-2 py-1 rounded-md hover:bg-cyan-500/10 transition-colors cursor-pointer"
               >
                 Listo ✓
               </button>

@@ -117,7 +117,7 @@ function GeneralTab() {
               <option key={tz} value={tz}>{tz}</option>
             ))}
           </select>
-          <p className="mt-1.5 text-[11px] text-faint">
+          <p className="mt-1.5 text-meta text-faint">
             Afecta timestamps, comparación de fechas límite, y horario de publicación de actividades.
           </p>
         </div>

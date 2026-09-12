@@ -365,7 +365,7 @@ export default function AdminStudentsPage() {
                       {!student.isActive && <Badge variant="danger" size="sm">Inactivo</Badge>}
                       {student.mustChangePassword && <Badge variant="warning" size="sm">Debe cambiar pass</Badge>}
                     </div>
-                    <p className="text-[11px] text-faint truncate mt-0.5 flex items-center gap-1.5">
+                    <p className="text-meta text-faint truncate mt-0.5 flex items-center gap-1.5">
                       {editingEmail?.id === student.id ? (
                         <span className="flex items-center gap-1">
                           <input
@@ -378,7 +378,7 @@ export default function AdminStudentsPage() {
                             }}
                             autoFocus
                             className="px-1.5 py-0.5 rounded border border-cyan-500/30 bg-foreground/5
-                                       text-foreground text-[11px] w-52
+                                       text-foreground text-meta w-52
                                        focus:outline-none focus:border-cyan-500/50"
                           />
                           <IconButton
@@ -422,7 +422,7 @@ export default function AdminStudentsPage() {
                               }}
                               autoFocus
                               className="px-1.5 py-0.5 rounded border border-cyan-500/30 bg-foreground/5
-                                         text-foreground text-[11px] w-32 font-mono
+                                         text-foreground text-meta w-32 font-mono
                                          focus:outline-none focus:border-cyan-500/50"
                             />
                             <IconButton

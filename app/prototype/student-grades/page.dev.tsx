@@ -21,7 +21,7 @@ export default function PrototypePage() {
       {/* Barra del taller */}
       <div className="sticky top-0 z-50 border-b border-foreground/10 bg-background/80 backdrop-blur-md">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-4 flex-wrap">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
+          <span className="text-meta font-semibold uppercase tracking-wider text-amber-400">
             Taller de diseño · datos falsos
           </span>
 

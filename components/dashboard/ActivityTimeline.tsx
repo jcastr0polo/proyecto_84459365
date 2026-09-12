@@ -85,7 +85,7 @@ export default function ActivityTimeline({ events, loading = false }: ActivityTi
                   <span className="mr-1">{config.icon}</span>
                   {event.title}
                 </p>
-                <p className="text-[10px] text-faint mt-0.5">
+                <p className="text-micro text-faint mt-0.5">
                   {event.description}
                   {event.courseName && (
                     <span className="text-faint"> · {event.courseName}</span>
@@ -94,7 +94,7 @@ export default function ActivityTimeline({ events, loading = false }: ActivityTi
               </div>
 
               {/* Time */}
-              <span className="text-[10px] text-faint flex-shrink-0 pt-1">
+              <span className="text-micro text-faint flex-shrink-0 pt-1">
                 {formatRelativeTime(event.timestamp)}
               </span>
             </motion.div>

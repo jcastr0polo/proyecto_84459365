@@ -183,12 +183,12 @@ export default function CSVImporter({ onConfirm, loading = false }: CSVImporterP
             <table className="w-full text-sm text-left">
               <thead className="bg-foreground/[0.03] border-b border-foreground/[0.06]">
                 <tr>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">#</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">Nombre</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">Apellido</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">Email</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">Documento</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-subtle">Estado</th>
+                  <th className="px-3 py-2 text-micro font-semibold uppercase tracking-wider text-subtle">#</th>
+                  <th className="px-3 py-2 text-micro font-semibold uppercase tracking-wider text-subtle">Nombre</th>
+                  <th className="px-3 py-2 text-micro font-semibold uppercase tracking-wider text-subtle">Apellido</th>
+                  <th className="px-3 py-2 text-micro font-semibold uppercase tracking-wider text-subtle">Email</th>
+                  <th className="px-3 py-2 text-micro font-semibold uppercase tracking-wider text-subtle">Documento</th>
+                  <th className="px-3 py-2 text-micro font-semibold uppercase tracking-wider text-subtle">Estado</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
@@ -203,7 +203,7 @@ export default function CSVImporter({ onConfirm, loading = false }: CSVImporterP
                       {row.valid ? (
                         <Badge variant="success" size="sm">✓</Badge>
                       ) : (
-                        <span className="text-[10px] text-red-400">{row.error}</span>
+                        <span className="text-micro text-red-400">{row.error}</span>
                       )}
                     </td>
                   </tr>

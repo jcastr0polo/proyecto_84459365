@@ -223,7 +223,7 @@ export default function ChatWidget() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-foreground">NEXUS Chat</p>
-                  <p className="text-[10px] text-subtle">
+                  <p className="text-micro text-subtle">
                     {nameSet ? `Conectado como ${username}` : 'Chat grupal · Archivos compartidos'}
                   </p>
                 </div>
@@ -287,7 +287,7 @@ export default function ChatWidget() {
                           }`}
                         >
                           {!isMe && (
-                            <p className={`text-[11px] font-semibold mb-0.5 ${userColor(msg.user)}`}>
+                            <p className={`text-meta font-semibold mb-0.5 ${userColor(msg.user)}`}>
                               {msg.user}
                             </p>
                           )}
@@ -303,10 +303,10 @@ export default function ChatWidget() {
                             >
                               <Download className="w-3.5 h-3.5 shrink-0" />
                               <span className="truncate">{msg.file.fileName}</span>
-                              <span className="shrink-0 text-[10px] opacity-70">{formatSize(msg.file.size)}</span>
+                              <span className="shrink-0 text-micro opacity-70">{formatSize(msg.file.size)}</span>
                             </button>
                           )}
-                          <p className={`text-[10px] mt-1 ${isMe ? 'text-white/50' : 'text-faint'}`}>{msg.time}</p>
+                          <p className={`text-micro mt-1 ${isMe ? 'text-white/50' : 'text-faint'}`}>{msg.time}</p>
                         </div>
                       </div>
                     );

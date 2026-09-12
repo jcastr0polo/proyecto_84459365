@@ -227,7 +227,7 @@ function Field({
       </label>
       {children}
       {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
-      {!error && hint && <p className="mt-1 text-[11px] text-faint">{hint}</p>}
+      {!error && hint && <p className="mt-1 text-meta text-faint">{hint}</p>}
     </div>
   );
 }

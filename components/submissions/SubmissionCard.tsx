@@ -39,7 +39,7 @@ export default function SubmissionCard({ submission, activityTitle, activityDueD
       {/* Top row */}
       <div className="flex items-center justify-between gap-2 mb-2">
         <Badge variant={status.variant} size="sm" dot>{status.label}</Badge>
-        <span className="text-[11px] text-subtle font-mono">v{submission.version}</span>
+        <span className="text-meta text-subtle font-mono">v{submission.version}</span>
       </div>
 
       {/* Title */}
@@ -86,7 +86,7 @@ export default function SubmissionCard({ submission, activityTitle, activityDueD
 
       {/* Due date comparison */}
       {activityDueDate && submission.isLate && (
-        <p className="mt-2 text-[11px] text-red-400/60">
+        <p className="mt-2 text-meta text-red-400/60">
           Fecha límite: {formatDate(activityDueDate)}
         </p>
       )}

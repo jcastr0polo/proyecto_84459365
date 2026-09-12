@@ -193,7 +193,7 @@ export default function StudentTakeQuizPage() {
                 <Shield className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-medium text-amber-300">Anti-trampas activo</p>
-                  <p className="text-[11px] text-amber-400/70">Si cambias de pestaña o pierdes el foco de la ventana, tu parcial se enviará automáticamente.</p>
+                  <p className="text-meta text-amber-400/70">Si cambias de pestaña o pierdes el foco de la ventana, tu parcial se enviará automáticamente.</p>
                 </div>
               </div>
             )}
@@ -202,7 +202,7 @@ export default function StudentTakeQuizPage() {
                 <Clock className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-medium text-cyan-300">Cronómetro de {quiz.timeLimit} minutos</p>
-                  <p className="text-[11px] text-cyan-400/70">El parcial se enviará automáticamente cuando se acabe el tiempo.</p>
+                  <p className="text-meta text-cyan-400/70">El parcial se enviará automáticamente cuando se acabe el tiempo.</p>
                 </div>
               </div>
             )}
@@ -261,7 +261,7 @@ export default function StudentTakeQuizPage() {
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="p-2.5 rounded-lg bg-foreground/[0.02] border border-foreground/[0.06]">
-      <p className="text-[10px] text-subtle uppercase tracking-wider">{label}</p>
+      <p className="text-micro text-subtle uppercase tracking-wider">{label}</p>
       <p className="text-sm font-medium text-muted">{value}</p>
     </div>
   );

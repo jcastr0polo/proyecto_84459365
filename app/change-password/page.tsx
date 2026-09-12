@@ -252,8 +252,8 @@ export default function ChangePasswordPage() {
                 {newPassword.length > 0 && (
                   <div className="mt-3">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] text-subtle">Fortaleza</span>
-                      <span className={`text-[11px] font-medium ${strength.color}`}>{strength.label}</span>
+                      <span className="text-meta text-subtle">Fortaleza</span>
+                      <span className={`text-meta font-medium ${strength.color}`}>{strength.label}</span>
                     </div>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((seg) => (
@@ -294,14 +294,14 @@ export default function ChangePasswordPage() {
                   placeholder="Repite la nueva contraseña"
                 />
                 {confirmPassword.length > 0 && newPassword !== confirmPassword && (
-                  <p className="text-[11px] text-red-400 mt-1.5">Las contraseñas no coinciden</p>
+                  <p className="text-meta text-red-400 mt-1.5">Las contraseñas no coinciden</p>
                 )}
               </div>
 
               {/* Password rules */}
               {newPassword.length > 0 && (
                 <div className="rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] p-3.5">
-                  <p className="text-[10px] font-medium text-subtle uppercase tracking-wider mb-2">Requisitos</p>
+                  <p className="text-micro font-medium text-subtle uppercase tracking-wider mb-2">Requisitos</p>
                   <div className="space-y-1.5">
                     {rules.map((rule, i) => (
                       <div key={i} className="flex items-center gap-2">

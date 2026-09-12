@@ -165,7 +165,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                       <div className="absolute right-0 mt-2 w-56 rounded-xl border border-foreground/10 bg-canvas shadow-2xl z-50 overflow-hidden">
                         <div className="px-4 py-3 border-b border-foreground/10">
                           <p className="text-sm font-medium text-foreground">{user.firstName} {user.lastName}</p>
-                          <p className="text-[11px] text-faint">Estudiante</p>
+                          <p className="text-meta text-faint">Estudiante</p>
                         </div>
                         <div className="py-1">
                           <Link href="/student/profile" onClick={closeMenus}

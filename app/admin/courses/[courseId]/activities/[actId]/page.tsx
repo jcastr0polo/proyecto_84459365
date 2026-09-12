@@ -233,12 +233,12 @@ export default function AdminActivityDetailPage() {
           <div className="divide-y divide-foreground/[0.06]">
             {pendingStudents.map((e) => (
               <div key={e.id} className="flex items-center gap-3 py-2.5">
-                <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center text-[10px] font-bold text-amber-400 shrink-0">
+                <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center text-micro font-bold text-amber-400 shrink-0">
                   {e.student.firstName[0]}{e.student.lastName[0]}
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm text-foreground/80 truncate">{e.student.firstName} {e.student.lastName}</p>
-                  <p className="text-[11px] text-subtle truncate">{e.student.email}</p>
+                  <p className="text-meta text-subtle truncate">{e.student.email}</p>
                 </div>
               </div>
             ))}

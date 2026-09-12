@@ -253,7 +253,7 @@ export default function QuestionImporter({ onImport, onClose }: QuestionImporter
           <button
             type="button"
             onClick={copyExample}
-            className="inline-flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 text-micro text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
           >
             <Copy className="w-3 h-3" /> Copiar ejemplo
           </button>
@@ -317,7 +317,7 @@ export default function QuestionImporter({ onImport, onClose }: QuestionImporter
               </div>
               <ul className="space-y-1">
                 {result.errors.map((err, i) => (
-                  <li key={i} className="text-[11px] text-red-300">{err}</li>
+                  <li key={i} className="text-meta text-red-300">{err}</li>
                 ))}
               </ul>
             </div>
@@ -332,7 +332,7 @@ export default function QuestionImporter({ onImport, onClose }: QuestionImporter
               </div>
               <ul className="space-y-1">
                 {result.questions.map((q, i) => (
-                  <li key={i} className="text-[11px] text-emerald-300 flex items-center gap-2">
+                  <li key={i} className="text-meta text-emerald-300 flex items-center gap-2">
                     <span className="text-emerald-400/60 font-mono w-4">{i + 1}.</span>
                     <span className="truncate">{q.text}</span>
                     <span className="text-emerald-400/50 shrink-0">

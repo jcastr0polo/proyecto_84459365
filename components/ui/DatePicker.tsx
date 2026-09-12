@@ -203,7 +203,7 @@ export default function DatePicker({
       </button>
 
       {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
-      {!error && hint && <p className="mt-1 text-[11px] text-faint">{hint}</p>}
+      {!error && hint && <p className="mt-1 text-meta text-faint">{hint}</p>}
 
       {open && (
         <div
@@ -237,7 +237,7 @@ export default function DatePicker({
           {/* Day headers */}
           <div className="grid grid-cols-7 px-2 pt-2">
             {DAYS_ES.map((d) => (
-              <span key={d} className="text-center text-[10px] font-medium text-faint py-1">
+              <span key={d} className="text-center text-micro font-medium text-faint py-1">
                 {d}
               </span>
             ))}
@@ -285,7 +285,7 @@ export default function DatePicker({
                 setOpen(false);
                 onBlur?.();
               }}
-              className="text-[11px] text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
+              className="text-meta text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
             >
               Hoy — {today.getDate()} {MONTHS_ES[today.getMonth()].substring(0, 3)}
             </button>

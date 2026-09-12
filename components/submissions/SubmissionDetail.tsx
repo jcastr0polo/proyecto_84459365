@@ -93,7 +93,7 @@ export default function SubmissionDetail({ submission, isAdmin = false, onReturn
                 <span className="text-lg shrink-0">{LINK_ICONS[link.type] ?? <LinkIcon className="w-5 h-5" />}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-foreground/80 group-hover:text-cyan-300 truncate">{link.label || link.url}</p>
-                  <p className="text-[11px] text-subtle truncate">{link.url}</p>
+                  <p className="text-meta text-subtle truncate">{link.url}</p>
                 </div>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-faint group-hover:text-cyan-400 shrink-0">
                   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
@@ -116,7 +116,7 @@ export default function SubmissionDetail({ submission, isAdmin = false, onReturn
           >
             ↩ Devolver Entrega
           </Button>
-          <p className="text-[11px] text-faint mt-1">Permite al estudiante re-enviar su trabajo</p>
+          <p className="text-meta text-faint mt-1">Permite al estudiante re-enviar su trabajo</p>
         </div>
       )}
     </div>
@@ -175,7 +175,7 @@ function SubmissionAttachments({ attachments }: { attachments: Submission['attac
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-foreground/80 group-hover:text-foreground truncate">{att.fileName}</p>
-                <p className="text-[11px] text-subtle">{formatFileSize(att.fileSize)}</p>
+                <p className="text-meta text-subtle">{formatFileSize(att.fileSize)}</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {canPreview ? (

@@ -45,15 +45,15 @@ export default function PromptCard({
             {title}
           </h3>
           {courseName && (
-            <p className="text-[11px] text-subtle mt-0.5 truncate">{courseName}</p>
+            <p className="text-meta text-subtle mt-0.5 truncate">{courseName}</p>
           )}
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <span className="text-[10px] text-subtle bg-foreground/[0.04] px-1.5 py-0.5 rounded">
+          <span className="text-micro text-subtle bg-foreground/[0.04] px-1.5 py-0.5 rounded">
             v{version}
           </span>
           {isTemplate && (
-            <span className="text-[10px] text-violet-400 bg-violet-500/15 px-1.5 py-0.5 rounded border border-violet-500/20">
+            <span className="text-micro text-violet-400 bg-violet-500/15 px-1.5 py-0.5 rounded border border-violet-500/20">
               Plantilla
             </span>
           )}
@@ -71,16 +71,16 @@ export default function PromptCard({
           {tags.slice(0, 4).map((tag) => (
             <span
               key={tag}
-              className="text-[10px] text-cyan-400/60 bg-cyan-500/10 px-1.5 py-0.5 rounded"
+              className="text-micro text-cyan-400/60 bg-cyan-500/10 px-1.5 py-0.5 rounded"
             >
               {tag}
             </span>
           ))}
           {tags.length > 4 && (
-            <span className="text-[10px] text-faint">+{tags.length - 4}</span>
+            <span className="text-micro text-faint">+{tags.length - 4}</span>
           )}
         </div>
-        <span className="text-[10px] text-faint flex-shrink-0">
+        <span className="text-micro text-faint flex-shrink-0">
           {formatDateShort(updatedAt)}
         </span>
       </div>

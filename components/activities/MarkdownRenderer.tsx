@@ -26,7 +26,7 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
         prose-code:text-cyan-300 prose-code:bg-foreground/[0.06] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
         prose-pre:bg-foreground/[0.04] prose-pre:border prose-pre:border-foreground/[0.08] prose-pre:rounded-lg prose-pre:overflow-x-auto
         [&_pre_code]:text-xs [&_pre_code]:leading-relaxed [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:whitespace-pre
-        [&_.code-lang]:block [&_.code-lang]:text-[10px] [&_.code-lang]:text-faint [&_.code-lang]:uppercase [&_.code-lang]:tracking-wider [&_.code-lang]:mb-1
+        [&_.code-lang]:block [&_.code-lang]:text-micro [&_.code-lang]:text-faint [&_.code-lang]:uppercase [&_.code-lang]:tracking-wider [&_.code-lang]:mb-1
         prose-blockquote:border-l-cyan-500/40 prose-blockquote:text-muted
         prose-li:text-muted prose-li:marker:text-subtle
         prose-hr:border-foreground/[0.08]

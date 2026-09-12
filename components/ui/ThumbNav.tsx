@@ -71,15 +71,18 @@ export default function ThumbNav({
                 {item.badge !== undefined && item.badge > 0 && (
                   <span
                     aria-hidden="true"
-                    className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1
-                               rounded-full bg-red-500 text-white text-[11px] font-bold
-                               leading-[18px] text-center tabular-nums"
+                    /* Aquí el tamaño fijo sí está justificado: es un número
+                       dentro de un círculo, no texto que se lee de corrido.
+                       Con la escala normal se sale del círculo. */
+                    className="absolute -top-2 -right-2.5 min-w-[20px] h-[20px] px-1
+                               rounded-full bg-red-500 text-white text-[12px] font-bold
+                               leading-[20px] text-center tabular-nums"
                   >
                     {item.badge > 9 ? '9+' : item.badge}
                   </span>
                 )}
               </span>
-              <span className="text-[11px] leading-none font-medium">
+              <span className="text-meta leading-none font-medium">
                 {item.label}
                 {item.badge !== undefined && item.badge > 0 && (
                   <span className="sr-only"> ({item.badge} pendientes)</span>

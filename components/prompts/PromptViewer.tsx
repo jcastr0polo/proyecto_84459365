@@ -59,12 +59,12 @@ export default function PromptViewer({
             <div className="flex items-center gap-2">
               <Bot className="w-4 h-4 text-cyan-400" />
               <h3 className="text-sm font-semibold text-foreground/90 truncate">{title}</h3>
-              <span className="text-[10px] text-subtle bg-foreground/[0.04] px-1.5 py-0.5 rounded flex-shrink-0">
+              <span className="text-micro text-subtle bg-foreground/[0.04] px-1.5 py-0.5 rounded flex-shrink-0">
                 v{version}
               </span>
             </div>
             {courseName && (
-              <p className="text-[10px] text-subtle mt-0.5 ml-7">{courseName}</p>
+              <p className="text-micro text-subtle mt-0.5 ml-7">{courseName}</p>
             )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -95,7 +95,7 @@ export default function PromptViewer({
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="text-[10px] text-cyan-400/60 bg-cyan-500/10 px-1.5 py-0.5 rounded"
+                className="text-micro text-cyan-400/60 bg-cyan-500/10 px-1.5 py-0.5 rounded"
               >
                 {tag}
               </span>

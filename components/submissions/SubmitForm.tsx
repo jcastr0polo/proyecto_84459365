@@ -194,7 +194,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-foreground/80 truncate">{file.name}</p>
-                    <p className="text-[11px] text-subtle">{formatFileSize(file.size)}</p>
+                    <p className="text-meta text-subtle">{formatFileSize(file.size)}</p>
                   </div>
                   <button
                     type="button"
@@ -268,7 +268,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
                      focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/25
                      disabled:opacity-50 disabled:cursor-not-allowed"
         />
-        <p className="mt-1 text-[11px] text-faint text-right">{content.length}/5000</p>
+        <p className="mt-1 text-meta text-faint text-right">{content.length}/5000</p>
       </section>
 
       {/*

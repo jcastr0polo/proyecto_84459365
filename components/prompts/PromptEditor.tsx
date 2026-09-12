@@ -166,7 +166,7 @@ export default function PromptEditor({
           <button
             type="button"
             onClick={() => setShowPreview(!showPreview)}
-            className="text-[11px] text-cyan-400/60 hover:text-cyan-400 transition-colors cursor-pointer"
+            className="text-meta text-cyan-400/60 hover:text-cyan-400 transition-colors cursor-pointer"
           >
             {showPreview ? 'Ocultar preview' : 'Mostrar preview'}
           </button>
@@ -186,7 +186,7 @@ export default function PromptEditor({
               required
               minLength={10}
             />
-            <p className="text-[10px] text-faint mt-1">
+            <p className="text-micro text-faint mt-1">
               {content.length} caracteres · Markdown soportado
             </p>
           </div>
@@ -206,7 +206,7 @@ export default function PromptEditor({
 
       {/* ─── Submit ─── */}
       <div className="flex items-center justify-between pt-4 border-t border-foreground/[0.06]">
-        <p className="text-[11px] text-subtle">
+        <p className="text-meta text-subtle">
           * Campos requeridos
         </p>
         <Button type="submit" loading={loading} disabled={!isValid}>

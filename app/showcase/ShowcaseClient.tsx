@@ -206,7 +206,7 @@ function ProjectCard({ project }: { project: ShowcaseProject }) {
         )}
 
         {/* Course tag */}
-        <p className="text-[10px] font-medium text-cyan-400/50 uppercase tracking-[0.15em] mb-3">
+        <p className="text-micro font-medium text-cyan-400/50 uppercase tracking-[0.15em] mb-3">
           {project.courseName}
         </p>
 
@@ -300,7 +300,7 @@ function Stat({ value, label }: { value: number; label: string }) {
   return (
     <div className="text-center">
       <p className="text-2xl font-bold text-foreground">{value}</p>
-      <p className="text-[10px] text-subtle uppercase tracking-wider">{label}</p>
+      <p className="text-micro text-subtle uppercase tracking-wider">{label}</p>
     </div>
   );
 }

@@ -187,7 +187,7 @@ export default function CoursesPage() {
                   <Badge variant={course.isActive ? 'success' : 'neutral'} size="sm" dot>
                     {course.isActive ? 'Activo' : 'Inactivo'}
                   </Badge>
-                  <span className="text-[10px] text-subtle uppercase tracking-wider">
+                  <span className="text-micro text-subtle uppercase tracking-wider">
                     {course.schedule[0]?.modality ?? 'N/A'}
                   </span>
                 </div>

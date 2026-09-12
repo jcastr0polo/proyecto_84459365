@@ -216,7 +216,7 @@ function StatCard({ label, value, color }: { label: string; value: number; color
   return (
     <div className="p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] text-center">
       <p className={`text-xl font-bold ${color}`}>{value}</p>
-      <p className="text-[11px] text-subtle mt-0.5">{label}</p>
+      <p className="text-meta text-subtle mt-0.5">{label}</p>
     </div>
   );
 }

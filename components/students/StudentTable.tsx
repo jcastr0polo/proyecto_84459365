@@ -85,7 +85,7 @@ export default function StudentTable({ enrollments, onWithdraw, courseId }: Stud
                         </Button>
                       )}
                       {!isActive && enrollment.withdrawnAt && (
-                        <span className="text-[10px] text-subtle">
+                        <span className="text-micro text-subtle">
                           {formatDate(enrollment.withdrawnAt)}
                         </span>
                       )}

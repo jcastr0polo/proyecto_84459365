@@ -136,7 +136,7 @@ export default function LandingClient() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
             </span>
-            <span className="text-[11px] font-medium text-muted tracking-wide">Semestre 2026-1 · En curso</span>
+            <span className="text-meta font-medium text-muted tracking-wide">Semestre 2026-1 · En curso</span>
           </motion.div>
 
           <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold tracking-tighter" style={{ fontFamily: 'var(--font-playfair)' }}>
@@ -195,7 +195,7 @@ export default function LandingClient() {
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/[0.08] border border-cyan-500/10 mb-4">
               <GraduationCap className="w-3.5 h-3.5 text-cyan-400/70" />
-              <span className="text-[11px] font-medium text-cyan-400/70 tracking-wider uppercase">Semestre 2026-1</span>
+              <span className="text-meta font-medium text-cyan-400/70 tracking-wider uppercase">Semestre 2026-1</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               Cursos del Semestre
@@ -220,17 +220,17 @@ export default function LandingClient() {
                   className={`relative h-full rounded-2xl border border-foreground/[0.08] bg-gradient-to-br ${cfg.gradient} p-6 ${cfg.border} transition-all duration-300 group`}
                 >
                   <div className="flex items-start justify-between mb-5">
-                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-medium ${cfg.badgeClass}`}>
+                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-micro font-medium ${cfg.badgeClass}`}>
                       <Icon className="w-3 h-3" />
                       {cfg.badge}
                     </div>
-                    <span className="text-[10px] font-mono text-faint">{course.code}</span>
+                    <span className="text-micro font-mono text-faint">{course.code}</span>
                   </div>
                   <h3 className="text-lg font-semibold text-foreground/90 mb-2 group-hover:text-foreground transition-colors">{course.name}</h3>
                   <p className="text-xs text-subtle leading-relaxed line-clamp-3">
                     {course.description || 'Curso del programa académico.'}
                   </p>
-                  <div className="mt-5 pt-4 border-t border-foreground/[0.06] flex items-center gap-3 text-[11px] text-faint">
+                  <div className="mt-5 pt-4 border-t border-foreground/[0.06] flex items-center gap-3 text-meta text-faint">
                     <span className="flex items-center gap-1"><Users className="w-3 h-3" /> Activo</span>
                     {course.schedule?.length > 0 && (
                       <span className="flex items-center gap-1">
@@ -252,7 +252,7 @@ export default function LandingClient() {
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/[0.08] border border-purple-500/10 mb-4">
               <Sparkles className="w-3.5 h-3.5 text-purple-400/70" />
-              <span className="text-[11px] font-medium text-purple-400/70 tracking-wider uppercase">Flujo de trabajo</span>
+              <span className="text-meta font-medium text-purple-400/70 tracking-wider uppercase">Flujo de trabajo</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               ¿Cómo funciona?
@@ -282,7 +282,7 @@ export default function LandingClient() {
                       <div className="w-10 h-10 rounded-xl bg-foreground/[0.05] flex items-center justify-center group-hover:bg-cyan-500/10 transition-colors">
                         <Icon className="w-5 h-5 text-muted group-hover:text-cyan-400 transition-colors" />
                       </div>
-                      <span className="text-[10px] font-mono text-faint tracking-wider">{step.number}</span>
+                      <span className="text-micro font-mono text-faint tracking-wider">{step.number}</span>
                     </div>
                     <h3 className="text-sm font-semibold text-foreground/80 mb-2">{step.title}</h3>
                     <p className="text-xs text-subtle leading-relaxed">{step.description}</p>
@@ -300,7 +300,7 @@ export default function LandingClient() {
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/[0.08] border border-emerald-500/10 mb-4">
               <Code2 className="w-3.5 h-3.5 text-emerald-400/70" />
-              <span className="text-[11px] font-medium text-emerald-400/70 tracking-wider uppercase">Tecnologías</span>
+              <span className="text-meta font-medium text-emerald-400/70 tracking-wider uppercase">Tecnologías</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               Stack Tecnológico
@@ -328,7 +328,7 @@ export default function LandingClient() {
                   </div>
                   <div className="text-center">
                     <p className="text-xs font-semibold text-muted">{item.name}</p>
-                    <p className="text-[10px] text-faint mt-0.5">{item.desc}</p>
+                    <p className="text-micro text-faint mt-0.5">{item.desc}</p>
                   </div>
                 </motion.div>
               );
@@ -345,15 +345,15 @@ export default function LandingClient() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
               <div>
                 <p className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">100%</p>
-                <p className="text-[11px] text-subtle mt-1">TypeScript — Zero any</p>
+                <p className="text-meta text-subtle mt-1">TypeScript — Zero any</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground/80">JSON</p>
-                <p className="text-[11px] text-subtle mt-1">Base de datos en archivos</p>
+                <p className="text-meta text-subtle mt-1">Base de datos en archivos</p>
               </div>
               <div>
                 <p className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">IA</p>
-                <p className="text-[11px] text-subtle mt-1">Prompts como metodología</p>
+                <p className="text-meta text-subtle mt-1">Prompts como metodología</p>
               </div>
             </div>
           </motion.div>
@@ -370,7 +370,7 @@ export default function LandingClient() {
               </div>
               <div>
                 <p className="text-sm font-bold text-muted">NEXUS</p>
-                <p className="text-[11px] text-faint">Plataforma Académica · 2026-1</p>
+                <p className="text-meta text-faint">Plataforma Académica · 2026-1</p>
               </div>
             </div>
             <div className="flex items-center gap-6 text-xs text-subtle">
@@ -381,7 +381,7 @@ export default function LandingClient() {
                 <ExternalLink className="w-3 h-3" /> Vitrina
               </Link>
             </div>
-            <p className="text-[10px] text-faint">
+            <p className="text-micro text-faint">
               Next.js + TypeScript + IA · © 2026
             </p>
           </div>

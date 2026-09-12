@@ -270,7 +270,7 @@ export default function AdminQuizDetailPage() {
                     {q.type === 'single' ? (
                       <span className={`w-3 h-3 rounded-full border ${opt.weight === 100 ? 'bg-emerald-400 border-emerald-400' : 'border-foreground/20'}`} />
                     ) : (
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${opt.weight >= 80 ? 'bg-emerald-500/20 text-emerald-400' : opt.weight > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-foreground/[0.06] text-faint'}`}>{opt.weight}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-micro font-mono ${opt.weight >= 80 ? 'bg-emerald-500/20 text-emerald-400' : opt.weight > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-foreground/[0.06] text-faint'}`}>{opt.weight}</span>
                     )}
                     <span className={opt.weight > 0 ? 'text-muted' : 'text-faint'}>{opt.text}</span>
                   </div>
@@ -304,7 +304,7 @@ function StatCard({ label, value, icon }: { label: string; value: number | strin
     <div className="p-3 rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] text-center">
       <div className="flex justify-center mb-1">{icon}</div>
       <p className="text-xl font-bold text-foreground">{value}</p>
-      <p className="text-[10px] text-subtle uppercase tracking-wider">{label}</p>
+      <p className="text-micro text-subtle uppercase tracking-wider">{label}</p>
     </div>
   );
 }

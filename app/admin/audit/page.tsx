@@ -203,7 +203,7 @@ export default function AuditPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-bold uppercase ${config.color}`}>{config.label}</span>
+                    <span className={`text-micro font-bold uppercase ${config.color}`}>{config.label}</span>
                     <Badge variant="neutral" size="sm">{ENTITY_LABELS[entry.entity] ?? entry.entity}</Badge>
                   </div>
                   <p className="text-xs text-muted truncate mt-0.5">
@@ -213,7 +213,7 @@ export default function AuditPage() {
                 <div className="hidden sm:block text-right shrink-0 ml-2">
                   <p className="text-xs text-muted truncate max-w-[120px]">{entry.userName || entry.userId.slice(0, 8)}</p>
                 </div>
-                <span className="text-[10px] text-faint shrink-0 whitespace-nowrap tabular-nums">
+                <span className="text-micro text-faint shrink-0 whitespace-nowrap tabular-nums">
                   {formatAuditTime(entry.timestamp)}
                 </span>
                 <Eye className="w-3.5 h-3.5 text-faint opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
@@ -276,7 +276,7 @@ function AuditDetail({ entry }: { entry: AuditEntry }) {
 
       {entry.metadata && Object.keys(entry.metadata).length > 0 && (
         <div>
-          <p className="text-[10px] font-semibold text-subtle uppercase tracking-wider mb-2">Metadata</p>
+          <p className="text-micro font-semibold text-subtle uppercase tracking-wider mb-2">Metadata</p>
           <pre className="text-xs text-muted bg-foreground/[0.03] border border-foreground/[0.06] rounded-lg p-3 overflow-x-auto max-h-48">
             {JSON.stringify(entry.metadata, null, 2)}
           </pre>
@@ -291,7 +291,7 @@ function DetailRow({ icon, label, value, mono }: { icon: React.ReactNode; label:
     <div className="flex items-start gap-2.5">
       <div className="w-5 h-5 flex items-center justify-center text-faint shrink-0 mt-0.5">{icon}</div>
       <div className="min-w-0">
-        <p className="text-[10px] text-faint uppercase tracking-wider">{label}</p>
+        <p className="text-micro text-faint uppercase tracking-wider">{label}</p>
         <p className={`text-sm text-muted break-all ${mono ? 'font-mono text-xs' : ''}`}>{value}</p>
       </div>
     </div>
@@ -314,7 +314,7 @@ function BeforeAfterDiff({ before, after, action }: { before?: Record<string, un
 
   return (
     <div>
-      <p className="text-[10px] font-semibold text-subtle uppercase tracking-wider mb-2">
+      <p className="text-micro font-semibold text-subtle uppercase tracking-wider mb-2">
         {isCreate ? 'Objeto Creado' : isDelete ? 'Objeto Eliminado' : 'Cambios Realizados'}
       </p>
       <div className="rounded-lg border border-foreground/[0.06] overflow-hidden">
@@ -360,8 +360,8 @@ function CellValue({ value }: { value: unknown }) {
   if (Array.isArray(value)) return <span className="text-faint">[{value.length} items]</span>;
   if (typeof value === 'object') {
     const str = JSON.stringify(value);
-    if (str.length > 120) return <span className="font-mono text-[10px] break-all">{str.slice(0, 120)}…</span>;
-    return <span className="font-mono text-[10px] break-all">{str}</span>;
+    if (str.length > 120) return <span className="font-mono text-micro break-all">{str.slice(0, 120)}…</span>;
+    return <span className="font-mono text-micro break-all">{str}</span>;
   }
   return <span>{String(value)}</span>;
 }

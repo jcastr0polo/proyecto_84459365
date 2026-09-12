@@ -147,12 +147,12 @@ export default function CourseActivitiesPage() {
             />
           </div>
           {totalWeight > 100 && (
-            <p className="mt-1.5 text-[11px] text-red-400 flex items-center gap-1">
+            <p className="mt-1.5 text-meta text-red-400 flex items-center gap-1">
               <AlertTriangle className="w-3.5 h-3.5" /> El peso acumulado excede 100%. Revisa los porcentajes de las actividades.
             </p>
           )}
           {totalWeight < 100 && totalWeight > 0 && (
-            <p className="mt-1.5 text-[11px] text-faint">
+            <p className="mt-1.5 text-meta text-faint">
               Falta {100 - totalWeight}% por asignar
             </p>
           )}

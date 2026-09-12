@@ -56,7 +56,7 @@ export default function StatCard({
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[11px] font-medium text-subtle uppercase tracking-wider">{label}</p>
+        <p className="text-meta font-medium text-subtle uppercase tracking-wider">{label}</p>
         {icon && (
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-foreground/[0.04] text-base">
             {icon}
@@ -77,8 +77,8 @@ export default function StatCard({
         <div className="mt-4 pt-3 border-t border-foreground/[0.05] space-y-1.5">
           {details.map((d, i) => (
             <div key={i} className="flex items-center justify-between">
-              <span className="text-[11px] text-subtle">{d.label}</span>
-              <span className={`text-[11px] font-medium ${d.color ?? 'text-muted'}`}>
+              <span className="text-meta text-subtle">{d.label}</span>
+              <span className={`text-meta font-medium ${d.color ?? 'text-muted'}`}>
                 {d.value}
               </span>
             </div>

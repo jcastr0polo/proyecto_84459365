@@ -193,7 +193,7 @@ function SummaryBox({ label, value, variant }: {
   return (
     <div className="text-center p-3 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06]">
       <p className={`text-2xl font-bold ${colors[variant]}`}>{value}</p>
-      <p className="text-[10px] text-subtle uppercase tracking-wider mt-1">{label}</p>
+      <p className="text-micro text-subtle uppercase tracking-wider mt-1">{label}</p>
     </div>
   );
 }

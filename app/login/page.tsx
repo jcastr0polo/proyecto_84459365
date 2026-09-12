@@ -78,7 +78,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-[11px] font-medium text-subtle mb-2 uppercase tracking-wider">
+              <label htmlFor="email" className="block text-meta font-medium text-subtle mb-2 uppercase tracking-wider">
                 Email
               </label>
               <input
@@ -95,7 +95,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-[11px] font-medium text-subtle mb-2 uppercase tracking-wider">
+              <label htmlFor="password" className="block text-meta font-medium text-subtle mb-2 uppercase tracking-wider">
                 Contraseña
               </label>
               <div className="relative">
@@ -152,7 +152,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 pt-5 border-t border-foreground/[0.06]">
-            <p className="text-center text-[10px] text-faint">
+            <p className="text-center text-micro text-faint">
               NEXUS · Fullstack TypeScript + Next.js + IA
             </p>
           </div>

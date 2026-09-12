@@ -223,7 +223,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <p className="text-sm font-medium text-foreground truncate">
                   {user.firstName} {user.lastName}
                 </p>
-                <p className="text-[10px] text-faint uppercase tracking-wider">Administrador</p>
+                <p className="text-micro text-faint uppercase tracking-wider">Administrador</p>
               </div>
             </div>
             <div className="space-y-1">
@@ -291,14 +291,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {semester && (
                 <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-foreground/10 bg-foreground/5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-medium text-subtle">
+                  <span className="text-micro font-medium text-subtle">
                     {semester.label || semester.id}
                   </span>
                 </div>
               )}
               <ThemeToggle />
               <div className="flex items-center gap-2 lg:hidden">
-                <div className="w-7 h-7 rounded-full bg-cyan-500/10 flex items-center justify-center text-[10px] font-bold text-cyan-400">
+                <div className="w-7 h-7 rounded-full bg-cyan-500/10 flex items-center justify-center text-micro font-bold text-cyan-400">
                   {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                 </div>
               </div>

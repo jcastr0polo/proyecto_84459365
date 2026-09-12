@@ -166,11 +166,11 @@ export default function StudentProfilePage() {
                       <Badge variant={badge.variant} size="sm">{badge.label}</Badge>
                     </div>
                     <p className="text-sm font-medium text-foreground/80 line-clamp-1">{course.name}</p>
-                    <p className="text-[11px] text-faint font-mono">{course.code}</p>
+                    <p className="text-meta text-faint font-mono">{course.code}</p>
                   </div>
                   <div className="shrink-0 text-right ml-3">
                     <p className="text-xs text-faint">Inscrito</p>
-                    <p className="text-[11px] text-subtle">
+                    <p className="text-meta text-subtle">
                       {formatDateShort(enrollment.enrolledAt)}
                     </p>
                   </div>
@@ -182,7 +182,7 @@ export default function StudentProfilePage() {
 
         {semester && (
           <div className="mt-4 pt-3 border-t border-foreground/[0.06]">
-            <p className="text-[11px] text-faint">
+            <p className="text-meta text-faint">
               Semestre activo: {semester.label ?? semester.id}
             </p>
           </div>

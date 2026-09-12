@@ -133,7 +133,7 @@ export default function StudentQuizResultsPage() {
                           {formatDuration(attempt.startedAt, attempt.completedAt)}
                         </p>
                       )}
-                      <p className="text-[11px] text-faint">
+                      <p className="text-meta text-faint">
                         {formatDateTimeColombia(attempt.completedAt || attempt.startedAt)}
                       </p>
                       {attempt.autoSubmitted && (
@@ -170,7 +170,7 @@ export default function StudentQuizResultsPage() {
                       return (
                         <div key={question.id} className="space-y-2">
                           <div className="flex items-start gap-2">
-                            <span className={`shrink-0 mt-0.5 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                            <span className={`shrink-0 mt-0.5 w-6 h-6 rounded-full flex items-center justify-center text-meta font-bold ${
                               isCorrect
                                 ? 'bg-emerald-500/20 text-emerald-400'
                                 : isPartial

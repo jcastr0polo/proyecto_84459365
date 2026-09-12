@@ -295,7 +295,7 @@ export default function ActivityForm({
               rows={8}
               className={`${inputClass('description')} resize-y min-h-[200px] font-mono text-xs`}
             />
-            <p className="mt-1 text-[11px] text-faint">
+            <p className="mt-1 text-meta text-faint">
               Soporta Markdown: **negrita**, *cursiva*, `código`, # títulos, - listas
             </p>
             {touched.description && errors.description && (
@@ -335,7 +335,7 @@ export default function ActivityForm({
                   onChange={(e) => update('publishTime', e.target.value)}
                   className={inputClass('publishTime')}
                 />
-                <p className="mt-0.5 text-[11px] text-faint">Por defecto: 00:00</p>
+                <p className="mt-0.5 text-meta text-faint">Por defecto: 00:00</p>
               </div>
             </div>
             <div className="space-y-2">
@@ -361,7 +361,7 @@ export default function ActivityForm({
                   onChange={(e) => update('dueTime', e.target.value)}
                   className={inputClass('dueTime')}
                 />
-                <p className="mt-0.5 text-[11px] text-faint">Por defecto: 23:59</p>
+                <p className="mt-0.5 text-meta text-faint">Por defecto: 23:59</p>
               </div>
             </div>
           </div>
@@ -444,7 +444,7 @@ export default function ActivityForm({
                 onChange={(e) => update('latePenaltyPercent', parseInt(e.target.value) || 0)}
                 className={`${inputClass('latePenaltyPercent')} max-w-[120px]`}
               />
-              <p className="mt-1 text-[11px] text-faint">
+              <p className="mt-1 text-meta text-faint">
                 Se descontará este % de la nota por entrega tardía
               </p>
             </div>
@@ -493,7 +493,7 @@ export default function ActivityForm({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-foreground/80 truncate">{att.fileName}</p>
-                    <p className="text-[11px] text-subtle">
+                    <p className="text-meta text-subtle">
                       {formatFileSize(att.fileSize)} · {att.mimeType.split('/')[1]?.toUpperCase()}
                     </p>
                   </div>

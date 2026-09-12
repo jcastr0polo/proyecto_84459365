@@ -123,7 +123,7 @@ export default function QuestionEditor({ question, index, onChange }: QuestionEd
       {/* Options */}
       <div className="ml-8 space-y-2">
         {question.type === 'weighted' && (
-          <p className="text-[10px] text-faint mb-1">
+          <p className="text-micro text-faint mb-1">
             Asigna peso (0-100) a cada opción. 100 = completamente correcta.
           </p>
         )}

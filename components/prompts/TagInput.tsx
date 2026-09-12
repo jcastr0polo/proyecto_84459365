@@ -80,7 +80,7 @@ export default function TagInput({
         className="flex-1 min-w-[80px] bg-transparent text-sm text-foreground/80 placeholder:text-faint outline-none disabled:cursor-not-allowed"
       />
       {tags.length > 0 && (
-        <span className="text-[10px] text-faint ml-auto">{tags.length}/{maxTags}</span>
+        <span className="text-micro text-faint ml-auto">{tags.length}/{maxTags}</span>
       )}
     </div>
   );
