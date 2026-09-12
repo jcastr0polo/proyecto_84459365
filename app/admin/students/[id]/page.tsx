@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { formatDateColombia as formatDate, formatDateTimeColombia as formatDateTime } from '@/lib/dateUtils';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, BookOpen, CheckCircle2,
   ExternalLink, FolderGit2, ChevronDown, ChevronRight,
@@ -434,16 +434,33 @@ export default function AdminStudentDetailPage() {
             description="Este estudiante no está inscrito en ningún curso"
           />
         ) : (
-          visibleCourses.map((course) => (
-            <CourseSection
-              key={course.id}
-              course={course}
-              expanded={expandedCourses.has(course.id)}
-              onToggle={() => toggleCourse(course.id)}
-              expandedActivities={expandedActivities}
-              onToggleActivity={toggleActivity}
-            />
-          ))
+          /*
+            Frecuencia: ocasional · Propósito: EVITAR UN CAMBIO BRUSCO.
+            Al filtrar, la lista pierde o gana cursos de golpe y cuesta ver
+            que respondió al toque. Se funde el bloque entero, no cada fila:
+            son datos que se están leyendo y no deben desfilar por estética.
+          */
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={focus ?? 'todos'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+              className="space-y-4"
+            >
+              {visibleCourses.map((course) => (
+                <CourseSection
+                  key={course.id}
+                  course={course}
+                  expanded={expandedCourses.has(course.id)}
+                  onToggle={() => toggleCourse(course.id)}
+                  expandedActivities={expandedActivities}
+                  onToggleActivity={toggleActivity}
+                />
+              ))}
+            </motion.div>
+          </AnimatePresence>
         )}
       </div>
     </div>

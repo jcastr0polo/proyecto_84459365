@@ -133,13 +133,13 @@ export default function AdminDashboardViewV2({
         </div>
 
         <div className="space-y-3 mt-4">
-          <ProgressRow label="Calendario" pct={progress.timePct ?? 0} tone="bg-foreground/30"
+          <ProgressRow delay={0} label="Calendario" pct={progress.timePct ?? 0} tone="bg-foreground/30"
             hint={semester ? `${semester.startDate} → ${semester.endDate}` : ''} />
-          <ProgressRow label="Actividades cerradas" pct={progress.workPct} tone="bg-cyan-500"
+          <ProgressRow delay={0.06} label="Actividades cerradas" pct={progress.workPct} tone="bg-cyan-500"
             hint={`${progress.closed} de ${progress.totalActs}`} />
           {/* La única de las tres que lleva a alguna parte: las otras dos son
               medidas del tiempo y del calendario, no cosas que se puedan abrir. */}
-          <ProgressRow label="Entregas calificadas" pct={progress.gradedPct}
+          <ProgressRow delay={0.12} label="Entregas calificadas" pct={progress.gradedPct}
             tone={progress.gradedPct >= (progress.timePct ?? 0) ? 'bg-emerald-500' : 'bg-amber-500'}
             hint={totalPending > 0 ? `${totalPending} sin calificar` : 'todo al día'}
             onClick={totalPending > 0
@@ -303,9 +303,10 @@ export default function AdminDashboardViewV2({
   );
 }
 
-function ProgressRow({ label, pct, tone, hint, onClick }: {
-  label: string; pct: number; tone: string; hint?: string; onClick?: () => void;
+function ProgressRow({ label, pct, tone, hint, onClick, delay = 0 }: {
+  label: string; pct: number; tone: string; hint?: string; onClick?: () => void; delay?: number;
 }) {
+  const reduce = useReducedMotion();
   const Tag = onClick ? 'button' : 'div';
   return (
     <Tag
@@ -323,12 +324,22 @@ function ProgressRow({ label, pct, tone, hint, onClick }: {
           {pct}%{hint && <span className="text-faint"> · {hint}</span>}
         </span>
       </div>
+      {/*
+        Frecuencia: ocasional · Propósito: EXPLICACIÓN.
+        La barra se llena al abrir para que la proporción se lea como
+        magnitud y no como un bloque estático. Escalonada por fila para que
+        las tres se puedan comparar en el orden en que se leen.
+        scaleX y no width: animar la maqueta obliga a recalcularla en cada
+        fotograma, y aquí hay tres barras a la vez.
+      */}
       <div className="relative h-1.5 rounded-full bg-foreground/[0.08] overflow-hidden mt-1">
-        <div
-          className={`absolute inset-y-0 left-0 rounded-full ${tone}
-                      transition-[width] duration-[var(--dur-base)] ease-[var(--ease-out)]
-                      motion-reduce:transition-none`}
-          style={{ width: `${pct}%` }}
+        <motion.div
+          initial={reduce ? false : { scaleX: 0 }}
+          animate={{ scaleX: pct / 100 }}
+          transition={{ duration: reduce ? 0 : 0.28, delay: reduce ? 0 : delay,
+                        ease: [0.23, 1, 0.32, 1] }}
+          style={{ transformOrigin: 'left' }}
+          className={`absolute inset-0 rounded-full ${tone}`}
         />
       </div>
     </Tag>
