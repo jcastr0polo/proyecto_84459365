@@ -109,10 +109,15 @@ export default function ThemeProvider({ children, defaultTheme = 'dark' }: {
 /* ─── ThemeToggle button component ─── */
 export function ThemeToggle({ className = '' }: { className?: string }) {
   const { theme, toggleTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  /*
+   * Saber si ya estamos en el cliente con useSyncExternalStore en vez de un
+   * setState dentro de un efecto: el efecto obliga a un render extra y el
+   * lint lo marca con razón. Reutiliza los mismos ayudantes que ya usa el
+   * proveedor, así que no hay dos formas de responder la misma pregunta.
+   */
+  const mounted = useSyncExternalStore(subscribeToNothing, getClientSnapshot, getServerSnapshot);
 
-  // Render a fixed-size placeholder during SSR to avoid hydration mismatch
+  // Durante el SSR se asume oscuro para no provocar desajuste de hidratación.
   const isDark = mounted ? theme === 'dark' : true;
 
   return (

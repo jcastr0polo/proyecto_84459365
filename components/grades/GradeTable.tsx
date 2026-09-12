@@ -70,11 +70,19 @@ export default function GradeTable({
   // cerrar la pestaña sin aviso le costaría toda la sesión.
   useUnsavedGuard(modifiedIds.size > 0);
 
-  // Sync rows from parent when they change (e.g. after reloadGrades)
-  useEffect(() => {
+  /*
+   * Las filas se resincronizan cuando el padre manda otras, comparando con
+   * el valor anterior DURANTE el render. Antes iba en un efecto, que provoca
+   * un render con los datos viejos y otro con los nuevos: entre ambos, el
+   * docente ve un instante la tabla anterior. Es el patrón que recomienda
+   * React para ajustar estado al cambiar una prop.
+   */
+  const [prevRows, setPrevRows] = useState(initialRows);
+  if (initialRows !== prevRows) {
+    setPrevRows(initialRows);
     setRows(initialRows);
     setModifiedIds(new Set());
-  }, [initialRows]);
+  }
 
   const updateRow = useCallback((submissionId: string, field: 'score' | 'feedback', value: number | null | string) => {
     setRows((prev) => prev.map((r) => {

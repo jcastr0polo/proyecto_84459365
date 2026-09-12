@@ -1,5 +1,6 @@
 'use client';
 
+import EmptyState from '@/components/ui/EmptyState';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Download, FileText } from 'lucide-react';
@@ -13,15 +14,19 @@ export default function StudentDocumentViewerPage() {
   const name = searchParams.get('name') ?? 'Documento';
 
   const [content, setContent] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(url));
   const [error, setError] = useState('');
 
+  /*
+   * La falta de url se resuelve durante el render, no en un efecto.
+   * Antes se hacía setError y setLoading dentro del efecto, lo que obliga a
+   * un segundo render y, entre medias, muestra un cargando que nunca va a
+   * cargar nada. No depende de nada asíncrono: se sabe al primer render.
+   */
+  const missingUrl = !url;
+
   useEffect(() => {
-    if (!url) {
-      setError('No se especificó un documento');
-      setLoading(false);
-      return;
-    }
+    if (!url) return;
 
     const downloadUrl = url.startsWith('http')
       ? `/api/upload/download?url=${encodeURIComponent(url)}`
@@ -78,16 +83,25 @@ export default function StudentDocumentViewerPage() {
       <div className="max-w-4xl mx-auto px-6 py-8">
         {loading && <PageLoader />}
 
-        {error && (
-          <div className="text-center py-16">
-            <p className="text-sm text-red-400">{error}</p>
-            <button
-              onClick={() => router.back()}
-              className="mt-4 text-xs text-cyan-400 hover:underline cursor-pointer"
-            >
-              Volver
-            </button>
-          </div>
+        {/* El caso "sin documento" se sabe al primer render, así que se
+            distingue del error de carga en vez de mezclarlos. */}
+        {(missingUrl || error) && (
+          <EmptyState
+            kind="error"
+            title={missingUrl ? 'No se especificó un documento' : 'No se pudo abrir el documento'}
+            description={missingUrl
+              ? 'El enlace no incluye el archivo que se quiere ver.'
+              : error}
+            action={
+              <button
+                onClick={() => router.back()}
+                className="text-xs text-cyan-600 dark:text-cyan-400 hover:underline cursor-pointer
+                           inline-flex items-center min-h-11 px-3"
+              >
+                Volver
+              </button>
+            }
+          />
         )}
 
         {content !== null && !loading && (

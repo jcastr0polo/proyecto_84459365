@@ -47,14 +47,25 @@ export default function PromptEditor({
   const [isTemplate, setIsTemplate] = useState(initialIsTemplate);
   const [showPreview, setShowPreview] = useState(true);
 
-  // Sync from parent when props change (defensive)
-  useEffect(() => {
+  /*
+   * Ajuste al cambiar las props, comparado durante el render en vez de en un
+   * efecto: así no hay una pasada intermedia con el contenido anterior, que
+   * en un editor se ve como un parpadeo del texto.
+   */
+  const [prevProps, setPrevProps] = useState({ initialTitle, initialContent, initialCourseId, initialIsTemplate });
+  if (
+    prevProps.initialTitle !== initialTitle ||
+    prevProps.initialContent !== initialContent ||
+    prevProps.initialCourseId !== initialCourseId ||
+    prevProps.initialIsTemplate !== initialIsTemplate
+  ) {
+    setPrevProps({ initialTitle, initialContent, initialCourseId, initialIsTemplate });
     setTitle(initialTitle);
     setContent(initialContent);
     setTags(initialTags);
     setCourseId(initialCourseId);
     setIsTemplate(initialIsTemplate);
-  }, [initialTitle, initialContent, initialTags, initialCourseId, initialIsTemplate]);
+  }
 
   const isValid = useMemo(
     () => title.trim().length >= 3 && content.trim().length >= 10 && courseId !== '',

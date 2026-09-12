@@ -23,9 +23,18 @@ export function useAntiCheat({ enabled, onBlur, onAutoSubmit, maxBlurs = Infinit
   const onAutoSubmitRef = useRef(onAutoSubmit);
   const onBlurRef = useRef(onBlur);
 
-  // Keep refs fresh
-  onAutoSubmitRef.current = onAutoSubmit;
-  onBlurRef.current = onBlur;
+  /*
+   * Las referencias se refrescan en un efecto, no durante el render.
+   * Escribir en una ref mientras se renderiza rompe el render concurrente:
+   * React puede renderizar y descartar, y la ref queda apuntando a una
+   * versión que nunca se montó. Al hacerlo en un efecto sin lista de
+   * dependencias corre tras cada render, así que los manejadores de eventos
+   * siempre ven la última versión.
+   */
+  useEffect(() => {
+    onAutoSubmitRef.current = onAutoSubmit;
+    onBlurRef.current = onBlur;
+  });
 
   const handleBlur = useCallback(() => {
     if (!enabled || autoSubmittedRef.current) return;
