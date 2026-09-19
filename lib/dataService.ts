@@ -48,7 +48,8 @@ import {
   supabaseReplaceCourses, supabaseReplaceEnrollments, supabaseReplaceActivities,
   supabaseReplaceSubmissions, supabaseUpdateSubmission,
   supabaseReplaceGrades, supabaseReplaceCortes,
-  supabaseReplacePrompts, supabaseReplaceProjects, supabaseReplaceQuizzes,
+  supabaseReplacePrompts, supabaseReplaceProjects, supabaseUpdateProject,
+  supabaseReplaceQuizzes,
   supabaseReplaceQuizAttempts, supabaseReplaceQuizSimulations,
   supabaseInsertQuizAttempt, supabaseInsertQuizSimulation,
   supabaseInsertQuizAttempts, supabaseDeleteQuizAttempts,
@@ -404,6 +405,11 @@ export function readProjects(): StudentProject[] {
 
 export async function readProjectsFresh(): Promise<StudentProject[]> {
   return supabaseReadProjects();
+}
+
+/** Cambia un proyecto sin reescribir los demás. Ver supabaseUpdateProject. */
+export async function patchProject(id: string, patch: Partial<StudentProject>): Promise<void> {
+  await supabaseUpdateProject(id, patch);
 }
 
 export async function writeProjects(projects: StudentProject[]): Promise<void> {

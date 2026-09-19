@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import VisibilityToggle from '@/components/projects/VisibilityToggle';
+import ProjectShowcaseImage from '@/components/projects/ProjectShowcaseImage';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import MarkdownViewer from '@/components/ui/MarkdownViewer';
 import type { StudentProject, Course } from '@/lib/types';
@@ -37,10 +38,12 @@ export default function StudentProjectPage() {
   const [githubUrl, setGithubUrl] = useState('');
   const [vercelUrl, setVercelUrl] = useState('');
   const [figmaUrl, setFigmaUrl] = useState('');
+  const [imagenUrl, setImagenUrl] = useState('');
   const [isPublic, setIsPublic] = useState(false);
 
   // Document upload state
   const [uploading, setUploading] = useState(false);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [docContent, setDocContent] = useState<string | null>(null);
   const [showDoc, setShowDoc] = useState(false);
 
@@ -61,6 +64,7 @@ export default function StudentProjectPage() {
           setGithubUrl(myProject.githubUrl);
           setVercelUrl(myProject.vercelUrl ?? '');
           setFigmaUrl(myProject.figmaUrl ?? '');
+          setImagenUrl(myProject.showcaseImageUrl ?? '');
           setIsPublic(myProject.isPublic);
         }
       }
@@ -95,9 +99,19 @@ export default function StudentProjectPage() {
     } catch { return false; }
   }, [figmaUrl]);
 
+  /* Solo http/https: esa dirección acaba en un <img> de la vitrina pública,
+     y el servidor la rechaza igual (urlHttpSchema). Avisar aquí evita mandar
+     un formulario que va a volver con error. */
+  const isImagenValida = useMemo(() => {
+    if (!imagenUrl) return true;
+    try {
+      return ['http:', 'https:'].includes(new URL(imagenUrl).protocol);
+    } catch { return false; }
+  }, [imagenUrl]);
+
   const isFormValid = useMemo(
-    () => projectName.trim().length >= 1 && isGithubValid && isVercelValid && isFigmaValid,
-    [projectName, isGithubValid, isVercelValid, isFigmaValid]
+    () => projectName.trim().length >= 1 && isGithubValid && isVercelValid && isFigmaValid && isImagenValida,
+    [projectName, isGithubValid, isVercelValid, isFigmaValid, isImagenValida]
   );
 
   /**
@@ -116,6 +130,7 @@ export default function StudentProjectPage() {
         || githubUrl !== project.githubUrl
         || vercelUrl !== (project.vercelUrl ?? '')
         || figmaUrl !== (project.figmaUrl ?? '')
+        || imagenUrl !== (project.showcaseImageUrl ?? '')
         || isPublic !== project.isPublic
       : projectName || description || githubUrl || vercelUrl || figmaUrl
   );
@@ -134,6 +149,7 @@ export default function StudentProjectPage() {
       githubUrl,
       vercelUrl: vercelUrl || undefined,
       figmaUrl: figmaUrl || undefined,
+      showcaseImageUrl: imagenUrl,
       isPublic,
     };
 
@@ -167,7 +183,7 @@ export default function StudentProjectPage() {
     } finally {
       setSaving(false);
     }
-  }, [isFormValid, saving, courseId, projectName, description, githubUrl, vercelUrl, figmaUrl, isPublic, project, toast]);
+  }, [isFormValid, saving, courseId, projectName, description, githubUrl, vercelUrl, figmaUrl, imagenUrl, isPublic, project, toast]);
 
   const handleUploadDoc = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -204,6 +220,45 @@ export default function StudentProjectPage() {
     } finally {
       setUploading(false);
       e.target.value = '';
+    }
+  }, [project, toast]);
+
+  /* La imagen con la que el proyecto sale en la vitrina. El archivo va al
+     mismo Blob que el documento; quien ya tenga la captura publicada puede
+     pegar la URL en el formulario en vez de subir nada. */
+  const handleUploadImagen = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !project) return;
+    setSubiendoImagen(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch(`/api/projects/${project.id}/imagen`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'No se pudo subir la imagen');
+      setProject((p) => (p ? { ...p, showcaseImageUrl: data.showcaseImageUrl } : p));
+      toast('Imagen del proyecto actualizada', 'success');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Error de conexión', 'error');
+    } finally {
+      setSubiendoImagen(false);
+      e.target.value = '';
+    }
+  }, [project, toast]);
+
+  const handleQuitarImagen = useCallback(async () => {
+    if (!project) return;
+    setSubiendoImagen(true);
+    try {
+      const res = await fetch(`/api/projects/${project.id}/imagen`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'No se pudo quitar');
+      setProject((p) => (p ? { ...p, showcaseImageUrl: undefined } : p));
+      toast('Imagen retirada', 'success');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Error de conexión', 'error');
+    } finally {
+      setSubiendoImagen(false);
     }
   }, [project, toast]);
 
@@ -283,6 +338,15 @@ export default function StudentProjectPage() {
               {project.vercelUrl && <LinkRow icon="vercel" label="Vercel" url={project.vercelUrl} />}
               {project.figmaUrl && <LinkRow icon="figma" label="Figma" url={project.figmaUrl} />}
             </div>
+
+            <ProjectShowcaseImage
+              projectName={project.projectName}
+              imageUrl={project.showcaseImageUrl}
+              editable={project.status === 'in-progress'}
+              busy={subiendoImagen}
+              onUpload={handleUploadImagen}
+              onRemove={handleQuitarImagen}
+            />
 
             {/* Document upload section */}
             <div className="mt-6 pt-6 border-t border-foreground/[0.06]">
@@ -464,6 +528,29 @@ export default function StudentProjectPage() {
               />
               {figmaUrl && !isFigmaValid && (
                 <p className="text-meta text-red-400 mt-1">Debe ser un enlace HTTPS de figma.com</p>
+              )}
+            </div>
+
+            {/* Imagen por dirección, para quien ya la tiene publicada. El
+                que prefiera subir el archivo lo hace fuera del formulario. */}
+            <div>
+              <label className="block text-xs font-medium text-muted mb-1.5" htmlFor="imagen-vitrina">
+                Imagen del proyecto por dirección (opcional)
+              </label>
+              <input
+                id="imagen-vitrina"
+                type="url"
+                value={imagenUrl}
+                onChange={(e) => setImagenUrl(e.target.value)}
+                placeholder="https://.../captura.png"
+                className={`w-full px-3 py-2.5 bg-foreground/[0.04] border rounded-lg text-sm text-foreground/90 placeholder:text-faint focus:outline-none focus:ring-1 transition-colors ${
+                  imagenUrl && !isImagenValida
+                    ? 'border-red-500/50 focus:border-red-500/60 focus:ring-red-500/20'
+                    : 'border-foreground/[0.08] focus:border-cyan-500/40 focus:ring-cyan-500/20'
+                }`}
+              />
+              {imagenUrl && !isImagenValida && (
+                <p className="text-meta text-red-400 mt-1">Debe ser una dirección http o https</p>
               )}
             </div>
 

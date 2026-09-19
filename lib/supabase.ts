@@ -990,6 +990,29 @@ export async function supabaseGetProjectById(id: string): Promise<StudentProject
   return row ? rowToProject(row) : null;
 }
 
+/**
+ * Cambia UN proyecto, sin tocar los demás.
+ *
+ * Los estudiantes editan su proyecto y suben su imagen alrededor de las mismas
+ * fechas de entrega. Reescribir la tabla entera para guardar un campo se lleva
+ * por delante lo que otro guardó en ese instante: el mismo fallo de los
+ * intentos de parcial y de las entregas.
+ */
+export async function supabaseUpdateProject(
+  id: string,
+  patch: Partial<StudentProject>,
+): Promise<void> {
+  const sb = requireSupabaseClient();
+  const fila: Record<string, unknown> = { updated_at: nowColombiaISO() };
+  if (patch.showcaseImageUrl !== undefined) fila.showcase_image_url = patch.showcaseImageUrl || null;
+  if (patch.showcaseDescription !== undefined) fila.showcase_description = patch.showcaseDescription || null;
+  if (patch.documentUrl !== undefined) fila.document_url = patch.documentUrl || null;
+  if (patch.isPublic !== undefined) fila.is_public = patch.isPublic;
+
+  const { error } = await sb.from('projects').update(fila).eq('id', id);
+  if (error) throw new Error(`[supabase] update projects ${id}: ${error.message}`);
+}
+
 export async function supabaseReplaceProjects(items: StudentProject[]): Promise<void> {
   await replaceAllRows('projects', items.map(projectToRow));
 }

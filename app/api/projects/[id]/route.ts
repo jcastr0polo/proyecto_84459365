@@ -55,13 +55,16 @@ export async function PUT(
 
     const updates = parsed.data;
 
-    // Students cannot change admin-only fields
+    /* Campos que solo el docente decide. showcaseImageUrl salió de aquí: la
+       imagen con la que su proyecto sale en la vitrina la elige quien lo
+       construyó, igual que elige el nombre, la descripción y si es público.
+       El docente sigue pudiendo cambiarla o bloquear el proyecto entero.
+       showcaseDescription se queda: ese texto es la curaduría del docente. */
     if (user.role === 'student') {
       delete updates.isFeatured;
       delete updates.status;
       delete updates.isBlockedFromShowcase;
       delete updates.showcaseDescription;
-      delete updates.showcaseImageUrl;
     }
 
     // If admin blocks from showcase, force isPublic = false

@@ -17,11 +17,18 @@ export interface ShowcaseProject {
   studentName: string;
   courseName: string;
   courseId: string;
+  semesterId: string;
+  semesterLabel: string;
 }
+
+export interface ShowcaseSemester { id: string; label: string; count: number }
 
 interface ShowcaseClientProps {
   projects: ShowcaseProject[];
-  semesterLabel: string;
+  /** Semestres que tienen proyectos, del más nuevo al más viejo. */
+  semesters: ShowcaseSemester[];
+  /** El semestre en curso, tenga proyectos o no. */
+  activeSemester: { id: string; label: string } | null;
   courses: { id: string; name: string }[];
 }
 
@@ -47,13 +54,43 @@ const cardVariants = {
  * ShowcaseClient — Animated grid of featured student projects
  * Fase 19 — Public showcase with framer-motion stagger
  */
-export default function ShowcaseClient({ projects, semesterLabel, courses }: ShowcaseClientProps) {
+export default function ShowcaseClient({
+  projects, semesters, activeSemester, courses,
+}: ShowcaseClientProps) {
+  /* Se abre en el semestre más reciente que TENGA proyectos. El día que se
+     publique el primero del semestre en curso, pasa a ser ese sin tocar nada;
+     mientras tanto no se enseña una página vacía, pero tampoco se hace pasar
+     el trabajo del semestre pasado por el de este. */
+  const [semesterFilter, setSemesterFilter] = useState(semesters[0]?.id ?? 'all');
   const [courseFilter, setCourseFilter] = useState('all');
 
+  const porSemestre = useMemo(
+    () => (semesterFilter === 'all' ? projects : projects.filter((p) => p.semesterId === semesterFilter)),
+    [projects, semesterFilter],
+  );
+
+  /* Los cursos del semestre que se está viendo: filtrar por un curso que no
+     tiene proyectos en ese semestre deja la rejilla vacía sin explicación. */
+  const cursosVisibles = useMemo(() => {
+    const ids = new Set(porSemestre.map((p) => p.courseId));
+    return courses.filter((c) => ids.has(c.id));
+  }, [courses, porSemestre]);
+
   const filtered = useMemo(() => {
-    if (courseFilter === 'all') return projects;
-    return projects.filter((p) => p.courseId === courseFilter);
-  }, [projects, courseFilter]);
+    if (courseFilter === 'all') return porSemestre;
+    return porSemestre.filter((p) => p.courseId === courseFilter);
+  }, [porSemestre, courseFilter]);
+
+  /* Si se cambia de semestre y el curso elegido no existe ahí, el filtro de
+     curso se cae solo en vez de dejar cero resultados. */
+  const cursoValido = courseFilter === 'all' || cursosVisibles.some((c) => c.id === courseFilter);
+  const cursoEfectivo = cursoValido ? courseFilter : 'all';
+  const visibles = cursoEfectivo === 'all' ? porSemestre : filtered;
+
+  const verSemestre = semesters.find((s) => s.id === semesterFilter);
+  const elActivoEstaVacio = Boolean(
+    activeSemester && !semesters.some((s) => s.id === activeSemester.id),
+  );
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -86,17 +123,32 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
               </span>
             </h1>
             <p className="text-subtle mt-4 max-w-xl mx-auto leading-relaxed">
-              Proyectos fullstack destacados construidos por estudiantes durante el semestre{' '}
-              <span className="text-muted">{semesterLabel}</span>, utilizando Next.js, TypeScript y asistentes de IA.
+              {semesterFilter === 'all' ? (
+                <>Proyectos fullstack construidos por estudiantes con Next.js, TypeScript y asistentes de IA.</>
+              ) : (
+                <>
+                  Proyectos fullstack construidos por estudiantes en{' '}
+                  <span className="text-muted">{verSemestre?.label}</span>, con Next.js, TypeScript y
+                  asistentes de IA.
+                </>
+              )}
             </p>
+
+            {/* Que el semestre en curso no tenga nada publicado todavía se dice,
+                en vez de dejar creer que lo de abajo es de ahora. */}
+            {elActivoEstaVacio && (
+              <p className="text-meta text-faint mt-3">
+                {activeSemester?.label} aún no tiene proyectos publicados.
+              </p>
+            )}
 
             {/* Stats */}
             <div className="flex items-center justify-center gap-8 mt-8">
-              <Stat value={projects.length} label="Proyectos" />
+              <Stat value={porSemestre.length} label="Proyectos" />
               <div className="w-px h-8 bg-foreground/[0.08]" />
-              <Stat value={courses.length} label="Cursos" />
+              <Stat value={cursosVisibles.length} label="Cursos" />
               <div className="w-px h-8 bg-foreground/[0.08]" />
-              <Stat value={new Set(projects.map((p) => p.studentName)).size} label="Estudiantes" />
+              <Stat value={new Set(porSemestre.map((p) => p.studentName)).size} label="Estudiantes" />
             </div>
           </motion.div>
         </div>
@@ -108,25 +160,44 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="flex items-center justify-center gap-2 mb-10"
+          className="space-y-3 mb-10"
         >
-          <Chip active={courseFilter === 'all'} onClick={() => setCourseFilter('all')}>
-            Todos ({projects.length})
-          </Chip>
-          {courses.map((c) => {
-            const count = projects.filter((p) => p.courseId === c.id).length;
-            return (
-              <Chip key={c.id} active={courseFilter === c.id} onClick={() => setCourseFilter(c.id)}>
-                {c.name} ({count})
+          {/* El semestre primero: manda sobre el curso, y los cursos cambian
+              según cuál se elija. Solo aparece si de verdad hay más de uno. */}
+          {semesters.length > 1 && (
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              {semesters.map((sem) => (
+                <Chip key={sem.id} active={semesterFilter === sem.id}
+                  onClick={() => { setSemesterFilter(sem.id); setCourseFilter('all'); }}>
+                  {sem.label} ({sem.count})
+                </Chip>
+              ))}
+              <Chip active={semesterFilter === 'all'}
+                onClick={() => { setSemesterFilter('all'); setCourseFilter('all'); }} tone="neutral">
+                Todos los semestres ({projects.length})
               </Chip>
-            );
-          })}
+            </div>
+          )}
+
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <Chip active={cursoEfectivo === 'all'} onClick={() => setCourseFilter('all')}>
+              Todos ({porSemestre.length})
+            </Chip>
+            {cursosVisibles.map((c) => {
+              const count = porSemestre.filter((p) => p.courseId === c.id).length;
+              return (
+                <Chip key={c.id} active={cursoEfectivo === c.id} onClick={() => setCourseFilter(c.id)}>
+                  {c.name} ({count})
+                </Chip>
+              );
+            })}
+          </div>
         </motion.div>
       </div>
 
       {/* ─── Projects Grid ─── */}
       <div className="max-w-7xl mx-auto px-6 pb-20">
-        {filtered.length === 0 ? (
+        {visibles.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -143,7 +214,7 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
             animate="visible"
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {filtered.map((project) => (
+            {visibles.map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}
           </motion.div>
@@ -154,7 +225,7 @@ export default function ShowcaseClient({ projects, semesterLabel, courses }: Sho
       <div className="border-t border-foreground/[0.04] py-8">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <p className="text-xs text-faint">
-            Plataforma de Gestión Académica · {semesterLabel} · Construido con Next.js + TypeScript + Vercel
+            Plataforma de Gestión Académica · Construido con Next.js + TypeScript + Vercel
           </p>
         </div>
       </div>

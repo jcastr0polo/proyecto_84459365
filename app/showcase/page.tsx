@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import ShowcaseClient from './ShowcaseClient';
-import type { ShowcaseProject } from './ShowcaseClient';
+import type { ShowcaseProject, ShowcaseSemester } from './ShowcaseClient';
 import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 
 /**
@@ -12,7 +12,8 @@ import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 export default function ShowcasePage() {
   const [projects, setProjects] = useState<ShowcaseProject[]>([]);
   const [courses, setCourses] = useState<{ id: string; name: string }[]>([]);
-  const [semesterLabel, setSemesterLabel] = useState('2026');
+  const [semesters, setSemesters] = useState<ShowcaseSemester[]>([]);
+  const [activeSemester, setActiveSemester] = useState<{ id: string; label: string } | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -22,7 +23,8 @@ export default function ShowcasePage() {
         if (data) {
           setProjects(data.projects ?? []);
           setCourses(data.courses ?? []);
-          setSemesterLabel(data.semesterLabel ?? '2026');
+          setSemesters(data.semesters ?? []);
+          setActiveSemester(data.activeSemester ?? null);
         }
       })
       .catch(() => {})
@@ -46,7 +48,8 @@ export default function ShowcasePage() {
   return (
     <ShowcaseClient
       projects={projects}
-      semesterLabel={semesterLabel}
+      semesters={semesters}
+      activeSemester={activeSemester}
       courses={courses}
     />
   );

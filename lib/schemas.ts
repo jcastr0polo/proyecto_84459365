@@ -323,6 +323,23 @@ export type UpdateActivityZod = z.infer<typeof updateActivitySchema>;
 // ────────────────────────────────────────────────────────────
 
 /**
+ * Solo http y https.
+ *
+ * z.string().url() da por buenos javascript:, data: y vbscript:, porque para
+ * el constructor URL son URLs perfectamente válidas. Cualquier campo que
+ * termine en un href o un src de una página pública necesita esto encima.
+ */
+export const urlHttpSchema = z.string()
+  .url('URL inválida')
+  .refine((url) => {
+    try {
+      return ['http:', 'https:'].includes(new URL(url).protocol);
+    } catch {
+      return false;
+    }
+  }, 'Solo se permiten URLs HTTP/HTTPS');
+
+/**
  * submissionLinkSchema — Validación de enlace de entrega
  * RN-ENT-06: URLs de GitHub/Vercel para cursos de programación
  */
@@ -531,7 +548,7 @@ export const projectSchema = z.object({
   description: z.string().optional(),
   githubUrl: githubUrlSchema,
   vercelUrl: vercelUrlSchema.optional(),
-  figmaUrl: z.string().url().optional(),
+  figmaUrl: urlHttpSchema.optional(),
   documentUrl: z.string().optional(),
   isPublic: z.boolean(),
   isFeatured: z.boolean(),
@@ -552,7 +569,7 @@ export const createProjectSchema = z.object({
   description: z.string().max(1000, 'La descripción no puede exceder 1000 caracteres').optional(),
   githubUrl: githubUrlSchema,
   vercelUrl: vercelUrlSchema.optional().or(z.literal('')),
-  figmaUrl: z.string().url('URL de Figma inválida').optional().or(z.literal('')),
+  figmaUrl: urlHttpSchema.optional().or(z.literal('')),
   isPublic: z.boolean().optional().default(false),
 });
 
@@ -565,12 +582,13 @@ export const updateProjectSchema = z.object({
   description: z.string().max(1000).optional(),
   githubUrl: githubUrlSchema.optional(),
   vercelUrl: vercelUrlSchema.optional().or(z.literal('')),
-  figmaUrl: z.string().url().optional().or(z.literal('')),
+  figmaUrl: urlHttpSchema.optional().or(z.literal('')),
   isPublic: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
   isBlockedFromShowcase: z.boolean().optional(),
   showcaseDescription: z.string().max(500).optional().or(z.literal('')),
-  showcaseImageUrl: z.string().url().optional().or(z.literal('')),
+  /* Se pinta en un <img> de la vitrina pública: http/https y nada más. */
+  showcaseImageUrl: urlHttpSchema.optional().or(z.literal('')),
   status: z.enum(['in-progress', 'submitted', 'reviewed', 'featured']).optional(),
 });
 
