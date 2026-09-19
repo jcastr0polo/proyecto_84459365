@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, Pencil, Trash2, FileText, ClipboardList, PenLine } from 'lucide-react';
 import IconButton from '@/components/ui/IconButton';
+import Button from '@/components/ui/Button';
 import { gradeText, formatScore } from '@/lib/gradeScale';
 import { toneBox, toneText } from '@/lib/semantics';
 
@@ -157,14 +158,13 @@ export default function CorteCard({
             <span className={`font-medium ${toneText.ok}`}>Notas reportadas</span>
             <span className="text-subtle"> · {fecha(corte.reportedAt ?? undefined)}</span>
           </p>
-          <button
+          <Button
+            variant="ghost" size="xs" className="shrink-0"
             onClick={() => onToggleReported(false)}
             disabled={reporting}
-            className="text-micro text-subtle hover:text-foreground underline underline-offset-2 shrink-0
-                       disabled:opacity-50 cursor-pointer"
           >
             Deshacer
-          </button>
+          </Button>
         </div>
       ) : reporte && (
         <div className={`mx-4 mb-4 -mt-1 rounded-lg border px-3 py-2 flex items-center justify-between gap-2 ${reporte.caja ?? 'border-surface-border bg-surface-sunken'}`}>
@@ -177,14 +177,13 @@ export default function CorteCard({
               </span>
             )}
           </p>
-          <button
+          <Button
+            variant="secondary" size="xs" className="shrink-0"
             onClick={() => onToggleReported(true)}
             disabled={reporting}
-            className="text-micro font-medium text-cyan-600 dark:text-cyan-400 hover:underline
-                       underline-offset-2 shrink-0 disabled:opacity-50 cursor-pointer"
           >
-            Marcar reportado
-          </button>
+            {reporting ? 'Marcando…' : 'Marcar reportado'}
+          </Button>
         </div>
       )}
 

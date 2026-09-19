@@ -49,7 +49,9 @@ export default function CortesPage() {
   const [formEnd, setFormEnd] = useState('');
   const [formReport, setFormReport] = useState('');
 
-  const fetchCortes = useCallback(async () => {
+  /** Devuelve los cortes recién leídos, para poder comprobar que un cambio cuajó. */
+  const fetchCortes = useCallback(async (): Promise<CorteOverview[]> => {
+    let devueltos: CorteOverview[] = [];
     try {
       const [cortesRes, courseRes] = await Promise.all([
         fetch(`/api/courses/${courseId}/cortes/overview`),
@@ -58,9 +60,11 @@ export default function CortesPage() {
 
       if (!cortesRes.ok) throw new Error('Error cargando cortes');
       const cortesData = await cortesRes.json();
-      setCortes(cortesData.cortes ?? []);
+      const frescos: CorteOverview[] = cortesData.cortes ?? [];
+      setCortes(frescos);
       setTotalWeight(cortesData.totalWeight ?? 0);
       setOrphanItems(cortesData.orphanItems ?? []);
+      devueltos = frescos;
 
       /* Solo hace falta cuando no hay cortes: es el estado en el que cae el
          docente al crear la asignatura. */
@@ -81,6 +85,7 @@ export default function CortesPage() {
     } finally {
       setLoading(false);
     }
+    return devueltos;
   }, [courseId, toast]);
 
   useEffect(() => { fetchCortes(); }, [fetchCortes]);
@@ -170,7 +175,8 @@ export default function CortesPage() {
     }
   }
 
-  async function handleDelete(corteId: string) {    try {
+  async function handleDelete(corteId: string) {
+    try {
       const res = await fetch(`/api/courses/${courseId}/cortes/${corteId}`, {
         method: 'DELETE',
       });
@@ -206,8 +212,21 @@ export default function CortesPage() {
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'No se pudo actualizar');
-      toast(reported ? 'Corte marcado como reportado' : 'Se deshizo el reporte', 'success');
-      await fetchCortes();
+
+      /* No basta con que la petición devuelva 200: la marca vive en una
+         columna que llega con su migración, y si todavía no está aplicada se
+         guarda en el vacío. Se comprueba contra lo que devuelve la base en vez
+         de cantar un éxito que no ocurrió. */
+      const frescos = await fetchCortes();
+      const cuajo = Boolean(frescos.find((c) => c.id === corteId)?.reportedAt) === reported;
+      if (cuajo) {
+        toast(reported ? 'Corte marcado como reportado' : 'Se deshizo el reporte', 'success');
+      } else {
+        toast(
+          'La marca no se guardó: falta aplicar el cambio de esquema en Configuración › Base de datos.',
+          'error',
+        );
+      }
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Error de conexión', 'error');
     } finally {

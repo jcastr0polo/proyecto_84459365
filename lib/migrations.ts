@@ -61,6 +61,21 @@ export const MIGRATIONS: Migration[] = [
       { table: 'semesters', column: 'corte_template' },
     ],
   },
+  {
+    id: '2026-09-corte-reportado',
+    title: 'Marca de notas reportadas',
+    why:
+      'Guarda cuándo marcaste un corte como ya reportado a la universidad, para que '
+      + 'el panel deje de avisarte de ese plazo. Lo pones tú a mano: el sistema no '
+      + 'tiene forma de saber si de verdad subiste las notas. Nace vacía: ningún '
+      + 'corte existente cambia, y el aviso de los que no hayas marcado sigue igual.',
+    statements: [
+      'ALTER TABLE cortes ADD COLUMN IF NOT EXISTS reported_at TIMESTAMPTZ',
+    ],
+    requires: [
+      { table: 'cortes', column: 'reported_at' },
+    ],
+  },
 ];
 
 export function findMigration(id: string): Migration | undefined {

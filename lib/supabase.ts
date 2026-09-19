@@ -721,6 +721,7 @@ interface SupabaseCorteRow {
   start_date?: string | null;
   end_date?: string | null;
   report_deadline?: string | null;
+  reported_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -739,6 +740,8 @@ function rowToCorte(r: SupabaseCorteRow): Corte {
     ...(toISODate(r.start_date) ? { startDate: toISODate(r.start_date)! } : {}),
     ...(toISODate(r.end_date) ? { endDate: toISODate(r.end_date)! } : {}),
     ...(toISODate(r.report_deadline) ? { reportDeadline: toISODate(r.report_deadline)! } : {}),
+    /* Marca de tiempo completa, no fecha suelta: interesa cuándo se reportó. */
+    ...(r.reported_at ? { reportedAt: String(r.reported_at) } : {}),
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -750,6 +753,7 @@ function corteToRow(c: Corte): SupabaseCorteRow {
     start_date: c.startDate ?? null,
     end_date: c.endDate ?? null,
     report_deadline: c.reportDeadline ?? null,
+    reported_at: c.reportedAt ?? null,
     created_at: c.createdAt, updated_at: c.updatedAt,
   };
 }
@@ -764,8 +768,47 @@ export async function supabaseGetCorteById(id: string): Promise<Corte | null> {
   return row ? rowToCorte(row) : null;
 }
 
+/**
+ * ¿Este error es "falta esta columna" y no otra cosa?
+ *
+ * Se exige el SQLSTATE 42703 además del nombre: sin el código, cualquier error
+ * cuyo texto mencione la columna por casualidad haría que se dejara de
+ * escribir un dato bueno.
+ */
+export function faltaColumna(e: unknown, columna: string): boolean {
+  const err = e as { code?: string; message?: string } | null;
+  const texto = `${err?.message ?? ''} ${String(e)}`;
+  return err?.code === '42703' && texto.includes(columna);
+}
+
+/**
+ * Escribir cortes tolera que aún falte `reported_at`.
+ *
+ * La columna llega con su migración, y entre desplegar el código y aplicarla
+ * puede pasar un rato. Sin esta salvaguarda, durante ese rato el INSERT
+ * mencionaría una columna que no existe y editar CUALQUIER corte devolvería un
+ * 500: una función nueva a medio llegar no puede romper las que ya andaban.
+ * No se memoriza el resultado a propósito: así, en cuanto se aplique la
+ * migración, la marca empieza a guardarse sin esperar a que se recicle la
+ * instancia. Escribir cortes es raro; el reintento no cuesta nada.
+ */
 export async function supabaseReplaceCortes(items: Corte[]): Promise<void> {
-  await replaceAllRows('cortes', items.map(corteToRow));
+  const filas = items.map(corteToRow);
+  try {
+    await replaceAllRows('cortes', filas);
+  } catch (e) {
+    if (!faltaColumna(e, 'reported_at')) throw e;
+    console.warn(
+      '[supabase] falta la columna cortes.reported_at. Aplica la migración '
+      + '"2026-09-corte-reportado" en Configuración › Base de datos; hasta entonces '
+      + 'la marca de "notas reportadas" no se guarda.',
+    );
+    await replaceAllRows('cortes', filas.map((f) => {
+      const sinColumna = { ...f };
+      delete sinColumna.reported_at;
+      return sinColumna;
+    }));
+  }
 }
 
 // ════════════════════════════════════════════════════════════════
