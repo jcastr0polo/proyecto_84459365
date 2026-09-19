@@ -99,7 +99,8 @@ export async function GET(request: Request): Promise<NextResponse> {
      * para llegar, que es lo accionable.
      */
     const reportDeadlines = cortes
-      .filter((c) => courseIds.has(c.courseId) && c.reportDeadline)
+      // Ya marcado como reportado a mano: no seguir avisando de lo mismo.
+      .filter((c) => courseIds.has(c.courseId) && c.reportDeadline && !c.reportedAt)
       .map((corte) => {
         const course = currentCourses.find((c) => c.id === corte.courseId)!;
         const roster = enrByCourse.get(corte.courseId) ?? [];

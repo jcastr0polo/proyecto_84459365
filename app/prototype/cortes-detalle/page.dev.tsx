@@ -42,7 +42,7 @@ export default function PrototypeCortesDetalle() {
       <span className="text-meta font-semibold uppercase tracking-wider text-amber-400">Taller · datos falsos</span>
       <p className="text-xs text-subtle">Vencido · vence en 5 días con pesos mal sumados · vacío y borrable</p>
       {cortes.map((c) => (
-        <CorteCard key={c.id} corte={c} onEdit={() => {}} onDelete={() => {}} />
+        <CorteCard key={c.id} corte={c} onEdit={() => {}} onDelete={() => {}} onToggleReported={() => {}} />
       ))}
     </div>
   );

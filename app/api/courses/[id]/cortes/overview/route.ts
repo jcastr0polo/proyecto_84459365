@@ -100,6 +100,8 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
         /** Días hasta el tope de reporte. Negativo = ya venció. */
         daysToReport: dias(corte.reportDeadline),
         daysToEnd: dias(corte.endDate),
+        /** Cuándo se marcó como reportado a mano. null = todavía no. */
+        reportedAt: corte.reportedAt ?? null,
         /** Ítems que aún no tienen nota para todos los inscritos. */
         pendingItems: items.filter((i) => i.graded < roster.length).length,
         canDelete: items.length === 0,

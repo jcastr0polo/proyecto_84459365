@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronDown, Pencil, Trash2, CalendarClock, FileText, ClipboardList, PenLine } from 'lucide-react';
+import { ChevronDown, Pencil, Trash2, FileText, ClipboardList, PenLine } from 'lucide-react';
 import IconButton from '@/components/ui/IconButton';
 import { gradeText, formatScore } from '@/lib/gradeScale';
 import { toneBox, toneText } from '@/lib/semantics';
@@ -24,6 +24,8 @@ export interface CorteOverview {
   startDate?: string;
   endDate?: string;
   reportDeadline?: string;
+  /** Cuándo se marcó como reportado a mano. null = todavía no. */
+  reportedAt?: string | null;
   items: CorteItem[];
   internalWeight: number;
   studentsTotal: number;
@@ -76,15 +78,19 @@ const fecha = (iso?: string) => iso
  * cada cosa, qué falta por calificar y cuánto queda para el reporte.
  */
 export default function CorteCard({
-  corte, onEdit, onDelete, deleting,
+  corte, onEdit, onDelete, onToggleReported, deleting, reporting,
 }: {
   corte: CorteOverview;
   onEdit: () => void;
   onDelete: () => void;
+  /** Marca o desmarca el corte como ya reportado a la universidad. */
+  onToggleReported: (reported: boolean) => void;
   deleting?: boolean;
+  reporting?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const reporte = plazo(corte.daysToReport);
+  const yaReportado = Boolean(corte.reportedAt);
   const pesoMal = corte.items.length > 0 && corte.internalWeight !== 100;
 
   return (
@@ -142,11 +148,27 @@ export default function CorteCard({
         </div>
       </div>
 
-      {/* El plazo de reporte va siempre visible: es la fecha que aprieta. */}
-      {reporte && (
-        <div className={`mx-4 mb-4 -mt-1 rounded-lg border px-3 py-2 flex items-center gap-2 ${reporte.caja ?? 'border-surface-border bg-surface-sunken'}`}>
-          <CalendarClock className={`w-3.5 h-3.5 shrink-0 ${reporte.tono}`} aria-hidden="true" />
+      {/* El plazo de reporte va siempre visible: es la fecha que aprieta.
+          Una vez marcado como reportado, se cambia el aviso por confirmación
+          en vez de esconderlo: que se pueda deshacer si fue un clic de más. */}
+      {yaReportado ? (
+        <div className={`mx-4 mb-4 -mt-1 rounded-lg border px-3 py-2 flex items-center justify-between gap-2 ${toneBox.ok}`}>
           <p className="text-xs">
+            <span className={`font-medium ${toneText.ok}`}>Notas reportadas</span>
+            <span className="text-subtle"> · {fecha(corte.reportedAt ?? undefined)}</span>
+          </p>
+          <button
+            onClick={() => onToggleReported(false)}
+            disabled={reporting}
+            className="text-micro text-subtle hover:text-foreground underline underline-offset-2 shrink-0
+                       disabled:opacity-50 cursor-pointer"
+          >
+            Deshacer
+          </button>
+        </div>
+      ) : reporte && (
+        <div className={`mx-4 mb-4 -mt-1 rounded-lg border px-3 py-2 flex items-center justify-between gap-2 ${reporte.caja ?? 'border-surface-border bg-surface-sunken'}`}>
+          <p className="text-xs min-w-0">
             <span className={`font-medium ${reporte.tono}`}>Reporte de notas: {reporte.texto}</span>
             <span className="text-subtle"> · {fecha(corte.reportDeadline)}</span>
             {corte.pendingItems > 0 && (
@@ -155,6 +177,14 @@ export default function CorteCard({
               </span>
             )}
           </p>
+          <button
+            onClick={() => onToggleReported(true)}
+            disabled={reporting}
+            className="text-micro font-medium text-cyan-600 dark:text-cyan-400 hover:underline
+                       underline-offset-2 shrink-0 disabled:opacity-50 cursor-pointer"
+          >
+            Marcar reportado
+          </button>
         </div>
       )}
 

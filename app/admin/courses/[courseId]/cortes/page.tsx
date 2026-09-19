@@ -39,6 +39,7 @@ export default function CortesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCorte, setEditingCorte] = useState<CorteOverview | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [reportingId, setReportingId] = useState<string | null>(null);
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -169,8 +170,7 @@ export default function CortesPage() {
     }
   }
 
-  async function handleDelete(corteId: string) {
-    try {
+  async function handleDelete(corteId: string) {    try {
       const res = await fetch(`/api/courses/${courseId}/cortes/${corteId}`, {
         method: 'DELETE',
       });
@@ -193,6 +193,25 @@ export default function CortesPage() {
       await fetchCortes();
     } catch {
       toast('Error de conexión', 'error');
+    }
+  }
+
+  async function handleToggleReported(corteId: string, reported: boolean) {
+    setReportingId(corteId);
+    try {
+      const res = await fetch(`/api/courses/${courseId}/cortes/${corteId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reported }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'No se pudo actualizar');
+      toast(reported ? 'Corte marcado como reportado' : 'Se deshizo el reporte', 'success');
+      await fetchCortes();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Error de conexión', 'error');
+    } finally {
+      setReportingId(null);
     }
   }
 
@@ -398,6 +417,8 @@ export default function CortesPage() {
               corte={corte}
               onEdit={() => openEdit(corte)}
               onDelete={() => handleDelete(corte.id)}
+              onToggleReported={(reported) => handleToggleReported(corte.id, reported)}
+              reporting={reportingId === corte.id}
             />
           ))}
         </div>

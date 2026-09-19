@@ -593,6 +593,7 @@ export const corteSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   reportDeadline: z.string().optional(),
+  reportedAt: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -626,6 +627,8 @@ export const updateCorteSchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
   reportDeadline: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
+  /** Marca (o desmarca) el corte como ya reportado a la universidad. */
+  reported: z.boolean().optional(),
 }).refine((d) => !d.startDate || !d.endDate || d.startDate <= d.endDate,
   { message: 'El corte no puede terminar antes de empezar', path: ['endDate'] })
   .refine((d) => !d.endDate || !d.reportDeadline || d.endDate <= d.reportDeadline,

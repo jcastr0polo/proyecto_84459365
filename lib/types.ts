@@ -666,6 +666,12 @@ export interface Corte {
    * de verdad aprieta al docente, y la que el panel usa para avisar.
    */
   reportDeadline?: string;
+  /**
+   * Cuándo se marcó este corte como ya reportado a la universidad. Lo pone
+   * el docente a mano: el sistema no tiene forma de saber si de verdad subió
+   * las notas, así que esto solo silencia el aviso del panel.
+   */
+  reportedAt?: string;
   createdAt: string;                   // ISO 8601
   updatedAt: string;                   // ISO 8601
 }

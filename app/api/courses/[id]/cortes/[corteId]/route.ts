@@ -70,6 +70,12 @@ export async function PUT(
           if (updates.reportDeadline) allCortes[idx].reportDeadline = updates.reportDeadline;
           else delete allCortes[idx].reportDeadline;
         }
+        /* Marcar/desmarcar como reportado no toca ninguna otra fecha: es solo
+           el aviso del panel el que se apaga o se vuelve a encender. */
+        if (updates.reported !== undefined) {
+          if (updates.reported) allCortes[idx].reportedAt = nowColombiaISO();
+          else delete allCortes[idx].reportedAt;
+        }
         allCortes[idx].updatedAt = nowColombiaISO();
 
         await dispatchWrite(
