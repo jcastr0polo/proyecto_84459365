@@ -363,6 +363,8 @@ export const submissionSchema = z.object({
   courseId: z.string().min(1),
   content: z.string().optional(),
   attachments: z.array(submissionAttachmentSchema),
+  /** Lo que el docente devuelve sobre esta entrega. */
+  feedbackAttachments: z.array(submissionAttachmentSchema).optional(),
   links: z.array(submissionLinkSchema),
   submittedAt: z.string(),
   isLate: z.boolean(),

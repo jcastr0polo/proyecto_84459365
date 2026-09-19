@@ -39,6 +39,7 @@ export default function AdminSubmissionsPage() {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [returnLoading, setReturnLoading] = useState(false);
+  const [docsBusy, setDocsBusy] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -113,6 +114,45 @@ export default function AdminSubmissionsPage() {
       toast('Error de conexión', 'error');
     } finally {
       setReturnLoading(false);
+    }
+  }
+
+  /* Devolver documentos: se sube y el estudiante ya lo ve. El modal se queda
+     abierto a propósito —lo normal es subir el corregido y seguir mirando la
+     entrega— así que hace falta refrescar para que aparezca en la lista. */
+  async function handleReturnDocuments(submissionId: string, files: File[]) {
+    setDocsBusy(true);
+    try {
+      const fd = new FormData();
+      files.forEach((f) => fd.append('files', f));
+      const res = await fetch(`/api/submissions/${submissionId}/devolucion`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo subir');
+      toast('Documento devuelto al estudiante', 'success');
+      await fetchData();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Error de conexión', 'error');
+    } finally {
+      setDocsBusy(false);
+    }
+  }
+
+  async function handleRemoveDocument(submissionId: string, attachmentId: string) {
+    setDocsBusy(true);
+    try {
+      const res = await fetch(`/api/submissions/${submissionId}/devolucion`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attachmentId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudo quitar');
+      toast('Documento retirado', 'success');
+      await fetchData();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Error de conexión', 'error');
+    } finally {
+      setDocsBusy(false);
     }
   }
 
@@ -335,6 +375,9 @@ export default function AdminSubmissionsPage() {
             isAdmin
             onReturn={() => handleReturn(selected.id)}
             returnLoading={returnLoading}
+            onReturnDocuments={(files) => handleReturnDocuments(selected.id, files)}
+            onRemoveDocument={(attId) => handleRemoveDocument(selected.id, attId)}
+            documentsBusy={docsBusy}
           />
         )}
       </Modal>

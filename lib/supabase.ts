@@ -25,6 +25,7 @@ import type {
   QuizQuestion, QuizAnswer, CorteTemplateItem,
 } from '@/lib/types';
 import type { AuditEntry } from '@/lib/auditService';
+import { nowColombiaISO } from '@/lib/dateUtils';
 
 // ── Build-safe client ──────────────────────────────────────────
 
@@ -602,6 +603,8 @@ interface SupabaseSubmissionRow {
   course_id: string;
   content: string | null;
   attachments: SubmissionAttachment[];
+  /* Llega con su migración; en filas anteriores viene null. */
+  feedback_attachments?: SubmissionAttachment[] | null;
   links: SubmissionLink[];
   submitted_at: string;
   is_late: boolean;
@@ -616,6 +619,7 @@ function rowToSubmission(r: SupabaseSubmissionRow): Submission {
     id: r.id, activityId: r.activity_id, studentId: r.student_id, courseId: r.course_id,
     content: r.content ?? undefined,
     attachments: r.attachments ?? [],
+    ...(r.feedback_attachments?.length ? { feedbackAttachments: r.feedback_attachments } : {}),
     links: r.links ?? [],
     submittedAt: r.submitted_at, isLate: r.is_late,
     status: r.status, version: r.version,
@@ -628,6 +632,7 @@ function submissionToRow(s: Submission): Record<string, unknown> {
     id: s.id, activity_id: s.activityId, student_id: s.studentId, course_id: s.courseId,
     content: s.content ?? null,
     attachments: (s.attachments ?? []),
+    feedback_attachments: (s.feedbackAttachments ?? []),
     links: (s.links ?? []),
     submitted_at: s.submittedAt, is_late: s.isLate,
     status: s.status, version: s.version,
@@ -645,8 +650,58 @@ export async function supabaseGetSubmissionById(id: string): Promise<Submission 
   return row ? rowToSubmission(row) : null;
 }
 
+/**
+ * Igual que con cortes.reported_at: la devolución del docente vive en una
+ * columna que llega con su migración, y entregar o calificar no puede romperse
+ * en el rato que va de desplegar el código a aplicarla.
+ */
+/**
+ * Actualiza UNA entrega, sin releer ni reescribir las demás.
+ *
+ * Lo usa la devolución del docente, que ocurre a lo largo de días mientras los
+ * estudiantes siguen entregando. Con la reescritura completa, subir un
+ * documento corregido en el mismo instante en que alguien entrega se lleva por
+ * delante esa entrega —el mismo fallo que tenían los intentos de parcial—.
+ *
+ * Tolera que aún falte la columna, igual que la escritura completa.
+ */
+export async function supabaseUpdateSubmission(
+  id: string,
+  patch: Partial<Submission>,
+): Promise<void> {
+  const sb = requireSupabaseClient();
+  const fila: Record<string, unknown> = { updated_at: nowColombiaISO() };
+  if (patch.feedbackAttachments !== undefined) fila.feedback_attachments = patch.feedbackAttachments;
+  if (patch.status !== undefined) fila.status = patch.status;
+
+  const { error } = await sb.from('submissions').update(fila).eq('id', id);
+  if (!error) return;
+  if (!faltaColumna(error, 'feedback_attachments')) {
+    throw new Error(`[supabase] update submissions ${id}: ${error.message}`);
+  }
+  throw new Error(
+    'Falta la columna submissions.feedback_attachments. Aplica la migración '
+    + '"2026-09-devolucion-docente" en Configuración › Base de datos.',
+  );
+}
+
 export async function supabaseReplaceSubmissions(items: Submission[]): Promise<void> {
-  await replaceAllRows('submissions', items.map(submissionToRow));
+  const filas = items.map(submissionToRow);
+  try {
+    await replaceAllRows('submissions', filas);
+  } catch (e) {
+    if (!faltaColumna(e, 'feedback_attachments')) throw e;
+    console.warn(
+      '[supabase] falta la columna submissions.feedback_attachments. Aplica la '
+      + 'migración "2026-09-devolucion-docente" en Configuración › Base de datos; '
+      + 'hasta entonces no se guardan los documentos que devuelvas.',
+    );
+    await replaceAllRows('submissions', filas.map((f) => {
+      const sinColumna = { ...f };
+      delete sinColumna.feedback_attachments;
+      return sinColumna;
+    }));
+  }
 }
 
 // ════════════════════════════════════════════════════════════════

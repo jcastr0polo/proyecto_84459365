@@ -162,7 +162,7 @@ export default function ActivityDetail({
 
       {/* ─── Attachments ─── */}
       {activity.attachments.length > 0 && (
-        <AttachmentsSection attachments={activity.attachments} />
+        <AttachmentsSection attachments={activity.attachments} isAdmin={isAdmin} />
       )}
 
       {/* ─── Prompt Slot (AI Prompt) ─── */}
@@ -199,7 +199,7 @@ export default function ActivityDetail({
 
 /* ─── Sub-components ─── */
 
-function AttachmentsSection({ attachments }: { attachments: Activity['attachments'] }) {
+function AttachmentsSection({ attachments, isAdmin }: { attachments: Activity['attachments']; isAdmin: boolean }) {
   const isMdOrTxt = (mime: string, name: string) => {
     const ext = name.split('.').pop()?.toLowerCase();
     return mime === 'text/markdown' || mime === 'text/plain' || ext === 'md' || ext === 'txt';
@@ -215,8 +215,11 @@ function AttachmentsSection({ attachments }: { attachments: Activity['attachment
       ? `/api/upload/download?url=${encodeURIComponent(filePath)}&download=1`
       : `/api/upload/${filePath.replace('uploads/', '')}?download=1`;
 
+  /* Por rol: el layout de /admin comprueba el rol y echaba al login al
+     estudiante que intentaba previsualizar el material de su propia clase. */
   const getViewerUrl = (att: Activity['attachments'][0]) =>
-    `/admin/viewer?url=${encodeURIComponent(att.filePath)}&name=${encodeURIComponent(att.fileName)}`;
+    `/${isAdmin ? 'admin' : 'student'}/viewer`
+    + `?url=${encodeURIComponent(att.filePath)}&name=${encodeURIComponent(att.fileName)}`;
 
   return (
     <Card padding="lg">

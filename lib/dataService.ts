@@ -46,7 +46,8 @@ import {
   // Writes (replace-all)
   supabaseReplaceUsers, supabaseReplaceSessions, supabaseReplaceSemesters,
   supabaseReplaceCourses, supabaseReplaceEnrollments, supabaseReplaceActivities,
-  supabaseReplaceSubmissions, supabaseReplaceGrades, supabaseReplaceCortes,
+  supabaseReplaceSubmissions, supabaseUpdateSubmission,
+  supabaseReplaceGrades, supabaseReplaceCortes,
   supabaseReplacePrompts, supabaseReplaceProjects, supabaseReplaceQuizzes,
   supabaseReplaceQuizAttempts, supabaseReplaceQuizSimulations,
   supabaseInsertQuizAttempt, supabaseInsertQuizSimulation,
@@ -288,6 +289,15 @@ export function readSubmissions(): Submission[] {
 
 export async function readSubmissionsFresh(): Promise<Submission[]> {
   return supabaseReadSubmissions();
+}
+
+/**
+ * Cambia una entrega sin tocar las demás. Es lo que debe usar todo lo que
+ * modifica UNA entrega: reescribir la tabla entera mientras un estudiante
+ * entrega se lleva esa entrega por delante.
+ */
+export async function patchSubmission(id: string, patch: Partial<Submission>): Promise<void> {
+  await supabaseUpdateSubmission(id, patch);
 }
 
 export async function writeSubmissions(submissions: Submission[]): Promise<void> {

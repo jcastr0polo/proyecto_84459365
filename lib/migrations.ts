@@ -76,6 +76,21 @@ export const MIGRATIONS: Migration[] = [
       { table: 'cortes', column: 'reported_at' },
     ],
   },
+  {
+    id: '2026-09-devolucion-docente',
+    title: 'Documentos de devolución',
+    why:
+      'Permite adjuntar documentos a una entrega para devolvérselos al estudiante: '
+      + 'su mismo trabajo corregido, un plan anotado, una rúbrica llena. El estudiante '
+      + 'los ve en su entrega en cuanto los subes, sin esperar a que publiques la nota. '
+      + 'Nace vacía: ninguna entrega existente cambia.',
+    statements: [
+      'ALTER TABLE submissions ADD COLUMN IF NOT EXISTS feedback_attachments JSONB',
+    ],
+    requires: [
+      { table: 'submissions', column: 'feedback_attachments' },
+    ],
+  },
 ];
 
 export function findMigration(id: string): Migration | undefined {

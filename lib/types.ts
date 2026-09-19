@@ -410,6 +410,17 @@ export interface Submission {
   courseId: string;               // FK a Course.id (denormalizado)
   content?: string;              // Texto/comentario del estudiante
   attachments: SubmissionAttachment[];
+  /**
+   * Lo que el docente devuelve sobre esta entrega: el mismo documento
+   * corregido, una rúbrica llena, un plan anotado.
+   *
+   * Vive en la entrega y no en la nota a propósito. Devolver el trabajo
+   * enriquecido es parte de revisarlo, y pasa antes —y a veces en vez— de
+   * poner un número: si colgara de Grade, el estudiante no podría verlo hasta
+   * que se publicara la nota, que es justo lo contrario de lo que sirve para
+   * que corrija y vuelva a entregar.
+   */
+  feedbackAttachments?: SubmissionAttachment[];
   links: SubmissionLink[];
   submittedAt: string;           // ISO 8601
   isLate: boolean;               // submittedAt > activity.dueDate
