@@ -7,10 +7,11 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import Chip from '@/components/ui/Chip';
 import Button from '@/components/ui/Button';
 import IconButton from '@/components/ui/IconButton';
-import { Rocket, Star, Eye, EyeOff, Ban, Image as ImageIcon, FileText, Download } from 'lucide-react';
+import { Rocket, Star, Eye, EyeOff, Ban, Image as ImageIcon, FileText, Download, Archive } from 'lucide-react';
 import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
+import { toneBox } from '@/lib/semantics';
 import type { StudentProject, Course } from '@/lib/types';
 import BackLink from '@/components/ui/BackLink';
 
@@ -27,6 +28,7 @@ export default function AdminCourseProjectsPage() {
 
   const [projects, setProjects] = useState<EnrichedProject[]>([]);
   const [course, setCourse] = useState<Course | null>(null);
+  const [semestreActivo, setSemestreActivo] = useState<{ id: string; label: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
@@ -44,6 +46,16 @@ export default function AdminCourseProjectsPage() {
       if (courseRes.ok) {
         const data = await courseRes.json();
         setCourse(data.course ?? null);
+      }
+
+      /* La vitrina pública solo enseña el semestre en curso, así que en un
+         curso cerrado el interruptor "Público" no hace nada visible. Se avisa
+         donde se pulsa, en vez de dejar que parezca que no funciona. */
+      const semRes = await fetch('/api/semesters');
+      if (semRes.ok) {
+        const data = await semRes.json();
+        const activo = (data.semesters ?? []).find((x: { isActive: boolean }) => x.isActive);
+        setSemestreActivo(activo ? { id: activo.id, label: activo.label } : null);
       }
     } catch {
       toast('Error al cargar proyectos', 'error');
@@ -230,6 +242,18 @@ export default function AdminCourseProjectsPage() {
           <StatPill label="Públicos" value={projects.filter((p) => p.isPublic).length} color="text-emerald-400" />
         </div>
       </div>
+
+      {course && semestreActivo && course.semesterId !== semestreActivo.id && (
+        <div className={`rounded-xl border p-4 flex items-start gap-2.5 ${toneBox.lifecycle}`}>
+          <Archive className="w-4 h-4 text-subtle shrink-0 mt-0.5" aria-hidden="true" />
+          <p className="text-xs text-subtle max-w-prose">
+            Este curso es de un semestre cerrado. La vitrina pública solo enseña{' '}
+            <span className="text-foreground/80">{semestreActivo.label}</span>, así que marcar un
+            proyecto como público aquí no lo hace aparecer ahí. Los proyectos siguen guardados y los
+            ves en esta pantalla.
+          </p>
+        </div>
+      )}
 
       {/* ─── Projects Grid ─── */}
       {projects.length === 0 ? (

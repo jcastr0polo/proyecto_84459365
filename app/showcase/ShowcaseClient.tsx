@@ -17,18 +17,13 @@ export interface ShowcaseProject {
   studentName: string;
   courseName: string;
   courseId: string;
-  semesterId: string;
-  semesterLabel: string;
 }
 
-export interface ShowcaseSemester { id: string; label: string; count: number }
-
 interface ShowcaseClientProps {
+  /** Solo los del semestre en curso: la API ya no manda otros. */
   projects: ShowcaseProject[];
-  /** Semestres que tienen proyectos, del más nuevo al más viejo. */
-  semesters: ShowcaseSemester[];
-  /** El semestre en curso, tenga proyectos o no. */
-  activeSemester: { id: string; label: string } | null;
+  /** Etiqueta del semestre en curso. null si no hay ninguno activo. */
+  semesterLabel: string | null;
   courses: { id: string; name: string }[];
 }
 
@@ -55,41 +50,13 @@ const cardVariants = {
  * Fase 19 — Public showcase with framer-motion stagger
  */
 export default function ShowcaseClient({
-  projects, semesters, activeSemester, courses,
+  projects, semesterLabel, courses,
 }: ShowcaseClientProps) {
-  /* Se abre en el semestre más reciente que TENGA proyectos. El día que se
-     publique el primero del semestre en curso, pasa a ser ese sin tocar nada;
-     mientras tanto no se enseña una página vacía, pero tampoco se hace pasar
-     el trabajo del semestre pasado por el de este. */
-  const [semesterFilter, setSemesterFilter] = useState(semesters[0]?.id ?? 'all');
   const [courseFilter, setCourseFilter] = useState('all');
 
-  const porSemestre = useMemo(
-    () => (semesterFilter === 'all' ? projects : projects.filter((p) => p.semesterId === semesterFilter)),
-    [projects, semesterFilter],
-  );
-
-  /* Los cursos del semestre que se está viendo: filtrar por un curso que no
-     tiene proyectos en ese semestre deja la rejilla vacía sin explicación. */
-  const cursosVisibles = useMemo(() => {
-    const ids = new Set(porSemestre.map((p) => p.courseId));
-    return courses.filter((c) => ids.has(c.id));
-  }, [courses, porSemestre]);
-
-  const filtered = useMemo(() => {
-    if (courseFilter === 'all') return porSemestre;
-    return porSemestre.filter((p) => p.courseId === courseFilter);
-  }, [porSemestre, courseFilter]);
-
-  /* Si se cambia de semestre y el curso elegido no existe ahí, el filtro de
-     curso se cae solo en vez de dejar cero resultados. */
-  const cursoValido = courseFilter === 'all' || cursosVisibles.some((c) => c.id === courseFilter);
-  const cursoEfectivo = cursoValido ? courseFilter : 'all';
-  const visibles = cursoEfectivo === 'all' ? porSemestre : filtered;
-
-  const verSemestre = semesters.find((s) => s.id === semesterFilter);
-  const elActivoEstaVacio = Boolean(
-    activeSemester && !semesters.some((s) => s.id === activeSemester.id),
+  const visibles = useMemo(
+    () => (courseFilter === 'all' ? projects : projects.filter((p) => p.courseId === courseFilter)),
+    [projects, courseFilter],
   );
 
   return (
@@ -123,77 +90,47 @@ export default function ShowcaseClient({
               </span>
             </h1>
             <p className="text-subtle mt-4 max-w-xl mx-auto leading-relaxed">
-              {semesterFilter === 'all' ? (
-                <>Proyectos fullstack construidos por estudiantes con Next.js, TypeScript y asistentes de IA.</>
-              ) : (
-                <>
-                  Proyectos fullstack construidos por estudiantes en{' '}
-                  <span className="text-muted">{verSemestre?.label}</span>, con Next.js, TypeScript y
-                  asistentes de IA.
-                </>
-              )}
+              Proyectos fullstack construidos por estudiantes
+              {semesterLabel && <> en <span className="text-muted">{semesterLabel}</span></>}, con
+              Next.js, TypeScript y asistentes de IA.
             </p>
 
-            {/* Que el semestre en curso no tenga nada publicado todavía se dice,
-                en vez de dejar creer que lo de abajo es de ahora. */}
-            {elActivoEstaVacio && (
-              <p className="text-meta text-faint mt-3">
-                {activeSemester?.label} aún no tiene proyectos publicados.
-              </p>
-            )}
-
-            {/* Stats */}
+            {/* Cifras y filtros solo si hay algo que contar y que filtrar:
+                tres ceros y un "Todos (0)" no informan de nada y hacen que la
+                página vacía parezca rota en vez de recién empezada. */}
+            {projects.length > 0 && (
             <div className="flex items-center justify-center gap-8 mt-8">
-              <Stat value={porSemestre.length} label="Proyectos" />
+              <Stat value={projects.length} label="Proyectos" />
               <div className="w-px h-8 bg-foreground/[0.08]" />
-              <Stat value={cursosVisibles.length} label="Cursos" />
+              <Stat value={courses.length} label="Cursos" />
               <div className="w-px h-8 bg-foreground/[0.08]" />
-              <Stat value={new Set(porSemestre.map((p) => p.studentName)).size} label="Estudiantes" />
+              <Stat value={new Set(projects.map((p) => p.studentName)).size} label="Estudiantes" />
             </div>
+            )}
           </motion.div>
         </div>
       </div>
 
       {/* ─── Filters ─── */}
+      {projects.length > 0 && (
       <div className="max-w-7xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="space-y-3 mb-10"
+          className="flex items-center justify-center gap-2 flex-wrap mb-10"
         >
-          {/* El semestre primero: manda sobre el curso, y los cursos cambian
-              según cuál se elija. Solo aparece si de verdad hay más de uno. */}
-          {semesters.length > 1 && (
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-              {semesters.map((sem) => (
-                <Chip key={sem.id} active={semesterFilter === sem.id}
-                  onClick={() => { setSemesterFilter(sem.id); setCourseFilter('all'); }}>
-                  {sem.label} ({sem.count})
-                </Chip>
-              ))}
-              <Chip active={semesterFilter === 'all'}
-                onClick={() => { setSemesterFilter('all'); setCourseFilter('all'); }} tone="neutral">
-                Todos los semestres ({projects.length})
-              </Chip>
-            </div>
-          )}
-
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            <Chip active={cursoEfectivo === 'all'} onClick={() => setCourseFilter('all')}>
-              Todos ({porSemestre.length})
+          <Chip active={courseFilter === 'all'} onClick={() => setCourseFilter('all')}>
+            Todos ({projects.length})
+          </Chip>
+          {courses.map((c) => (
+            <Chip key={c.id} active={courseFilter === c.id} onClick={() => setCourseFilter(c.id)}>
+              {c.name} ({projects.filter((p) => p.courseId === c.id).length})
             </Chip>
-            {cursosVisibles.map((c) => {
-              const count = porSemestre.filter((p) => p.courseId === c.id).length;
-              return (
-                <Chip key={c.id} active={cursoEfectivo === c.id} onClick={() => setCourseFilter(c.id)}>
-                  {c.name} ({count})
-                </Chip>
-              );
-            })}
-          </div>
+          ))}
         </motion.div>
       </div>
+      )}
 
       {/* ─── Projects Grid ─── */}
       <div className="max-w-7xl mx-auto px-6 pb-20">
@@ -203,9 +140,20 @@ export default function ShowcaseClient({
             animate={{ opacity: 1 }}
             className="text-center py-20"
           >
-            <Rocket className="w-10 h-10 text-faint mx-auto mb-4" />
-            <p className="text-subtle text-sm">No hay proyectos destacados aún</p>
-            <p className="text-faint text-xs mt-1">Los proyectos aparecerán aquí cuando el docente los destaque</p>
+            {/* Al empezar un semestre esto es lo normal, no un fallo: la
+                vitrina solo enseña el semestre en curso. Se dice de cuál se
+                está hablando para que nadie piense que la página se rompió. */}
+            <Rocket className="w-10 h-10 text-faint mx-auto mb-4" aria-hidden="true" />
+            <p className="text-subtle text-sm">
+              {courseFilter === 'all'
+                ? <>Todavía no hay proyectos publicados{semesterLabel ? <> en {semesterLabel}</> : ''}.</>
+                : <>Ese curso todavía no tiene proyectos publicados.</>}
+            </p>
+            <p className="text-faint text-xs mt-1">
+              {courseFilter === 'all'
+                ? 'Aparecerán aquí cuando los estudiantes los publiquen y el docente los apruebe.'
+                : 'Prueba con otro curso.'}
+            </p>
           </motion.div>
         ) : (
           <motion.div
