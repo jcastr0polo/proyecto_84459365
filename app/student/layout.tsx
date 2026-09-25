@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
 import { Skeleton, SkeletonCards, SkeletonList } from '@/components/ui/Skeleton';
-import { Home, BookOpen, User, Lock, LogOut, Menu, X, ChevronDown, ChevronRight, Cpu } from 'lucide-react';
+import { Home, BookOpen, User, Lock, LogOut, Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import ThumbNav from '@/components/ui/ThumbNav';
 import { useHideOnScroll } from '@/lib/useHideOnScroll';
+import NexusMark from '@/components/ui/NexusMark';
 
 interface UserInfo {
   firstName: string;
@@ -75,9 +76,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     return (
       <div className="min-h-screen bg-canvas" role="status" aria-label="Cargando">
         <div className="h-16 border-b border-surface-border flex items-center gap-3 px-4 sm:px-6">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shrink-0">
-            <Cpu className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-          </div>
+          <NexusMark size="sm" decorative />
           <Skeleton className="h-4 w-32" />
         </div>
         <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-4">
@@ -121,9 +120,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
               {/* Left: Logo + Nav */}
               <div className="flex items-center gap-8">
                 <Link href="/student" className="flex items-center gap-2.5 shrink-0">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
-                    <Cpu className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                  </div>
+                  <NexusMark size="xs" decorative />
                   <span className="text-sm font-bold text-foreground tracking-tight hidden sm:block">
                     NEXUS
                   </span>

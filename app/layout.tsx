@@ -18,15 +18,44 @@ const poppins = Poppins({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0d1117",
+  /* Uno por tema: con un solo color oscuro, la barra del navegador en móvil se
+     quedaba negra sobre una página clara. */
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1117" },
+  ],
 };
 
+/* Sin metadataBase, una imagen de previsualización declarada con ruta relativa
+   revienta la compilación; y aunque no lo hiciera, quien pegue el enlace no
+   vería nada porque la URL llegaría a medias. */
+const SITIO = process.env.NEXT_PUBLIC_SITE_URL ?? "https://proyecto-84459365.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITIO),
   title: {
     default: "NEXUS — Plataforma Académica",
     template: "%s | NEXUS",
   },
-  description: "Plataforma de gestión académica universitaria potenciada por IA. Fullstack TypeScript + Next.js + React 19.",
+  description:
+    "Actividades, entregas, parciales y notas de tus cursos, en un solo sitio. Construida con Next.js, TypeScript y Supabase.",
+  applicationName: "NEXUS",
+  /* Añadido a la pantalla de inicio de iOS se abre como aplicación, sin la
+     barra de Safari comiéndose el alto. */
+  appleWebApp: { capable: true, title: "NEXUS", statusBarStyle: "black-translucent" },
+  openGraph: {
+    type: "website",
+    siteName: "NEXUS",
+    locale: "es_CO",
+    title: "NEXUS — Plataforma Académica",
+    description: "Actividades, entregas, parciales y notas de tus cursos, en un solo sitio.",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "NEXUS — Plataforma Académica",
+    description: "Actividades, entregas, parciales y notas de tus cursos, en un solo sitio.",
+  },
 };
 
 export default function RootLayout({

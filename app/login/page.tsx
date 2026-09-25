@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Cpu, Eye, EyeOff, ArrowRight, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
+import NexusMark from '@/components/ui/NexusMark';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -65,9 +66,7 @@ export default function LoginPage() {
         <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.03] backdrop-blur-xl p-8">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 mb-5 shadow-lg shadow-cyan-500/20">
-              <Cpu className="w-7 h-7 text-white" strokeWidth={2} />
-            </div>
+            <NexusMark size="lg" className="mb-5 shadow-lg shadow-cyan-500/20" decorative />
             <h1 className="text-2xl font-bold text-foreground tracking-tight" style={{ fontFamily: 'var(--font-playfair)' }}>
               NEXUS
             </h1>

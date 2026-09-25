@@ -7,6 +7,7 @@ import AnimatedText from '@/components/AnimatedText';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import ChatWidget from '@/components/ChatWidget';
 import type { Course } from '@/lib/types';
+import NexusMark from '@/components/ui/NexusMark';
 import {
   ArrowRight,
   ExternalLink,
@@ -18,7 +19,6 @@ import {
   BookOpen,
   Users,
   GitBranch,
-  Cpu,
   Database,
   Palette,
   BarChart3,
@@ -92,9 +92,7 @@ export default function LandingClient({ hero, semesterLabel, courses }: LandingP
       <nav className="fixed top-0 inset-x-0 z-50 border-b border-foreground/[0.06] bg-canvas/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group min-h-11 pr-2 rounded-lg">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
-              <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
-            </div>
+            <NexusMark size="sm" decorative />
             <span className="text-sm font-bold text-foreground tracking-tight hidden sm:block">
               NEXUS
             </span>
@@ -378,9 +376,7 @@ export default function LandingClient({ hero, semesterLabel, courses }: LandingP
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
-                <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
-              </div>
+              <NexusMark size="sm" decorative />
               <div>
                 <p className="text-sm font-bold text-muted">NEXUS</p>
                 <p className="text-meta text-faint">Plataforma Académica{semesterLabel ? ` · ${semesterLabel}` : ''}</p>

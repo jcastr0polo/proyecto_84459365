@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
+import NexusMark from '@/components/ui/NexusMark';
 import {
   MessageCircle,
   X,
@@ -10,7 +11,6 @@ import {
   Paperclip,
   Download,
   Loader2,
-  Cpu,
   User,
 } from 'lucide-react';
 
@@ -219,9 +219,7 @@ export default function ChatWidget() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-foreground/[0.08] bg-foreground/[0.02]">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
-                  <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
-                </div>
+                <NexusMark size="sm" decorative />
                 <div>
                   <p className="text-sm font-semibold text-foreground">NEXUS Chat</p>
                   <p className="text-micro text-subtle">

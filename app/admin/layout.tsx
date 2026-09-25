@@ -6,10 +6,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
 import { Skeleton, SkeletonCards } from '@/components/ui/Skeleton';
 import ThumbNav from '@/components/ui/ThumbNav';
-import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, Cpu, ChevronRight, Shield } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, Sparkles, Settings, Lock, LogOut, Menu, ChevronRight, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import type { Semester } from '@/lib/types';
 import { useHideOnScroll } from '@/lib/useHideOnScroll';
+import NexusMark from '@/components/ui/NexusMark';
 
 interface UserInfo {
   firstName: string;
@@ -125,9 +126,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex h-screen bg-canvas overflow-hidden" role="status" aria-label="Cargando">
         <aside className="hidden lg:flex w-60 flex-col bg-canvas border-r border-surface-border">
           <div className="flex items-center gap-3 px-5 h-16 border-b border-surface-border shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
-              <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
-            </div>
+            <NexusMark size="sm" decorative />
             <span className="text-sm font-bold text-foreground tracking-tight">NEXUS</span>
           </div>
           <div className="flex-1 py-4 px-3 space-y-1">
@@ -183,9 +182,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         >
           {/* Logo */}
           <div className="flex items-center gap-3 px-5 h-16 border-b border-foreground/10 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center">
-              <Cpu className="w-4 h-4 text-white" strokeWidth={2.5} />
-            </div>
+            <NexusMark size="sm" decorative />
             <span className="text-sm font-bold text-foreground tracking-tight">
               NEXUS
             </span>
