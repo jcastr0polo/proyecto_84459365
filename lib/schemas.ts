@@ -343,9 +343,16 @@ export const urlHttpSchema = z.string()
  * submissionLinkSchema — Validación de enlace de entrega
  * RN-ENT-06: URLs de GitHub/Vercel para cursos de programación
  */
-/** Un punto de una lista de tareas. */
+/**
+ * Un punto de una lista de tareas.
+ *
+ * El id llega VACÍO en los puntos recién escritos: lo asigna el servidor al
+ * guardar, y los que ya existían lo conservan para no dejar huérfanas las
+ * marcas de la clase. Exigirlo aquí rechazaba toda lista nueva con un
+ * «Too small: expected string to have >=1 characters» que además no dice nada.
+ */
 export const checklistItemSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().default(''),
   text: z.string().min(1, 'El punto no puede estar vacío').max(200, 'Máximo 200 caracteres').trim(),
   requiresEvidence: z.boolean(),
 });

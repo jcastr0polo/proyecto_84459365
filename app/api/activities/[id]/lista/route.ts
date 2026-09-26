@@ -107,8 +107,14 @@ export async function PUT(request: Request, { params }: RouteParams): Promise<Ne
 
       const parsed = checklistSchema.safeParse(await request.json());
       if (!parsed.success) {
+        /* El mensaje crudo de Zod («Too small: expected string to have >=1
+           characters») no le dice nada a nadie. Se nombra el punto que falla. */
+        const fallo = parsed.error.issues[0];
+        const nPunto = typeof fallo?.path?.[1] === 'number' ? fallo.path[1] + 1 : null;
         return NextResponse.json(
-          { error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 });
+          { error: nPunto ? `Punto ${nPunto}: ${fallo.message}` : (fallo?.message ?? 'Datos inválidos') },
+          { status: 400 },
+        );
       }
 
       /* Los puntos que ya existían conservan su id: si se regenerara, todas
