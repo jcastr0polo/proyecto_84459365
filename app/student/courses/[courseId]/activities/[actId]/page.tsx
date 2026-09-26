@@ -105,15 +105,15 @@ export default function StudentActivityDetailPage() {
       {activity.type === 'checklist' && (
         <Link
           href={`/student/courses/${courseId}/activities/${actId}/lista`}
-          className="flex items-center justify-between gap-3 rounded-2xl border border-cyan-500/25
-                     bg-cyan-500/[0.06] px-5 py-4 transition-colors duration-[var(--dur-fast)]
+          className="flex items-center justify-between gap-3 rounded-2xl border border-cyan-500/40
+                     bg-cyan-500/[0.1] px-5 py-5 transition-colors duration-[var(--dur-fast)]
                      hover:bg-cyan-500/[0.1] active:scale-[0.99] motion-reduce:active:scale-100
                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
         >
           <span className="min-w-0">
-            <span className="block text-sm font-semibold text-foreground">Abrir mi lista</span>
-            <span className="block text-xs text-subtle mt-0.5">
-              Ve marcando lo que termines. Tu docente lo ve al momento.
+            <span className="block text-base font-semibold text-foreground">Abrir mi lista</span>
+            <span className="block text-sm text-subtle mt-0.5">
+              Aquí no se entrega nada: ve marcando lo que termines y tu docente lo ve al momento.
             </span>
           </span>
           <ListChecks className="w-5 h-5 text-cyan-500 shrink-0" aria-hidden="true" />
@@ -138,7 +138,11 @@ export default function StudentActivityDetailPage() {
             </Card>
           ) : undefined
         }
-        submissionSlot={
+        /* En una lista de tareas no hay nada que entregar: el bloque de
+           entrega les decía "Aún no has entregado" con un botón «Entregar»
+           que lleva a un formulario vacío, y grita más que el acceso a la
+           lista. Lo que hacen aquí es marcar, y eso ya está arriba. */
+        submissionSlot={activity.type === 'checklist' ? undefined : (
           <SubmissionStatus
             activity={activity}
             submission={submission}
@@ -147,7 +151,7 @@ export default function StudentActivityDetailPage() {
             actId={actId}
             today={today}
           />
-        }
+        )}
       />
     </div>
   );
