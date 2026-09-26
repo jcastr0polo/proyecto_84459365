@@ -42,6 +42,7 @@ const ACTIVITY_TYPES: { value: Activity['type']; label: string }[] = [
   { value: 'presentation', label: 'Presentación' },
   { value: 'prompt', label: 'Prompt IA' },
   { value: 'exam', label: 'Examen' },
+  { value: 'checklist', label: 'Lista de tareas (en vivo)' },
   { value: 'other', label: 'Otro' },
 ];
 

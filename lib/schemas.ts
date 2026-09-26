@@ -237,7 +237,7 @@ export const activitySchema = z.object({
   corteId: z.string().optional(),
   title: z.string().min(1),
   description: z.string(),
-  type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'other']),
+  type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'checklist', 'other']),
   category: z.enum(['individual', 'group']),
   attachments: z.array(activityAttachmentSchema),
   promptId: z.string().optional(),
@@ -264,7 +264,7 @@ export const activitySchema = z.object({
 export const createActivitySchema = z.object({
   title: z.string().min(1, 'El título es requerido').trim(),
   description: z.string().min(1, 'La descripción es requerida'),
-  type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'other']),
+  type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'checklist', 'other']),
   category: z.enum(['individual', 'group']),
   corteId: z.string().optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido'),
@@ -295,7 +295,7 @@ export const createActivitySchema = z.object({
 export const updateActivitySchema = z.object({
   title: z.string().min(1, 'El título es requerido').trim().optional(),
   description: z.string().optional(),
-  type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'other']).optional(),
+  type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'checklist', 'other']).optional(),
   category: z.enum(['individual', 'group']).optional(),
   corteId: z.string().nullable().optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido').optional(),
@@ -343,6 +343,28 @@ export const urlHttpSchema = z.string()
  * submissionLinkSchema — Validación de enlace de entrega
  * RN-ENT-06: URLs de GitHub/Vercel para cursos de programación
  */
+/** Un punto de una lista de tareas. */
+export const checklistItemSchema = z.object({
+  id: z.string().min(1),
+  text: z.string().min(1, 'El punto no puede estar vacío').max(200, 'Máximo 200 caracteres').trim(),
+  requiresEvidence: z.boolean(),
+});
+
+/** La lista entera, tal como la guarda el docente. */
+export const checklistSchema = z.object({
+  items: z.array(checklistItemSchema)
+    .max(40, 'Cuarenta puntos son demasiados para una clase'),
+});
+
+/** Marcar o desmarcar un punto. */
+export const tickSchema = z.object({
+  itemId: z.string().min(1),
+  done: z.boolean(),
+  evidenceUrl: urlHttpSchema.optional().or(z.literal('')),
+  evidenceName: z.string().max(200).optional(),
+  note: z.string().max(500).optional(),
+});
+
 export const submissionLinkSchema = z.object({
   type: z.enum(['github', 'vercel', 'figma', 'other']),
   url: z.string()

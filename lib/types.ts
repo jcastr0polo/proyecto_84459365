@@ -304,13 +304,47 @@ export interface ActivityAttachment {
  * RN-ACT-02: Estados draft → published → closed
  * RN-ACT-03: publishDate futuro → no visible hasta esa fecha
  */
+/**
+ * Un punto de una actividad de lista de tareas.
+ *
+ * El docente pone la lista, el estudiante va marcando. Nada de notas: el valor
+ * está en que la clase entera vea el avance mientras ocurre.
+ */
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  /** Si es true, marcarlo obliga a adjuntar una evidencia (enlace o archivo). */
+  requiresEvidence: boolean;
+}
+
+/**
+ * Lo que un estudiante marcó de una lista.
+ *
+ * Tabla aparte y no un JSONB dentro de la entrega: el tablero del docente lee
+ * esto cada pocos segundos durante la clase, y una fila estrecha por marca se
+ * consulta y se escribe sin tocar nada más. Además cada marca lleva su hora,
+ * que es lo que ordena el tablero.
+ */
+export interface ChecklistTick {
+  id: string;
+  activityId: string;
+  studentId: string;
+  courseId: string;
+  itemId: string;
+  doneAt: string;                      // ISO 8601
+  /** Evidencia opcional: un enlace, o un archivo subido al Blob. */
+  evidenceUrl?: string;
+  evidenceName?: string;
+  note?: string;
+}
+
 export interface Activity {
   id: string;                          // UUID
   courseId: string;                     // FK a Course.id
   corteId?: string;                    // FK a Corte.id (período de evaluación)
   title: string;                       // "Proyecto Fullstack - Fase 1"
   description: string;                 // Descripción detallada (Markdown)
-  type: 'project' | 'exercise' | 'document' | 'presentation' | 'prompt' | 'exam' | 'other';
+  type: 'project' | 'exercise' | 'document' | 'presentation' | 'prompt' | 'exam' | 'checklist' | 'other';
   category: 'individual' | 'group';
   attachments: ActivityAttachment[];   // Archivos adjuntos del docente
   promptId?: string;                   // FK a Prompt.id (si aplica)
@@ -326,6 +360,10 @@ export interface Activity {
   requiresFileUpload: boolean;         // ¿Requiere subir archivo?
   requiresLinkSubmission: boolean;     // ¿Requiere enviar enlace (GitHub/Vercel)?
   projectRequired?: boolean;           // Solo visible para estudiantes con proyecto registrado
+  /**
+   * Los puntos, cuando type === 'checklist'. Vacío o ausente en las demás.
+   */
+  checklist?: ChecklistItem[];
   createdAt: string;                   // ISO 8601
   updatedAt: string;                   // ISO 8601
 }

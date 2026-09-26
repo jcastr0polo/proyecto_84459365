@@ -17,6 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import { HomeDataSchema, AppConfigSchema } from './validators';
 import type {
+  ChecklistTick,
   HomeData, AppConfig, User, Session, Semester, Course, Enrollment, Activity,
   Submission, Grade, AIPrompt, StudentProject, Corte, Quiz, QuizAttempt,
   QuizSimulation, ManualGradeItem, ManualGrade,
@@ -47,6 +48,7 @@ import {
   supabaseReplaceUsers, supabaseReplaceSessions, supabaseReplaceSemesters,
   supabaseReplaceCourses, supabaseReplaceEnrollments, supabaseReplaceActivities,
   supabaseReplaceSubmissions, supabaseUpdateSubmission,
+  supabaseUpdateActivity, supabaseReadTicks, supabaseInsertTick, supabaseDeleteTick,
   supabaseReplaceGrades, supabaseReplaceCortes,
   supabaseReplacePrompts, supabaseReplaceProjects, supabaseUpdateProject,
   supabaseReplaceQuizzes,
@@ -297,6 +299,27 @@ export async function readSubmissionsFresh(): Promise<Submission[]> {
  * modifica UNA entrega: reescribir la tabla entera mientras un estudiante
  * entrega se lleva esa entrega por delante.
  */
+/** Cambia una actividad sin reescribir las demás. */
+export async function patchActivity(id: string, patch: Partial<Activity>): Promise<void> {
+  await supabaseUpdateActivity(id, patch);
+}
+
+// ────────────────────────────────────────────────────────────
+// Listas de tareas
+// ────────────────────────────────────────────────────────────
+
+export async function readTicks(activityId: string): Promise<ChecklistTick[]> {
+  return supabaseReadTicks(activityId);
+}
+
+export async function addTick(t: ChecklistTick): Promise<void> {
+  await supabaseInsertTick(t);
+}
+
+export async function removeTick(activityId: string, studentId: string, itemId: string): Promise<void> {
+  await supabaseDeleteTick(activityId, studentId, itemId);
+}
+
 export async function patchSubmission(id: string, patch: Partial<Submission>): Promise<void> {
   await supabaseUpdateSubmission(id, patch);
 }

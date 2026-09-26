@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -13,6 +14,7 @@ import type { ActivityFormData } from '@/components/activities/ActivityForm';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Activity, Course, ActivityAttachment, Submission, EnrollmentWithStudent } from '@/lib/types';
 import BackLink from '@/components/ui/BackLink';
+import { Radio } from 'lucide-react';
 
 /**
  * Admin — Activity Detail Page
@@ -202,6 +204,26 @@ export default function AdminActivityDetailPage() {
         <p className="text-xs text-subtle">
           {course.name} · <span className="font-mono">{course.code}</span>
         </p>
+      )}
+
+      {/* Una lista de tareas no se califica ni se entrega: se mira avanzar.
+          Por eso su acceso va arriba y aparte de las acciones de siempre. */}
+      {activity.type === 'checklist' && (
+        <Link
+          href={`/admin/courses/${courseId}/activities/${actId}/tablero`}
+          className="flex items-center justify-between gap-3 rounded-2xl border border-cyan-500/25
+                     bg-cyan-500/[0.06] px-5 py-4 transition-colors duration-[var(--dur-fast)]
+                     hover:bg-cyan-500/[0.1] focus-visible:outline-none focus-visible:ring-2
+                     focus-visible:ring-cyan-500/40"
+        >
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold text-foreground">Tablero en vivo</span>
+            <span className="block text-xs text-subtle mt-0.5">
+              El avance de todo el curso, actualizándose solo. Para proyectar en clase.
+            </span>
+          </span>
+          <Radio className="w-5 h-5 text-cyan-500 shrink-0" aria-hidden="true" />
+        </Link>
       )}
 
       <ActivityDetail

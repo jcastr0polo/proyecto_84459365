@@ -21,7 +21,9 @@ import type {
   User, Session, Semester, Course, Enrollment, Activity, Submission, Grade,
   Corte, AIPrompt, StudentProject, Quiz, QuizAttempt, QuizSimulation,
   ManualGradeItem, ManualGrade, AppConfig, HomeData,
-  ActivityAttachment, SubmissionAttachment, SubmissionLink, CourseSchedule,
+  ActivityAttachment,
+  ChecklistItem,
+  ChecklistTick, SubmissionAttachment, SubmissionLink, CourseSchedule,
   QuizQuestion, QuizAnswer, CorteTemplateItem,
 } from '@/lib/types';
 import type { AuditEntry } from '@/lib/auditService';
@@ -532,6 +534,8 @@ interface SupabaseActivityRow {
   requires_file_upload: boolean;
   requires_link_submission: boolean;
   project_required: boolean | null;
+  /* Llega con su migración; en filas anteriores viene null. */
+  checklist?: ChecklistItem[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -553,6 +557,7 @@ function rowToActivity(r: SupabaseActivityRow): Activity {
     requiresFileUpload: r.requires_file_upload,
     requiresLinkSubmission: r.requires_link_submission,
     projectRequired: r.project_required ?? undefined,
+    ...(r.checklist?.length ? { checklist: r.checklist } : {}),
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -574,6 +579,7 @@ function activityToRow(a: Activity): Record<string, unknown> {
     requires_file_upload: a.requiresFileUpload,
     requires_link_submission: a.requiresLinkSubmission,
     project_required: a.projectRequired ?? null,
+    checklist: a.checklist ?? null,
     created_at: a.createdAt, updated_at: a.updatedAt,
   };
 }
@@ -588,8 +594,115 @@ export async function supabaseGetActivityById(id: string): Promise<Activity | nu
   return row ? rowToActivity(row) : null;
 }
 
+/** Cambia UNA actividad sin reescribir las demás. */
+export async function supabaseUpdateActivity(
+  id: string,
+  patch: Partial<Activity>,
+): Promise<void> {
+  const sb = requireSupabaseClient();
+  const fila: Record<string, unknown> = { updated_at: nowColombiaISO() };
+  if (patch.checklist !== undefined) fila.checklist = patch.checklist;
+  const { error } = await sb.from('activities').update(fila).eq('id', id);
+  if (!error) return;
+  if (faltaColumna(error, 'checklist')) {
+    throw new Error(
+      'Falta la columna activities.checklist. Aplica la migración '
+      + '"2026-09-actividad-lista" en Configuración › Base de datos.',
+    );
+  }
+  throw new Error(`[supabase] update activities ${id}: ${error.message}`);
+}
+
 export async function supabaseReplaceActivities(items: Activity[]): Promise<void> {
-  await replaceAllRows('activities', items.map(activityToRow));
+  const filas = items.map(activityToRow);
+  try {
+    await replaceAllRows('activities', filas);
+  } catch (e) {
+    if (!faltaColumna(e, 'checklist')) throw e;
+    console.warn(
+      '[supabase] falta la columna activities.checklist. Aplica la migración '
+      + '"2026-09-actividad-lista" en Configuración › Base de datos.',
+    );
+    await replaceAllRows('activities', filas.map((f) => {
+      const sin = { ...f }; delete sin.checklist; return sin;
+    }));
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// MARCAS DE LISTA DE TAREAS
+// ════════════════════════════════════════════════════════════════
+
+interface SupabaseTickRow {
+  id: string;
+  activity_id: string;
+  student_id: string;
+  course_id: string;
+  item_id: string;
+  done_at: string;
+  evidence_url: string | null;
+  evidence_name: string | null;
+  note: string | null;
+}
+
+function rowToTick(r: SupabaseTickRow): ChecklistTick {
+  return {
+    id: r.id, activityId: r.activity_id, studentId: r.student_id,
+    courseId: r.course_id, itemId: r.item_id,
+    doneAt: typeof r.done_at === 'string' ? r.done_at : new Date(r.done_at).toISOString(),
+    evidenceUrl: r.evidence_url ?? undefined,
+    evidenceName: r.evidence_name ?? undefined,
+    note: r.note ?? undefined,
+  };
+}
+
+/**
+ * Las marcas de una actividad. Es la consulta del tablero, que se repite cada
+ * pocos segundos con la clase entera mirando: filtrada en la base y no en
+ * memoria, y con su índice.
+ */
+export async function supabaseReadTicks(activityId: string): Promise<ChecklistTick[]> {
+  const sb = requireSupabaseClient();
+  const { data, error } = await sb.from('checklist_ticks')
+    .select('*').eq('activity_id', activityId).order('done_at', { ascending: false });
+  if (error) {
+    if (/checklist_ticks/.test(error.message)) {
+      throw new Error(
+        'Falta la tabla checklist_ticks. Aplica la migración "2026-09-actividad-lista" '
+        + 'en Configuración › Base de datos.',
+      );
+    }
+    throw new Error(`[supabase] leer marcas: ${error.message}`);
+  }
+  return (data ?? []).map(rowToTick);
+}
+
+/**
+ * Marca un punto. Si ya estaba marcado no pasa nada: el índice único lo impide
+ * y el conflicto se ignora, que es exactamente lo que debe ocurrir cuando un
+ * móvil lento manda el mismo toque dos veces.
+ */
+export async function supabaseInsertTick(t: ChecklistTick): Promise<void> {
+  const sb = requireSupabaseClient();
+  const { error } = await sb.from('checklist_ticks')
+    .upsert({
+      id: t.id, activity_id: t.activityId, student_id: t.studentId,
+      course_id: t.courseId, item_id: t.itemId, done_at: t.doneAt,
+      evidence_url: t.evidenceUrl ?? null,
+      evidence_name: t.evidenceName ?? null,
+      note: t.note ?? null,
+    }, { onConflict: 'activity_id,student_id,item_id', ignoreDuplicates: true });
+  if (error) throw new Error(`[supabase] marcar: ${error.message}`);
+}
+
+/** Desmarca: borra la fila de ese estudiante para ese punto. */
+export async function supabaseDeleteTick(
+  activityId: string, studentId: string, itemId: string,
+): Promise<void> {
+  const sb = requireSupabaseClient();
+  const { error } = await sb.from('checklist_ticks').delete()
+    .eq('activity_id', activityId).eq('student_id', studentId).eq('item_id', itemId);
+  if (error) throw new Error(`[supabase] desmarcar: ${error.message}`);
 }
 
 // ════════════════════════════════════════════════════════════════

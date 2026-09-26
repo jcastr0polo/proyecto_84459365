@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import Card from '@/components/ui/Card';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
@@ -13,6 +14,7 @@ import PromptViewer from '@/components/prompts/PromptViewer';
 import type { Activity, Submission, AIPrompt } from '@/lib/types';
 import { parseDateTimeColombia } from '@/lib/dateUtils';
 import BackLink from '@/components/ui/BackLink';
+import { ListChecks } from 'lucide-react';
 
 /**
  * Student — Activity Detail Page
@@ -99,6 +101,24 @@ export default function StudentActivityDetailPage() {
     <div className="space-y-6 max-w-3xl mx-auto">
       {/* Back link */}
       <BackLink href={`/student/courses/${courseId}/activities`}>Volver a actividades</BackLink>
+
+      {activity.type === 'checklist' && (
+        <Link
+          href={`/student/courses/${courseId}/activities/${actId}/lista`}
+          className="flex items-center justify-between gap-3 rounded-2xl border border-cyan-500/25
+                     bg-cyan-500/[0.06] px-5 py-4 transition-colors duration-[var(--dur-fast)]
+                     hover:bg-cyan-500/[0.1] active:scale-[0.99] motion-reduce:active:scale-100
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40"
+        >
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold text-foreground">Abrir mi lista</span>
+            <span className="block text-xs text-subtle mt-0.5">
+              Ve marcando lo que termines. Tu docente lo ve al momento.
+            </span>
+          </span>
+          <ListChecks className="w-5 h-5 text-cyan-500 shrink-0" aria-hidden="true" />
+        </Link>
+      )}
 
       <ActivityDetail
         activity={activity}

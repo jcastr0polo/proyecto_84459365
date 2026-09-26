@@ -19,6 +19,7 @@ const TYPE_LABELS: Record<Activity['type'], string> = {
   presentation: 'Presentación',
   prompt: 'Prompt IA',
   exam: 'Examen',
+  checklist: 'Lista de tareas',
   other: 'Otro',
 };
 
@@ -30,6 +31,7 @@ const TYPE_VARIANTS: Record<Activity['type'], 'info' | 'success' | 'warning' | '
   presentation: 'design',
   prompt: 'management',
   exam: 'danger',
+  checklist: 'success',
   other: 'neutral',
 };
 

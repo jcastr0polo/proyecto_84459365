@@ -186,6 +186,16 @@
   --text-base--line-height: 1.6;
 }
 
+/* Superficie OPACA, con el mismo aspecto que bg-surface.
+   En oscuro, --surface-bg es un 3% de blanco: precioso quieto sobre la página,
+   y un desastre cuando dos tarjetas se cruzan al animarse, porque se ven una a
+   través de la otra y el texto se solapa. Esto pinta el fondo de la página
+   debajo del mismo tinte: se ve idéntico y no deja pasar nada. */
+@utility bg-surface-opaque {
+  background-color: var(--base-bg);
+  background-image: linear-gradient(var(--surface-bg), var(--surface-bg));
+}
+
 @utility type-page {
   font-size: 1.5rem; line-height: 1.2; font-weight: 700;
 }

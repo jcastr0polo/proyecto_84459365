@@ -91,6 +91,42 @@ export const MIGRATIONS: Migration[] = [
       { table: 'submissions', column: 'feedback_attachments' },
     ],
   },
+  {
+    id: '2026-09-actividad-lista',
+    title: 'Actividades de lista de tareas',
+    why:
+      'Habilita un tipo de actividad nuevo: tú pones una lista de puntos y los '
+      + 'estudiantes van marcando lo que hacen, con evidencia o sin ella. Tú ves el '
+      + 'avance de todo el curso en una pantalla, en vivo, para proyectarla en clase. '
+      + 'No pone notas: si al final quieres darle un valor apreciativo, se hace con un '
+      + 'ítem de nota manual como cualquier otro. Nada existente cambia.',
+    statements: [
+      'ALTER TABLE activities ADD COLUMN IF NOT EXISTS checklist JSONB',
+      `CREATE TABLE IF NOT EXISTS checklist_ticks (
+         id           TEXT PRIMARY KEY,
+         activity_id  TEXT NOT NULL,
+         student_id   TEXT NOT NULL,
+         course_id    TEXT NOT NULL,
+         item_id      TEXT NOT NULL,
+         done_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+         evidence_url  TEXT,
+         evidence_name TEXT,
+         note          TEXT
+       )`,
+      /* Un estudiante marca un punto una vez. Sin esto, dos toques seguidos en
+         un móvil lento dejan la misma marca dos veces y el avance pasa del
+         100%. Con el índice, el segundo INSERT choca y se ignora. */
+      `CREATE UNIQUE INDEX IF NOT EXISTS checklist_ticks_unicos
+         ON checklist_ticks (activity_id, student_id, item_id)`,
+      /* El tablero pregunta siempre "las marcas de esta actividad, por hora". */
+      `CREATE INDEX IF NOT EXISTS checklist_ticks_por_actividad
+         ON checklist_ticks (activity_id, done_at DESC)`,
+    ],
+    requires: [
+      { table: 'activities', column: 'checklist' },
+      { table: 'checklist_ticks', column: 'item_id' },
+    ],
+  },
 ];
 
 export function findMigration(id: string): Migration | undefined {
