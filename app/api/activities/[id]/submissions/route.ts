@@ -125,6 +125,16 @@ export async function POST(
         return NextResponse.json({ error: 'Actividad no encontrada' }, { status: 404 });
       }
 
+      /* En una lista de tareas no se entrega: se marca. Aceptar una entrega
+         aquí crea una que nadie va a revisar y le hace creer al estudiante
+         que ya cumplió sin haber marcado nada. */
+      if (activity.type === 'checklist') {
+        return NextResponse.json(
+          { error: 'Esta actividad no se entrega: ábrela y ve marcando los puntos de la lista.' },
+          { status: 400 },
+        );
+      }
+
       // Parse FormData
       const formData = await request.formData();
       const dataField = formData.get('data');

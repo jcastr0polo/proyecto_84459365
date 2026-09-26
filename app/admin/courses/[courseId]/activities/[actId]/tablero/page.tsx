@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Radio, Pencil, Maximize2 } from 'lucide-react';
 import BackLink from '@/components/ui/BackLink';
@@ -29,6 +29,7 @@ const CADA_MS = 3000;
  */
 export default function TableroPage() {
   const { courseId, actId } = useParams<{ courseId: string; actId: string }>();
+  const router = useRouter();
   const { toast } = useToast();
 
   const [cargando, setCargando] = useState(true);
@@ -149,8 +150,10 @@ export default function TableroPage() {
             <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
             {editando ? 'Cerrar' : 'Editar lista'}
           </Button>
-          <Button variant="secondary" size="sm"
-            onClick={() => document.documentElement.requestFullscreen?.().catch(() => {})}>
+          {/* Lleva a la pantalla de proyección, que vive fuera de /admin y no
+              arrastra barra lateral ni menús. Pantalla completa a secas solo
+              maximizaba la ventana con todo el cromo dentro. */}
+          <Button variant="primary" size="sm" onClick={() => router.push(`/tablero/${actId}`)}>
             <Maximize2 className="w-3.5 h-3.5" aria-hidden="true" /> Proyectar
           </Button>
         </div>

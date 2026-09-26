@@ -41,6 +41,13 @@ export default function StudentSubmitPage() {
 
       if (actRes.ok) {
         const data = await actRes.json();
+        /* Una lista no se entrega. Quien llegue aquí por un enlace viejo o
+           por el historial va a su lista, en vez de encontrarse un formulario
+           que no le sirve y que el servidor va a rechazar. */
+        if (data.activity?.type === 'checklist') {
+          router.replace(`/student/courses/${courseId}/activities/${actId}/lista`);
+          return;
+        }
         setActivity(data.activity);
       } else {
         toast('Actividad no disponible', 'error');

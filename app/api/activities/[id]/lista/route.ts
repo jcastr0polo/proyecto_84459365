@@ -13,7 +13,7 @@ import { withAuth } from '@/lib/withAuth';
 import { checklistSchema } from '@/lib/schemas';
 import {
   readActivitiesFresh, patchActivity, readTicks,
-  getEnrollmentsByCourse, readUsersFresh, isStudentEnrolled,
+  getEnrollmentsByCourse, readUsersFresh, isStudentEnrolled, getCourseById,
 } from '@/lib/dataService';
 import { logAudit, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { ChecklistItem } from '@/lib/types';
@@ -47,8 +47,9 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
       /* Docente: la foto completa, ya ordenada. Se arma aquí y no en el
          navegador porque el tablero se repinta cada pocos segundos y no tiene
          sentido mandarle la nómina entera cada vez para que la cruce. */
-      const [inscripciones, usuarios, marcas] = await Promise.all([
+      const [inscripciones, usuarios, marcas, curso] = await Promise.all([
         getEnrollmentsByCourse(activity.courseId), readUsersFresh(), readTicks(id),
+        getCourseById(activity.courseId),
       ]);
       const activos = inscripciones.filter((e) => e.status === 'active');
       const porId = new Map(usuarios.map((u) => [u.id, u]));
@@ -80,7 +81,10 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
       });
 
       return NextResponse.json({
-        activity: { id: activity.id, title: activity.title, description: activity.description, status: activity.status },
+        activity: {
+          id: activity.id, title: activity.title, description: activity.description,
+          status: activity.status, courseName: curso?.name ?? '',
+        },
         items,
         total: items.length,
         students: estudiantes,
