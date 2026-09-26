@@ -142,6 +142,31 @@ export default function ActivityForm({
     }
   }
 
+  /**
+   * Cambia VARIOS campos de una vez.
+   *
+   * `update` compone el formulario nuevo a partir de `form`, que dentro de un
+   * mismo manejador vale siempre lo de antes del primer cambio. Así que dos
+   * `update` seguidos no se suman: el segundo parte del formulario viejo y
+   * borra lo que hizo el primero. Pasó justo aquí —al elegir «Lista de
+   * tareas» se ponía el tipo y acto seguido el peso a 0, y el desplegable
+   * volvía solo a la opción anterior—.
+   */
+  function updateVarios(parche: Partial<ActivityFormData>) {
+    const next = { ...form, ...parche };
+    setForm(next);
+    const v = validate(next);
+    setErrors((prev) => {
+      const updated = { ...prev };
+      for (const campo of Object.keys(parche)) {
+        if (!touched[campo]) continue;
+        if (v[campo]) updated[campo] = v[campo];
+        else delete updated[campo];
+      }
+      return updated;
+    });
+  }
+
   function handleBlur(field: string) {
     setTouched((prev) => ({ ...prev, [field]: true }));
     const v = validate(form);
@@ -241,10 +266,11 @@ export default function ActivityForm({
                 value={form.type}
                 onChange={(e) => {
                   const t = e.target.value as Activity['type'];
-                  update('type', t);
-                  /* Peso 0: una lista no puede arrastrar porcentaje a la
+                  /* Un solo cambio con los dos campos: en dos llamadas, la
+                     segunda parte del formulario viejo y deshace la primera.
+                     Peso 0 porque una lista no puede arrastrar porcentaje a la
                      definitiva por un número que quedó escrito antes. */
-                  if (t === 'checklist') update('weight', 0);
+                  updateVarios(t === 'checklist' ? { type: t, weight: 0 } : { type: t });
                 }}
                 className={selectClass('type')}
               >

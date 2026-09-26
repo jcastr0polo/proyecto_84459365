@@ -54,4 +54,6 @@ next-env.d.ts
 .scripts/
 
 # Credenciales para verificación manual con datos reales. NUNCA se sube.
-.credenciales
+# Credenciales de prueba, con cualquier sufijo: un respaldo llamado
+# .credenciales.bak no estaba cubierto y podía acabar en un commit.
+.credenciales*
