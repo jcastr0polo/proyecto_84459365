@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Check, Link2, AlertCircle } from 'lucide-react';
+import { Check, Image as ImageIcon } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import BackLink from '@/components/ui/BackLink';
-import Button from '@/components/ui/Button';
 import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import ProgressBar from '@/components/checklist/ProgressBar';
@@ -36,8 +35,7 @@ export default function ListaEstudiantePage() {
   const [hechos, setHechos] = useState<Set<string>>(new Set());
   const [enVuelo, setEnVuelo] = useState<Set<string>>(new Set());
   const [evidencias, setEvidencias] = useState<Record<string, string>>({});
-  const [pidiendoEvidencia, setPidiendoEvidencia] = useState<string | null>(null);
-  const campoEvidencia = useRef<HTMLInputElement>(null);
+  const [subiendo, setSubiendo] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -57,33 +55,26 @@ export default function ListaEstudiantePage() {
     })();
   }, [actId, toast]);
 
-  useEffect(() => {
-    if (pidiendoEvidencia) campoEvidencia.current?.focus();
-  }, [pidiendoEvidencia]);
-
-  const marcar = useCallback(async (item: ChecklistItem, done: boolean, evidenceUrl?: string) => {
+  const marcar = useCallback(async (item: ChecklistItem, done: boolean) => {
     if (enVuelo.has(item.id)) return;
 
-    if (done && item.requiresEvidence && !evidenceUrl) {
-      setPidiendoEvidencia(item.id);
-      return;
-    }
+    /* Los puntos con evidencia no se marcan de un toque: se marcan subiendo
+       el pantallazo. El botón abre el selector de archivos. */
+    if (done && item.requiresEvidence) return;
 
     // Optimista: se pinta ya y se deshace si el servidor dice que no.
     const antes = new Set(hechos);
     setHechos((h) => { const n = new Set(h); if (done) n.add(item.id); else n.delete(item.id); return n; });
     setEnVuelo((v) => new Set(v).add(item.id));
-    setPidiendoEvidencia(null);
 
     try {
       const res = await fetch(`/api/activities/${actId}/lista/marcas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemId: item.id, done, evidenceUrl: evidenceUrl || undefined }),
+        body: JSON.stringify({ itemId: item.id, done }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'No se pudo guardar');
-      if (done && evidenceUrl) setEvidencias((e) => ({ ...e, [item.id]: evidenceUrl }));
       if (!done) setEvidencias((e) => { const n = { ...e }; delete n[item.id]; return n; });
     } catch (e) {
       setHechos(antes);
@@ -92,6 +83,32 @@ export default function ListaEstudiantePage() {
       setEnVuelo((v) => { const n = new Set(v); n.delete(item.id); return n; });
     }
   }, [actId, hechos, enVuelo, toast]);
+
+  /**
+   * Sube el pantallazo y marca el punto de una vez.
+   *
+   * Aquí NO se pinta optimista: hasta que la imagen no está arriba no hay
+   * nada marcado, y fingir lo contrario haría que alguien cerrara el móvil
+   * creyendo que ya subió.
+   */
+  const subirPantallazo = useCallback(async (item: ChecklistItem, file: File) => {
+    setSubiendo(item.id);
+    try {
+      const fd = new FormData();
+      fd.append('itemId', item.id);
+      fd.append('file', file);
+      const res = await fetch(`/api/activities/${actId}/lista/evidencia`, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'No se pudo subir');
+      setHechos((h) => new Set(h).add(item.id));
+      setEvidencias((e) => ({ ...e, [item.id]: data.evidenceUrl }));
+      toast('Pantallazo subido', 'success');
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'No se subió. Revisa la conexión.', 'error');
+    } finally {
+      setSubiendo(null);
+    }
+  }, [actId, toast]);
 
   if (cargando) {
     return (
@@ -132,14 +149,17 @@ export default function ListaEstudiantePage() {
           {items.map((item) => {
             const marcado = hechos.has(item.id);
             const ocupado = enVuelo.has(item.id);
-            const pidiendo = pidiendoEvidencia === item.id;
+
+            const pidePantallazo = item.requiresEvidence && !marcado;
+            const subiendoEste = subiendo === item.id;
+            const Fila = pidePantallazo ? 'label' : 'button';
 
             return (
               <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => marcar(item, !marcado)}
-                  aria-pressed={marcado}
+                <Fila
+                  {...(pidePantallazo
+                    ? {}
+                    : { type: 'button' as const, onClick: () => marcar(item, !marcado), 'aria-pressed': marcado })}
                   className={`w-full text-left flex items-start gap-3 rounded-xl border px-4 py-3.5 min-h-14
                               transition-[background-color,border-color,transform] duration-[160ms]
                               ease-[var(--ease-out)]
@@ -150,8 +170,21 @@ export default function ListaEstudiantePage() {
                               ${marcado
                                 ? 'border-emerald-500/30 bg-emerald-500/[0.07]'
                                 : 'border-surface-border bg-surface hover:bg-surface-hover'}`}
-                  disabled={ocupado}
+                  {...(pidePantallazo ? {} : { disabled: ocupado })}
                 >
+                  {pidePantallazo && (
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif"
+                      className="sr-only"
+                      disabled={subiendoEste}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        e.target.value = '';
+                        if (f) subirPantallazo(item, f);
+                      }}
+                    />
+                  )}
                   {/* La casilla no aparece de la nada: el cuadro ya está, se
                       rellena. Y el check entra a 0.6 de escala, no a 0. */}
                   <span
@@ -176,51 +209,26 @@ export default function ListaEstudiantePage() {
                       {item.text}
                     </span>
                     {item.requiresEvidence && (
-                      <span className="mt-1 inline-flex items-center gap-1 text-meta text-subtle">
-                        <Link2 className="w-3 h-3" aria-hidden="true" />
-                        {evidencias[item.id] ? 'Con evidencia' : 'Pide evidencia'}
+                      <span className="mt-1.5 inline-flex items-center gap-1.5 text-meta font-medium
+                                       text-cyan-600 dark:text-cyan-400">
+                        <ImageIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                        {subiendoEste ? 'Subiendo el pantallazo…'
+                          : marcado ? 'Pantallazo enviado'
+                          : 'Toca para subir el pantallazo'}
                       </span>
                     )}
-                  </span>
-                </button>
-
-                {pidiendo && (
-                  <div className="mt-2 ml-4 rounded-xl border border-cyan-500/25 bg-cyan-500/[0.06] p-3">
-                    <label className="block text-xs font-medium text-muted mb-1.5" htmlFor={`ev-${item.id}`}>
-                      Pega el enlace de tu evidencia
-                    </label>
-                    {/* En un teléfono, el campo y los dos botones en una fila
-                        dejan el enlace en un hueco de tres centímetros. */}
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <input
-                        id={`ev-${item.id}`}
-                        ref={campoEvidencia}
-                        type="url"
-                        placeholder="https://..."
-                        className="w-full sm:flex-1 min-w-0 px-3 py-2 min-h-11 rounded-lg bg-foreground/[0.04]
-                                   border border-foreground/[0.08] text-sm text-foreground
-                                   placeholder:text-faint focus:outline-none focus:border-cyan-500/40"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') marcar(item, true, (e.target as HTMLInputElement).value.trim());
-                          if (e.key === 'Escape') setPidiendoEvidencia(null);
-                        }}
+                    {/* La miniatura: que vea lo que mandó, no solo que lo mandó. */}
+                    {marcado && evidencias[item.id] && (
+                      /* eslint-disable-next-line @next/next/no-img-element -- la
+                         imagen vive en el Blob, con dominio variable. */
+                      <img
+                        src={`/api/upload/download?url=${encodeURIComponent(evidencias[item.id])}`}
+                        alt=""
+                        className="mt-2 h-20 rounded-lg border border-surface-border object-cover"
                       />
-                      <div className="flex gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
-                        <Button variant="primary" size="md"
-                          onClick={() => marcar(item, true, campoEvidencia.current?.value.trim())}>
-                          Marcar
-                        </Button>
-                        <Button variant="ghost" size="md" onClick={() => setPidiendoEvidencia(null)}>
-                          Cancelar
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-meta text-subtle mt-2 flex items-center gap-1.5">
-                      <AlertCircle className="w-3 h-3 shrink-0" aria-hidden="true" />
-                      Un enlace a tu repositorio, a una captura, a lo que sea que lo demuestre.
-                    </p>
-                  </div>
-                )}
+                    )}
+                  </span>
+                </Fila>
               </li>
             );
           })}
