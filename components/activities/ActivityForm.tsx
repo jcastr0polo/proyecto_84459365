@@ -95,7 +95,23 @@ export default function ActivityForm({
   const [attachments, setAttachments] = useState<ActivityAttachment[]>(activity?.attachments ?? []);
   const [uploading, setUploading] = useState(false);
 
+  /** Una lista de tareas no califica: ni nota máxima, ni peso, ni entrega. */
+  const esLista = form.type === 'checklist';
+
   function validate(data: ActivityFormData): Record<string, string> {
+    /* Sin este atajo, una lista arrastraría los errores de unos campos que ni
+       se enseñan, y el botón de guardar no haría nada sin decir por qué. */
+    if (data.type === 'checklist') {
+      const e: Record<string, string> = {};
+      if (!data.title.trim()) e.title = 'El título es requerido';
+      if (!data.description.trim()) e.description = 'La descripción es requerida';
+      if (!data.publishDate) e.publishDate = 'La fecha de publicación es requerida';
+      return e;
+    }
+    return validarNormal(data);
+  }
+
+  function validarNormal(data: ActivityFormData): Record<string, string> {
     const e: Record<string, string> = {};
     if (!data.title.trim()) e.title = 'El título es requerido';
     if (!data.description.trim()) e.description = 'La descripción es requerida';
@@ -165,7 +181,14 @@ export default function ActivityForm({
       setErrors(v);
       return;
     }
-    await onSubmit(form, publish);
+    /* Una lista puede quedarse sin fecha límite: no se entrega nada. Pero
+       media aplicación pinta esa fecha, y una cadena vacía sale como
+       "Invalid Date" en las tarjetas. Se rellena con la de publicación. */
+    const datos = esLista && !form.dueDate
+      ? { ...form, dueDate: form.publishDate, weight: 0 }
+      : form;
+
+    await onSubmit(datos, publish);
   }
 
   const inputClass = (field: string) =>
@@ -216,7 +239,13 @@ export default function ActivityForm({
               <select
                 id="act-type"
                 value={form.type}
-                onChange={(e) => update('type', e.target.value as Activity['type'])}
+                onChange={(e) => {
+                  const t = e.target.value as Activity['type'];
+                  update('type', t);
+                  /* Peso 0: una lista no puede arrastrar porcentaje a la
+                     definitiva por un número que quedó escrito antes. */
+                  if (t === 'checklist') update('weight', 0);
+                }}
                 className={selectClass('type')}
               >
                 {ACTIVITY_TYPES.map((t) => (
@@ -346,7 +375,7 @@ export default function ActivityForm({
                 value={form.dueDate}
                 onChange={(v) => update('dueDate', v)}
                 onBlur={() => handleBlur('dueDate')}
-                required
+                required={!esLista}
                 min={form.publishDate}
                 error={touched.dueDate ? errors.dueDate : undefined}
                 hint="Fecha máxima de entrega"
@@ -367,7 +396,19 @@ export default function ActivityForm({
             </div>
           </div>
 
-          {/* Score + Weight row */}
+          {/* Una lista de tareas no pone nota: pedir aquí nota máxima y peso
+              es pedir dos datos que no se van a usar, y hace dudar de si va a
+              calificar o no. Si luego quieres darle un valor apreciativo, se
+              hace con un ítem de nota manual. */}
+          {esLista ? (
+            <div className="rounded-xl border border-surface-border bg-surface-sunken px-4 py-3">
+              <p className="text-xs text-muted">
+                <strong className="text-foreground">Esta actividad no califica.</strong>{' '}
+                Los estudiantes marcan lo que van haciendo y tú lo ves avanzar en el tablero.
+                Si al final del periodo quieres darle un valor, créalo como ítem de nota manual.
+              </p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="act-maxscore" className="block text-xs font-medium text-muted mb-1.5">
@@ -410,6 +451,7 @@ export default function ActivityForm({
               )}
             </div>
           </div>
+          )}
         </div>
       </section>
 
