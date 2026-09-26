@@ -1317,11 +1317,21 @@ export async function supabaseTableStats(
  * forma de comprobar una migración sin depender del pool, que desde Vercel no
  * responde.
  */
+/**
+ * ¿Existe esta columna? Se usa para decidir si una migración está aplicada.
+ *
+ * Dos formas de "todavía no": falta la COLUMNA (42703) o falta la TABLA
+ * entera (PGRST205, que es de PostgREST y no de Postgres). Hasta que una
+ * migración creó una tabla nueva, el segundo caso no se daba nunca y esto
+ * lanzaba excepción: la pantalla de estado de la base se caía entera justo
+ * cuando hacía falta para aplicar esa migración.
+ */
 export async function supabaseColumnExists(table: string, column: string): Promise<boolean> {
   const sb = requireSupabaseClient();
   const { error } = await sb.from(table).select(column).limit(1);
   if (!error) return true;
-  if (error.code === '42703') return false;
+  if (error.code === '42703') return false;            // falta la columna
+  if (error.code === 'PGRST205' || error.code === '42P01') return false;  // falta la tabla
   throw new Error(`No se pudo comprobar ${table}.${column}: ${error.message}`);
 }
 
