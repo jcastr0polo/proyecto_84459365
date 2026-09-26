@@ -50,7 +50,12 @@ export default function TableroPage() {
       if (!res.ok) throw new Error(data.error ?? 'No se pudo cargar');
 
       setTitulo(data.activity.title);
-      setItems(data.items ?? []);
+      const puntos = data.items ?? [];
+      setItems(puntos);
+      /* Sin puntos no hay nada que mirar: lo que toca es escribirlos, así que
+         el editor se abre solo. Solo en la primera carga, para no reabrirlo
+         encima del docente en cada vuelta del sondeo. */
+      if (primeraVez && puntos.length === 0) setEditando(true);
       setAhora(Date.parse(data.now) || Date.now());
 
       const nuevos: AvanceEstudiante[] = data.students ?? [];

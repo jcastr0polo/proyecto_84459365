@@ -14,7 +14,7 @@ import type { ActivityFormData } from '@/components/activities/ActivityForm';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import type { Activity, Course, ActivityAttachment, Submission, EnrollmentWithStudent } from '@/lib/types';
 import BackLink from '@/components/ui/BackLink';
-import { Radio } from 'lucide-react';
+import { Radio, ListChecks } from 'lucide-react';
 
 /**
  * Admin — Activity Detail Page
@@ -216,13 +216,24 @@ export default function AdminActivityDetailPage() {
                      hover:bg-cyan-500/[0.1] focus-visible:outline-none focus-visible:ring-2
                      focus-visible:ring-cyan-500/40"
         >
+          {/* Mientras la lista está vacía, lo que toca no es mirar el tablero
+              sino escribir los puntos. La tarjeta lo dice: quien acaba de
+              crear la actividad busca dónde definirla, no dónde proyectarla. */}
           <span className="min-w-0">
-            <span className="block text-sm font-semibold text-foreground">Tablero en vivo</span>
+            <span className="block text-sm font-semibold text-foreground">
+              {(activity.checklist?.length ?? 0) === 0
+                ? 'Define los puntos de la lista'
+                : `Tablero en vivo · ${activity.checklist!.length} puntos`}
+            </span>
             <span className="block text-xs text-subtle mt-0.5">
-              El avance de todo el curso, actualizándose solo. Para proyectar en clase.
+              {(activity.checklist?.length ?? 0) === 0
+                ? 'Todavía no tiene puntos. Escribe aquí lo que deben ir marcando.'
+                : 'El avance de todo el curso, actualizándose solo. Para proyectar en clase.'}
             </span>
           </span>
-          <Radio className="w-5 h-5 text-cyan-500 shrink-0" aria-hidden="true" />
+          {(activity.checklist?.length ?? 0) === 0
+            ? <ListChecks className="w-5 h-5 text-cyan-500 shrink-0" aria-hidden="true" />
+            : <Radio className="w-5 h-5 text-cyan-500 shrink-0" aria-hidden="true" />}
         </Link>
       )}
 

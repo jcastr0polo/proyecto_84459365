@@ -108,7 +108,12 @@ export default function NewActivityPage() {
         toast('Actividad guardada como borrador', 'success');
       }
 
-      router.push(`/admin/courses/${courseId}/activities/${activityId}`);
+      /* Una lista recién creada está vacía, y lo único que se puede hacer con
+         ella es escribir los puntos. Se aterriza directamente ahí en vez de en
+         una ficha donde hay que adivinar dónde se define. */
+      router.push(data.type === 'checklist'
+        ? `/admin/courses/${courseId}/activities/${activityId}/tablero`
+        : `/admin/courses/${courseId}/activities/${activityId}`);
     } catch {
       toast('Error de conexión', 'error');
     } finally {
