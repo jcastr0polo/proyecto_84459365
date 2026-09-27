@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Poppins } from "next/font/google";
 import ThemeProvider from "@/components/ThemeProvider";
+import SesionCaducada from "@/components/SesionCaducada";
 import "./globals.css";
 
 const playfairDisplay = Playfair_Display({
@@ -67,6 +68,7 @@ export default function RootLayout({
     <html lang="es" data-theme="dark" className={`${playfairDisplay.variable} ${poppins.variable} antialiased`} suppressHydrationWarning>
       <body className="min-h-screen bg-canvas text-foreground">
         <ThemeProvider>
+          <SesionCaducada />
           {children}
         </ThemeProvider>
       </body>

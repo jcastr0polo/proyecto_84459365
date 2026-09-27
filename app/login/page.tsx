@@ -1,18 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import NexusMark from '@/components/ui/NexusMark';
+import { toneBox } from '@/lib/semantics';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [expirada, setExpirada] = useState(false);
+
+  useEffect(() => {
+    setExpirada(new URLSearchParams(window.location.search).get('expirada') === '1');
+  }, []);
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
@@ -28,7 +34,15 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Error al iniciar sesión'); return; }
+      /* Si llegó aquí por una guarda, vuelve a donde iba. Quien abre un
+         enlace directo a una entrega no quiere aterrizar en el panel.
+         Solo rutas internas: un `next` con dominio ajeno sería un salto
+         abierto desde nuestro login. */
+      const destino = new URLSearchParams(window.location.search).get('next');
+      const interno = destino && destino.startsWith('/') && !destino.startsWith('//');
+
       if (data.mustChangePassword) { router.push('/change-password'); }
+      else if (interno) { router.push(destino!); }
       else if (data.user.role === 'admin') { router.push('/admin'); }
       else { router.push('/student'); }
     } catch {
@@ -74,6 +88,18 @@ export default function LoginPage() {
               Plataforma Académica
             </p>
           </div>
+
+          {/* Llegar al login sin haber pulsado «cerrar sesión» desconcierta:
+              se dice por qué, en vez de dejar que parezca que la aplicación
+              lo echó a uno sin motivo. */}
+          {expirada && (
+            <div className={`mb-5 rounded-xl border px-4 py-3 ${toneBox.attention}`}>
+              <p className="text-xs text-muted">
+                <strong className="text-foreground">Tu sesión caducó.</strong>{' '}
+                Vuelve a entrar y te llevamos donde estabas.
+              </p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
