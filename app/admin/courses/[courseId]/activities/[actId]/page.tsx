@@ -30,6 +30,8 @@ export default function AdminActivityDetailPage() {
   const [activity, setActivity] = useState<Activity | null>(null);
   const [course, setCourse] = useState<Course | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [avance, setAvance] = useState<{ done: number; firstName: string; lastName: string; studentId: string }[] | null>(null);
+  const [puntosTotales, setPuntosTotales] = useState(0);
   const [enrollments, setEnrollments] = useState<EnrollmentWithStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -50,6 +52,18 @@ export default function AdminActivityDetailPage() {
       if (actRes.ok) {
         const data = await actRes.json();
         setActivity(data.activity);
+        /* En una lista, "entregar" es marcar. Las cifras salen del avance,
+           no de una tabla de entregas que siempre estará vacía. */
+        if (data.activity?.type === 'checklist') {
+          const listaRes = await fetch(`/api/activities/${actId}/lista`);
+          if (listaRes.ok) {
+            const lista = await listaRes.json();
+            setAvance(lista.students ?? []);
+            setPuntosTotales((lista.items ?? []).length);
+          }
+        } else {
+          setAvance(null);
+        }
       } else {
         toast('Actividad no encontrada', 'error');
         router.push(`/admin/courses/${courseId}/activities`);
@@ -195,6 +209,20 @@ export default function AdminActivityDetailPage() {
     total: activeEnrollments.length,
   };
 
+  /* Una lista se completa marcándola entera; quien lleva alguna marca está en
+     progreso. Sin puntos definidos todavía nadie puede completar nada, así que
+     no se cuenta a nadie como terminado. */
+  const esLista = activity.type === 'checklist';
+  const listaStats = esLista && avance
+    ? {
+        completaron: puntosTotales > 0 ? avance.filter((a) => a.done === puntosTotales).length : 0,
+        enProgreso: avance.filter((a) => a.done > 0 && (puntosTotales === 0 || a.done < puntosTotales)).length,
+        sinEmpezar: avance.filter((a) => a.done === 0).length,
+        total: avance.length,
+      }
+    : undefined;
+  const sinEmpezarLista = esLista && avance ? avance.filter((a) => a.done === 0) : [];
+
   return (
     <div className="space-y-6">
       {/* Back link */}
@@ -243,19 +271,45 @@ export default function AdminActivityDetailPage() {
         onPublish={activity.status === 'draft' ? handlePublish : undefined}
         onClose={activity.status === 'published' ? () => setConfirmClose(true) : undefined}
         onEdit={() => setEditModalOpen(true)}
-        onViewSubmissions={() => {
+        /* Una lista no tiene entregas que ver ni notas que poner: esos dos
+           botones llevaban a pantallas vacías y hacían dudar de si había que
+           calificar algo. Lo que se mira está en el tablero. */
+        onViewSubmissions={esLista ? undefined : () => {
           router.push(`/admin/courses/${courseId}/activities/${actId}/submissions`);
         }}
-        onGrade={() => {
+        onGrade={esLista ? undefined : () => {
           router.push(`/admin/courses/${courseId}/activities/${actId}/grades`);
         }}
         publishLoading={publishLoading}
         closeLoading={closeLoading}
         stats={stats}
+        listaStats={listaStats}
       />
 
+      {/* En una lista no hay "sin entrega": hay quien no ha marcado nada. */}
+      {esLista && sinEmpezarLista.length > 0 && (
+        <Card padding="lg">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider">
+              Sin empezar ({sinEmpezarLista.length})
+            </h3>
+            <Badge variant="warning" size="sm">no han marcado nada</Badge>
+          </div>
+          <div className="divide-y divide-foreground/[0.06]">
+            {sinEmpezarLista.map((a) => (
+              <div key={a.studentId} className="flex items-center gap-3 py-2.5">
+                <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center text-micro font-bold text-amber-400 shrink-0">
+                  {a.firstName[0]}{a.lastName[0]}
+                </div>
+                <p className="text-sm text-foreground/80 truncate">{a.lastName}, {a.firstName}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* ─── Pending students (who hasn't submitted) ─── */}
-      {pendingStudents.length > 0 && (
+      {!esLista && pendingStudents.length > 0 && (
         <Card padding="lg">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider">

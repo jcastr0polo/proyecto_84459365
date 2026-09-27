@@ -31,6 +31,20 @@ interface ActivityDetailProps {
     late: number;
     total: number;
   };
+  /**
+   * Avance, para las actividades de lista de tareas.
+   *
+   * Va aparte de `stats` y no reutilizando sus campos porque no significan lo
+   * mismo: en una lista no hay entregas ni tardías, y enseñar «Entregaron 0»
+   * en una actividad que veinte personas están completando es sencillamente
+   * falso. Aquí la entrega SON las marcas.
+   */
+  listaStats?: {
+    completaron: number;
+    enProgreso: number;
+    sinEmpezar: number;
+    total: number;
+  };
   /** Whether the viewer is admin */
   isAdmin?: boolean;
   publishLoading?: boolean;
@@ -51,6 +65,7 @@ export default function ActivityDetail({
   submissionSlot,
   promptSlot,
   stats,
+  listaStats,
   isAdmin = false,
   publishLoading = false,
   closeLoading = false,
@@ -139,7 +154,15 @@ export default function ActivityDetail({
       </div>
 
       {/* ─── Stats (Admin) ─── */}
-      {isAdmin && stats && (
+      {isAdmin && listaStats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label="Completaron" value={listaStats.completaron} color="text-emerald-400" />
+          <StatCard label="En progreso" value={listaStats.enProgreso} color="text-cyan-400" />
+          <StatCard label="Sin empezar" value={listaStats.sinEmpezar} color="text-amber-400" />
+          <StatCard label="Total inscritos" value={listaStats.total} color="text-cyan-400" />
+        </div>
+      )}
+      {isAdmin && !listaStats && stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard label="Entregaron" value={stats.submitted} color="text-emerald-400" />
           <StatCard label="Pendientes" value={stats.pending} color="text-amber-400" />
