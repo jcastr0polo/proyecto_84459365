@@ -73,8 +73,14 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
           lastName: u?.lastName ?? '',
           done: vigentes.length,
           itemIds: vigentes.map((t) => t.itemId),
+          /* Con el texto del punto y la hora: para revisarlas hay que saber
+             de QUÉ punto es cada captura, y «evidencia_3.png» no lo dice. */
           evidences: vigentes.filter((t) => t.evidenceUrl).map((t) => ({
-            itemId: t.itemId, url: t.evidenceUrl!, name: t.evidenceName ?? 'evidencia',
+            itemId: t.itemId,
+            itemText: items.find((i) => i.id === t.itemId)?.text ?? '',
+            url: t.evidenceUrl!,
+            name: t.evidenceName ?? 'evidencia',
+            doneAt: t.doneAt,
           })),
           lastAt: ultima,
         };

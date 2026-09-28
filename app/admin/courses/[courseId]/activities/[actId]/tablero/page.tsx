@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import TableroTarjeta, { type AvanceEstudiante } from '@/components/checklist/TableroTarjeta';
 import EditorDeLista from '@/components/checklist/EditorDeLista';
+import Evidencias from '@/components/checklist/Evidencias';
 import type { ChecklistItem } from '@/lib/types';
 
 /** Cada cuánto se vuelve a preguntar. */
@@ -39,6 +40,7 @@ export default function TableroPage() {
   const [ahora, setAhora] = useState(() => Date.now());
   const [editando, setEditando] = useState(false);
   const [enVivo, setEnVivo] = useState(true);
+  const [viendo, setViendo] = useState<string | null>(null);
 
   /** Quién acaba de marcar, para el destello. Ref y no estado: no repinta. */
   const marcasPrevias = useRef<Map<string, number>>(new Map());
@@ -193,12 +195,17 @@ export default function TableroPage() {
                   total={total}
                   ahora={ahora}
                   recienMarcado={destellos.has(a.studentId)}
+                  onAbrir={() => setViendo(a.studentId)}
                 />
               ))}
             </AnimatePresence>
           </ul>
         </LayoutGroup>
       )}
+      <Evidencias
+        alumno={alumnos.find((a) => a.studentId === viendo) ?? null}
+        onClose={() => setViendo(null)}
+      />
     </div>
   );
 }

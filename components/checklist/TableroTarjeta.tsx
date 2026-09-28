@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Link2 } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import ProgressBar from './ProgressBar';
 
 export interface AvanceEstudiante {
@@ -11,7 +11,7 @@ export interface AvanceEstudiante {
   lastName: string;
   done: number;
   itemIds: string[];
-  evidences: { itemId: string; url: string; name: string }[];
+  evidences: { itemId: string; itemText?: string; url: string; name: string; doneAt?: string }[];
   lastAt: string | null;
 }
 
@@ -41,13 +41,16 @@ function haceCuanto(iso: string | null, ahora: number): string | null {
  * el número siguen cambiando: la información no se pierde, solo el movimiento.
  */
 export default function TableroTarjeta({
-  alumno, total, ahora, recienMarcado,
+  alumno, total, ahora, recienMarcado, onAbrir,
 }: {
   alumno: AvanceEstudiante;
   total: number;
   ahora: number;
   /** Acaba de marcar algo: se le da un destello para que el ojo lo encuentre. */
   recienMarcado: boolean;
+  /** Abre sus pantallazos. Solo si tiene alguno: una tarjeta que parece
+      pulsable y no hace nada es peor que una que no lo parece. */
+  onAbrir?: () => void;
 }) {
   const reducir = useReducedMotion();
   const completo = total > 0 && alumno.done === total;
@@ -98,10 +101,27 @@ export default function TableroTarjeta({
           {cuando ?? 'sin empezar'}
         </span>
         {alumno.evidences.length > 0 && (
-          <span className="inline-flex items-center gap-1 text-subtle shrink-0">
-            <Link2 className="w-3 h-3" aria-hidden="true" />
-            {alumno.evidences.length}
-          </span>
+          onAbrir ? (
+            <button
+              type="button"
+              onClick={onAbrir}
+              className="inline-flex items-center gap-1.5 shrink-0 rounded-lg px-2 py-1 -mr-1
+                         text-cyan-600 dark:text-cyan-400 font-medium
+                         hover:bg-cyan-500/10 transition-colors duration-[var(--dur-fast)]
+                         relative after:absolute after:inset-x-0 after:top-1/2
+                         after:-translate-y-1/2 after:h-11 after:content-['']
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40
+                         cursor-pointer"
+            >
+              <ImageIcon className="w-3.5 h-3.5" aria-hidden="true" />
+              Ver {alumno.evidences.length}
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-subtle shrink-0">
+              <ImageIcon className="w-3 h-3" aria-hidden="true" />
+              {alumno.evidences.length}
+            </span>
+          )
         )}
       </div>
     </motion.li>
