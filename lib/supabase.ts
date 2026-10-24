@@ -608,29 +608,48 @@ export async function supabaseUpdateActivity(
   if (patch.groupMaxSize !== undefined) fila.group_max_size = patch.groupMaxSize ?? null;
   const { error } = await sb.from('activities').update(fila).eq('id', id);
   if (!error) return;
-  if (faltaColumna(error, 'checklist')) {
+  const col = columnaQueFalta(error);
+  if (col) {
     throw new Error(
-      'Falta la columna activities.checklist. Aplica la migración '
-      + '"2026-09-actividad-lista" en Configuración › Base de datos.',
+      `Falta la columna activities.${col}. Aplica las migraciones pendientes `
+      + 'en Configuración › Base de datos.',
     );
   }
   throw new Error(`[supabase] update activities ${id}: ${error.message}`);
 }
 
+/**
+ * Escribir actividades tolera que falte CUALQUIER columna que aún no exista.
+ *
+ * Se quita la que el propio error nombra y se reintenta, hasta tres veces.
+ * Antes la lista de columnas tolerables estaba a mano y había que acordarse
+ * de ampliarla con cada migración; la vez que no me acordé, guardar una
+ * actividad devolvía 500 hasta aplicar la migración. Una función nueva a
+ * medio llegar no puede romper las que ya andaban.
+ */
 export async function supabaseReplaceActivities(items: Activity[]): Promise<void> {
-  const filas = items.map(activityToRow);
-  try {
-    await replaceAllRows('activities', filas);
-  } catch (e) {
-    if (!faltaColumna(e, 'checklist')) throw e;
-    console.warn(
-      '[supabase] falta la columna activities.checklist. Aplica la migración '
-      + '"2026-09-actividad-lista" en Configuración › Base de datos.',
-    );
-    await replaceAllRows('activities', filas.map((f) => {
-      const sin = { ...f }; delete sin.checklist; return sin;
-    }));
+  let filas: Record<string, unknown>[] = items.map(activityToRow);
+  const quitadas: string[] = [];
+
+  for (let intento = 0; intento < 4; intento++) {
+    try {
+      await replaceAllRows('activities', filas);
+      if (quitadas.length > 0) {
+        console.warn(
+          `[supabase] faltan columnas en activities (${quitadas.join(', ')}): `
+          + 'se guardó sin ellas. Aplica las migraciones pendientes en '
+          + 'Configuración › Base de datos.',
+        );
+      }
+      return;
+    } catch (e) {
+      const col = columnaQueFalta(e);
+      if (!col || !(col in (filas[0] ?? {}))) throw e;
+      quitadas.push(col);
+      filas = filas.map((f) => { const sin = { ...f }; delete sin[col]; return sin; });
+    }
   }
+  throw new Error('[supabase] demasiadas columnas ausentes en activities');
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -976,6 +995,25 @@ export async function supabaseGetCorteById(id: string): Promise<Corte | null> {
  * cuyo texto mencione la columna por casualidad haría que se dejara de
  * escribir un dato bueno.
  */
+/**
+ * Qué columna falta, según el error de Postgres.
+ *
+ * Sacarla del mensaje en vez de ir listando a mano las que pueden faltar:
+ * cada vez que una migración añade una columna, la salvaguarda tenía que
+ * acordarse de incluirla, y la vez que no me acordé —group_max_size— dejó al
+ * docente sin poder guardar NINGUNA actividad hasta aplicar la migración.
+ */
+export function columnaQueFalta(e: unknown): string | null {
+  const err = e as { code?: string; message?: string } | null;
+  if (err?.code !== '42703') return null;
+  /* Postgres lo dice de dos formas según de dónde venga:
+       column "group_max_size" of relation "activities" does not exist
+       column activities.checklist does not exist
+     El punto tiene que entrar en la captura para poder quitar la tabla. */
+  const m = /column "?([a-z_][a-z0-9_.]*)"?/i.exec(`${err.message ?? ''} ${String(e)}`);
+  return m ? m[1].replace(/^.*\./, '') : null;
+}
+
 export function faltaColumna(e: unknown, columna: string): boolean {
   const err = e as { code?: string; message?: string } | null;
   const texto = `${err?.message ?? ''} ${String(e)}`;
