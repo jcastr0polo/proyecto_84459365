@@ -27,6 +27,7 @@ import {
   gradableItemsOf, adjustItemId, isAdjustItemId,
 } from '@/lib/gradeService';
 import { PASS } from '@/lib/gradeScale';
+import { sePuedePresentar } from '@/lib/disponibilidadParcial';
 
 export async function GET(request: Request): Promise<NextResponse> {
   return withAuth(request, async (user) => {
@@ -198,13 +199,19 @@ export async function GET(request: Request): Promise<NextResponse> {
      *
      * Abierto = dentro de su ventana y con intentos disponibles.
      */
-    const ahora = Date.now();
+    /* Con la MISMA función que la lista de parciales y que la ruta de envío.
+       Aquí se comparaba con `new Date(q.endDate)` a secas, y una fecha como
+       "2026-10-24T13:00" —sin zona— la interpreta como hora local del
+       servidor, que en Vercel es UTC: las 13:00 pasaban a ser las 08:00 de
+       Colombia. El día del parcial, el panel daba por cerrado a las 8:00 algo
+       que abría a las 8:20, mientras la lista de parciales —que sí usaba la
+       función correcta— lo enseñaba bien. */
+    const ahora = new Date();
     const activeQuizzes = myCourses.flatMap((course) =>
       quizzes
         .filter((q) => {
           if (q.courseId !== course.id) return false;
-          if (q.startDate && new Date(q.startDate).getTime() > ahora) return false;
-          if (q.endDate && new Date(q.endDate).getTime() < ahora) return false;
+          if (!sePuedePresentar(q, ahora)) return false;
           const mine = attempts.filter((a) => a.quizId === q.id && a.studentId === user.id);
           return q.maxAttempts === 0 || mine.length < q.maxAttempts;
         })

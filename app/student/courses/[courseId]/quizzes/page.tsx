@@ -45,6 +45,36 @@ export default function StudentQuizzesPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  /**
+   * La lista se vuelve a pedir sola.
+   *
+   * Un parcial aparece a una hora exacta, y esta pantalla se pedía UNA vez al
+   * abrirla: quien la tenía abierta desde cinco minutos antes veía una lista
+   * vacía indefinidamente. El día del parcial eso es media clase preguntando
+   * por qué no les sale, con el reloj corriendo.
+   *
+   * Cada 30 s y al volver a la pestaña. No es una pantalla que se mire
+   * fijamente durante horas: se abre, se espera a que se abra el parcial y se
+   * entra. Y se para cuando la pestaña no está a la vista, para no preguntar
+   * toda la tarde desde un portátil olvidado.
+   */
+  useEffect(() => {
+    let id: number | undefined;
+    const arrancar = () => { id = window.setInterval(() => fetchData(), 30_000); };
+    const parar = () => { if (id) window.clearInterval(id); id = undefined; };
+    const alVolver = () => {
+      if (document.visibilityState === 'visible') { fetchData(); arrancar(); } else parar();
+    };
+    if (document.visibilityState === 'visible') arrancar();
+    document.addEventListener('visibilitychange', alVolver);
+    window.addEventListener('focus', fetchData);
+    return () => {
+      parar();
+      document.removeEventListener('visibilitychange', alVolver);
+      window.removeEventListener('focus', fetchData);
+    };
+  }, [fetchData]);
+
   if (loading) {
     return (
       <div className="space-y-6">
