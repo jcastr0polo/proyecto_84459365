@@ -10,6 +10,8 @@ import { useToast } from '@/components/ui/Toast';
 import type { Quiz, Course } from '@/lib/types';
 import { ClipboardList, Search, Clock, Shield, Eye, EyeOff } from 'lucide-react';
 import BackLink from '@/components/ui/BackLink';
+import { EstadoParcialBadge, VentanaParcial } from '@/components/quizzes/EstadoParcial';
+import { disponibilidadDe } from '@/lib/disponibilidadParcial';
 
 type TypeFilter = 'all' | 'training' | 'graded';
 
@@ -63,7 +65,10 @@ export default function CourseQuizzesPage() {
 
   const trainingCount = quizzes.filter((q) => q.type === 'training').length;
   const gradedCount = quizzes.filter((q) => q.type === 'graded').length;
-  const activeCount = quizzes.filter((q) => q.isActive).length;
+  /* Se recalcula con cada render; el reloj del navegador basta para una
+     lista que se mira, no para decidir nada: quien decide es el servidor. */
+  const abiertos = quizzes.filter((q) => disponibilidadDe(q).estado === 'abierto').length;
+  const programados = quizzes.filter((q) => disponibilidadDe(q).estado === 'programado').length;
 
   if (loading) {
     return (
@@ -97,7 +102,8 @@ export default function CourseQuizzesPage() {
         <Badge variant="info" size="md">{quizzes.length} total</Badge>
         {trainingCount > 0 && <Badge variant="warning" size="md" dot>{trainingCount} entrenamiento</Badge>}
         {gradedCount > 0 && <Badge variant="success" size="md" dot>{gradedCount} calificables</Badge>}
-        {activeCount > 0 && <Badge variant="info" size="md" dot>{activeCount} activos</Badge>}
+        {abiertos > 0 && <Badge variant="success" size="md" dot>{abiertos} abierto{abiertos !== 1 ? 's' : ''} ahora</Badge>}
+        {programados > 0 && <Badge variant="warning" size="md" dot>{programados} programado{programados !== 1 ? 's' : ''}</Badge>}
       </div>
 
       {/* Filters */}
@@ -156,14 +162,19 @@ export default function CourseQuizzesPage() {
                 <Badge variant={quiz.type === 'training' ? 'warning' : 'success'} size="sm">
                   {quiz.type === 'training' ? 'Entrenamiento' : 'Calificable'}
                 </Badge>
-                <Badge variant={quiz.isActive ? 'success' : 'neutral'} size="sm" dot>
-                  {quiz.isActive ? 'Activo' : 'Inactivo'}
-                </Badge>
+                {/* El estado real, no la bandera: un parcial cuya fecha cerró
+                    salía igual que uno abierto. Es la misma función que decide
+                    si el estudiante puede presentarlo. */}
+                <EstadoParcialBadge quiz={quiz} />
               </div>
 
               <h3 className="text-sm font-semibold text-foreground/90 mb-2 line-clamp-1">{quiz.title}</h3>
 
-              <div className="flex flex-wrap items-center gap-3 text-xs text-subtle">
+              {/* La ventana, siempre a la vista: es lo que hay que comprobar
+                  antes de una clase, y estaba escondida dentro del detalle. */}
+              <VentanaParcial quiz={quiz} />
+
+              <div className="flex flex-wrap items-center gap-3 text-xs text-subtle mt-2">
                 <span>{quiz.questions.length} pregunta{quiz.questions.length !== 1 ? 's' : ''}</span>
                 {quiz.timeLimit && (
                   <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {quiz.timeLimit} min</span>

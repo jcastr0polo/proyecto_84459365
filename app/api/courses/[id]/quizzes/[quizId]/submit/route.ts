@@ -21,10 +21,10 @@ import {
   appendQuizAttempt,
   appendQuizSimulation,
   isStudentEnrolled,
-  parseDateColombia,
   nowColombiaISO,
 } from '@/lib/dataService';
 import type { QuizAttempt, QuizAnswer, QuizSimulation } from '@/lib/types';
+import { disponibilidadDe } from '@/lib/disponibilidadParcial';
 
 type RouteParams = { params: Promise<{ id: string; quizId: string }> };
 
@@ -69,17 +69,19 @@ export async function POST(request: Request, { params }: RouteParams): Promise<N
         return NextResponse.json({ error: 'Parcial no encontrado' }, { status: 404 });
       }
 
-      if (!isSimulation && !quiz.isActive) {
-        return NextResponse.json({ error: 'Este parcial no está activo' }, { status: 400 });
-      }
-
-      // Verificar rango de fechas
+      /* Una sola regla, compartida con la lista del estudiante y con el
+         estado que ve el docente en el panel. */
       const now = new Date();
-      if (!isSimulation && quiz.startDate && parseDateColombia(quiz.startDate) > now) {
-        return NextResponse.json({ error: 'Este parcial aún no está disponible' }, { status: 400 });
-      }
-      if (!isSimulation && quiz.endDate && parseDateColombia(quiz.endDate) < now) {
-        return NextResponse.json({ error: 'Este parcial ya cerró' }, { status: 400 });
+      if (!isSimulation) {
+        const { estado } = disponibilidadDe(quiz, now);
+        if (estado !== 'abierto') {
+          const porQue = {
+            inactivo: 'Este parcial no está activo',
+            programado: 'Este parcial aún no está disponible',
+            cerrado: 'Este parcial ya cerró',
+          }[estado];
+          return NextResponse.json({ error: porQue }, { status: 400 });
+        }
       }
 
       // Verificar intentos permitidos

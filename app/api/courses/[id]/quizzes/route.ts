@@ -18,10 +18,10 @@ import {
   readQuizAttemptsFresh,
   withFileLock,
   nowColombiaISO,
-  parseDateColombia,
 } from '@/lib/dataService';
 import { dispatchWrite, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { Quiz, QuizQuestion, QuizOption } from '@/lib/types';
+import { sePuedePresentar } from '@/lib/disponibilidadParcial';
 
 /**
  * GET /api/courses/[id]/quizzes
@@ -48,13 +48,11 @@ export async function GET(
         return NextResponse.json({ error: 'No estás inscrito en este curso' }, { status: 403 });
       }
 
+      /* Misma función que usa el panel para pintar el estado y la ruta de
+         envío para aceptarlo: si divergen, el docente ve una cosa y el
+         estudiante se encuentra otra. */
       const now = new Date();
-      quizzes = quizzes.filter((q) => {
-        if (!q.isActive) return false;
-        if (q.startDate && parseDateColombia(q.startDate) > now) return false;
-        if (q.endDate && parseDateColombia(q.endDate) < now) return false;
-        return true;
-      });
+      quizzes = quizzes.filter((q) => sePuedePresentar(q, now));
 
       // Ocultar respuestas correctas para estudiantes
       quizzes = quizzes.map((q) => ({
