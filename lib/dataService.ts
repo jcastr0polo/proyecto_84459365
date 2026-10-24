@@ -48,6 +48,7 @@ import {
   supabaseReplaceUsers, supabaseReplaceSessions, supabaseReplaceSemesters,
   supabaseReplaceCourses, supabaseReplaceEnrollments, supabaseReplaceActivities,
   supabaseReplaceSubmissions, supabaseUpdateSubmission,
+  supabaseInsertSubmissions, supabaseDeleteSubmissions,
   supabaseUpdateActivity, supabaseReadTicks, supabaseInsertTick, supabaseDeleteTick,
   supabaseReplaceGrades, supabaseReplaceCortes,
   supabaseReplacePrompts, supabaseReplaceProjects, supabaseUpdateProject,
@@ -318,6 +319,16 @@ export async function addTick(t: ChecklistTick): Promise<void> {
 
 export async function removeTick(activityId: string, studentId: string, itemId: string): Promise<void> {
   await supabaseDeleteTick(activityId, studentId, itemId);
+}
+
+/** Añade entregas sin reescribir las demás. */
+export async function appendSubmissions(items: Submission[]): Promise<void> {
+  await supabaseInsertSubmissions(items);
+}
+
+/** Borra entregas concretas por id. */
+export async function deleteSubmissions(ids: string[]): Promise<void> {
+  await supabaseDeleteSubmissions(ids);
 }
 
 export async function patchSubmission(id: string, patch: Partial<Submission>): Promise<void> {

@@ -378,6 +378,7 @@ export default function AdminSubmissionsPage() {
             onReturnDocuments={(files) => handleReturnDocuments(selected.id, files)}
             onRemoveDocument={(attId) => handleRemoveDocument(selected.id, attId)}
             documentsBusy={docsBusy}
+            grupo={(selected as SubmissionWithDetails & { grupo?: { miembros: string[]; subidoPor: string } }).grupo}
           />
         )}
       </Modal>

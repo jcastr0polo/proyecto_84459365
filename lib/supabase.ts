@@ -718,6 +718,8 @@ interface SupabaseSubmissionRow {
   attachments: SubmissionAttachment[];
   /* Llega con su migración; en filas anteriores viene null. */
   feedback_attachments?: SubmissionAttachment[] | null;
+  group_id?: string | null;
+  submitted_by?: string | null;
   links: SubmissionLink[];
   submitted_at: string;
   is_late: boolean;
@@ -733,6 +735,8 @@ function rowToSubmission(r: SupabaseSubmissionRow): Submission {
     content: r.content ?? undefined,
     attachments: r.attachments ?? [],
     ...(r.feedback_attachments?.length ? { feedbackAttachments: r.feedback_attachments } : {}),
+    ...(r.group_id ? { groupId: r.group_id } : {}),
+    ...(r.submitted_by ? { submittedBy: r.submitted_by } : {}),
     links: r.links ?? [],
     submittedAt: r.submitted_at, isLate: r.is_late,
     status: r.status, version: r.version,
@@ -746,6 +750,8 @@ function submissionToRow(s: Submission): Record<string, unknown> {
     content: s.content ?? null,
     attachments: (s.attachments ?? []),
     feedback_attachments: (s.feedbackAttachments ?? []),
+    group_id: s.groupId ?? null,
+    submitted_by: s.submittedBy ?? null,
     links: (s.links ?? []),
     submitted_at: s.submittedAt, is_late: s.isLate,
     status: s.status, version: s.version,
@@ -786,6 +792,12 @@ export async function supabaseUpdateSubmission(
   const fila: Record<string, unknown> = { updated_at: nowColombiaISO() };
   if (patch.feedbackAttachments !== undefined) fila.feedback_attachments = patch.feedbackAttachments;
   if (patch.status !== undefined) fila.status = patch.status;
+  if (patch.content !== undefined) fila.content = patch.content ?? null;
+  if (patch.attachments !== undefined) fila.attachments = patch.attachments;
+  if (patch.links !== undefined) fila.links = patch.links;
+  if (patch.submittedAt !== undefined) fila.submitted_at = patch.submittedAt;
+  if (patch.isLate !== undefined) fila.is_late = patch.isLate;
+  if (patch.version !== undefined) fila.version = patch.version;
 
   const { error } = await sb.from('submissions').update(fila).eq('id', id);
   if (!error) return;
@@ -796,6 +808,23 @@ export async function supabaseUpdateSubmission(
     'Falta la columna submissions.feedback_attachments. Aplica la migración '
     + '"2026-09-devolucion-docente" en Configuración › Base de datos.',
   );
+}
+
+/**
+ * Añade entregas sin tocar las que ya están.
+ *
+ * Entregar reescribía la tabla entera —412 filas para guardar una—, con lo que
+ * dos estudiantes enviando a la vez se borraban la entrega el uno al otro: el
+ * mismo fallo de los intentos de parcial. Con las entregas de grupo, que
+ * escriben varias filas de golpe, la ventana era aún mayor.
+ */
+export async function supabaseInsertSubmissions(items: Submission[]): Promise<void> {
+  await insertRows('submissions', items.map(submissionToRow));
+}
+
+/** Borra entregas por id. Se usa al reemplazar las de un grupo al re-entregar. */
+export async function supabaseDeleteSubmissions(ids: string[]): Promise<void> {
+  await deleteRowsById('submissions', ids);
 }
 
 export async function supabaseReplaceSubmissions(items: Submission[]): Promise<void> {

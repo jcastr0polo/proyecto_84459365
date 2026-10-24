@@ -14,6 +14,8 @@ import {
   getSubmission,
   readSubmissionsFresh,
   writeSubmissions,
+  appendSubmissions,
+  patchSubmission,
 } from '@/lib/dataService';
 import { nowColombiaISO, parseDateTimeColombia } from '@/lib/dateUtils';
 import { withFileLock } from '@/lib/dataService';
@@ -135,7 +137,12 @@ export async function submitWork(
   courseId: string,
   content: string | undefined,
   attachments: SubmissionAttachment[],
-  links: SubmissionLink[]
+  links: SubmissionLink[],
+  /**
+   * Compañeros de grupo, sin incluir a quien entrega. Solo en actividades
+   * marcadas como grupales; en las demás se ignora.
+   */
+  groupMemberIds: string[] = [],
 ): Promise<Submission> {
   // 1. Verificar actividad
   const activity = await getActivityById(activityId);
@@ -186,15 +193,24 @@ export async function submitWork(
       updatedAt: now,
     };
 
-    // Reemplazar en array (con lock para evitar escrituras concurrentes)
-    await withFileLock('submissions.json', async () => {
-      const submissions = await readSubmissionsFresh();
-      const index = submissions.findIndex((s) => s.id === existing.id);
-      if (index !== -1) {
-        submissions[index] = updatedSubmission;
-        await writeSubmissions(submissions);
-      }
-    });
+    /* Si la entrega es de grupo, se actualizan las filas de TODOS. Si solo se
+       tocara la de quien reenvía, sus compañeros se quedarían con la versión
+       vieja del archivo y el docente calificaría cosas distintas creyendo que
+       es el mismo trabajo. */
+    const todas = await readSubmissionsFresh();
+    const delGrupo = existing.groupId
+      ? todas.filter((x) => x.groupId === existing.groupId)
+      : [existing];
+
+    await Promise.all(delGrupo.map((fila) => patchSubmission(fila.id, {
+      content,
+      attachments,
+      links,
+      submittedAt: now,
+      isLate,
+      status: existing.status === 'returned' ? 'resubmitted' : 'submitted',
+      version: fila.version + 1,
+    })));
 
     return updatedSubmission;
   }
@@ -202,11 +218,44 @@ export async function submitWork(
   // 5. Validar requisitos para nueva entrega
   validateRequirements(activity, attachments, links);
 
-  // 6. Nueva entrega
-  const submission: Submission = {
+  /* 6. Quiénes quedan cubiertos por esta entrega.
+     En una actividad individual, solo quien entrega: los compañeros que
+     pudieran venir en la petición se ignoran, no se confía en el cliente para
+     decidir si algo es grupal. */
+  const esGrupal = activity.category === 'group';
+  const miembros = esGrupal
+    ? [...new Set([studentId, ...groupMemberIds])]
+    : [studentId];
+
+  if (esGrupal && miembros.length > 1) {
+    /* Todos tienen que estar inscritos y ninguno puede haber entregado ya:
+       si no, el segundo grupo que incluya a alguien repetido le pisaría su
+       entrega anterior sin que nadie se entere. */
+    const todas = await readSubmissionsFresh();
+    const yaEntregaron = todas.filter(
+      (x) => x.activityId === activityId && miembros.includes(x.studentId));
+    if (yaEntregaron.length > 0) {
+      throw new SubmissionError(
+        'Alguien de tu grupo ya entregó esta actividad. Revisa con tu grupo quién la subió.',
+        409,
+      );
+    }
+    for (const id of miembros) {
+      if (!(await isStudentEnrolled(id, courseId))) {
+        throw new SubmissionError('Alguien de tu grupo no está inscrito en este curso', 400);
+      }
+    }
+  }
+
+  const groupId = esGrupal && miembros.length > 1 ? `grp-${uuidv4()}` : undefined;
+
+  /* Una fila por miembro, con los MISMOS archivos. El archivo en el Blob es
+     uno solo: lo que se repite es la ficha, que es lo que hace que calificar,
+     contar y «mis entregas» sigan funcionando sin saber de grupos. */
+  const filas: Submission[] = miembros.map((id) => ({
     id: uuidv4(),
     activityId,
-    studentId,
+    studentId: id,
     courseId,
     content,
     attachments,
@@ -215,17 +264,14 @@ export async function submitWork(
     isLate,
     status: 'submitted',
     version: 1,
+    ...(groupId ? { groupId, submittedBy: studentId } : {}),
     createdAt: now,
     updatedAt: now,
-  };
+  }));
 
-  await withFileLock('submissions.json', async () => {
-    const submissions = await readSubmissionsFresh();
-    submissions.push(submission);
-    await writeSubmissions(submissions);
-  });
+  await appendSubmissions(filas);
 
-  return submission;
+  return filas.find((f) => f.studentId === studentId)!;
 }
 
 // ────────────────────────────────────────────────────────────

@@ -70,7 +70,7 @@ export default function StudentSubmitPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  async function handleSubmit(data: { files: File[]; links: SubmissionLink[]; content?: string }) {
+  async function handleSubmit(data: { files: File[]; links: SubmissionLink[]; content?: string; groupMemberIds?: string[] }) {
     setSubmitting(true);
     try {
       const formData = new FormData();
@@ -84,6 +84,7 @@ export default function StudentSubmitPage() {
       formData.append('data', JSON.stringify({
         content: data.content,
         links: data.links,
+        groupMemberIds: data.groupMemberIds,
       }));
 
       // XHR y no fetch: es la única forma de saber el progreso real de la

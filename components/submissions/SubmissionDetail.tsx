@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { GitBranch, Palette, Link as LinkIcon, Eye, Download, Trash2 } from 'lucide-react';
+import { GitBranch, Palette, Link as LinkIcon, Eye, Download, Trash2, Users } from 'lucide-react';
 import { formatDateTimeColombia as formatDateTime } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
@@ -23,6 +23,8 @@ interface SubmissionDetailProps {
   /** Docente: retira uno de los documentos devueltos. */
   onRemoveDocument?: (attachmentId: string) => void;
   documentsBusy?: boolean;
+  /** Si la entrega es de grupo: quiénes y quién la subió. */
+  grupo?: { miembros: string[]; subidoPor: string };
 }
 
 function isWithDetails(s: Submission | SubmissionWithDetails): s is SubmissionWithDetails {
@@ -34,7 +36,7 @@ function isWithDetails(s: Submission | SubmissionWithDetails): s is SubmissionWi
  */
 export default function SubmissionDetail({
   submission, isAdmin = false, onReturn, returnLoading = false,
-  onReturnDocuments, onRemoveDocument, documentsBusy = false,
+  onReturnDocuments, onRemoveDocument, documentsBusy = false, grupo,
 }: SubmissionDetailProps) {
   const devueltos = submission.feedbackAttachments ?? [];
   const status = SUBMISSION_STATUS_CONFIG[submission.status];
@@ -58,6 +60,21 @@ export default function SubmissionDetail({
             <p className="text-sm text-foreground/80 font-medium">{submission.student.firstName} {submission.student.lastName}</p>
             <p className="text-xs text-subtle">{submission.student.email}</p>
           </div>
+        </div>
+      )}
+
+      {/* Entrega en grupo: cuatro filas con el mismo archivo se leen como
+          cuatro entregas repetidas si no se dice que son un grupo. */}
+      {grupo && grupo.miembros.length > 1 && (
+        <div className={`rounded-xl border p-3 ${toneBox.action}`}>
+          <p className="text-xs font-medium text-foreground flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5 text-cyan-500" aria-hidden="true" />
+            Entrega en grupo · {grupo.miembros.length} personas
+          </p>
+          <p className="text-meta text-subtle mt-1">
+            {grupo.miembros.join(' · ')}
+          </p>
+          <p className="text-meta text-faint mt-0.5">Subido por {grupo.subidoPor}</p>
         </div>
       )}
 

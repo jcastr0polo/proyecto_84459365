@@ -69,6 +69,16 @@ export async function GET(
     const allUsers = await readUsersFresh();
     const usersById = new Map(allUsers.map((u) => [u.id, u]));
 
+    /** Quién entregó y con quién, para no leer cuatro entregas idénticas. */
+    const nombre = (id: string) => {
+      const u = usersById.get(id);
+      return u ? `${u.firstName} ${u.lastName}` : 'Desconocido';
+    };
+    const nombresDelGrupo = (groupId: string) => ({
+      miembros: filtered.filter((x) => x.groupId === groupId).map((x) => nombre(x.studentId)),
+      subidoPor: nombre(filtered.find((x) => x.groupId === groupId)?.submittedBy ?? ''),
+    });
+
     const enriched: SubmissionWithDetails[] = filtered.map((s) => {
       const student = usersById.get(s.studentId);
       return {
@@ -85,6 +95,10 @@ export async function GET(
           type: activity.type,
           dueDate: activity.dueDate,
         },
+        /* En una actividad grupal hay una fila por miembro con el MISMO
+           archivo. Sin decir que son un grupo, al docente le parecen cuatro
+           entregas duplicadas y no sabe cuál revisar. */
+        ...(s.groupId ? { grupo: nombresDelGrupo(s.groupId) } : {}),
       };
     });
 
@@ -141,6 +155,7 @@ export async function POST(
 
       let content: string | undefined;
       let links: SubmissionLink[] = [];
+      let groupMemberIds: string[] = [];
 
       if (dataField && typeof dataField === 'string') {
         const parsed = createSubmissionSchema.safeParse(JSON.parse(dataField));
@@ -152,6 +167,7 @@ export async function POST(
         }
         content = parsed.data.content ?? undefined;
         links = (parsed.data.links ?? []) as SubmissionLink[];
+        groupMemberIds = parsed.data.groupMemberIds ?? [];
       }
 
       // Upload attached files
@@ -192,7 +208,8 @@ export async function POST(
         activity.courseId,
         content,
         attachments,
-        links
+        links,
+        groupMemberIds,
       );
 
       logAudit({

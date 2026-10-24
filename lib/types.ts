@@ -459,6 +459,20 @@ export interface Submission {
    * que corrija y vuelva a entregar.
    */
   feedbackAttachments?: SubmissionAttachment[];
+  /**
+   * Entrega de grupo: identificador que comparten las filas de todos los
+   * miembros.
+   *
+   * Se crea UNA fila por estudiante y no una sola compartida. Parece
+   * duplicación, pero es lo que hace que todo lo demás siga funcionando sin
+   * tocarlo: calificar es por estudiante —y el docente puede querer poner
+   * notas distintas—, «quién no ha entregado» cuenta filas, y cada uno ve lo
+   * suyo en «Mis entregas». Con una fila compartida habría que enseñarle el
+   * concepto de grupo a media aplicación.
+   */
+  groupId?: string;
+  /** Quién subió los archivos. Los demás miembros los reciben sin subir nada. */
+  submittedBy?: string;
   links: SubmissionLink[];
   submittedAt: string;           // ISO 8601
   isLate: boolean;               // submittedAt > activity.dueDate

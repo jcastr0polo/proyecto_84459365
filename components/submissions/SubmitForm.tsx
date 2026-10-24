@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card';
 import Countdown from '@/components/ui/Countdown';
 import FileUploadZone from '@/components/ui/FileUploadZone';
 import LinkInput from '@/components/submissions/LinkInput';
+import SelectorDeGrupo from '@/components/submissions/SelectorDeGrupo';
 import { parseDateTimeColombia } from '@/lib/dateUtils';
 import { useDraft } from '@/lib/useDraft';
 import { nowColombia } from '@/lib/dateUtils';
@@ -19,6 +20,7 @@ interface SubmitFormProps {
     files: File[];
     links: SubmissionLink[];
     content?: string;
+    groupMemberIds?: string[];
   }) => Promise<void>;
   loading?: boolean;
   existingVersion?: number;
@@ -32,6 +34,7 @@ interface SubmitFormProps {
  */
 export default function SubmitForm({ activity, onSubmit, loading = false, existingVersion, progress }: SubmitFormProps) {
   const [files, setFiles] = useState<File[]>([]);
+  const [grupo, setGrupo] = useState<string[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
 
   // Borrador local: los archivos no se pueden guardar, el texto y los
@@ -92,6 +95,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
         files,
         links: buildLinks(),
         content: content.trim() || undefined,
+        groupMemberIds: activity.category === 'group' ? grupo : undefined,
       });
       // Enviado: el borrador ya no hace falta.
       clearDraft();
@@ -104,6 +108,17 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
 
   return (
     <div className="space-y-6">
+      {/* Con quién se entrega va primero: es una decisión previa a qué se
+          sube, y descubrirla al final ya no sirve de nada. */}
+      {activity.category === 'group' && (
+        <SelectorDeGrupo
+          activityId={activity.id}
+          seleccionados={grupo}
+          onChange={setGrupo}
+          disabled={loading}
+        />
+      )}
+
       {/* Se avisa de que hay texto recuperado: si no, el estudiante podría
           pensar que envió algo que en realidad nunca salió. */}
       {restored && (

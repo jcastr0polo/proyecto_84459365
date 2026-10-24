@@ -411,6 +411,8 @@ export const submissionSchema = z.object({
   attachments: z.array(submissionAttachmentSchema),
   /** Lo que el docente devuelve sobre esta entrega. */
   feedbackAttachments: z.array(submissionAttachmentSchema).optional(),
+  groupId: z.string().optional(),
+  submittedBy: z.string().optional(),
   links: z.array(submissionLinkSchema),
   submittedAt: z.string(),
   isLate: z.boolean(),
@@ -426,6 +428,12 @@ export const submissionSchema = z.object({
  */
 export const createSubmissionSchema = z.object({
   content: z.string().max(5000, 'El comentario no puede exceder 5000 caracteres').optional(),
+  /**
+   * Miembros del grupo, solo en actividades grupales. No incluye a quien
+   * entrega: ese se añade siempre, y pedirle que se marque a sí mismo es una
+   * forma segura de que alguien se deje fuera de su propio grupo.
+   */
+  groupMemberIds: z.array(z.string().min(1)).max(9, 'Máximo 10 personas por grupo').optional(),
   links: z.array(submissionLinkSchema).max(10, 'Máximo 10 enlaces').optional(),
 });
 
