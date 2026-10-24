@@ -22,13 +22,17 @@ export interface Companero {
  * ese compañero ya entregó por su cuenta y hay que hablar con él—.
  */
 export default function SelectorDeGrupo({
-  activityId, seleccionados, onChange, disabled,
+  activityId, seleccionados, onChange, disabled, maxGrupo,
 }: {
   activityId: string;
   seleccionados: string[];
   onChange: (ids: string[]) => void;
   disabled?: boolean;
+  /** Tope del grupo ENTERO, quien entrega incluido. Sin valor = sin tope. */
+  maxGrupo?: number;
 }) {
+  /* Quien entrega ya ocupa un sitio: con un tope de 3 puede elegir a 2. */
+  const cupoCompaneros = maxGrupo ? maxGrupo - 1 : null;
   const [companeros, setCompaneros] = useState<Companero[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,8 +49,15 @@ export default function SelectorDeGrupo({
     })();
   }, [activityId]);
 
-  const alternar = (id: string) => onChange(
-    seleccionados.includes(id) ? seleccionados.filter((x) => x !== id) : [...seleccionados, id]);
+  const lleno = cupoCompaneros !== null && seleccionados.length >= cupoCompaneros;
+
+  const alternar = (id: string) => {
+    if (seleccionados.includes(id)) { onChange(seleccionados.filter((x) => x !== id)); return; }
+    /* Lleno no significa bloqueado del todo: se puede desmarcar para cambiar
+       de compañero. Solo se impide añadir uno más. */
+    if (lleno) return;
+    onChange([...seleccionados, id]);
+  };
 
   return (
     <section className={`rounded-xl border p-4 ${toneBox.action}`}>
@@ -57,6 +68,10 @@ export default function SelectorDeGrupo({
           <p className="text-xs text-subtle mt-0.5 max-w-prose">
             Marca a tus compañeros. Subes el trabajo <strong className="text-foreground">una sola vez</strong> y
             queda entregado para todos: ellos no tienen que volver a subirlo.
+            {cupoCompaneros !== null && (
+              <> Grupos de <strong className="text-foreground">máximo {maxGrupo}</strong>, así que
+              puedes elegir {cupoCompaneros}.</>
+            )}
           </p>
         </div>
       </div>
@@ -83,7 +98,7 @@ export default function SelectorDeGrupo({
                   <button
                     type="button"
                     onClick={() => alternar(c.studentId)}
-                    disabled={disabled || c.yaEntrego}
+                    disabled={disabled || c.yaEntrego || (lleno && !marcado)}
                     aria-pressed={marcado}
                     className={`w-full flex items-center gap-3 rounded-lg border px-3 py-2.5 min-h-11 text-left
                                 transition-colors duration-[var(--dur-fast)]
@@ -119,7 +134,9 @@ export default function SelectorDeGrupo({
             <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" aria-hidden="true" />
             {seleccionados.length === 0
               ? 'Si no marcas a nadie, la entrega queda solo a tu nombre.'
-              : `Quedará entregado para ti y ${seleccionados.length} compañero${seleccionados.length !== 1 ? 's' : ''}.`}
+              : <>Quedará entregado para ti y {seleccionados.length} compañero{seleccionados.length !== 1 ? 's' : ''}
+                 {cupoCompaneros !== null && <> · {seleccionados.length + 1} de {maxGrupo}</>}
+                 {lleno && <strong className="text-foreground"> · grupo completo</strong>}.</>}
           </p>
         </>
       )}

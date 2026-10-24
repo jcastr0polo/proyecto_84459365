@@ -13,6 +13,8 @@ export interface ActivityFormData {
   description: string;
   type: Activity['type'];
   category: Activity['category'];
+  /** Tope de personas por grupo, contando a quien entrega. */
+  groupMaxSize?: number;
   corteId?: string;
   dueDate: string;
   dueTime: string;
@@ -81,6 +83,7 @@ export default function ActivityForm({
     dueTime: activity?.dueTime ?? '23:59',
     publishDate: activity?.publishDate ?? '',
     publishTime: activity?.publishTime ?? '00:00',
+    groupMaxSize: activity?.groupMaxSize,
     maxScore: activity?.maxScore ?? 5.0,
     weight: activity?.weight ?? 0,
     allowLateSubmission: activity?.allowLateSubmission ?? false,
@@ -97,6 +100,7 @@ export default function ActivityForm({
 
   /** Una lista de tareas no califica: ni nota máxima, ni peso, ni entrega. */
   const esLista = form.type === 'checklist';
+  const esGrupal = form.category === 'group';
 
   function validate(data: ActivityFormData): Record<string, string> {
     /* Sin este atajo, una lista arrastraría los errores de unos campos que ni
@@ -287,12 +291,45 @@ export default function ActivityForm({
               <select
                 id="act-category"
                 value={form.category}
-                onChange={(e) => update('category', e.target.value as Activity['category'])}
+                onChange={(e) => {
+                  const c = e.target.value as Activity['category'];
+                  /* Al volver a individual se limpia el cupo: dejarlo puesto
+                     haría que reapareciera si alguien vuelve a grupal, con un
+                     número que ya no decidió nadie. */
+                  updateVarios(c === 'group' ? { category: c } : { category: c, groupMaxSize: undefined });
+                }}
                 className={selectClass('category')}
               >
                 <option value="individual">Individual</option>
                 <option value="group">Grupal</option>
               </select>
+
+              {/* El cupo cuenta el grupo ENTERO, quien sube incluido: si pones
+                  3, cada estudiante podrá elegir a 2 compañeros. Decirlo aquí
+                  evita la duda de si son 3 o 4. */}
+              {esGrupal && (
+                <div className="mt-3">
+                  <label htmlFor="act-grupo-max" className="block text-xs font-medium text-muted mb-1.5">
+                    Máximo por grupo
+                  </label>
+                  <input
+                    id="act-grupo-max"
+                    type="number"
+                    min={2}
+                    max={10}
+                    placeholder="Sin tope"
+                    value={form.groupMaxSize ?? ''}
+                    onChange={(e) => update('groupMaxSize',
+                      e.target.value === '' ? undefined : Math.max(2, Math.min(10, parseInt(e.target.value) || 2)))}
+                    className={inputClass('groupMaxSize')}
+                  />
+                  <p className="mt-1 text-meta text-faint">
+                    {form.groupMaxSize
+                      ? `Cada estudiante podrá elegir ${form.groupMaxSize - 1} compañero${form.groupMaxSize - 1 !== 1 ? 's' : ''}.`
+                      : 'Sin tope: podrán formar grupos de cualquier tamaño.'}
+                  </p>
+                </div>
+              )}
             </div>
 
             {cortes.length > 0 && (

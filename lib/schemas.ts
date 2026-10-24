@@ -239,6 +239,8 @@ export const activitySchema = z.object({
   description: z.string(),
   type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'checklist', 'other']),
   category: z.enum(['individual', 'group']),
+  /** Tope de personas por grupo. Sin valor = sin tope. */
+  groupMaxSize: z.number().int().min(2, 'Un grupo es de dos personas como mínimo').max(10, 'Diez por grupo ya es una clase').optional(),
   attachments: z.array(activityAttachmentSchema),
   promptId: z.string().optional(),
   dueDate: z.string(),
@@ -266,6 +268,8 @@ export const createActivitySchema = z.object({
   description: z.string().min(1, 'La descripción es requerida'),
   type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'checklist', 'other']),
   category: z.enum(['individual', 'group']),
+  /** Tope de personas por grupo. Sin valor = sin tope. */
+  groupMaxSize: z.number().int().min(2, 'Un grupo es de dos personas como mínimo').max(10, 'Diez por grupo ya es una clase').optional(),
   corteId: z.string().optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido'),
   dueTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:mm').optional().default('23:59'),
@@ -297,6 +301,7 @@ export const updateActivitySchema = z.object({
   description: z.string().optional(),
   type: z.enum(['project', 'exercise', 'document', 'presentation', 'prompt', 'exam', 'checklist', 'other']).optional(),
   category: z.enum(['individual', 'group']).optional(),
+  groupMaxSize: z.number().int().min(2).max(10).optional(),
   corteId: z.string().nullable().optional(),
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?/, 'Formato de fecha inválido').optional(),
   dueTime: z.string().regex(/^\d{2}:\d{2}$/, 'Formato HH:mm').optional(),

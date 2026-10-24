@@ -227,6 +227,16 @@ export async function submitWork(
     ? [...new Set([studentId, ...groupMemberIds])]
     : [studentId];
 
+  if (esGrupal && activity.groupMaxSize && miembros.length > activity.groupMaxSize) {
+    /* El cupo cuenta el grupo ENTERO, quien sube incluido: «máximo 3» son
+       tres personas, no tres compañeros más quien entrega. */
+    throw new SubmissionError(
+      `Esta actividad es para grupos de máximo ${activity.groupMaxSize} personas, `
+      + `y están ${miembros.length} contándote a ti.`,
+      400,
+    );
+  }
+
   if (esGrupal && miembros.length > 1) {
     /* Todos tienen que estar inscritos y ninguno puede haber entregado ya:
        si no, el segundo grupo que incluya a alguien repetido le pisaría su

@@ -135,10 +135,14 @@ export const MIGRATIONS: Migration[] = [
       + 'compañeros y la entrega queda registrada para todos: dejan de subir el mismo '
       + 'archivo cuatro veces y tú dejas de recibirlo cuatro veces. Cada uno sigue '
       + 'teniendo su propia fila, así que puedes calificarlos por separado si quieres. '
+      + 'Tú decides cuántos caben en cada grupo. '
       + 'Nada existente cambia.',
     statements: [
       'ALTER TABLE submissions ADD COLUMN IF NOT EXISTS group_id TEXT',
       'ALTER TABLE submissions ADD COLUMN IF NOT EXISTS submitted_by TEXT',
+      /* El cupo lo decide el docente por actividad: no es lo mismo un informe
+         de a dos que un proyecto de a cinco. Vacío = sin tope. */
+      'ALTER TABLE activities ADD COLUMN IF NOT EXISTS group_max_size INTEGER',
       /* Para traer de una vez a todos los miembros de un grupo: se usa al
          re-entregar, que reemplaza las filas de todo el grupo. */
       'CREATE INDEX IF NOT EXISTS submissions_por_grupo ON submissions (group_id)',
@@ -146,6 +150,7 @@ export const MIGRATIONS: Migration[] = [
     requires: [
       { table: 'submissions', column: 'group_id' },
       { table: 'submissions', column: 'submitted_by' },
+      { table: 'activities', column: 'group_max_size' },
     ],
   },
 ];

@@ -364,6 +364,12 @@ export interface Activity {
    * Los puntos, cuando type === 'checklist'. Vacío o ausente en las demás.
    */
   checklist?: ChecklistItem[];
+  /**
+   * Cuántas personas caben en un grupo, cuando category === 'group'.
+   * Sin valor = sin tope. Lo decide el docente por actividad: no es lo mismo
+   * un informe de a dos que un proyecto de a cinco.
+   */
+  groupMaxSize?: number;
   createdAt: string;                   // ISO 8601
   updatedAt: string;                   // ISO 8601
 }

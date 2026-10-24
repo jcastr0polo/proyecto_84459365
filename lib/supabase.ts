@@ -536,6 +536,7 @@ interface SupabaseActivityRow {
   project_required: boolean | null;
   /* Llega con su migración; en filas anteriores viene null. */
   checklist?: ChecklistItem[] | null;
+  group_max_size?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -558,6 +559,7 @@ function rowToActivity(r: SupabaseActivityRow): Activity {
     requiresLinkSubmission: r.requires_link_submission,
     projectRequired: r.project_required ?? undefined,
     ...(r.checklist?.length ? { checklist: r.checklist } : {}),
+    ...(r.group_max_size ? { groupMaxSize: Number(r.group_max_size) } : {}),
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -580,6 +582,7 @@ function activityToRow(a: Activity): Record<string, unknown> {
     requires_link_submission: a.requiresLinkSubmission,
     project_required: a.projectRequired ?? null,
     checklist: a.checklist ?? null,
+    group_max_size: a.groupMaxSize ?? null,
     created_at: a.createdAt, updated_at: a.updatedAt,
   };
 }
@@ -602,6 +605,7 @@ export async function supabaseUpdateActivity(
   const sb = requireSupabaseClient();
   const fila: Record<string, unknown> = { updated_at: nowColombiaISO() };
   if (patch.checklist !== undefined) fila.checklist = patch.checklist;
+  if (patch.groupMaxSize !== undefined) fila.group_max_size = patch.groupMaxSize ?? null;
   const { error } = await sb.from('activities').update(fila).eq('id', id);
   if (!error) return;
   if (faltaColumna(error, 'checklist')) {

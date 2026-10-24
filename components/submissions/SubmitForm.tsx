@@ -116,6 +116,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
           seleccionados={grupo}
           onChange={setGrupo}
           disabled={loading}
+          maxGrupo={activity.groupMaxSize}
         />
       )}
 
