@@ -8,6 +8,8 @@ import { Skeleton, SkeletonList } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import ActivityDetail from '@/components/activities/ActivityDetail';
 import SubmissionStatus from '@/components/student/SubmissionStatus';
+import { ListaDeArchivos } from '@/components/submissions/SubmissionDetail';
+import { toneBox } from '@/lib/semantics';
 import { nowColombia } from '@/lib/dateUtils';
 import { startOfTodayColombia } from '@/lib/activityStatus';
 import PromptViewer from '@/components/prompts/PromptViewer';
@@ -143,14 +145,42 @@ export default function StudentActivityDetailPage() {
            que lleva a un formulario vacío, y grita más que el acceso a la
            lista. Lo que hacen aquí es marcar, y eso ya está arriba. */
         submissionSlot={activity.type === 'checklist' ? undefined : (
-          <SubmissionStatus
-            activity={activity}
-            submission={submission}
-            isPastDue={isPastDue}
-            courseId={courseId}
-            actId={actId}
-            today={today}
-          />
+          <>
+            <SubmissionStatus
+              activity={activity}
+              submission={submission}
+              isPastDue={isPastDue}
+              courseId={courseId}
+              actId={actId}
+              today={today}
+            />
+
+            {/* Lo que entregó, descargable desde aquí.
+                Antes solo se veía entrando a «entregar», y con la actividad
+                cerrada ese camino desaparece: el estudiante se quedaba sin
+                forma de recuperar su propio archivo. Casi todos suben .md o
+                .pdf; el .md además se puede previsualizar sin descargarlo. */}
+            {submission && submission.attachments.length > 0 && (
+              <div className="mt-4">
+                <ListaDeArchivos
+                  titulo={`Lo que entregaste (${submission.attachments.length})`}
+                  archivos={submission.attachments}
+                  isAdmin={false}
+                />
+              </div>
+            )}
+
+            {submission && (submission.feedbackAttachments?.length ?? 0) > 0 && (
+              <div className={`mt-4 rounded-xl border p-4 ${toneBox.ok}`}>
+                <ListaDeArchivos
+                  titulo={`Devolución del docente (${submission.feedbackAttachments!.length})`}
+                  archivos={submission.feedbackAttachments!}
+                  isAdmin={false}
+                  tono="emerald"
+                />
+              </div>
+            )}
+          </>
         )}
       />
     </div>

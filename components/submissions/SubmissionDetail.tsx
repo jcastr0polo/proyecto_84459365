@@ -170,7 +170,7 @@ function formatFileSize(bytes: number): string {
  * pantalla del estudiante: el layout de admin comprueba el rol y lo echaba al
  * login. Un estudiante no podía previsualizar su propio .md.
  */
-function ListaDeArchivos({
+export function ListaDeArchivos({
   titulo, archivos, isAdmin, onQuitar, ocupado, tono = 'cyan',
 }: {
   titulo: string;

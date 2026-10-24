@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ToastProvider } from '@/components/ui/Toast';
 import { Skeleton, SkeletonCards, SkeletonList } from '@/components/ui/Skeleton';
-import { Home, BookOpen, User, Lock, LogOut, Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Home, BookOpen, User, Inbox, Lock, LogOut, Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import ThumbNav from '@/components/ui/ThumbNav';
 import { useHideOnScroll } from '@/lib/useHideOnScroll';
@@ -20,6 +20,7 @@ interface UserInfo {
 const NAV_ITEMS = [
   { href: '/student', label: 'Inicio', icon: Home },
   { href: '/student/courses', label: 'Mis Cursos', icon: BookOpen },
+  { href: '/student/entregas', label: 'Mis Entregas', icon: Inbox },
   { href: '/student/profile', label: 'Mi Perfil', icon: User },
 ];
 
@@ -255,6 +256,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         items={[
           { href: '/student', label: 'Inicio', icon: <Home className="w-5 h-5" /> },
           { href: '/student/courses', label: 'Cursos', icon: <BookOpen className="w-5 h-5" /> },
+          { href: '/student/entregas', label: 'Entregas', icon: <Inbox className="w-5 h-5" /> },
           { href: '/student/profile', label: 'Perfil', icon: <User className="w-5 h-5" /> },
           { label: 'Más', icon: <Menu className="w-5 h-5" />, onClick: () => setMobileMenuOpen(true) },
         ]}
@@ -267,6 +269,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
 const SEGMENT_LABELS: Record<string, string> = {
   student: 'Inicio',
+  entregas: 'Mis Entregas',
   courses: 'Mis Cursos',
   activities: 'Actividades',
   grades: 'Notas',
