@@ -52,7 +52,18 @@ export async function GET(request: Request, { params }: RouteParams): Promise<Ne
         })
         .sort((a, b) => `${a.lastName}${a.firstName}`.localeCompare(`${b.lastName}${b.firstName}`, 'es'));
 
-      return NextResponse.json({ companeros });
+      /* Con quién está YA agrupado quien pregunta. El selector arranca con
+         ellos marcados: si arranca vacío, reenviar equivale a decir «ahora voy
+         solo» y se le borra la entrega a los compañeros sin que nadie lo
+         pida. Pasó: un estudiante reenvió y su compañera perdió la entrega. */
+      const miEntrega = entregas.find((s) => s.activityId === id && s.studentId === user.id);
+      const miGrupo = miEntrega?.groupId
+        ? entregas
+            .filter((s) => s.groupId === miEntrega.groupId && s.studentId !== user.id)
+            .map((s) => s.studentId)
+        : [];
+
+      return NextResponse.json({ companeros, miGrupo });
     } catch (error) {
       console.error('[companeros]', error);
       return NextResponse.json({ error: 'Error interno' }, { status: 500 });

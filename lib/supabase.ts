@@ -1368,14 +1368,24 @@ function quizAttemptToRow(a: QuizAttempt): Record<string, unknown> {
  * un commit. Una caja de texto libre contra producción sería otra cosa.
  *
  * Todo o nada: si una falla, no queda nada aplicado a medias.
+ *
+ * Devuelve cuántas filas tocó cada sentencia. Para un cambio de esquema da
+ * cero y no interesa; para una reparación de datos es lo único que dice si
+ * hizo algo, y poder contarlo evita tener que salir a mirar la base a mano.
  */
-export async function supabaseRunStatements(statements: string[]): Promise<void> {
-  await conPg(async (sql) => {
-    await sql.begin(async (tx) => {
-      for (const stmt of statements) await tx.unsafe(stmt);
+export async function supabaseRunStatements(statements: string[]): Promise<number[]> {
+  return conPg(async (sql) => {
+    const filas = await sql.begin(async (tx) => {
+      const cuentas: number[] = [];
+      for (const stmt of statements) {
+        const r = await tx.unsafe(stmt);
+        cuentas.push((r as unknown as { count?: number }).count ?? 0);
+      }
+      return cuentas;
     });
     // PostgREST cachea el esquema: sin esto el cliente JS no ve lo nuevo.
     await sql`NOTIFY pgrst, 'reload schema'`;
+    return filas as number[];
   });
 }
 

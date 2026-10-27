@@ -24,6 +24,16 @@ export interface Migration {
   statements: string[];
   /** Columnas que deben existir cuando la migración esté aplicada. */
   requires: { table: string; column: string }[];
+  /**
+   * Arregla DATOS, no el esquema.
+   *
+   * El estado se deduce de si existen unas columnas, y eso no sirve para una
+   * reparación: las columnas ya están, así que saldría «aplicada» y no habría
+   * forma de ejecutarla. Marcada así, se ofrece siempre. Tiene que ser
+   * idempotente de verdad —correrla dos veces no puede cambiar nada—, y
+   * `requires` pasa a significar «qué hace falta para poder correrla».
+   */
+  datos?: boolean;
 }
 
 export const MIGRATIONS: Migration[] = [
@@ -151,6 +161,47 @@ export const MIGRATIONS: Migration[] = [
       { table: 'submissions', column: 'group_id' },
       { table: 'submissions', column: 'submitted_by' },
       { table: 'activities', column: 'group_max_size' },
+    ],
+  },
+  {
+    id: '2026-10-reparar-grupos',
+    title: 'Reparar las entregas en grupo que perdieron su grupo',
+    why:
+      'Las entregas hechas antes de habilitar los grupos se guardaron sin el dato '
+      + 'de quién entregó con quién: cada miembro aparece por separado y no se ve '
+      + 'que son un mismo trabajo. Esto lo reconstruye. No adivina por el nombre del '
+      + 'archivo: agrupa solo las entregas que apuntan al MISMO archivo subido —la '
+      + 'misma ruta exacta—, que es prueba de que salió de una sola carga. No toca '
+      + 'nada que ya tenga grupo, ni las actividades individuales. Se puede aplicar '
+      + 'más de una vez sin efecto.',
+    statements: [
+      `WITH huellas AS (
+         SELECT s.id, s.activity_id, s.student_id, s.submitted_at,
+                (SELECT string_agg(a->>'filePath', '|' ORDER BY a->>'filePath')
+                   FROM jsonb_array_elements(s.attachments) a) AS huella
+         FROM submissions s
+         JOIN activities ac ON ac.id = s.activity_id AND ac.category = 'group'
+         WHERE s.group_id IS NULL
+           AND jsonb_array_length(COALESCE(s.attachments, '[]'::jsonb)) > 0
+       ),
+       grupos AS (
+         SELECT activity_id, huella,
+                'grp-' || md5(activity_id || huella) AS gid,
+                (array_agg(student_id ORDER BY submitted_at, student_id))[1] AS primero
+         FROM huellas
+         GROUP BY activity_id, huella
+         HAVING count(*) > 1
+       )
+       UPDATE submissions s
+          SET group_id = g.gid, submitted_by = g.primero
+         FROM huellas h
+         JOIN grupos g ON g.activity_id = h.activity_id AND g.huella = h.huella
+        WHERE s.id = h.id`,
+    ],
+    /* No añade columnas: `requires` es aquí «qué hace falta para correrla». */
+    datos: true,
+    requires: [
+      { table: 'submissions', column: 'group_id' },
     ],
   },
 ];

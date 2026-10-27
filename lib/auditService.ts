@@ -118,14 +118,18 @@ export function logAudit(ctx: AuditContext): void {
  * 1. AWAIT la escritura de datos (prioridad máxima, debe completar)
  * 2. FIRE-AND-FORGET la auditoría (background, no bloquea respuesta)
  *
+ * Devuelve lo que devuelva la escritura, para quien necesite el resultado
+ * (por ejemplo, cuántas filas tocó) sin perder la auditoría por el camino.
+ *
  * @param writeFn - La función async de escritura (ej: writeUsers(users))
  * @param audit - Contexto de auditoría
  */
-export async function dispatchWrite(
-  writeFn: () => Promise<void>,
+export async function dispatchWrite<T = void>(
+  writeFn: () => Promise<T>,
   audit: AuditContext
-): Promise<void> {
-  await writeFn();        // Datos: AWAIT — debe completar antes de responder
-  logAudit(audit);        // Audit: fire-and-forget — no bloquea
+): Promise<T> {
+  const resultado = await writeFn();  // Datos: AWAIT — debe completar antes de responder
+  logAudit(audit);                    // Audit: fire-and-forget — no bloquea
+  return resultado;
 }
 

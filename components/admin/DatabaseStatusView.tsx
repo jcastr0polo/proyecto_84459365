@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Database, RefreshCw, Table2, Archive, Check, AlertTriangle } from 'lucide-react';
+import { Database, RefreshCw, Table2, Archive, Check, AlertTriangle, Wrench } from 'lucide-react';
 import StatTile from '@/components/ui/StatTile';
 import Button from '@/components/ui/Button';
 import BackLink from '@/components/ui/BackLink';
@@ -30,6 +30,10 @@ export interface MigrationStatus {
   why: string;
   statements: string[];
   applied: boolean;
+  /** Reparación de datos: no se puede leer si está hecha, se ofrece y ya. */
+  datos?: boolean;
+  /** Sus prerequisitos de esquema están, así que tiene sentido ejecutarla. */
+  puedeCorrerse?: boolean;
   error: string | null;
 }
 
@@ -123,13 +127,18 @@ export default function DatabaseStatusView({
           <div className="space-y-2">
             {migrations.map((m) => (
               <div key={m.id}
-                className={`rounded-xl border p-4 ${m.applied ? 'border-surface-border bg-surface' : toneBox.attention}`}>
+                /* Una reparación de datos no es un cambio pendiente: es una
+                   herramienta que está ahí por si hace falta. En ámbar como
+                   las pendientes haría pensar que falta algo siempre. */
+                className={`rounded-xl border p-4 ${m.applied || m.datos ? 'border-surface-border bg-surface' : toneBox.attention}`}>
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground flex items-center gap-2">
                       {m.applied
                         ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-                        : <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true" />}
+                        : m.datos
+                          ? <Wrench className="w-4 h-4 text-subtle shrink-0" aria-hidden="true" />
+                          : <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true" />}
                       {m.title}
                     </p>
                     <p className="text-xs text-subtle mt-1 max-w-prose">{m.why}</p>
@@ -138,6 +147,19 @@ export default function DatabaseStatusView({
 
                   {m.applied ? (
                     <span className={`text-xs font-medium shrink-0 ${toneText.ok}`}>Aplicada</span>
+                  ) : m.datos ? (
+                    /* Se puede repetir sin miedo: solo toca filas que siguen
+                       sin grupo, así que correrla dos veces no cambia nada. */
+                    <Button
+                      variant="secondary" size="md" className="shrink-0"
+                      onClick={() => onApply?.(m.id)}
+                      disabled={!onApply || applying === m.id || m.puedeCorrerse === false}
+                      title={m.puedeCorrerse === false
+                        ? 'Faltan columnas que esta reparación necesita'
+                        : undefined}
+                    >
+                      {applying === m.id ? 'Reparando…' : 'Reparar'}
+                    </Button>
                   ) : (
                     <Button
                       variant="warning" size="md" className="shrink-0"

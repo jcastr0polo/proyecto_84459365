@@ -43,10 +43,16 @@ export default function SelectorDeGrupo({
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? 'No se pudo cargar el curso');
         setCompaneros(data.companeros ?? []);
+        /* Si ya estaba en un grupo, se marca solo. Quien reenvía para cambiar
+           un archivo no tiene por qué volver a declarar su grupo entero, y si
+           se le olvida, sus compañeros pierden la entrega. */
+        if ((data.miGrupo ?? []).length > 0) onChange(data.miGrupo);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Error de conexión');
       }
     })();
+    // onChange se omite a propósito: solo se precarga una vez, al montar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activityId]);
 
   const lleno = cupoCompaneros !== null && seleccionados.length >= cupoCompaneros;

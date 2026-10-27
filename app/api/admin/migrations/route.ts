@@ -27,9 +27,13 @@ async function estadoDe(id: string) {
     const checks = await Promise.all(
       m.requires.map((r) => supabaseColumnExists(r.table, r.column)),
     );
-    return { applied: checks.every(Boolean), error: null as string | null };
+    const listo = checks.every(Boolean);
+    /* Una reparación de datos nunca se da por «aplicada»: su estado no se
+       puede leer de las columnas, y marcarla como hecha la dejaría fuera de
+       alcance para siempre. Se ofrece mientras se pueda correr. */
+    return { applied: m.datos ? false : listo, puedeCorrerse: listo, error: null as string | null };
   } catch (e) {
-    return { applied: false, error: e instanceof Error ? e.message : 'No se pudo comprobar' };
+    return { applied: false, puedeCorrerse: false, error: e instanceof Error ? e.message : 'No se pudo comprobar' };
   }
 }
 
@@ -39,6 +43,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       id: m.id,
       title: m.title,
       why: m.why,
+      datos: m.datos ?? false,
       // Se enseña el SQL exacto: aplicar algo a ciegas sobre notas reales, no.
       statements: m.statements,
       ...(await estadoDe(m.id)),
@@ -46,7 +51,9 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     return NextResponse.json({
       migrations,
-      pending: migrations.filter((m) => !m.applied).length,
+      /* Las reparaciones de datos no cuentan como pendientes: están ahí por si
+         hacen falta, no son algo que el esquema esté esperando. */
+      pending: migrations.filter((m) => !m.applied && !m.datos).length,
     });
   }, 'admin');
 }
@@ -68,24 +75,48 @@ export async function POST(request: Request): Promise<NextResponse> {
 
       // Aplicarla dos veces no rompe nada —son idempotentes— pero no tiene
       // sentido, y decirlo es mejor que fingir que se hizo algo.
-      const { applied } = await estadoDe(id);
+      const { applied, puedeCorrerse } = await estadoDe(id);
       if (applied) {
         return NextResponse.json({ applied: true, message: 'Ya estaba aplicada. No se cambió nada.' });
       }
+      if (migration.datos && !puedeCorrerse) {
+        return NextResponse.json(
+          { error: 'Antes hay que aplicar los cambios de esquema de los que depende.' },
+          { status: 400 },
+        );
+      }
 
-      await dispatchWrite(
+      const filas = await dispatchWrite(
         () => supabaseRunStatements(migration.statements),
         {
           action: 'update',
-          entity: 'schema',
+          entity: migration.datos ? 'submission' : 'schema',
           entityId: migration.id,
           userId: user.id,
           userName: `${user.firstName} ${user.lastName}`,
-          details: `Aplicó la migración "${migration.title}" (${migration.statements.length} sentencias)`,
+          details: migration.datos
+            ? `Ejecutó la reparación "${migration.title}"`
+            : `Aplicó la migración "${migration.title}" (${migration.statements.length} sentencias)`,
           after: auditSnapshot({ id: migration.id, statements: migration.statements }),
           ...extractRequestMeta(request),
         },
       );
+
+      /*
+       * Una reparación de datos no deja huella en el esquema, así que no hay
+       * nada que volver a comprobar: lo que se puede decir es cuántas filas
+       * tocó, y eso es justo lo que interesa saber.
+       */
+      if (migration.datos) {
+        const tocadas = (filas ?? []).reduce((a, b) => a + b, 0);
+        return NextResponse.json({
+          applied: true,
+          filas: tocadas,
+          message: tocadas > 0
+            ? `"${migration.title}": ${tocadas} ${tocadas === 1 ? 'fila corregida' : 'filas corregidas'}.`
+            : `"${migration.title}": no había nada que corregir.`,
+        });
+      }
 
       // Se vuelve a comprobar contra el esquema: que no falle no garantiza
       // que quedara como debía.
