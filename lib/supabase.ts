@@ -210,19 +210,46 @@ async function replaceAllRows<T extends object>(
 }
 
 async function insertOneRow<T extends Record<string, unknown>>(table: string, row: T): Promise<void> {
-  const sb = requireSupabaseClient();
-  const { error } = await sb.from(table).insert(row);
-  if (error) throw new Error(`[supabase] insert ${table}: ${error.message}`);
+  await insertRows(table, [row]);
 }
 
 /** Añade varias filas de una vez, sin tocar las que ya están. */
+/**
+ * Añade varias filas de una vez, sin tocar las que ya están.
+ *
+ * Tolera que falte una columna que aún no existe: se quita la que el error
+ * nombra y se reintenta. Entre desplegar el código que escribe una columna
+ * nueva y aplicar su migración pasa un rato, y en ese rato NADA que inserte en
+ * esa tabla puede dejar de funcionar. Pasó con submissions.group_id: durante
+ * horas ningún estudiante pudo entregar, ni en grupo ni solo.
+ */
 async function insertRows(table: string, rows: Record<string, unknown>[]): Promise<void> {
   if (rows.length === 0) return;
   const sb = requireSupabaseClient();
-  // El tipado genérico de supabase-js rechaza un array de Record suelto; la
-  // forma de la fila ya la garantiza el *ToRow que la construye.
-  const { error } = await sb.from(table).insert(rows as never);
-  if (error) throw new Error(`[supabase] insert ${table} (${rows.length}): ${error.message}`);
+  let actuales = rows;
+  const quitadas: string[] = [];
+
+  for (let intento = 0; intento < 4; intento++) {
+    // El tipado genérico de supabase-js rechaza un array de Record suelto; la
+    // forma de la fila ya la garantiza el *ToRow que la construye.
+    const { error } = await sb.from(table).insert(actuales as never);
+    if (!error) {
+      if (quitadas.length > 0) {
+        console.warn(
+          `[supabase] faltan columnas en ${table} (${quitadas.join(', ')}): se guardó `
+          + 'sin ellas. Aplica las migraciones pendientes en Configuración › Base de datos.',
+        );
+      }
+      return;
+    }
+    const col = columnaQueFalta(error);
+    if (!col || !(col in (actuales[0] ?? {}))) {
+      throw new Error(`[supabase] insert ${table} (${rows.length}): ${error.message}`);
+    }
+    quitadas.push(col);
+    actuales = actuales.map((f) => { const sin = { ...f }; delete sin[col]; return sin; });
+  }
+  throw new Error(`[supabase] demasiadas columnas ausentes en ${table}`);
 }
 
 /** Borra por id, sin tocar el resto de la tabla. */
@@ -1005,12 +1032,21 @@ export async function supabaseGetCorteById(id: string): Promise<Corte | null> {
  */
 export function columnaQueFalta(e: unknown): string | null {
   const err = e as { code?: string; message?: string } | null;
+  const texto = `${err?.message ?? ''} ${String(e)}`;
+
+  /* PostgREST no da el 42703 de Postgres: contesta desde su caché de esquema
+     con PGRST204 y otra redacción. Es el camino por el que van los INSERT,
+     así que sin esto la tolerancia solo servía para la conexión directa.
+       Could not find the 'group_id' column of 'submissions' in the schema cache */
+  const postgrest = /Could not find the '([a-z_][a-z0-9_]*)' column/i.exec(texto);
+  if (postgrest) return postgrest[1];
+
   if (err?.code !== '42703') return null;
   /* Postgres lo dice de dos formas según de dónde venga:
        column "group_max_size" of relation "activities" does not exist
        column activities.checklist does not exist
      El punto tiene que entrar en la captura para poder quitar la tabla. */
-  const m = /column "?([a-z_][a-z0-9_.]*)"?/i.exec(`${err.message ?? ''} ${String(e)}`);
+  const m = /column "?([a-z_][a-z0-9_.]*)"?/i.exec(texto);
   return m ? m[1].replace(/^.*\./, '') : null;
 }
 
