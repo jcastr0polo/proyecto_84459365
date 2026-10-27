@@ -16,9 +16,12 @@ import {
   writeSubmissions,
   appendSubmissions,
   patchSubmission,
+  deleteSubmissions,
+  readGradesFresh,
 } from '@/lib/dataService';
 import { nowColombiaISO, parseDateTimeColombia } from '@/lib/dateUtils';
 import { withFileLock } from '@/lib/dataService';
+import { supabaseColumnExists } from '@/lib/supabase';
 import type {
   Submission,
   SubmissionAttachment,
@@ -131,6 +134,25 @@ function validateRequirements(
  * 5. Validar requisitos (archivos/enlaces)
  * 6. Guardar
  */
+/**
+ * Sin las columnas de grupo no se puede registrar un grupo.
+ *
+ * La escritura tolera que falten —si no, con la migración pendiente nadie
+ * podría entregar— pero tolerar significa guardar SIN el dato del grupo, y
+ * eso es justo lo que no se puede hacer en silencio: el estudiante elige a su
+ * compañero, le decimos «entregado», y el compañero sigue apareciendo como
+ * que no entregó. Pasó. Aquí se para y se dice.
+ */
+async function exigirColumnasDeGrupo(): Promise<void> {
+  if (await supabaseColumnExists('submissions', 'group_id')) return;
+  throw new SubmissionError(
+    'Las entregas en grupo todavía no están habilitadas en esta plataforma. '
+    + 'Avísale a tu docente: tiene que aplicar un cambio pendiente. '
+    + 'Mientras tanto, cada uno puede subir su propia entrega.',
+    503,
+  );
+}
+
 export async function submitWork(
   activityId: string,
   studentId: string,
@@ -193,24 +215,89 @@ export async function submitWork(
       updatedAt: now,
     };
 
-    /* Si la entrega es de grupo, se actualizan las filas de TODOS. Si solo se
-       tocara la de quien reenvía, sus compañeros se quedarían con la versión
-       vieja del archivo y el docente calificaría cosas distintas creyendo que
-       es el mismo trabajo. */
+    /* Al reenviar también se rehace el GRUPO, no solo el archivo.
+       Antes este camino ignoraba los compañeros elegidos: quien entregaba
+       solo y luego reenviaba marcando a alguien, veía el selector, lo usaba,
+       y su compañero seguía apareciendo como que no había entregado. */
     const todas = await readSubmissionsFresh();
-    const delGrupo = existing.groupId
+    const esGrupalR = activity.category === 'group';
+    const deseados = esGrupalR
+      ? [...new Set([studentId, ...groupMemberIds])]
+      : [studentId];
+
+    if (esGrupalR && activity.groupMaxSize && deseados.length > activity.groupMaxSize) {
+      throw new SubmissionError(
+        `Esta actividad es para grupos de máximo ${activity.groupMaxSize} personas, `
+        + `y están ${deseados.length} contándote a ti.`,
+        400,
+      );
+    }
+    if (esGrupalR && deseados.length > 1) await exigirColumnasDeGrupo();
+
+    const actuales = existing.groupId
       ? todas.filter((x) => x.groupId === existing.groupId)
       : [existing];
+    const yaEnGrupo = new Set(actuales.map((x) => x.studentId));
 
-    await Promise.all(delGrupo.map((fila) => patchSubmission(fila.id, {
-      content,
-      attachments,
-      links,
-      submittedAt: now,
-      isLate,
-      status: existing.status === 'returned' ? 'resubmitted' : 'submitted',
-      version: fila.version + 1,
-    })));
+    /* Quien se añade no puede venir de otro grupo ni haber entregado aparte:
+       crearle una segunda fila dejaría dos entregas suyas y el docente no
+       sabría cuál es la buena. */
+    const aAnadir = deseados.filter((id) => !yaEnGrupo.has(id));
+    for (const id of aAnadir) {
+      if (!(await isStudentEnrolled(id, courseId))) {
+        throw new SubmissionError('Alguien de tu grupo no está inscrito en este curso', 400);
+      }
+      if (todas.some((x) => x.activityId === activityId && x.studentId === id)) {
+        throw new SubmissionError(
+          'Alguien a quien añadiste ya tiene su propia entrega en esta actividad. '
+          + 'Habla con esa persona antes de incluirla.',
+          409,
+        );
+      }
+    }
+
+    /* A quien se saca del grupo se le quita la fila, salvo que ya tenga nota:
+       borrar una entrega calificada es destruir el trabajo del docente. */
+    const aQuitar = actuales.filter((x) => !deseados.includes(x.studentId));
+    if (aQuitar.length > 0) {
+      const notas = await readGradesFresh();
+      const conNota = aQuitar.filter((x) => notas.some((g) => g.submissionId === x.id));
+      if (conNota.length > 0) {
+        throw new SubmissionError(
+          'No puedes sacar del grupo a alguien cuya entrega ya fue calificada.',
+          409,
+        );
+      }
+    }
+
+    const groupId = deseados.length > 1
+      ? (existing.groupId ?? `grp-${uuidv4()}`)
+      : undefined;
+    const nuevoEstado = existing.status === 'returned' ? 'resubmitted' : 'submitted';
+
+    const comunes = {
+      content, attachments, links, submittedAt: now, isLate,
+      status: nuevoEstado as Submission['status'],
+      ...(groupId ? { groupId, submittedBy: studentId } : {}),
+    };
+
+    await Promise.all([
+      // los que siguen: misma versión+1
+      ...actuales
+        .filter((x) => deseados.includes(x.studentId))
+        .map((fila) => patchSubmission(fila.id, { ...comunes, version: fila.version + 1 })),
+      // los que entran: fila nueva, en la versión del grupo
+      aAnadir.length > 0
+        ? appendSubmissions(aAnadir.map((id) => ({
+            id: uuidv4(), activityId, studentId: id, courseId,
+            version: existing.version + 1,
+            createdAt: now, updatedAt: now,
+            ...comunes,
+          } as Submission)))
+        : Promise.resolve(),
+      // los que salen
+      aQuitar.length > 0 ? deleteSubmissions(aQuitar.map((x) => x.id)) : Promise.resolve(),
+    ]);
 
     return updatedSubmission;
   }
@@ -236,6 +323,8 @@ export async function submitWork(
       400,
     );
   }
+
+  if (esGrupal && miembros.length > 1) await exigirColumnasDeGrupo();
 
   if (esGrupal && miembros.length > 1) {
     /* Todos tienen que estar inscritos y ninguno puede haber entregado ya:
