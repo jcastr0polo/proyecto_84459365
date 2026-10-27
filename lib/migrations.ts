@@ -169,16 +169,28 @@ export const MIGRATIONS: Migration[] = [
     why:
       'Las entregas hechas antes de habilitar los grupos se guardaron sin el dato '
       + 'de quién entregó con quién: cada miembro aparece por separado y no se ve '
-      + 'que son un mismo trabajo. Esto lo reconstruye. No adivina por el nombre del '
-      + 'archivo: agrupa solo las entregas que apuntan al MISMO archivo subido —la '
-      + 'misma ruta exacta—, que es prueba de que salió de una sola carga. No toca '
-      + 'nada que ya tenga grupo, ni las actividades individuales. Se puede aplicar '
-      + 'más de una vez sin efecto.',
+      + 'que son un mismo trabajo. Esto lo reconstruye sin adivinar nada. Agrupa '
+      + 'solo las entregas que apuntan al MISMO archivo subido —la misma ruta '
+      + 'exacta—, que es prueba de que salieron de una sola carga, y saca quién '
+      + 'entregó de la propia ruta, que lleva dentro la carpeta del que subió. No '
+      + 'toca nada que ya tenga grupo, ni las entregas individuales, ni las que '
+      + 'no compartan archivo con nadie. Se puede ejecutar más de una vez.',
     statements: [
+      /*
+       * Quién entregó NO sale de la fecha: los miembros de un grupo comparten
+       * el mismo `submitted_at` al milisegundo —se escribieron en la misma
+       * carga—, así que ordenar por fecha elegía a cualquiera. Sale de la
+       * ruta del archivo, que incluye la carpeta de quien lo subió
+       * (.../act-<actividad>/stu-<usuario>/<archivo>). Si de ahí no sale un
+       * usuario que exista, se deja como estaba: mejor sin dato que con uno
+       * inventado.
+       */
       `WITH huellas AS (
-         SELECT s.id, s.activity_id, s.student_id, s.submitted_at,
+         SELECT s.id, s.activity_id,
                 (SELECT string_agg(a->>'filePath', '|' ORDER BY a->>'filePath')
-                   FROM jsonb_array_elements(s.attachments) a) AS huella
+                   FROM jsonb_array_elements(s.attachments) a) AS huella,
+                (SELECT substring(a->>'filePath' from '/stu-([0-9a-zA-Z-]+)/')
+                   FROM jsonb_array_elements(s.attachments) a LIMIT 1) AS subio
          FROM submissions s
          JOIN activities ac ON ac.id = s.activity_id AND ac.category = 'group'
          WHERE s.group_id IS NULL
@@ -187,13 +199,15 @@ export const MIGRATIONS: Migration[] = [
        grupos AS (
          SELECT activity_id, huella,
                 'grp-' || md5(activity_id || huella) AS gid,
-                (array_agg(student_id ORDER BY submitted_at, student_id))[1] AS primero
+                max(subio) AS subio
          FROM huellas
          GROUP BY activity_id, huella
          HAVING count(*) > 1
        )
        UPDATE submissions s
-          SET group_id = g.gid, submitted_by = g.primero
+          SET group_id = g.gid,
+              submitted_by = COALESCE(
+                (SELECT u.id FROM users u WHERE u.id = g.subio), s.submitted_by)
          FROM huellas h
          JOIN grupos g ON g.activity_id = h.activity_id AND g.huella = h.huella
         WHERE s.id = h.id`,
