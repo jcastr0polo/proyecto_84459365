@@ -90,7 +90,7 @@ export default function StudentSubmitPage() {
       // XHR y no fetch: es la única forma de saber el progreso real de la
       // subida. Antes la barra la movía un temporizador que no sabía nada
       // del envío y trepaba hasta el 85% aunque no hubiera salido nada.
-      const result = await new Promise<{ ok: boolean; body: { error?: string; message?: string; submission?: Submission } }>((resolve, reject) => {
+      const result = await new Promise<{ ok: boolean; status: number; body: { error?: string; message?: string; submission?: Submission } }>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `/api/activities/${actId}/submissions`);
         xhr.withCredentials = true;
@@ -103,7 +103,7 @@ export default function StudentSubmitPage() {
         xhr.onload = () => {
           let body: { error?: string; message?: string; submission?: Submission } = {};
           try { body = JSON.parse(xhr.responseText); } catch { /* respuesta no JSON */ }
-          resolve({ ok: xhr.status >= 200 && xhr.status < 300, body });
+          resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, body });
         };
         xhr.onerror = () => reject(new Error('network'));
         xhr.onabort = () => reject(new Error('abort'));
@@ -111,7 +111,16 @@ export default function StudentSubmitPage() {
       });
 
       if (!result.ok || !result.body.submission) {
-        toast(result.body.error || 'Error al enviar entrega', 'error');
+        /* El 413 no lo manda la aplicación: lo manda la plataforma cuando el
+           cuerpo de la petición pasa de su tope, antes de que corra nada
+           nuestro. Viene sin JSON, así que aquí solo había «Error al enviar
+           entrega» y el estudiante no tenía forma de saber qué hacer. */
+        toast(
+          result.status === 413
+            ? 'Los archivos pesan demasiado para enviarlos de una vez. Comprime el documento, o súbelo a Drive y pega el enlace en «Enlaces».'
+            : result.body.error || 'Error al enviar entrega',
+          'error',
+        );
         return;
       }
 

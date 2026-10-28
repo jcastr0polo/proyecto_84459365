@@ -55,9 +55,36 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
   const isLate = now > dueDate;
   const isNearDue = !isLate && (dueDate.getTime() - now.getTime()) < 24 * 60 * 60 * 1000;
 
+  /*
+   * Tope REAL de una entrega.
+   *
+   * La plataforma donde esto corre rechaza cualquier petición cuyo cuerpo
+   * pase de 4,5 MB, y lo hace ella, antes de que llegue a nuestro código:
+   * devuelve un 413 que ni siquiera es JSON, así que el estudiante veía
+   * «Error al enviar entrega» y nada más. Le pasó a una estudiante con el
+   * plazo encima. Mientras la subida no vaya directa al almacenamiento, el
+   * límite se dice aquí y se dice antes, no después de esperar la subida.
+   *
+   * Cuenta el total de TODOS los archivos juntos, que es lo que viaja en
+   * una sola petición, y deja margen para el resto del formulario.
+   */
+  const TOPE_TOTAL_MB = 4;
+  const pesoTotal = files.reduce((n, f) => n + f.size, 0);
+
+  const [avisoPeso, setAvisoPeso] = useState<string | null>(null);
+
   const handleFileSelect = useCallback((file: File) => {
     setFiles((prev) => {
       if (prev.some((f) => f.name === file.name && f.size === file.size)) return prev;
+      const total = prev.reduce((n, f) => n + f.size, 0) + file.size;
+      if (total > TOPE_TOTAL_MB * 1024 * 1024) {
+        setAvisoPeso(
+          `«${file.name}» no cabe: entre todos los archivos de una entrega no se puede pasar de ${TOPE_TOTAL_MB} MB `
+          + `y con este iría en ${(total / 1024 / 1024).toFixed(1)} MB. Comprime el archivo, o súbelo a Drive y pega el enlace abajo.`,
+        );
+        return prev;
+      }
+      setAvisoPeso(null);
       return [...prev, file];
     });
   }, []);
@@ -229,12 +256,18 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
 
           <FileUploadZone
             onFileSelect={handleFileSelect}
+            multiple
             accept=".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.gif,.md,.txt,.zip"
-            maxSizeMB={10}
-            label="Arrastra tus archivos aquí"
-            hint="PDF, DOCX, PPTX, XLSX, imágenes, Markdown, TXT, ZIP · Máx. 10MB"
+            maxSizeMB={TOPE_TOTAL_MB}
+            label={files.length > 0 ? 'Añadir otro archivo' : 'Arrastra tus archivos aquí'}
+            hint={`PDF, DOCX, PPTX, XLSX, imágenes, Markdown, TXT, ZIP · ${TOPE_TOTAL_MB} MB entre todos`
+              + (files.length > 0 ? ` · llevas ${(pesoTotal / 1024 / 1024).toFixed(1)} MB` : '')}
             disabled={loading || (isLate && !activity.allowLateSubmission)}
           />
+
+          {avisoPeso && (
+            <p className="mt-2 text-xs text-red-400 max-w-prose">{avisoPeso}</p>
+          )}
         </section>
       )}
 

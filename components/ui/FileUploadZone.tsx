@@ -10,11 +10,21 @@ interface FileUploadZoneProps {
   hint?: string;
   disabled?: boolean;
   className?: string;
+  /** Permite elegir y soltar varios de una vez. */
+  multiple?: boolean;
 }
 
 /**
  * FileUploadZone — Zona de arrastrar y soltar reutilizable
- * Soporte drag&drop + click, validación de tamaño, feedback visual
+ *
+ * Soporta varios archivos cuando se le pide. Antes no: el input no llevaba
+ * `multiple` y al soltar se quedaba con `files[0]`, así que arrastrar tres
+ * subía uno y los otros dos desaparecían sin decir nada. Se avisaba de lo
+ * contrario en la etiqueta («Arrastra tus archivos»), que es peor que no
+ * decir nada.
+ *
+ * Se llama a `onFileSelect` una vez por archivo: quien la usa ya los va
+ * acumulando, y así no hay dos formas de añadir según de dónde vengan.
  */
 export default function FileUploadZone({
   onFileSelect,
@@ -24,30 +34,38 @@ export default function FileUploadZone({
   hint,
   disabled = false,
   className = '',
+  multiple = false,
 }: FileUploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = useCallback(
-    (file: File) => {
-      setError(null);
+  const handleFiles = useCallback(
+    (lista: FileList | File[]) => {
+      const archivos = Array.from(lista);
+      if (archivos.length === 0) return;
 
-      // Validate size
+      /* Los rechazados se nombran. Antes se descartaban en silencio y el
+         estudiante se quedaba mirando una lista a la que le faltaba uno. */
       const maxBytes = maxSizeMB * 1024 * 1024;
-      if (file.size > maxBytes) {
-        setError(`El archivo excede el tamaño máximo de ${maxSizeMB}MB`);
-        return;
-      }
+      const grandes = archivos.filter((f) => f.size > maxBytes);
+      const vacios = archivos.filter((f) => f.size === 0);
+      const buenos = archivos.filter((f) => f.size > 0 && f.size <= maxBytes);
 
-      if (file.size === 0) {
-        setError('El archivo está vacío');
-        return;
+      const quejas: string[] = [];
+      if (grandes.length > 0) {
+        quejas.push(
+          `${grandes.map((f) => f.name).join(', ')}: pasa${grandes.length === 1 ? '' : 'n'} de ${maxSizeMB} MB`,
+        );
       }
+      if (vacios.length > 0) {
+        quejas.push(`${vacios.map((f) => f.name).join(', ')}: está${vacios.length === 1 ? '' : 'n'} vacío${vacios.length === 1 ? '' : 's'}`);
+      }
+      setError(quejas.length > 0 ? quejas.join(' · ') : null);
 
-      onFileSelect(file);
+      for (const f of buenos) onFileSelect(f);
     },
-    [maxSizeMB, onFileSelect]
+    [maxSizeMB, onFileSelect],
   );
 
   function handleDragOver(e: React.DragEvent) {
@@ -67,15 +85,12 @@ export default function FileUploadZone({
     e.stopPropagation();
     setIsDragging(false);
     if (disabled) return;
-
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    handleFiles(multiple ? e.dataTransfer.files : [e.dataTransfer.files[0]].filter(Boolean));
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
-    // Reset input so same file can be selected again
+    if (e.target.files) handleFiles(e.target.files);
+    // Se vacía para poder volver a elegir el mismo archivo.
     e.target.value = '';
   }
 
@@ -100,10 +115,11 @@ export default function FileUploadZone({
           ref={inputRef}
           type="file"
           accept={accept}
+          multiple={multiple}
           onChange={handleInputChange}
           disabled={disabled}
           className="sr-only"
-          aria-label="Seleccionar archivo"
+          aria-label={multiple ? 'Seleccionar archivos' : 'Seleccionar archivo'}
         />
 
         {/* Upload icon */}
@@ -117,7 +133,9 @@ export default function FileUploadZone({
 
         <div>
           <p className={`text-sm font-medium ${isDragging ? 'text-cyan-300' : 'text-muted'}`}>
-            {isDragging ? 'Suelta el archivo aquí' : label}
+            {isDragging
+              ? (multiple ? 'Suelta los archivos aquí' : 'Suelta el archivo aquí')
+              : label}
           </p>
           {hint && (
             <p className="text-xs text-subtle mt-1">{hint}</p>
