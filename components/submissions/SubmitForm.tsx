@@ -40,12 +40,13 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
   // Borrador local: los archivos no se pueden guardar, el texto y los
   // enlaces sí, que es lo que cuesta rehacer.
   const { draft, setField, clearDraft, restored } = useDraft(`submit:${activity.id}`, {
-    githubUrl: '', vercelUrl: '', figmaUrl: '', otherUrl: '', content: '',
+    githubUrl: '', vercelUrl: '', figmaUrl: '', clickupUrl: '', otherUrl: '', content: '',
   });
-  const { githubUrl, vercelUrl, figmaUrl, otherUrl, content } = draft;
+  const { githubUrl, vercelUrl, figmaUrl, clickupUrl, otherUrl, content } = draft;
   const setGithubUrl = (v: string) => setField('githubUrl', v);
   const setVercelUrl = (v: string) => setField('vercelUrl', v);
   const setFigmaUrl = (v: string) => setField('figmaUrl', v);
+  const setClickupUrl = (v: string) => setField('clickupUrl', v);
   const setOtherUrl = (v: string) => setField('otherUrl', v);
   const setContent = (v: string) => setField('content', v);
 
@@ -98,6 +99,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
     if (githubUrl.trim()) links.push({ type: 'github', url: githubUrl.trim(), label: 'Repositorio GitHub' });
     if (vercelUrl.trim()) links.push({ type: 'vercel', url: vercelUrl.trim(), label: 'Deploy Vercel' });
     if (figmaUrl.trim()) links.push({ type: 'figma', url: figmaUrl.trim(), label: 'Diseño Figma' });
+    if (clickupUrl.trim()) links.push({ type: 'clickup', url: clickupUrl.trim(), label: 'Tablero ClickUp' });
     if (otherUrl.trim()) links.push({ type: 'other', url: otherUrl.trim(), label: 'Otro enlace' });
     return links;
   }
@@ -281,6 +283,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
             <LinkInput type="github" value={githubUrl} onChange={setGithubUrl} disabled={loading} />
             <LinkInput type="vercel" value={vercelUrl} onChange={setVercelUrl} disabled={loading} />
             <LinkInput type="figma" value={figmaUrl} onChange={setFigmaUrl} disabled={loading} />
+            <LinkInput type="clickup" value={clickupUrl} onChange={setClickupUrl} disabled={loading} />
             <LinkInput type="other" value={otherUrl} onChange={setOtherUrl} disabled={loading} />
           </div>
         </section>
@@ -295,6 +298,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
           <div className="space-y-4">
             <LinkInput type="github" value={githubUrl} onChange={setGithubUrl} disabled={loading} />
             <LinkInput type="vercel" value={vercelUrl} onChange={setVercelUrl} disabled={loading} />
+            <LinkInput type="clickup" value={clickupUrl} onChange={setClickupUrl} disabled={loading} />
             <LinkInput type="other" value={otherUrl} onChange={setOtherUrl} disabled={loading} />
           </div>
         </section>

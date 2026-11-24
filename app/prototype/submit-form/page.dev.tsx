@@ -9,7 +9,15 @@ import type { SubmissionLink } from '@/lib/types';
 export default function PrototypeSubmitForm() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<number | undefined>(undefined);
-  const activity = { ...MOCK_COURSES[0].activities[3], requiresLinkSubmission: true };
+  /* Se fuerza la carga de archivos: sin esto la sección ni se dibuja y el
+     taller no sirve para revisarla. Se deja individual a propósito —el
+     selector de grupo pide la API, y aquí no hay sesión: la respuesta 401
+     manda la página al login y no se ve nada—. */
+  const activity = {
+    ...MOCK_COURSES[0].activities[3],
+    requiresLinkSubmission: true,
+    requiresFileUpload: true,
+  };
 
   // Simula una subida para poder mirar el estado de progreso.
   async function fakeSubmit(_d: { files: File[]; links: SubmissionLink[]; content?: string }) {

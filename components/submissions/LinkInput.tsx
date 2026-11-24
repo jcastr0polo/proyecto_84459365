@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { GitBranch, Palette, Link as LinkIcon } from 'lucide-react';
+import { GitBranch, Palette, SquareKanban, Link as LinkIcon } from 'lucide-react';
 
 interface LinkInputProps {
-  type: 'github' | 'vercel' | 'figma' | 'other';
+  type: 'github' | 'vercel' | 'figma' | 'clickup' | 'other';
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
@@ -49,6 +49,20 @@ const CONFIG: Record<string, { label: string; placeholder: string; icon: React.R
       try {
         const u = new URL(url);
         if (!u.hostname.includes('figma.com')) return 'Debe ser una URL de Figma';
+        return null;
+      } catch { return 'URL inválida'; }
+    },
+  },
+  clickup: {
+    label: 'Tablero ClickUp',
+    placeholder: 'https://app.clickup.com/...',
+    icon: <SquareKanban className="w-4 h-4" />,
+    validate: (url) => {
+      if (!url) return null;
+      try {
+        const u = new URL(url);
+        if (!u.hostname.endsWith('clickup.com')) return 'Debe ser una URL de ClickUp';
+        if (u.protocol !== 'https:') return 'Debe usar HTTPS';
         return null;
       } catch { return 'URL inválida'; }
     },

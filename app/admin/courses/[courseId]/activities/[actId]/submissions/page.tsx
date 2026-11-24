@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { formatDateTimeColombia as formatDate } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
-import { Inbox, Search as SearchIcon, GitBranch, Palette, Link as LinkIcon, Paperclip } from 'lucide-react';
+import { Inbox, Search as SearchIcon, GitBranch, Palette, Link as LinkIcon, Paperclip, SquareKanban } from 'lucide-react';
 import SearchInput from '@/components/ui/SearchInput';
 import Pagination, { usePagination } from '@/components/ui/Pagination';
 import Button from '@/components/ui/Button';
@@ -391,5 +391,6 @@ const LINK_ICONS: Record<string, React.ReactNode> = {
   github: <GitBranch className="w-3.5 h-3.5" />,
   vercel: <span>▲</span>,
   figma: <Palette className="w-3.5 h-3.5" />,
+  clickup: <SquareKanban className="w-3.5 h-3.5" />,
   other: <LinkIcon className="w-3.5 h-3.5" />,
 };

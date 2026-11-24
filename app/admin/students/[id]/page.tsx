@@ -9,8 +9,7 @@ import {
   BookOpen, CheckCircle2,
   ExternalLink, FolderGit2, ChevronDown, ChevronRight,
   Paperclip, Link as LinkIcon, Eye, Download, GitBranch, Palette,
-  Plus, GraduationCap, AlertTriangle, Clock,
-} from 'lucide-react';
+  Plus, GraduationCap, AlertTriangle, Clock, SquareKanban, } from 'lucide-react';
 import { gradeText, gradeChip, formatScore, PASS } from '@/lib/gradeScale';
 import Badge from '@/components/ui/Badge';
 import StatTile from '@/components/ui/StatTile';
@@ -821,6 +820,7 @@ const LINK_ICON: Record<string, React.ReactNode> = {
   github: <GitBranch className="w-3.5 h-3.5" />,
   vercel: <span className="text-xs">▲</span>,
   figma: <Palette className="w-3.5 h-3.5" />,
+  clickup: <SquareKanban className="w-3.5 h-3.5" />,
 };
 
 function SubmissionBadge({ submission }: { submission: StudentSubmission | null }) {

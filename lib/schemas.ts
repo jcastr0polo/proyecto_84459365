@@ -378,7 +378,7 @@ export const tickSchema = z.object({
 });
 
 export const submissionLinkSchema = z.object({
-  type: z.enum(['github', 'vercel', 'figma', 'other']),
+  type: z.enum(['github', 'vercel', 'figma', 'clickup', 'other']),
   url: z.string()
     .url('URL inválida')
     .refine((url) => {

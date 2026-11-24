@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { GitBranch, Palette, Link as LinkIcon, Eye, Download, Trash2, Users } from 'lucide-react';
+import { GitBranch, Palette, Link as LinkIcon, Eye, Download, Trash2, Users, SquareKanban } from 'lucide-react';
 import { formatDateTimeColombia as formatDateTime } from '@/lib/dateUtils';
 import Badge from '@/components/ui/Badge';
 import Card from '@/components/ui/Card';
@@ -171,6 +171,7 @@ const LINK_ICONS: Record<string, React.ReactNode> = {
   github: <GitBranch className="w-5 h-5" />,
   vercel: <span>▲</span>,
   figma: <Palette className="w-5 h-5" />,
+  clickup: <SquareKanban className="w-5 h-5" />,
   other: <LinkIcon className="w-5 h-5" />,
 };
 

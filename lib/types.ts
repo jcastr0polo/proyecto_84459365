@@ -436,7 +436,7 @@ export interface SubmissionAttachment {
  * RN-ENT-06: GitHub/Vercel para cursos de programación
  */
 export interface SubmissionLink {
-  type: 'github' | 'vercel' | 'figma' | 'other';
+  type: 'github' | 'vercel' | 'figma' | 'clickup' | 'other';
   url: string;
   label?: string;                // "Repositorio principal"
 }
