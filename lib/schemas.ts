@@ -440,6 +440,18 @@ export const createSubmissionSchema = z.object({
    */
   groupMemberIds: z.array(z.string().min(1)).max(9, 'Máximo 10 personas por grupo').optional(),
   links: z.array(submissionLinkSchema).max(10, 'Máximo 10 enlaces').optional(),
+  /**
+   * Archivos que el navegador ya subió al almacenamiento, por su cuenta.
+   *
+   * Solo llegan la URL y el nombre: lo demás —tamaño y tipo— lo averigua el
+   * servidor preguntándole al almacenamiento, y la URL se comprueba contra
+   * la carpeta que le toca a este estudiante en esta actividad. Lo que diga
+   * el cliente sobre el peso de un archivo no es un dato, es una propuesta.
+   */
+  subidos: z.array(z.object({
+    url: z.string().url(),
+    fileName: z.string().min(1).max(255),
+  })).max(10, 'Máximo 10 archivos').optional(),
 });
 
 // Tipos inferidos — Entregas

@@ -7,6 +7,7 @@ import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Skeleton, SkeletonForm } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
+import { upload } from '@vercel/blob/client';
 import SubmitForm from '@/components/submissions/SubmitForm';
 import SubmissionDetail from '@/components/submissions/SubmissionDetail';
 import { formatDateTimeColombia } from '@/lib/dateUtils';
@@ -31,6 +32,10 @@ export default function StudentSubmitPage() {
   const [success, setSuccess] = useState(false);
   const [newSubmission, setNewSubmission] = useState<Submission | null>(null);
   const [progress, setProgress] = useState<number | undefined>(undefined);
+  /* Hasta cuánto admite de verdad, preguntado al servidor. Se arranca con el
+     tope pequeño: prometer de más es el error que se está corrigiendo. */
+  const [subida, setSubida] = useState<{ directo: boolean; maxBytes: number; userId: string }>(
+    { directo: false, maxBytes: 4 * 1024 * 1024, userId: '' });
 
   const fetchData = useCallback(async () => {
     try {
@@ -70,21 +75,66 @@ export default function StudentSubmitPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/upload/entrega', { credentials: 'include' });
+        if (r.ok) setSubida(await r.json());
+      } catch { /* se queda con el tope pequeño, que siempre funciona */ }
+    })();
+  }, []);
+
   async function handleSubmit(data: { files: File[]; links: SubmissionLink[]; content?: string; groupMemberIds?: string[] }) {
     setSubmitting(true);
     try {
-      const formData = new FormData();
-
-      // Add files
-      for (const file of data.files) {
-        formData.append('files', file);
+      /*
+       * Los archivos van directo al almacenamiento, no dentro de la entrega.
+       *
+       * La plataforma rechaza cualquier petición cuyo cuerpo pase de ~4,5 MB,
+       * y la rechaza ella, antes de que corra nada nuestro: un 413 sin JSON
+       * que al estudiante le llegaba como «Error al enviar entrega». Subiendo
+       * aparte, ese techo no existe y manda el límite que pone el servidor.
+       *
+       * Si no hay almacenamiento configurado —en local, normalmente— se cae
+       * al camino de siempre, con el archivo dentro de la petición.
+       */
+      const subidos: { url: string; fileName: string }[] = [];
+      if (subida.directo && subida.userId && data.files.length > 0) {
+        const total = data.files.reduce((n, f) => n + f.size, 0);
+        let hecho = 0;
+        for (const file of data.files) {
+          const nombre = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}-`
+            + file.name.replace(/[^\w.\-]+/g, '-');
+          const blob = await upload(
+            `uploads/submissions/act-${actId}/stu-${subida.userId}/${nombre}`,
+            file,
+            {
+              access: 'private',
+              handleUploadUrl: '/api/upload/entrega',
+              clientPayload: JSON.stringify({ activityId: actId }),
+              multipart: file.size > 5 * 1024 * 1024,
+              contentType: file.type || undefined,
+              onUploadProgress: ({ loaded }) =>
+                setProgress(((hecho + loaded) / total) * 100),
+            },
+          );
+          hecho += file.size;
+          subidos.push({ url: blob.url, fileName: file.name });
+        }
       }
 
-      // Add JSON data (content + links)
+      const formData = new FormData();
+
+      // Solo van dentro de la petición los que no se subieron aparte.
+      if (subidos.length === 0) {
+        for (const file of data.files) formData.append('files', file);
+      }
+
       formData.append('data', JSON.stringify({
         content: data.content,
         links: data.links,
         groupMemberIds: data.groupMemberIds,
+        subidos,
       }));
 
       // XHR y no fetch: es la única forma de saber el progreso real de la
@@ -224,6 +274,8 @@ export default function StudentSubmitPage() {
         loading={submitting}
         existingVersion={existing?.version}
         progress={progress}
+        maxBytes={subida.maxBytes}
+        porArchivo={subida.directo}
       />
     </div>
   );

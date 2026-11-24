@@ -26,13 +26,28 @@ interface SubmitFormProps {
   existingVersion?: number;
   /** Porcentaje real de subida; sin definir = indeterminado. */
   progress?: number;
+  /**
+   * Cuánto admite de verdad el servidor, por archivo.
+   *
+   * No es una preferencia: con el archivo dentro de la petición manda el
+   * tope de la plataforma (~4,5 MB para todo el cuerpo), y con subida
+   * directa al almacenamiento manda el del servidor. El formulario pregunta
+   * en vez de suponer, porque prometer de más fue justo lo que dejó a una
+   * estudiante sin entregar.
+   */
+  maxBytes?: number;
+  /** Con subida directa el tope es por archivo; si no, es la suma. */
+  porArchivo?: boolean;
 }
 
 /**
  * SubmitForm — Formulario completo de entrega del estudiante
  * Multi-sección: resumen actividad, archivos, enlaces, comentario, confirmación
  */
-export default function SubmitForm({ activity, onSubmit, loading = false, existingVersion, progress }: SubmitFormProps) {
+export default function SubmitForm({
+  activity, onSubmit, loading = false, existingVersion, progress,
+  maxBytes = 4 * 1024 * 1024, porArchivo = false,
+}: SubmitFormProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [grupo, setGrupo] = useState<string[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -69,7 +84,7 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
    * Cuenta el total de TODOS los archivos juntos, que es lo que viaja en
    * una sola petición, y deja margen para el resto del formulario.
    */
-  const TOPE_TOTAL_MB = 4;
+  const topeMB = Math.round(maxBytes / 1024 / 1024);
   const pesoTotal = files.reduce((n, f) => n + f.size, 0);
 
   const [avisoPeso, setAvisoPeso] = useState<string | null>(null);
@@ -77,18 +92,24 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
   const handleFileSelect = useCallback((file: File) => {
     setFiles((prev) => {
       if (prev.some((f) => f.name === file.name && f.size === file.size)) return prev;
-      const total = prev.reduce((n, f) => n + f.size, 0) + file.size;
-      if (total > TOPE_TOTAL_MB * 1024 * 1024) {
+      /* Con subida directa cada archivo viaja solo, así que el tope es suyo.
+         Si va dentro de la petición, lo que cuenta es la suma: es el cuerpo
+         entero lo que la plataforma mide. */
+      const medido = porArchivo ? file.size : prev.reduce((n, f) => n + f.size, 0) + file.size;
+      if (medido > maxBytes) {
         setAvisoPeso(
-          `«${file.name}» no cabe: entre todos los archivos de una entrega no se puede pasar de ${TOPE_TOTAL_MB} MB `
-          + `y con este iría en ${(total / 1024 / 1024).toFixed(1)} MB. Comprime el archivo, o súbelo a Drive y pega el enlace abajo.`,
+          porArchivo
+            ? `«${file.name}» pesa ${(file.size / 1024 / 1024).toFixed(1)} MB y el máximo por archivo `
+              + `es ${topeMB} MB. Comprímelo, o súbelo a Drive y pega el enlace abajo.`
+            : `«${file.name}» no cabe: entre todos los archivos de una entrega no se puede pasar de ${topeMB} MB `
+              + `y con este iría en ${(medido / 1024 / 1024).toFixed(1)} MB. Comprime el archivo, o súbelo a Drive y pega el enlace abajo.`,
         );
         return prev;
       }
       setAvisoPeso(null);
       return [...prev, file];
     });
-  }, []);
+  }, [maxBytes, porArchivo, topeMB]);
 
   function removeFile(index: number) {
     setFiles((prev) => prev.filter((_, i) => i !== index));
@@ -260,9 +281,10 @@ export default function SubmitForm({ activity, onSubmit, loading = false, existi
             onFileSelect={handleFileSelect}
             multiple
             accept=".pdf,.docx,.pptx,.xlsx,.png,.jpg,.jpeg,.gif,.md,.txt,.zip"
-            maxSizeMB={TOPE_TOTAL_MB}
+            maxSizeMB={topeMB}
             label={files.length > 0 ? 'Añadir otro archivo' : 'Arrastra tus archivos aquí'}
-            hint={`PDF, DOCX, PPTX, XLSX, imágenes, Markdown, TXT, ZIP · ${TOPE_TOTAL_MB} MB entre todos`
+            hint={`PDF, DOCX, PPTX, XLSX, imágenes, Markdown, TXT, ZIP · ${topeMB} MB `
+              + (porArchivo ? 'por archivo' : 'entre todos')
               + (files.length > 0 ? ` · llevas ${(pesoTotal / 1024 / 1024).toFixed(1)} MB` : '')}
             disabled={loading || (isLate && !activity.allowLateSubmission)}
           />

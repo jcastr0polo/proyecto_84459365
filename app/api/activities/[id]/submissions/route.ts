@@ -14,7 +14,7 @@ import {
   readSubmissionsFresh,
   readUsersFresh,
 } from '@/lib/dataService';
-import { uploadFile, UploadError } from '@/lib/uploadService';
+import { uploadFile, adoptarSubidaDirecta, UploadError } from '@/lib/uploadService';
 import { submitWork, SubmissionError } from '@/lib/submissionService';
 import { logAudit, extractRequestMeta, auditSnapshot } from '@/lib/auditService';
 import type { SubmissionAttachment, SubmissionLink, SubmissionWithDetails } from '@/lib/types';
@@ -156,6 +156,7 @@ export async function POST(
       let content: string | undefined;
       let links: SubmissionLink[] = [];
       let groupMemberIds: string[] = [];
+      let subidos: { url: string; fileName: string }[] = [];
 
       if (dataField && typeof dataField === 'string') {
         const parsed = createSubmissionSchema.safeParse(JSON.parse(dataField));
@@ -168,10 +169,33 @@ export async function POST(
         content = parsed.data.content ?? undefined;
         links = (parsed.data.links ?? []) as SubmissionLink[];
         groupMemberIds = parsed.data.groupMemberIds ?? [];
+        subidos = parsed.data.subidos ?? [];
       }
 
-      // Upload attached files
       const attachments: SubmissionAttachment[] = [];
+
+      /*
+       * Archivos que el navegador ya subió por su cuenta.
+       *
+       * Van primero porque es el camino normal: el archivo no cabe en una
+       * petición —la plataforma corta en ~4,5 MB— así que viaja directo al
+       * almacenamiento y aquí solo llega su dirección. Se comprueba que sea
+       * de este estudiante y de esta actividad, y el peso y el tipo salen de
+       * preguntárselo al almacenamiento.
+       */
+      for (const s of subidos) {
+        try {
+          attachments.push(await adoptarSubidaDirecta(s.url, s.fileName, activityId, user.id));
+        } catch (err) {
+          if (err instanceof UploadError) {
+            return NextResponse.json({ error: err.message }, { status: err.statusCode });
+          }
+          throw err;
+        }
+      }
+
+      // Archivos que sí vienen dentro de la petición (sin almacenamiento
+      // configurado, o navegador al que le falló la subida directa).
       const files = formData.getAll('files');
 
       for (const file of files) {

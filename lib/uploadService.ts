@@ -10,7 +10,7 @@
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { put, del, get } from '@vercel/blob';
+import { put, del, get, head } from '@vercel/blob';
 import type { ActivityAttachment } from '@/lib/types';
 import { nowColombiaISO } from '@/lib/dateUtils';
 
@@ -33,6 +33,86 @@ function getDataDir(...segments: string[]): string {
 
 /** Tamaño máximo de archivo: 10 MB */
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+/**
+ * Tope por archivo de una entrega de estudiante.
+ *
+ * Mientras el archivo viajaba dentro de la petición, el tope real no era
+ * este sino el de la plataforma —4,5 MB para el cuerpo entero, pasara lo que
+ * pasara aquí—, y por eso el formulario pedía 4 MB entre todos. Con la subida
+ * directa al almacenamiento ese techo desaparece y manda este número.
+ */
+export const MAX_ENTREGA_BYTES = 8 * 1024 * 1024;
+
+/**
+ * adoptarSubidaDirecta — convierte en adjunto un archivo que subió el navegador.
+ *
+ * El servidor no vio pasar el archivo, así que no se fía de lo que el cliente
+ * cuente sobre él. Dos comprobaciones, y las dos son necesarias:
+ *
+ * · La URL tiene que apuntar a la carpeta de ESTE estudiante en ESTA
+ *   actividad, que es la misma que se firmó al dar el permiso. Sin esto,
+ *   bastaría con mandar la URL del trabajo de otro para apropiárselo.
+ * · El archivo tiene que existir de verdad, y su tamaño y tipo salen de
+ *   preguntárselo al almacenamiento, no del formulario.
+ */
+export async function adoptarSubidaDirecta(
+  url: string,
+  fileName: string,
+  activityId: string,
+  studentId: string,
+): Promise<SubmissionAttachmentLike> {
+  const carpeta = `/uploads/submissions/act-${activityId}/stu-${studentId}/`;
+  let u: URL;
+  try { u = new URL(url); } catch { throw new UploadError('La dirección del archivo no es válida'); }
+  if (!u.hostname.endsWith('.blob.vercel-storage.com')) {
+    throw new UploadError('Ese archivo no está en el almacenamiento de la plataforma');
+  }
+  if (!u.pathname.includes(carpeta)) {
+    throw new UploadError('Ese archivo no es de esta entrega');
+  }
+
+  const token = getBlobToken();
+  if (!token) throw new UploadError('Almacenamiento no configurado');
+
+  let info: { size: number; contentType?: string };
+  try {
+    info = await head(url, { token });
+  } catch {
+    throw new UploadError(`No se encontró el archivo subido "${fileName}"`);
+  }
+
+  if (info.size > MAX_ENTREGA_BYTES) {
+    throw new UploadError(
+      `"${fileName}" pesa ${(info.size / 1024 / 1024).toFixed(1)} MB y el máximo es `
+      + `${MAX_ENTREGA_BYTES / 1024 / 1024} MB`,
+    );
+  }
+
+  return {
+    id: uuidv4(),
+    fileName,
+    filePath: url,
+    fileSize: info.size,
+    mimeType: info.contentType ?? 'application/octet-stream',
+    uploadedAt: nowColombiaISO(),
+  };
+}
+
+interface SubmissionAttachmentLike {
+  id: string; fileName: string; filePath: string;
+  fileSize: number; mimeType: string; uploadedAt: string;
+}
+
+/** Los tipos que se aceptan en una entrega, para la subida directa. */
+export function tiposPermitidosEnEntrega(): string[] {
+  return Object.keys(ALLOWED_MIME_TYPES_SUBMISSIONS);
+}
+
+/** Las extensiones que se aceptan en una entrega, para la subida directa. */
+export function extensionesPermitidasEnEntrega(): string[] {
+  return [...new Set(Object.values(ALLOWED_MIME_TYPES_SUBMISSIONS).flat())];
+}
 
 /**
  * Tipos MIME permitidos para actividades (material del docente)
