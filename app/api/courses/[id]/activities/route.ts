@@ -115,6 +115,13 @@ export async function POST(
         description: data.description,
         type: data.type,
         category: data.category,
+        /* El tope del grupo se perdía al crear: llegaba en la petición, pasaba
+           la validación y aquí nadie lo copiaba, así que la actividad nacía
+           sin tope y el docente creía haberlo puesto. Solo tiene sentido en
+           las grupales. */
+        ...(data.category === 'group' && data.groupMaxSize
+          ? { groupMaxSize: data.groupMaxSize }
+          : {}),
         attachments: [],
         dueDate: data.dueDate,
         dueTime: data.dueTime,
