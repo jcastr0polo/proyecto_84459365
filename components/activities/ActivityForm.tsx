@@ -26,7 +26,18 @@ export interface ActivityFormData {
   latePenaltyPercent: number;
   requiresFileUpload: boolean;
   requiresLinkSubmission: boolean;
+  /** Cuáles enlaces pide. Vacío = los cinco, y basta con uno. */
+  requiredLinks?: Activity['requiredLinks'];
 }
+
+/** Los enlaces que una actividad puede pedir, con el nombre que ve el docente. */
+const ENLACES: { value: NonNullable<Activity['requiredLinks']>[number]; label: string }[] = [
+  { value: 'github', label: 'Repositorio GitHub' },
+  { value: 'vercel', label: 'Deploy Vercel' },
+  { value: 'clickup', label: 'Tablero ClickUp' },
+  { value: 'figma', label: 'Diseño Figma' },
+  { value: 'other', label: 'Otro enlace' },
+];
 
 interface ActivityFormProps {
   activity?: Activity;
@@ -90,6 +101,7 @@ export default function ActivityForm({
     latePenaltyPercent: activity?.latePenaltyPercent ?? 0,
     requiresFileUpload: activity?.requiresFileUpload ?? false,
     requiresLinkSubmission: activity?.requiresLinkSubmission ?? false,
+    requiredLinks: activity?.requiredLinks,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -571,8 +583,56 @@ export default function ActivityForm({
             label="Requiere enviar enlace"
             description="El estudiante debe enviar una URL (GitHub, Vercel, etc.)"
             checked={form.requiresLinkSubmission}
-            onChange={(v) => update('requiresLinkSubmission', v)}
+            onChange={(v) => updateVarios(v
+              ? { requiresLinkSubmission: true }
+              : { requiresLinkSubmission: false, requiredLinks: undefined })}
           />
+
+          {/*
+            Cuáles enlaces, no solo si pide o no.
+            Sin marcar nada se queda como estaba: los cinco campos y basta con
+            uno. Marcando, el estudiante ve solo esos y los tiene que llenar
+            todos —que es lo que de verdad se quiere cuando se pide «el repo y
+            el despliegue» y llega solo el repo—.
+          */}
+          {form.requiresLinkSubmission && (
+            <div className="pl-1">
+              <p className="text-xs font-medium text-muted mb-2">¿Cuáles?</p>
+              <div className="flex flex-wrap gap-2">
+                {ENLACES.map((e) => {
+                  const marcado = (form.requiredLinks ?? []).includes(e.value);
+                  return (
+                    <button
+                      key={e.value}
+                      type="button"
+                      aria-pressed={marcado}
+                      onClick={() => {
+                        const actuales = form.requiredLinks ?? [];
+                        const siguiente = marcado
+                          ? actuales.filter((x) => x !== e.value)
+                          : [...actuales, e.value];
+                        update('requiredLinks', siguiente.length ? siguiente : undefined);
+                      }}
+                      className={`rounded-lg border px-3 py-2 min-h-11 text-xs
+                                  transition-colors duration-[var(--dur-fast)]
+                                  active:scale-[0.99] motion-reduce:active:scale-100
+                                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40
+                                  ${marcado
+                                    ? 'border-cyan-500/40 bg-cyan-500/10 text-foreground'
+                                    : 'border-surface-border bg-surface text-muted hover:bg-surface-hover cursor-pointer'}`}
+                    >
+                      {e.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-meta text-faint max-w-prose">
+                {(form.requiredLinks ?? []).length > 0
+                  ? `Verán solo ${(form.requiredLinks ?? []).length === 1 ? 'ese campo' : `esos ${(form.requiredLinks ?? []).length} campos`} y tendrán que llenarlos todos.`
+                  : 'Sin marcar nada: verán los cinco campos y les bastará con uno cualquiera.'}
+              </p>
+            </div>
+          )}
         </div>
       </section>
 

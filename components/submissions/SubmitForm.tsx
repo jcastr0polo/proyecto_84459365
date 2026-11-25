@@ -115,14 +115,31 @@ export default function SubmitForm({
     setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
+  /*
+   * Los campos de enlace, en un solo sitio.
+   *
+   * Estaban repartidos entre buildLinks y dos bloques de JSX casi iguales, y
+   * cada vez que se añadía uno había que acordarse de los tres. Así la lista
+   * se recorre, y de paso se puede enseñar solo lo que la actividad pide.
+   */
+  const CAMPOS = [
+    { type: 'github' as const, label: 'Repositorio GitHub', value: githubUrl, set: setGithubUrl },
+    { type: 'vercel' as const, label: 'Deploy Vercel', value: vercelUrl, set: setVercelUrl },
+    { type: 'figma' as const, label: 'Diseño Figma', value: figmaUrl, set: setFigmaUrl },
+    { type: 'clickup' as const, label: 'Tablero ClickUp', value: clickupUrl, set: setClickupUrl },
+    { type: 'other' as const, label: 'Otro enlace', value: otherUrl, set: setOtherUrl },
+  ];
+
+  /* Los que pide ESTA actividad. Sin lista, los de siempre. */
+  const pedidos = activity.requiredLinks ?? null;
+  const camposVisibles = pedidos
+    ? CAMPOS.filter((c) => pedidos.includes(c.type))
+    : CAMPOS.filter((c) => c.type !== 'figma' || activity.requiresLinkSubmission);
+
   function buildLinks(): SubmissionLink[] {
-    const links: SubmissionLink[] = [];
-    if (githubUrl.trim()) links.push({ type: 'github', url: githubUrl.trim(), label: 'Repositorio GitHub' });
-    if (vercelUrl.trim()) links.push({ type: 'vercel', url: vercelUrl.trim(), label: 'Deploy Vercel' });
-    if (figmaUrl.trim()) links.push({ type: 'figma', url: figmaUrl.trim(), label: 'Diseño Figma' });
-    if (clickupUrl.trim()) links.push({ type: 'clickup', url: clickupUrl.trim(), label: 'Tablero ClickUp' });
-    if (otherUrl.trim()) links.push({ type: 'other', url: otherUrl.trim(), label: 'Otro enlace' });
-    return links;
+    return camposVisibles
+      .filter((c) => c.value.trim())
+      .map((c) => ({ type: c.type, url: c.value.trim(), label: c.label }));
   }
 
   function validate(): string | null {
@@ -130,8 +147,15 @@ export default function SubmitForm({
       return 'Debes adjuntar al menos un archivo';
     }
     if (activity.requiresLinkSubmission) {
-      const links = buildLinks();
-      if (links.length === 0) return 'Debes enviar al menos un enlace';
+      /* Si la actividad dice cuáles pide, los pide TODOS. Antes bastaba con
+         uno cualquiera: en un proyecto que pide el repositorio y el
+         despliegue se entregaba solo con el repositorio. */
+      if (pedidos && pedidos.length > 0) {
+        const falta = camposVisibles.find((c) => !c.value.trim());
+        if (falta) return `Falta el enlace: ${falta.label}`;
+      } else if (buildLinks().length === 0) {
+        return 'Debes enviar al menos un enlace';
+      }
     }
     // Un enlace mal escrito se enviaba tal cual y luego no abría.
     const malformed = buildLinks().find((l) => !/^https?:\/\/[^\s.]+\.[^\s]{2,}$/i.test(l.url));
@@ -295,36 +319,38 @@ export default function SubmitForm({
         </section>
       )}
 
-      {/* ─── Links Section ─── */}
-      {activity.requiresLinkSubmission && (
-        <section>
-          <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">
-            Enlaces <span className="text-red-400/70">*</span>
-          </h3>
-          <div className="space-y-4">
-            <LinkInput type="github" value={githubUrl} onChange={setGithubUrl} disabled={loading} />
-            <LinkInput type="vercel" value={vercelUrl} onChange={setVercelUrl} disabled={loading} />
-            <LinkInput type="figma" value={figmaUrl} onChange={setFigmaUrl} disabled={loading} />
-            <LinkInput type="clickup" value={clickupUrl} onChange={setClickupUrl} disabled={loading} />
-            <LinkInput type="other" value={otherUrl} onChange={setOtherUrl} disabled={loading} />
-          </div>
-        </section>
-      )}
-
-      {/* Always show optional links if not required */}
-      {!activity.requiresLinkSubmission && (
-        <section>
-          <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">
-            Enlaces (opcional)
-          </h3>
-          <div className="space-y-4">
-            <LinkInput type="github" value={githubUrl} onChange={setGithubUrl} disabled={loading} />
-            <LinkInput type="vercel" value={vercelUrl} onChange={setVercelUrl} disabled={loading} />
-            <LinkInput type="clickup" value={clickupUrl} onChange={setClickupUrl} disabled={loading} />
-            <LinkInput type="other" value={otherUrl} onChange={setOtherUrl} disabled={loading} />
-          </div>
-        </section>
-      )}
+      {/*
+        Enlaces.
+        Eran dos bloques casi iguales con la lista escrita a mano en cada uno;
+        añadir ClickUp obligó a tocar los dos y en uno se olvidó Figma. Ahora
+        es una lista: la actividad decide cuáles se ven, y si los nombra, los
+        marca uno a uno como obligatorios en vez de pedir «alguno».
+      */}
+      <section>
+        <h3 className="text-xs font-semibold text-subtle uppercase tracking-wider mb-3">
+          Enlaces{' '}
+          {activity.requiresLinkSubmission
+            ? <span className="text-red-400/70">*</span>
+            : <span className="normal-case tracking-normal text-faint">(opcional)</span>}
+        </h3>
+        {pedidos && pedidos.length > 1 && (
+          <p className="text-xs text-subtle mb-3 max-w-prose">
+            Esta entrega pide los {pedidos.length}. Falta uno y no te deja enviar.
+          </p>
+        )}
+        <div className="space-y-4">
+          {camposVisibles.map((c) => (
+            <LinkInput
+              key={c.type}
+              type={c.type}
+              value={c.value}
+              onChange={c.set}
+              required={!!(activity.requiresLinkSubmission && pedidos?.includes(c.type))}
+              disabled={loading}
+            />
+          ))}
+        </div>
+      </section>
 
       {/* ─── Comment Section ─── */}
       <section>

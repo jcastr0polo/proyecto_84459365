@@ -134,6 +134,10 @@ export async function POST(
         status: 'draft',
         requiresFileUpload: data.requiresFileUpload,
         requiresLinkSubmission: data.requiresLinkSubmission,
+        /* Cuáles enlaces pide. Solo tiene sentido si pide alguno. */
+        ...(data.requiresLinkSubmission && data.requiredLinks?.length
+          ? { requiredLinks: data.requiredLinks }
+          : {}),
         projectRequired: data.projectRequired,
         createdAt: now,
         updatedAt: now,

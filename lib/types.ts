@@ -359,6 +359,18 @@ export interface Activity {
   status: 'draft' | 'published' | 'closed';
   requiresFileUpload: boolean;         // ¿Requiere subir archivo?
   requiresLinkSubmission: boolean;     // ¿Requiere enviar enlace (GitHub/Vercel)?
+  /**
+   * CUÁLES enlaces pide, cuando pide enlaces.
+   *
+   * `requiresLinkSubmission` solo dice sí o no, y con eso el formulario
+   * enseñaba los cinco campos —Figma y ClickUp incluidos, vinieran o no al
+   * caso— y se daba por satisfecho con uno cualquiera. Un proyecto que pide
+   * el repositorio Y el despliegue se podía entregar solo con el repositorio.
+   *
+   * Vacío o ausente: como antes, los cinco campos y basta con uno. Es lo que
+   * tienen todas las actividades que ya existen.
+   */
+  requiredLinks?: SubmissionLink['type'][];
   projectRequired?: boolean;           // Solo visible para estudiantes con proyecto registrado
   /**
    * Los puntos, cuando type === 'checklist'. Vacío o ausente en las demás.

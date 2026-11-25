@@ -164,6 +164,24 @@ export const MIGRATIONS: Migration[] = [
     ],
   },
   {
+    id: '2026-11-enlaces-que-pide',
+    title: 'Qué enlaces pide cada actividad',
+    why:
+      'Hoy una actividad solo puede decir «pide enlace» o «no pide enlace». Con '
+      + 'eso, el estudiante ve los cinco campos —GitHub, Vercel, Figma, ClickUp y '
+      + '«otro»— aunque la actividad solo quiera dos, y se da por entregado con '
+      + 'uno cualquiera: en un proyecto que pide el repositorio Y el despliegue, '
+      + 'bastaba con pegar el repositorio. Esto te deja marcar cuáles pides, y '
+      + 'entonces el formulario enseña solo esos y los exige todos. Nace vacía: '
+      + 'las actividades que ya existen siguen funcionando igual que hoy.',
+    statements: [
+      'ALTER TABLE activities ADD COLUMN IF NOT EXISTS required_links JSONB',
+    ],
+    requires: [
+      { table: 'activities', column: 'required_links' },
+    ],
+  },
+  {
     id: '2026-10-reparar-grupos',
     title: 'Reparar las entregas en grupo que perdieron su grupo',
     why:

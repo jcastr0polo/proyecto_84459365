@@ -281,6 +281,9 @@ export const createActivitySchema = z.object({
   latePenaltyPercent: z.number().min(0).max(100).optional(),
   requiresFileUpload: z.boolean().optional().default(false),
   requiresLinkSubmission: z.boolean().optional().default(false),
+  /** Cuáles enlaces exige. Vacío = los de siempre, y basta con uno. */
+  requiredLinks: z.array(z.enum(['github', 'vercel', 'figma', 'clickup', 'other']))
+    .max(5).optional(),
   projectRequired: z.boolean().optional().default(false),
 }).refine((data) => {
   const dueH = (data.dueTime || '23:59').split(':').map(Number);
@@ -313,6 +316,8 @@ export const updateActivitySchema = z.object({
   latePenaltyPercent: z.number().min(0).max(100).optional(),
   requiresFileUpload: z.boolean().optional(),
   requiresLinkSubmission: z.boolean().optional(),
+  requiredLinks: z.array(z.enum(['github', 'vercel', 'figma', 'clickup', 'other']))
+    .max(5).optional(),
   projectRequired: z.boolean().optional(),
   status: z.enum(['draft', 'published', 'closed']).optional(),
 });
